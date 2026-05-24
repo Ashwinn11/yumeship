@@ -1,8 +1,7 @@
 import React from 'react';
-import {
-  View, Text, Pressable, ScrollView,
-  StyleSheet, SafeAreaView,
-} from 'react-native';
+import { View, Text, Pressable, ScrollView,
+  StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { colors, radii, spacing, shadows } from '@/tokens/theme';
 import { Sparkle, Heart, Sakura } from '@/deco';

@@ -1,8 +1,7 @@
 import React from 'react';
-import {
-  View, Text, Pressable, ScrollView,
-  StyleSheet, SafeAreaView, Switch,
-} from 'react-native';
+import { View, Text, Pressable, ScrollView,
+  StyleSheet, Switch } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, radii, spacing, shadows } from '@/tokens/theme';
 import { Mark, Toggle } from '@/components';
 import { Sparkle, SparkleCluster, Heart } from '@/deco';

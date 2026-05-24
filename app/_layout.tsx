@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
-import { View, StyleSheet, AppState } from 'react-native';
-import { Stack, router } from 'expo-router';
+import { View, StyleSheet, AppState, Text, TextInput } from 'react-native';
+import { Stack, router, useSegments, useRootNavigationState } from 'expo-router';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
@@ -12,31 +12,57 @@ import { authenticate } from '@/services/appLock';
 import { colors } from '@/tokens/theme';
 import LockScreen from './lock-screen';
 
+import { InstrumentSerif_400Regular_Italic, InstrumentSerif_400Regular } from '@expo-google-fonts/instrument-serif';
+import { KleeOne_400Regular } from '@expo-google-fonts/klee-one';
+import { JetBrainsMono_400Regular } from '@expo-google-fonts/jetbrains-mono';
+import { Fredoka_400Regular } from '@expo-google-fonts/fredoka';
+
+// Globally override default fontFamily for Text and TextInput to Fredoka
+const patchComponentStyle = (Component: any, defaultStyle: any) => {
+  if (!Component) return;
+  const originalRender = Component.render || (Component.type && Component.type.render);
+  if (originalRender) {
+    const target = Component.render ? Component : Component.type;
+    target.render = function render(props: any, ref: any) {
+      return originalRender.call(this, {
+        ...props,
+        style: [defaultStyle, props.style],
+      }, ref);
+    };
+  }
+};
+
+patchComponentStyle(Text, { fontFamily: 'Fredoka' });
+patchComponentStyle(TextInput, { fontFamily: 'Fredoka' });
+
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
-    InstrumentSerif_Italic:  require('@expo-google-fonts/instrument-serif/400Regular_Italic'),
-    InstrumentSerif_Regular: require('@expo-google-fonts/instrument-serif/400Regular'),
-    DMSans:                  require('@expo-google-fonts/dm-sans/400Regular'),
-    DMSans_Medium:           require('@expo-google-fonts/dm-sans/500Medium'),
-    DMSans_SemiBold:         require('@expo-google-fonts/dm-sans/600SemiBold'),
-    KleeOne:                 require('@expo-google-fonts/klee-one/400Regular'),
-    JetBrainsMono:           require('@expo-google-fonts/jetbrains-mono/400Regular'),
-    Caveat:                  require('@expo-google-fonts/caveat/400Regular'),
-    Fredoka:                 require('@expo-google-fonts/fredoka/400Regular'),
+    InstrumentSerif_Italic:  InstrumentSerif_400Regular_Italic,
+    InstrumentSerif_Regular: InstrumentSerif_400Regular,
+    KleeOne:                 KleeOne_400Regular,
+    JetBrainsMono:           JetBrainsMono_400Regular,
+    Fredoka:                 Fredoka_400Regular,
   });
 
   const { success, error } = useMigrations(db, migrations);
   const { isLocked, lock, unlock } = useLockStore();
   const { appLockEnabled, lockTimeout, onboardingComplete } = useSettingsStore();
+  const segments = useSegments();
+  const navigationState = useRootNavigationState();
 
   // Redirect to onboarding on first launch
   useEffect(() => {
+    if (!navigationState?.key) return;
+
     if (!onboardingComplete) {
-      router.replace('/onboarding/welcome');
+      const inOnboarding = segments[0] === 'onboarding';
+      if (!inOnboarding) {
+        router.replace('/onboarding/welcome');
+      }
     }
-  }, [onboardingComplete]);
+  }, [onboardingComplete, segments, navigationState?.key]);
 
   // Lock on background
   useEffect(() => {

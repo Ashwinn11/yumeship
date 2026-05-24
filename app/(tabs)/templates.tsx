@@ -1,8 +1,7 @@
 import React from 'react';
-import {
-  View, Text, Pressable, FlatList,
-  StyleSheet, SafeAreaView,
-} from 'react-native';
+import { View, Text, Pressable, FlatList,
+  StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { colors, radii, spacing, shadows } from '@/tokens/theme';
 import { Mark } from '@/components';
@@ -78,7 +77,6 @@ function TemplateTile({ item }: { item: TemplateItem }) {
       <View style={[
         styles.tile,
         item.featured && { backgroundColor: colors.sakuraSoft, borderColor: item.tint },
-        ...shadows.sm as any,
       ]}>
         {/* Watermark kanji */}
         <Text style={[styles.watermark, { color: item.tint }]}>{item.ja}</Text>

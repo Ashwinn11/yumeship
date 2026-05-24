@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import {
-  View, Text, TextInput, Pressable,
-  ScrollView, StyleSheet, SafeAreaView,
-} from 'react-native';
+import { View, Text, TextInput, Pressable,
+  ScrollView, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useSettingsStore } from '@/store/settingsStore';
 import { colors, radii, spacing, shadows } from '@/tokens/theme';
 import { WashiTape, Heart } from '@/deco';
 
@@ -34,9 +33,10 @@ const PROMPTS = [
 
 export default function Scenario() {
   const [scene, setScene] = useState('');
+  const setOnboardingComplete = useSettingsStore((s) => s.setOnboardingComplete);
 
   const finish = async () => {
-    await AsyncStorage.setItem('onboardingComplete', 'true');
+    setOnboardingComplete(true);
     router.replace('/(tabs)' as any);
   };
 

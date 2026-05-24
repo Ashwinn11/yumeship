@@ -11,8 +11,6 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
-    "@expo-google-fonts/caveat": "^0.4.2",
-    "@expo-google-fonts/dm-sans": "^0.4.2",
     "@expo-google-fonts/fredoka": "^0.4.1",
     "@expo-google-fonts/instrument-serif": "^0.4.1",
     "@expo-google-fonts/jetbrains-mono": "^0.4.1",
@@ -34,7 +32,7 @@
     "expo-status-bar": "~56.0.4",
     "expo-updates": "~56.0.16",
     "expo-widgets": "~56.0.14",
-    "react": "^19.2.6",
+    "react": "19.2.3",
     "react-native": "0.85.3",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "4.25.2",

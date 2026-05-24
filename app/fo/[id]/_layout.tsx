@@ -29,41 +29,46 @@ export default function FOLayout() {
 
 function FOTabBar({ state, navigation }: any) {
   return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={styles.tabBarContent}
-      style={styles.tabBar}
-    >
-      <View style={styles.pill}>
-        {FO_TABS.map((tab, i) => {
-          const active = state.index === i;
-          return (
-            <Pressable
-              key={tab.id}
-              onPress={() => navigation.navigate(tab.id)}
-              style={[styles.tab, active && styles.tabActive]}
-            >
-              {active && (
-                <View style={styles.tabSparkle}>
-                  <Sparkle size={8} color={colors.butter} />
-                </View>
-              )}
-              <Text style={[styles.tabLabel, { color: active ? colors.vellum : colors.ink2 }]}>
-                {tab.label}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
-    </ScrollView>
+    <View style={styles.barWrap}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.tabBarContent}
+        style={styles.tabBar}
+      >
+        <View style={styles.pill}>
+          {FO_TABS.map((tab, i) => {
+            const active = state.index === i;
+            return (
+              <Pressable
+                key={tab.id}
+                onPress={() => navigation.navigate(tab.id)}
+                style={[styles.tab, active && styles.tabActive]}
+              >
+                {active && (
+                  <View style={styles.tabSparkle}>
+                    <Sparkle size={8} color={colors.butter} />
+                  </View>
+                )}
+                <Text style={[styles.tabLabel, { color: active ? colors.vellum : colors.ink2 }]}>
+                  {tab.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  tabBar: {
+  barWrap: {
     backgroundColor: colors.paper,
     borderBottomWidth: 1, borderBottomColor: colors.line,
+  },
+  tabBar: {
+    backgroundColor: 'transparent',
   },
   tabBarContent: { padding: spacing.s1, paddingHorizontal: spacing.s3 },
   pill: {

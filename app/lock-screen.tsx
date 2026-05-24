@@ -24,9 +24,8 @@ const styles = StyleSheet.create({
     gap: spacing.s4,
   },
   title: {
-    fontFamily: 'serif',
+    fontFamily: 'Fredoka',
     fontSize: fontSize.h2,
-    fontStyle: 'italic',
     color: colors.ink,
     letterSpacing: -1,
   },

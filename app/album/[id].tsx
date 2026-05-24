@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import {
-  View, Text, Pressable, ScrollView, Image,
-  StyleSheet, SafeAreaView, FlatList,
-} from 'react-native';
+import { View, Text, Pressable, ScrollView, Image,
+  StyleSheet, FlatList } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { colors, radii, spacing, shadows } from '@/tokens/theme';
 import { WashiTape, Sparkle, Heart, Seal, Sakura } from '@/deco';
@@ -180,7 +179,7 @@ const styles = StyleSheet.create({
   sticker: { position: 'absolute' },
   caption: {
     marginTop: 8, textAlign: 'center',
-    fontFamily: 'Caveat',
+    fontFamily: 'InstrumentSerif_Italic',
     fontSize: 17, color: colors.ink,
   },
 
