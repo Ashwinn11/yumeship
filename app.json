@@ -1,0 +1,81 @@
+{
+  "expo": {
+    "name": "YumeShip",
+    "slug": "yumeship",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "platforms": [
+      "ios"
+    ],
+    "scheme": "yumeship",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "bundleIdentifier": "com.yumeship.app",
+      "supportsTablet": false,
+      "buildNumber": "1"
+    },
+    "runtimeVersion": {
+      "policy": "fingerprint"
+    },
+    "updates": {
+      "enabled": true,
+      "checkOnLaunch": "ALWAYS",
+      "url": "https://u.expo.dev/REPLACE_WITH_PROJECT_ID"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-sqlite",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "YumeShip uses Face ID to keep your ships private."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "sounds": []
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "YumeShip accesses your photos to add images to your ships."
+        }
+      ],
+      [
+        "expo-widgets",
+        {
+          "bundleIdentifier": "com.yumeship.app.widgets",
+          "groupIdentifier": "group.com.yumeship.app",
+          "widgets": [
+            {
+              "name": "AnniversaryWidget",
+              "displayName": "Anniversary Countdown",
+              "description": "Counts down to your next ship anniversary.",
+              "supportedFamilies": [
+                "accessoryCircular",
+                "accessoryRectangular",
+                "systemSmall"
+              ]
+            },
+            {
+              "name": "HeadcanonWidget",
+              "displayName": "Daily Headcanon",
+              "description": "Shows a daily headcanon from your F/O.",
+              "supportedFamilies": [
+                "systemSmall",
+                "systemMedium",
+                "accessoryRectangular"
+              ]
+            }
+          ]
+        }
+      ],
+      "expo-status-bar"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

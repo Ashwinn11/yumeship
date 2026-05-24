@@ -1,0 +1,18 @@
+[
+  { "id": "heart-1",    "name": "pink heart",       "file": "heart-pink.png",    "category": "hearts" },
+  { "id": "heart-2",    "name": "plum heart",        "file": "heart-plum.png",    "category": "hearts" },
+  { "id": "star-1",     "name": "sparkle star",      "file": "star-sparkle.png",  "category": "sparkles" },
+  { "id": "star-2",     "name": "four-point star",   "file": "star-four.png",     "category": "sparkles" },
+  { "id": "washi-1",    "name": "washi roll",        "file": "washi-roll.png",    "category": "stationery" },
+  { "id": "bow-1",      "name": "ribbon bow",        "file": "bow-pink.png",      "category": "stationery" },
+  { "id": "seal-1",     "name": "wax seal",          "file": "seal-sakura.png",   "category": "stationery" },
+  { "id": "seal-2",     "name": "wax seal plum",     "file": "seal-plum.png",     "category": "stationery" },
+  { "id": "sakura-1",   "name": "sakura blossom",    "file": "sakura.png",        "category": "florals" },
+  { "id": "rose-1",     "name": "rose",              "file": "rose.png",          "category": "florals" },
+  { "id": "letter-1",   "name": "love letter",       "file": "letter.png",        "category": "objects" },
+  { "id": "ribbon-1",   "name": "pink ribbon",       "file": "ribbon.png",        "category": "stationery" },
+  { "id": "stamp-1",    "name": "mail stamp",        "file": "stamp.png",         "category": "stationery" },
+  { "id": "crown-1",    "name": "crown",             "file": "crown.png",         "category": "objects" },
+  { "id": "moon-1",     "name": "crescent moon",     "file": "moon.png",          "category": "celestial" },
+  { "id": "comet-1",    "name": "comet",             "file": "comet.png",         "category": "celestial" }
+]
