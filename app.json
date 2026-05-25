@@ -1,105 +1,36 @@
 {
   "expo": {
-    "name": "YumeShip",
+    "name": "yumeship",
     "slug": "yumeship",
     "version": "1.0.0",
     "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "yumeship",
+    "userInterfaceStyle": "automatic",
     "platforms": [
       "ios"
     ],
-    "scheme": "yumeship",
-    "userInterfaceStyle": "automatic",
     "ios": {
+      "icon": "./assets/expo.icon",
       "bundleIdentifier": "com.yumeship.app",
-      "supportsTablet": false,
-      "buildNumber": "1"
+      "supportsTablet": false
     },
-    "runtimeVersion": {
-      "policy": "fingerprint"
-    },
-    "updates": {
-      "enabled": true,
-      "checkOnLaunch": "ALWAYS",
-      "url": "https://u.expo.dev/f579f23c-2b74-4e06-a3c6-0fb9e3dfb024"
+    "web": {
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
       "expo-router",
-      "expo-sqlite",
       [
-        "expo-local-authentication",
+        "expo-splash-screen",
         {
-          "faceIDPermission": "YumeShip uses Face ID to keep your ships private."
+          "backgroundColor": "#208AEF"
         }
-      ],
-      [
-        "expo-notifications",
-        {
-          "sounds": []
-        }
-      ],
-      [
-        "expo-image-picker",
-        {
-          "photosPermission": "YumeShip accesses your photos to add images to your ships."
-        }
-      ],
-      [
-        "expo-widgets",
-        {
-          "bundleIdentifier": "com.yumeship.app.widgets",
-          "groupIdentifier": "group.com.yumeship.app",
-          "widgets": [
-            {
-              "name": "AnniversaryWidget",
-              "displayName": "Anniversary Countdown",
-              "description": "Counts down to your next ship anniversary.",
-              "supportedFamilies": [
-                "accessoryCircular",
-                "accessoryRectangular",
-                "systemSmall"
-              ]
-            },
-            {
-              "name": "HeadcanonWidget",
-              "displayName": "Daily Headcanon",
-              "description": "Shows a daily headcanon from your F/O.",
-              "supportedFamilies": [
-                "systemSmall",
-                "systemMedium",
-                "accessoryRectangular"
-              ]
-            }
-          ]
-        }
-      ],
-      "expo-status-bar"
+      ]
     ],
     "experiments": {
-      "typedRoutes": true
-    },
-    "extra": {
-      "router": {},
-      "eas": {
-        "build": {
-          "experimental": {
-            "ios": {
-              "appExtensions": [
-                {
-                  "targetName": "ExpoWidgetsTarget",
-                  "bundleIdentifier": "com.yumeship.app.widgets",
-                  "entitlements": {
-                    "com.apple.security.application-groups": [
-                      "group.com.yumeship.app"
-                    ]
-                  }
-                }
-              ]
-            }
-          }
-        },
-        "projectId": "f579f23c-2b74-4e06-a3c6-0fb9e3dfb024"
-      }
-    },
-    "owner": "yumeship"
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
   }
 }
