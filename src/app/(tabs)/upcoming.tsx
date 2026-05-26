@@ -1,11 +1,14 @@
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable, StyleSheet, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useState } from 'react';
 
 import { Mark } from '@/components/ui/Mark';
 import { IconBell } from '@/components/ui/Icon';
 import { Sakura } from '@/components/deco/Sakura';
 import { Sparkle } from '@/components/deco/Sparkle';
-import { Colors, FontFamily, FontSize, Radius, Spacing } from '@/constants/theme';
+import { Colors, FontFamily, FontSize, Radius, Spacing, RelationshipColors } from '@/constants/theme';
+import { useAllUpcomingDates, daysUntil } from '@/store/dates';
+import { MiniUpcoming } from '@/components/cards/MiniUpcoming';
 
 type FilterKey = 'next30' | 'allUpcoming' | 'allTime';
 
@@ -15,11 +18,23 @@ const FILTER_LABELS: { key: FilterKey; label: string }[] = [
   { key: 'allTime', label: 'all time' },
 ];
 
-import { useState } from 'react';
-
 export default function UpcomingScreen() {
   const insets = useSafeAreaInsets();
   const [filter, setFilter] = useState<FilterKey>('next30');
+  const allDates = useAllUpcomingDates();
+
+  const filteredDates = allDates.filter((d) => {
+    const days = daysUntil(d.date, d.yearly);
+    if (days === null) return false;
+    
+    if (filter === 'next30') {
+      return days >= 0 && days <= 30;
+    }
+    if (filter === 'allUpcoming') {
+      return days >= 0;
+    }
+    return true;
+  });
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]}>
@@ -55,16 +70,40 @@ export default function UpcomingScreen() {
         </View>
       </View>
 
-      {/* Empty state */}
-      <View style={styles.emptyState}>
-        <View style={styles.emptyDeco}>
-          <Sparkle size={10} color={Colors.sakura} />
-          <Sakura size={28} color={Colors.sakuraSoft} />
-          <Sparkle size={7} color={Colors.lavender} />
+      {/* List or Empty state */}
+      {filteredDates.length === 0 ? (
+        <View style={styles.emptyState}>
+          <View style={styles.emptyDeco}>
+            <Sparkle size={10} color={Colors.sakura} />
+            <Sakura size={28} color={Colors.sakuraSoft} />
+            <Sparkle size={7} color={Colors.lavender} />
+          </View>
+          <Text style={styles.emptyTitle}>nothing coming up</Text>
+          <Text style={styles.emptySub}>add dates to your ships to see them here</Text>
         </View>
-        <Text style={styles.emptyTitle}>nothing coming up</Text>
-        <Text style={styles.emptySub}>add dates to your ships to see them here</Text>
-      </View>
+      ) : (
+        <ScrollView contentContainerStyle={styles.listContainer} showsVerticalScrollIndicator={false}>
+          {filteredDates.map((d) => {
+            const days = daysUntil(d.date, d.yearly) ?? 0;
+            const tint = RelationshipColors[d.relType as keyof typeof RelationshipColors] || Colors.sakuraDeep;
+            
+            const featured = d.title === 'Our Anniversary' || days <= 7;
+            const muted = days > 60 && d.title !== 'Our Anniversary';
+
+            return (
+              <MiniUpcoming
+                key={d.id}
+                days={days}
+                title={d.title}
+                fo={d.shipName}
+                tint={tint}
+                featured={featured}
+                muted={muted}
+              />
+            );
+          })}
+        </ScrollView>
+      )}
     </View>
   );
 }
@@ -135,6 +174,12 @@ const styles = StyleSheet.create({
   filterTextActive: {
     color: Colors.vellum,
     fontWeight: '600',
+  },
+  listContainer: {
+    paddingHorizontal: Spacing.s5,
+    paddingTop: Spacing.s3,
+    paddingBottom: Spacing.s8,
+    gap: 10,
   },
   emptyState: {
     flex: 1,

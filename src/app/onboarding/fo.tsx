@@ -24,7 +24,7 @@ export default function OnbFO() {
   return (
     <View style={[styles.screen, { paddingTop: insets.top + Spacing.s1, paddingBottom: insets.bottom + Spacing.s1 }]}>
       <View style={styles.dotsRow}>
-        <StepDots step={2} />
+        <StepDots step={1} total={3} />
       </View>
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>

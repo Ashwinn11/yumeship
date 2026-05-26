@@ -2,12 +2,15 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { initDb } from '@/db/init';
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  useMemo(() => { initDb(); }, []);
+
   const [loaded] = useFonts({
     'InstrumentSerif-Italic': require('../../assets/fonts/InstrumentSerif-Italic.ttf'),
     'KleeOne-Regular': require('../../assets/fonts/KleeOne-Regular.ttf'),
@@ -30,7 +33,7 @@ export default function RootLayout() {
         <Stack.Screen name="index" />
         <Stack.Screen name="onboarding" />
         <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="ship" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="ship/[id]" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="messages" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="template" options={{ animation: 'slide_from_right' }} />
       </Stack>

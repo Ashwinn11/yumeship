@@ -96,30 +96,16 @@ export function HeadcanonsContent({ editing = false }: { editing?: boolean }) {
                       <TextInput
                         value={item}
                         onChangeText={setItem(ci, idx)}
-                        placeholder=""
+                        placeholder="headcanon..."
+                        placeholderTextColor={INK + '88'}
                         underlineColorAndroid="transparent"
-                        style={[
-                          { fontFamily: FontFamily.ja, fontSize: 11, color: INK, padding: 0, minHeight: 18 },
-                          !item && {
-                            height: 14,
-                            backgroundColor: '#e9d8cb',
-                            borderWidth: 1.5,
-                            borderColor: INK,
-                            borderRadius: 999,
-                          }
-                        ]}
+                        style={{ fontFamily: FontFamily.ja, fontSize: 11, color: INK, padding: 0, minHeight: 18, fontWeight: '600' }}
                       />
                     ) : (
                       item ? (
-                        <Text style={{ fontFamily: FontFamily.ja, fontSize: 11, color: INK }}>{item}</Text>
+                        <Text style={{ fontFamily: FontFamily.ja, fontSize: 11, color: INK, fontWeight: '600' }}>{item}</Text>
                       ) : (
-                        <View style={{
-                          height: 14,
-                          backgroundColor: '#e9d8cb',
-                          borderWidth: 1.5,
-                          borderColor: INK,
-                          borderRadius: 999,
-                        }} />
+                        <Text style={{ fontFamily: FontFamily.ja, fontSize: 11, color: INK + '44' }}>——</Text>
                       )
                     )}
                   </View>

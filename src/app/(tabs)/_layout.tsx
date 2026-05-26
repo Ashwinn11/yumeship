@@ -5,17 +5,17 @@ import { View } from 'react-native';
 import { RootTabBar, type RootTab } from '@/components/nav/RootTabBar';
 
 const ROUTE_TO_TAB: Record<string, RootTab> = {
-  index:     'home',
-  templates: 'templates',
-  upcoming:  'upcoming',
-  settings:  'settings',
+  index:    'home',
+  vault:    'vault',
+  upcoming: 'upcoming',
+  settings: 'settings',
 };
 
 const TAB_TO_ROUTE: Record<RootTab, string> = {
-  home:      'index',
-  templates: 'templates',
-  upcoming:  'upcoming',
-  settings:  'settings',
+  home:     'index',
+  vault:    'vault',
+  upcoming: 'upcoming',
+  settings: 'settings',
 };
 
 type TabBarProps = {
@@ -45,7 +45,7 @@ export default function TabsLayout() {
       tabBar={(props) => <CustomTabBar state={props.state} navigation={props.navigation} />}
     >
       <Tabs.Screen name="index" />
-      <Tabs.Screen name="templates" />
+      <Tabs.Screen name="vault" />
       <Tabs.Screen name="upcoming" />
       <Tabs.Screen name="settings" />
     </Tabs>

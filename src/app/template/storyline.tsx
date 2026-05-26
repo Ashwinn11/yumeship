@@ -9,6 +9,7 @@ import {
 import { Heart } from '@/components/deco/Heart';
 import { FontFamily } from '@/constants/theme';
 import { useTemplateCtx } from '@/store/templateData';
+import { DateField } from '@/components/ui/DateField';
 
 type EventEntry = { d: string; t: string; body: string };
 const BLANK_EVENTS: EventEntry[] = Array.from({ length: 5 }, () => ({ d: '', t: '', body: '' }));
@@ -50,11 +51,28 @@ export function StorylineContent({ editing = false }: { editing?: boolean }) {
               <View style={s.eventContent}>
                 <View style={s.eventHeader}>
                   <View style={s.dateBadge}>
-                    <BlankPill
-                      width={54}
+                    <DateField
                       value={ev.d}
-                      onChangeText={setField(i, 'd')}
+                      onChange={setField(i, 'd') || (() => {})}
+                      editing={e}
                       placeholder="date"
+                      style={{
+                        backgroundColor: 'transparent',
+                        borderWidth: 0,
+                        height: 'auto',
+                        paddingHorizontal: 0,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        minWidth: 54,
+                      }}
+                      textStyle={{
+                        fontFamily: FontFamily.markerBold,
+                        fontSize: 10,
+                        color: INK,
+                        textAlign: 'center',
+                        fontWeight: '600',
+                      }}
+                      displayValue={ev.d || undefined}
                     />
                   </View>
                   <View style={{ flex: 1 }}>
@@ -107,7 +125,7 @@ const s = StyleSheet.create({
   event: { position: 'relative', marginBottom: 18 },
   dot: {
     position: 'absolute',
-    left: -23,
+    left: -26,
     top: 4,
     width: 14,
     height: 14,

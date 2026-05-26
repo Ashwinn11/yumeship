@@ -26,8 +26,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     paddingVertical: 6,
     paddingHorizontal: 0,
-    fontSize: FontSize.h6,
-    fontFamily: FontFamily.displayItalic,
+    fontSize: FontSize.h6 - 2,
+    fontFamily: FontFamily.ui,
     color: Colors.ink,
   },
 });

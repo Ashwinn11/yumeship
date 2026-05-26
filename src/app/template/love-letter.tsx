@@ -17,7 +17,7 @@ export function LoveLetterContent({ editing = false }: { editing?: boolean }) {
   const [vals, setVals] = useState<{ dearName: string; letterBody: string; signName: string; things: string[] }>(() => ({
     dearName: ctx.get('dearName'),
     letterBody: ctx.get('letterBody'),
-    signName: ctx.get('signName'),
+    signName: ctx.get('signName') || ctx.get('meName') || ctx.get('name') || '',
     things: JSON.parse(ctx.get('things', 'null')) ?? [...BLANK_THINGS],
   }));
 
@@ -83,11 +83,30 @@ export function LoveLetterContent({ editing = false }: { editing?: boolean }) {
 
         <Text style={s.signoff}>yours, always —</Text>
         <View style={s.signName}>
-          <BlankPill
-            value={signName}
-            onChangeText={e ? set('signName') : undefined}
-            width={120}
-          />
+          {e ? (
+                   <TextInput
+                     value={signName}
+                     onChangeText={set('signName')}
+                     placeholder="your name..."
+                     placeholderTextColor={INK + '88'}
+                     underlineColorAndroid="transparent"
+                     style={{
+                       fontFamily: FontFamily.ui,
+                       fontSize: 15,
+                       color: INK,
+                       padding: 0,
+                       minWidth: 120,
+                     }}
+                   />
+                 ) : (
+                   <Text style={{
+                     fontFamily: FontFamily.ui,
+                     fontSize: 15,
+                     color: INK,
+                   }}>
+                     {signName || '——'}
+                   </Text>
+                 )}
         </View>
       </View>
 
@@ -201,8 +220,8 @@ const s = StyleSheet.create({
     fontWeight: '600',
   },
   signoff: {
-    fontFamily: FontFamily.script,
-    fontSize: 16,
+    fontFamily: FontFamily.ui,
+    fontSize: 13,
     color: INK,
     marginTop: 12,
   },

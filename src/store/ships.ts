@@ -1,50 +1,198 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { getDb } from '@/db/client';
+import { notifyDates } from './dates';
 
 export type Ship = {
   id: string;
+  name: string;
+  fandom: string;
+  relType: 'romantic' | 'platonic' | 'familial';
+  shareType: string;
+  nickname: string;
+  coverUri: string;
+  aboutText: string;
+  gradStart: string;
+  gradEnd: string;
+  tapePattern: string;
+  tapeColor: string;
+  pinned: boolean;
+  startDate: string;
   templateKey: string;
-  foName: string;
-  data: Record<string, string>;
   createdAt: number;
 };
 
-let ships: Ship[] = [];
 const listeners = new Set<() => void>();
-
 function notify() { listeners.forEach((fn) => fn()); }
 
-export function addShip(d: { templateKey: string; foName: string; data?: Record<string, string> }): string {
+function rowToShip(row: Record<string, unknown>): Ship {
+  return {
+    id: row.id as string,
+    name: row.name as string,
+    fandom: row.fandom as string,
+    relType: (row.rel_type as Ship['relType']) ?? 'romantic',
+    shareType: row.share_type as string,
+    nickname: row.nickname as string,
+    coverUri: row.cover_uri as string,
+    aboutText: row.about_text as string,
+    gradStart: row.grad_start as string,
+    gradEnd: row.grad_end as string,
+    tapePattern: row.tape_pattern as string,
+    tapeColor: row.tape_color as string,
+    pinned: !!(row.pinned as number),
+    startDate: row.start_date as string,
+    templateKey: (row.template_key as string) ?? 'get-to-know',
+    createdAt: row.created_at as number,
+  };
+}
+
+export function getAllShips(): Ship[] {
+  return (getDb().getAllSync('SELECT * FROM ships ORDER BY pinned DESC, created_at DESC') as Record<string, unknown>[])
+    .map(rowToShip);
+}
+
+export function getShip(id: string): Ship | undefined {
+  const row = getDb().getFirstSync('SELECT * FROM ships WHERE id = ?', id) as Record<string, unknown> | null;
+  return row ? rowToShip(row) : undefined;
+}
+
+export function addShip(d: {
+  name: string;
+  fandom?: string;
+  relType?: string;
+  shareType?: string;
+  nickname?: string;
+  gradStart?: string;
+  gradEnd?: string;
+  tapePattern?: string;
+  tapeColor?: string;
+  templateKey?: string;
+}): string {
   const id = String(Date.now());
-  ships = [{ ...d, data: d.data ?? {}, id, createdAt: Date.now() }, ...ships];
+  getDb().runSync(
+    `INSERT INTO ships (id, name, fandom, rel_type, share_type, nickname, grad_start, grad_end, tape_pattern, tape_color, template_key, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    id,
+    d.name,
+    d.fandom ?? '',
+    d.relType ?? 'romantic',
+    d.shareType ?? '',
+    d.nickname ?? '',
+    d.gradStart ?? '#f3b6c4',
+    d.gradEnd ?? '#d77a8d',
+    d.tapePattern ?? 'heart',
+    d.tapeColor ?? 'rgba(255,255,255,0.9)',
+    d.templateKey ?? 'get-to-know',
+    Date.now(),
+  );
   notify();
   return id;
 }
 
-export function updateShip(id: string, d: { foName?: string; data?: Record<string, string> }) {
-  ships = ships.map((s) => (s.id === id ? { ...s, ...d } : s));
+export function updateShip(id: string, d: Partial<Omit<Ship, 'id' | 'createdAt'>>) {
+  const fields: string[] = [];
+  const values: unknown[] = [];
+
+  if (d.name !== undefined)        { fields.push('name = ?');         values.push(d.name); }
+  if (d.fandom !== undefined)      { fields.push('fandom = ?');        values.push(d.fandom); }
+  if (d.relType !== undefined)     { fields.push('rel_type = ?');      values.push(d.relType); }
+  if (d.shareType !== undefined)   { fields.push('share_type = ?');    values.push(d.shareType); }
+  if (d.nickname !== undefined)    { fields.push('nickname = ?');      values.push(d.nickname); }
+  if (d.coverUri !== undefined)    { fields.push('cover_uri = ?');     values.push(d.coverUri); }
+  if (d.aboutText !== undefined)   { fields.push('about_text = ?');    values.push(d.aboutText); }
+  if (d.gradStart !== undefined)   { fields.push('grad_start = ?');    values.push(d.gradStart); }
+  if (d.gradEnd !== undefined)     { fields.push('grad_end = ?');      values.push(d.gradEnd); }
+  if (d.tapePattern !== undefined) { fields.push('tape_pattern = ?');  values.push(d.tapePattern); }
+  if (d.tapeColor !== undefined)   { fields.push('tape_color = ?');    values.push(d.tapeColor); }
+  if (d.pinned !== undefined)      { fields.push('pinned = ?');        values.push(d.pinned ? 1 : 0); }
+  if (d.startDate !== undefined)    { fields.push('start_date = ?');     values.push(d.startDate); }
+  if (d.templateKey !== undefined)  { fields.push('template_key = ?');   values.push(d.templateKey); }
+
+  if (!fields.length) return;
+  getDb().runSync(
+    `UPDATE ships SET ${fields.join(', ')} WHERE id = ?`,
+    ...([...values, id] as import('expo-sqlite').SQLiteBindValue[]),
+  );
   notify();
+  if (d.startDate !== undefined) {
+    notifyDates();
+  }
 }
 
 export function deleteShip(id: string) {
-  ships = ships.filter((s) => s.id !== id);
+  getDb().runSync('DELETE FROM ships WHERE id = ?', id);
+  getDb().runSync('DELETE FROM headcanons WHERE ship_id = ?', id);
+  getDb().runSync('DELETE FROM scenarios WHERE ship_id = ?', id);
+  getDb().runSync('DELETE FROM dates WHERE ship_id = ?', id);
+  getDb().runSync('DELETE FROM message_threads WHERE ship_id = ?', id);
+  getDb().runSync('DELETE FROM messages WHERE thread_id NOT IN (SELECT id FROM message_threads)', []);
+  getDb().runSync('DELETE FROM albums WHERE ship_id = ?', id);
+  getDb().runSync('DELETE FROM album_photos WHERE album_id NOT IN (SELECT id FROM albums)', []);
+  getDb().runSync('DELETE FROM outfits WHERE ship_id = ?', id);
+  getDb().runSync('DELETE FROM storyline_events WHERE ship_id = ?', id);
+  getDb().runSync('DELETE FROM fo_messages WHERE ship_id = ?', id);
+  getDb().runSync('DELETE FROM template_data WHERE ship_id = ?', id);
   notify();
 }
 
-export function getShip(id: string): Ship | undefined {
-  return ships.find((s) => s.id === id);
+export function deleteAllData() {
+  const db = getDb();
+  db.execSync(`
+    DELETE FROM ships;
+    DELETE FROM headcanons;
+    DELETE FROM scenarios;
+    DELETE FROM dates;
+    DELETE FROM message_threads;
+    DELETE FROM messages;
+    DELETE FROM albums;
+    DELETE FROM album_photos;
+    DELETE FROM outfits;
+    DELETE FROM storyline_events;
+    DELETE FROM fo_messages;
+    DELETE FROM template_data;
+  `);
+  notify();
 }
 
 export function useShips(): Ship[] {
-  const [, rerender] = useState(0);
+  const [ships, setShips] = useState<Ship[]>(() => getAllShips());
   useEffect(() => {
-    const fn = () => rerender((n) => n + 1);
+    const fn = () => setShips(getAllShips());
     listeners.add(fn);
     return () => { listeners.delete(fn); };
   }, []);
   return ships;
 }
 
+export function useShip(id: string | undefined): Ship | undefined {
+  const [ship, setShip] = useState<Ship | undefined>(() => id ? getShip(id) : undefined);
+  useEffect(() => {
+    const fn = () => setShip(id ? getShip(id) : undefined);
+    listeners.add(fn);
+    return () => { listeners.delete(fn); };
+  }, [id]);
+  return ship;
+}
+
+export function daysTogetherLabel(startDate: string): string {
+  if (!startDate) return '';
+  const start = new Date(startDate).getTime();
+  if (isNaN(start)) return '';
+  const days = Math.floor((Date.now() - start) / 86_400_000);
+  if (days < 0) return '';
+  if (days === 0) return 'today ♡';
+  if (days < 365) return `${days}d`;
+  const years = Math.floor(days / 365);
+  const rem = days % 365;
+  return rem === 0 ? `${years}y` : `${years}y ${rem}d`;
+}
+
 export function daysAgo(createdAt: number): string {
   const d = Math.floor((Date.now() - createdAt) / 86_400_000);
   return d === 0 ? 'today' : `${d}d`;
 }
+
+export const REL_GRADS: Record<string, [string, string]> = {
+  romantic: ['#f3b6c4', '#d77a8d'],
+  platonic: ['#b4c8a5', '#6e8762'],
+  familial: ['#f4b89a', '#b76b48'],
+};

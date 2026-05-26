@@ -36,7 +36,7 @@ export default function OnbPersona() {
   return (
     <View style={[styles.screen, { paddingTop: insets.top + Spacing.s1, paddingBottom: insets.bottom + Spacing.s1 }]}>
       <View style={styles.dotsRow}>
-        <StepDots step={1} />
+        <StepDots step={0} total={3} />
       </View>
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>

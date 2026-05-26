@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Heart } from '@/components/deco/Heart';
@@ -9,6 +9,7 @@ import { IconBell, IconLock } from '@/components/ui/Icon';
 import { Mark } from '@/components/ui/Mark';
 import { Toggle } from '@/components/ui/Toggle';
 import { Colors, FontFamily, FontSize, Radius, Spacing } from '@/constants/theme';
+import { deleteAllData } from '@/store/ships';
 
 // ─── Shared sub-components ────────────────────────────────────────────────────
 
@@ -180,9 +181,20 @@ export default function SettingsScreen() {
         <SettingGroup ja="蔵" name="Data">
           <SettingRow label="Storage" trailing={<MetaText>0 MB</MetaText>} />
           <SettingRow
-            label="Delete all"
+            label="Delete all data"
             destructive
-            onPress={() => router.replace('/onboarding')}
+            onPress={() => Alert.alert(
+              'Delete everything?',
+              'This removes all ships, headcanons, scenarios, messages, albums, and more. Cannot be undone.',
+              [
+                {
+                  text: 'Delete everything',
+                  style: 'destructive',
+                  onPress: () => { deleteAllData(); router.replace('/onboarding'); },
+                },
+                { text: 'Cancel', style: 'cancel' },
+              ],
+            )}
           />
         </SettingGroup>
       </ScrollView>

@@ -2,7 +2,7 @@ import { Pin } from '@/components/deco/Pin';
 import { WashiTape } from '@/components/deco/WashiTape';
 import { GradientCover } from '@/components/ui/GradientCover';
 import { Colors, FontFamily, FontSize, Radius, Shadow } from '@/constants/theme';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View, ViewStyle } from 'react-native';
 
 // design/screens.jsx — ShipCard
 // F/O card: 3/4 aspect, gradient cover, washi tape, optional pin + polycule badge.
@@ -22,6 +22,8 @@ type Props = {
   tapePattern?: TapePattern;
   tapeColor?: string;
   onPress?: () => void;
+  onLongPress?: () => void;
+  style?: ViewStyle;
 };
 
 const TYPE_COLORS: Record<string, string> = {
@@ -43,11 +45,13 @@ export function ShipCard({
   tapePattern = 'heart',
   tapeColor = Colors.vellum,
   onPress,
+  onLongPress,
+  style,
 }: Props) {
   const typeColor = TYPE_COLORS[type];
 
   return (
-    <Pressable onPress={onPress} style={styles.card}>
+    <Pressable onPress={onPress} onLongPress={onLongPress} style={[styles.card, style]}>
       <GradientCover gradStart={gradStart} gradEnd={gradEnd} style={styles.cover}>
         <Text style={styles.initial}>{initial}</Text>
 

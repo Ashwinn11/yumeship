@@ -5,13 +5,13 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 // design/screens.jsx — RootTabBar + ROOT_TABS
 // 4-tab pill nav. Active tab = sakura-deep pill + sparkle badge.
 
-export type RootTab = 'home' | 'templates' | 'upcoming' | 'settings';
+export type RootTab = 'home' | 'vault' | 'upcoming' | 'settings';
 
 const TABS: { id: RootTab; ja: string; label: string }[] = [
-  { id: 'home',      ja: '船', label: 'Home' },
-  { id: 'templates', ja: '型', label: 'Templates' },
-  { id: 'upcoming',  ja: '次', label: 'Upcoming' },
-  { id: 'settings',  ja: '設', label: 'Settings' },
+  { id: 'home',     ja: '船', label: 'Home' },
+  { id: 'vault',    ja: '蔵', label: 'Vault' },
+  { id: 'upcoming', ja: '次', label: 'Upcoming' },
+  { id: 'settings', ja: '設', label: 'Settings' },
 ];
 
 type Props = {

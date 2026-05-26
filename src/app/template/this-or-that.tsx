@@ -136,5 +136,5 @@ const s = StyleSheet.create({
     backgroundColor: '#fff',
     borderStyle: 'dashed',
   },
-  noteText: { fontFamily: FontFamily.script, fontSize: 13, color: INK },
+  noteText: { fontFamily: FontFamily.ui, fontSize: 11, color: INK },
 });

@@ -55,15 +55,15 @@ export function AestheticContent({ editing = false }: { editing?: boolean }) {
               placeholderTextColor={INK + '88'}
               underlineColorAndroid="transparent"
               style={{
-                fontFamily: FontFamily.script,
-                fontSize: 16,
+                fontFamily: FontFamily.ui,
+                fontSize: 14,
                 color: INK,
                 marginBottom: 6,
                 padding: 0,
               }}
             />
           ) : (
-            song ? <Text style={{ fontFamily: FontFamily.script, fontSize: 16, color: INK, marginBottom: 6 }}>{song}</Text> : null
+            song ? <Text style={{ fontFamily: FontFamily.ui, fontSize: 14, color: INK, marginBottom: 6 }}>{song}</Text> : null
           )}
           <MusicPlayer />
         </View>
@@ -117,5 +117,5 @@ const s = StyleSheet.create({
   paletteRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
   swatch: { width: 26, height: 26, borderWidth: 1.5, borderColor: INK, borderRadius: 4 },
   footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 14 },
-  paletteLabel: { marginLeft: 8, fontFamily: FontFamily.script, fontSize: 13, color: INK },
+  paletteLabel: { marginLeft: 8, fontFamily: FontFamily.ui, fontSize: 11, color: INK },
 });

@@ -3,27 +3,67 @@ export type OnbState = {
   pronouns: string;
   foName: string;
   fandom: string;
+  nickname: string;
   relType: string;
   shareType: string;
 };
 
+import { getDb } from '@/db/client';
+
+export function saveGlobalSetting(key: string, val: string) {
+  try {
+    getDb().runSync(
+      'INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value',
+      key, val
+    );
+  } catch (err) {
+    console.error('Error saving global setting:', err);
+  }
+}
+
+export function getGlobalSetting(key: string, fallback = ''): string {
+  try {
+    const row = getDb().getFirstSync('SELECT value FROM settings WHERE key = ?', key) as { value: string } | null;
+    return row ? row.value : fallback;
+  } catch (_) {
+    return fallback;
+  }
+}
+
 let state: OnbState = {
-  userName: '',
+  userName: getGlobalSetting('user_name'),
   pronouns: 'she/her',
   foName: '',
   fandom: '',
+  nickname: '',
   relType: 'romantic',
   shareType: 'mirror',
 };
 
-export function getOnbState(): OnbState { return state; }
+export function getOnbState(): OnbState {
+  if (!state.userName) {
+    state.userName = getGlobalSetting('user_name');
+  }
+  return state;
+}
 
 export function setOnbField<K extends keyof OnbState>(key: K, value: OnbState[K]) {
   state = { ...state, [key]: value };
+  if (key === 'userName') {
+    saveGlobalSetting('user_name', value as string);
+  }
 }
 
 export function resetOnb() {
-  state = { userName: '', pronouns: 'she/her', foName: '', fandom: '', relType: 'romantic', shareType: 'mirror' };
+  state = {
+    userName: getGlobalSetting('user_name'),
+    pronouns: 'she/her',
+    foName: '',
+    fandom: '',
+    nickname: '',
+    relType: 'romantic',
+    shareType: 'mirror',
+  };
 }
 
 export function buildInitialData(templateKey: string, s: OnbState): Record<string, string> {
@@ -47,6 +87,7 @@ export function buildInitialData(templateKey: string, s: OnbState): Record<strin
       break;
     case 'love-letter':
       if (s.foName) d.dearName = s.foName;
+      if (s.userName) d.signName = s.userName;
       break;
     case 'headcanons':
       if (s.foName)  d.fo     = s.foName;
