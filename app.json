@@ -23,7 +23,8 @@
           "backgroundColor": "#fdf3ee"
         }
       ],
-      "expo-widgets"
+      "expo-widgets",
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true,

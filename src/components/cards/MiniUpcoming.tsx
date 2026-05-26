@@ -1,7 +1,7 @@
-import { View, Text, StyleSheet } from 'react-native';
-import { Sparkle } from '@/components/deco/Sparkle';
 import { Heart } from '@/components/deco/Heart';
+import { Sparkle } from '@/components/deco/Sparkle';
 import { Colors, FontFamily, FontSize, Radius } from '@/constants/theme';
+import { StyleSheet, Text, View } from 'react-native';
 
 // design/screens.jsx — MiniUpcoming
 // Upcoming event row: days-until badge + title + F/O name + sparkle accent.
@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   daysLabel: {
-    fontFamily: FontFamily.mono,
+    fontFamily: FontFamily.marker,
     fontSize: 7,
     letterSpacing: 1,
     marginTop: 2,

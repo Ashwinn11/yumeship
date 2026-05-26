@@ -1,5 +1,5 @@
-import { View, Text, StyleSheet } from 'react-native';
 import { Colors, FontFamily, FontSize, Radius } from '@/constants/theme';
+import { StyleSheet, Text, View } from 'react-native';
 
 // design/screens.jsx — MiniHC
 // Small pill chip showing a headcanon category: ja glyph + label + count.
@@ -33,7 +33,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.pill,
   },
   ja: {
-    fontFamily: FontFamily.jaSemiBold,
+    fontFamily: FontFamily.ja,
     fontSize: FontSize.caption,
     fontWeight: '600',
   },
@@ -44,7 +44,7 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.ui,
   },
   count: {
-    fontFamily: FontFamily.mono,
+    fontFamily: FontFamily.marker,
     fontSize: 9,
     fontWeight: '600',
   },

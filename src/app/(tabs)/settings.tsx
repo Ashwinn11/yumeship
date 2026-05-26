@@ -1,13 +1,13 @@
-import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Mark } from '@/components/ui/Mark';
-import { Toggle } from '@/components/ui/Toggle';
-import { SparkleCluster } from '@/components/deco/SparkleCluster';
 import { Heart } from '@/components/deco/Heart';
 import { Sparkle } from '@/components/deco/Sparkle';
-import { IconLock, IconBell } from '@/components/ui/Icon';
+import { SparkleCluster } from '@/components/deco/SparkleCluster';
+import { IconBell, IconLock } from '@/components/ui/Icon';
+import { Mark } from '@/components/ui/Mark';
+import { Toggle } from '@/components/ui/Toggle';
 import { Colors, FontFamily, FontSize, Radius, Spacing } from '@/constants/theme';
 
 // ─── Shared sub-components ────────────────────────────────────────────────────
@@ -37,7 +37,7 @@ const group = StyleSheet.create({
   labelRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   ja: { fontFamily: FontFamily.ja, fontSize: 11, color: Colors.sakuraDeep, fontWeight: '600' },
   name: {
-    fontFamily: FontFamily.mono,
+    fontFamily: FontFamily.marker,
     fontSize: 9,
     color: Colors.ink3,
     letterSpacing: 1.4,
@@ -157,7 +157,7 @@ export default function SettingsScreen() {
           <SettingRow
             label="Face ID lock"
             icon={<IconLock size={12} color={Colors.ink2} />}
-            trailing={<Toggle value={true} onValueChange={() => {}} />}
+            trailing={<Toggle value={true} onValueChange={() => { }} />}
           />
           <SettingRow
             label="Timeout"
@@ -169,11 +169,11 @@ export default function SettingsScreen() {
           <SettingRow
             label="Allow notifications"
             icon={<IconBell size={12} color={Colors.ink2} />}
-            trailing={<Toggle value={true} onValueChange={() => {}} />}
+            trailing={<Toggle value={true} onValueChange={() => { }} />}
           />
           <SettingRow
             label="Discreet preview"
-            trailing={<Toggle value={true} onValueChange={() => {}} />}
+            trailing={<Toggle value={true} onValueChange={() => { }} />}
           />
         </SettingGroup>
 
@@ -206,7 +206,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   version: {
-    fontFamily: FontFamily.mono,
+    fontFamily: FontFamily.marker,
     fontSize: 10,
     color: Colors.ink3,
     letterSpacing: 1.2,
@@ -251,7 +251,7 @@ const styles = StyleSheet.create({
     gap: 5,
   },
   proLabel: {
-    fontFamily: FontFamily.mono,
+    fontFamily: FontFamily.marker,
     fontSize: 9,
     color: Colors.sakuraDeep,
     letterSpacing: 1.4,

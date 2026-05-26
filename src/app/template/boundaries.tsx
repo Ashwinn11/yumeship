@@ -1,10 +1,11 @@
+import { TemplateScreenWrapper } from '@/components/templates/TemplateScreenWrapper';
+import { INK, MarkerCard, ScriptCredit, SquareCheck } from '@/components/templates/primitives';
+import { FontFamily } from '@/constants/theme';
+import { useTemplateCtx } from '@/store/templateData';
+import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
-import { router } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
-import { MarkerCard, ScriptCredit, SquareCheck, INK } from '@/components/templates/primitives';
-import { Colors, FontFamily, Spacing } from '@/constants/theme';
 
 const STATES = [
   {
@@ -27,16 +28,22 @@ const STATES = [
   },
 ];
 
+const DEFAULT_CHECK_STATES = STATES.map((st) => [...st.defaults]);
+
 export function BoundariesContent({ editing = false }: { editing?: boolean }) {
+  const ctx = useTemplateCtx();
+
   const [checkStates, setCheckStates] = useState<boolean[][]>(() =>
-    STATES.map((st) => [...st.defaults])
+    JSON.parse(ctx.get('checkStates', 'null')) ?? DEFAULT_CHECK_STATES
   );
 
   const toggle = (si: number, ci: number) => {
     if (!editing) return;
-    setCheckStates((p) =>
-      p.map((cs, i) => (i === si ? cs.map((c, j) => (j === ci ? !c : c)) : cs))
-    );
+    setCheckStates((p) => {
+      const next = p.map((cs, i) => (i === si ? cs.map((c, j) => (j === ci ? !c : c)) : cs));
+      ctx.set('checkStates', JSON.stringify(next));
+      return next;
+    });
   };
 
   return (
@@ -92,27 +99,15 @@ export function BoundariesContent({ editing = false }: { editing?: boolean }) {
 }
 
 export default function TemplateBoundaries() {
-  const insets = useSafeAreaInsets();
+  const { shipId } = useLocalSearchParams<{ shipId?: string }>();
   return (
-    <View style={[s.screen, { paddingTop: insets.top }]}>
-      <View style={s.appBar}>
-        <Pressable onPress={() => router.back()} style={s.back}>
-          <Text style={s.backText}>‹</Text>
-        </Pressable>
-      </View>
-      <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
-        <BoundariesContent editing />
-      </ScrollView>
-    </View>
+    <TemplateScreenWrapper templateKey="boundaries" shipId={shipId}>
+      <BoundariesContent editing />
+    </TemplateScreenWrapper>
   );
 }
 
 const s = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: Colors.paper },
-  appBar: { paddingHorizontal: Spacing.s5, paddingVertical: Spacing.s2 },
-  back: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
-  backText: { fontSize: 24, color: Colors.ink2, fontFamily: FontFamily.ui },
-  scroll: { padding: Spacing.s5, paddingBottom: Spacing.s8 },
   titleCenter: { alignItems: 'center', marginBottom: 6, gap: 4 },
   titlePill: {
     flexDirection: 'row',
@@ -123,7 +118,7 @@ const s = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 999,
   },
-  titleJa: { fontFamily: FontFamily.jaSemiBold, fontWeight: '600', fontSize: 18, color: '#fff' },
+  titleJa: { fontFamily: FontFamily.ja, fontWeight: '600', fontSize: 18, color: '#fff' },
   titleText: { fontFamily: FontFamily.markerBold, fontWeight: '700', fontSize: 16, color: '#fff', letterSpacing: 0.8, textTransform: 'uppercase' },
   titleSub: { fontFamily: FontFamily.script, fontSize: 14, color: INK },
   states: { marginTop: 14, gap: 10 },
@@ -145,7 +140,7 @@ const s = StyleSheet.create({
     justifyContent: 'center',
     flexShrink: 0,
   },
-  sealJa: { fontFamily: FontFamily.jaSemiBold, fontWeight: '600', fontSize: 22 },
+  sealJa: { fontFamily: FontFamily.ja, fontWeight: '600', fontSize: 22 },
   stateContent: { flex: 1, minWidth: 0 },
   stateTitle: { fontFamily: FontFamily.markerBold, fontWeight: '700', fontSize: 15, letterSpacing: 0.5 },
   stateDesc: { fontFamily: FontFamily.script, fontSize: 13, color: INK, marginTop: 1 },

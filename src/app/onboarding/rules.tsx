@@ -1,14 +1,15 @@
-import { useState } from 'react';
-import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
+import { useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { StepDots } from '@/components/ui/StepDots';
 import { Button } from '@/components/ui/Button';
 import { Field } from '@/components/ui/Field';
-import { PickerOption } from '@/components/ui/PickerOption';
 import { IconLock } from '@/components/ui/Icon';
+import { PickerOption } from '@/components/ui/PickerOption';
+import { StepDots } from '@/components/ui/StepDots';
 import { Colors, FontFamily, FontSize, Radius, Spacing } from '@/constants/theme';
+import { setOnbField } from '@/store/onboarding';
 
 type RelType = 'romantic' | 'platonic' | 'familial';
 type ShareType = 'ng' | 'welcome' | 'mirror';
@@ -17,6 +18,9 @@ export default function OnbRules() {
   const insets = useSafeAreaInsets();
   const [relType, setRelType] = useState<RelType>('romantic');
   const [shareType, setShareType] = useState<ShareType>('mirror');
+
+  const handleRelType = (v: RelType) => { setRelType(v); setOnbField('relType', v); };
+  const handleShareType = (v: ShareType) => { setShareType(v); setOnbField('shareType', v); };
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top + Spacing.s1, paddingBottom: insets.bottom + Spacing.s1 }]}>
@@ -38,7 +42,7 @@ export default function OnbRules() {
                 tint={Colors.sakuraDeep}
                 tintBg={Colors.sakuraSoft}
                 active={relType === 'romantic'}
-                onPress={() => setRelType('romantic')}
+                onPress={() => handleRelType('romantic')}
               />
               <PickerOption
                 ja="友"
@@ -46,7 +50,7 @@ export default function OnbRules() {
                 tint={Colors.sageDeep}
                 tintBg={Colors.sageSoft}
                 active={relType === 'platonic'}
-                onPress={() => setRelType('platonic')}
+                onPress={() => handleRelType('platonic')}
               />
               <PickerOption
                 ja="家"
@@ -54,7 +58,7 @@ export default function OnbRules() {
                 tint={Colors.peachDeep}
                 tintBg={Colors.peachSoft}
                 active={relType === 'familial'}
-                onPress={() => setRelType('familial')}
+                onPress={() => handleRelType('familial')}
               />
             </View>
           </Field>
@@ -70,7 +74,7 @@ export default function OnbRules() {
                 tint={Colors.ember}
                 tintBg="#fde0d4"
                 active={shareType === 'ng'}
-                onPress={() => setShareType('ng')}
+                onPress={() => handleShareType('ng')}
               />
               <PickerOption
                 ja="可"
@@ -78,7 +82,7 @@ export default function OnbRules() {
                 tint={Colors.sageDeep}
                 tintBg={Colors.sageSoft}
                 active={shareType === 'welcome'}
-                onPress={() => setShareType('welcome')}
+                onPress={() => handleShareType('welcome')}
               />
               <PickerOption
                 ja="鏡"
@@ -86,7 +90,7 @@ export default function OnbRules() {
                 tint={Colors.lavenderDeep}
                 tintBg={Colors.lavenderSoft}
                 active={shareType === 'mirror'}
-                onPress={() => setShareType('mirror')}
+                onPress={() => handleShareType('mirror')}
               />
             </View>
           </Field>
@@ -111,11 +115,11 @@ export default function OnbRules() {
           variant="primary"
           size="lg"
           full
-          onPress={() => router.push('/onboarding/scenario')}
+          onPress={() => router.push('/onboarding/template' as any)}
         >
-          continue · the first scene
+          continue · pick a template
         </Button>
-        <Pressable onPress={() => router.push('/onboarding/scenario')} style={styles.skipPressable}>
+        <Pressable onPress={() => router.push('/onboarding/template' as any)} style={styles.skipPressable}>
           <Text style={styles.skip}>skip for now</Text>
         </Pressable>
       </View>
@@ -142,7 +146,7 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.s4,
   },
   eyebrow: {
-    fontFamily: FontFamily.mono,
+    fontFamily: FontFamily.marker,
     fontSize: 10,
     color: Colors.sageDeep,
     letterSpacing: 1.6,

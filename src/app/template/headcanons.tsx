@@ -1,12 +1,18 @@
-import { useState } from 'react';
-import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
-import { router } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import {
-  MarkerCard, TitleHeader, MarkerHeader, TemplateField, BlankPill, Check, INK, FILL_GRAY,
-} from '@/components/templates/primitives';
 import { Heart } from '@/components/deco/Heart';
-import { Colors, FontFamily, Spacing } from '@/constants/theme';
+import { TemplateScreenWrapper } from '@/components/templates/TemplateScreenWrapper';
+import {
+  BlankPill, Check,
+  FILL_GRAY,
+  INK,
+  MarkerCard,
+  MarkerHeader, TemplateField,
+  TitleHeader,
+} from '@/components/templates/primitives';
+import { FontFamily } from '@/constants/theme';
+import { useTemplateCtx } from '@/store/templateData';
+import { useLocalSearchParams } from 'expo-router';
+import { useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 
 const CATS = [
   { ja: '性', name: 'PERSONALITY' },
@@ -14,22 +20,34 @@ const CATS = [
   { ja: '好', name: 'FAVORITES' },
 ];
 const ITEMS_PER_CAT = 4;
+const BLANK_CAT_ITEMS = CATS.map(() => Array(ITEMS_PER_CAT).fill('') as string[]);
 
 export function HeadcanonsContent({ editing = false }: { editing?: boolean }) {
-  const [fo, setFo] = useState('');
-  const [source, setSource] = useState('');
-  const [catItems, setCatItems] = useState<string[][]>(() =>
-    CATS.map(() => Array(ITEMS_PER_CAT).fill(''))
-  );
+  const ctx = useTemplateCtx();
+
+  const [vals, setVals] = useState<{ fo: string; source: string; catItems: string[][] }>(() => ({
+    fo: ctx.get('fo'),
+    source: ctx.get('source'),
+    catItems: JSON.parse(ctx.get('catItems', 'null')) ?? BLANK_CAT_ITEMS,
+  }));
+
   const e = editing;
 
+  const setFo = (v: string) => { setVals((p) => ({ ...p, fo: v })); ctx.set('fo', v); };
+  const setSource = (v: string) => { setVals((p) => ({ ...p, source: v })); ctx.set('source', v); };
+
   const setItem = (cat: number, idx: number) =>
-    e
-      ? (v: string) =>
-          setCatItems((p) =>
-            p.map((c, ci) => (ci === cat ? c.map((x, xi) => (xi === idx ? v : x)) : c))
-          )
-      : undefined;
+    e ? (v: string) => {
+      setVals((p) => {
+        const next = p.catItems.map((c, ci) =>
+          ci === cat ? c.map((x, xi) => (xi === idx ? v : x)) : c
+        );
+        ctx.set('catItems', JSON.stringify(next));
+        return { ...p, catItems: next };
+      });
+    } : undefined;
+
+  const { fo, source, catItems } = vals;
 
   return (
     <MarkerCard tint="#fffbf6">
@@ -91,27 +109,15 @@ export function HeadcanonsContent({ editing = false }: { editing?: boolean }) {
 }
 
 export default function TemplateHeadcanons() {
-  const insets = useSafeAreaInsets();
+  const { shipId } = useLocalSearchParams<{ shipId?: string }>();
   return (
-    <View style={[s.screen, { paddingTop: insets.top }]}>
-      <View style={s.appBar}>
-        <Pressable onPress={() => router.back()} style={s.back}>
-          <Text style={s.backText}>‹</Text>
-        </Pressable>
-      </View>
-      <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
-        <HeadcanonsContent editing />
-      </ScrollView>
-    </View>
+    <TemplateScreenWrapper templateKey="headcanons" shipId={shipId}>
+      <HeadcanonsContent editing />
+    </TemplateScreenWrapper>
   );
 }
 
 const s = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: Colors.paper },
-  appBar: { paddingHorizontal: Spacing.s5, paddingVertical: Spacing.s2 },
-  back: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
-  backText: { fontSize: 24, color: Colors.ink2, fontFamily: FontFamily.ui },
-  scroll: { padding: Spacing.s5, paddingBottom: Spacing.s8 },
   fieldRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 },
   cats: { marginTop: 14, gap: 10 },
   catCard: { borderWidth: 1.5, borderColor: INK, borderRadius: 8, backgroundColor: '#fff', overflow: 'hidden' },
@@ -125,7 +131,7 @@ const s = StyleSheet.create({
     borderBottomWidth: 1.5,
     borderBottomColor: INK,
   },
-  catJa: { fontFamily: FontFamily.jaSemiBold, fontSize: 18, fontWeight: '600', color: INK },
+  catJa: { fontFamily: FontFamily.ja, fontSize: 18, fontWeight: '600', color: INK },
   countBadge: {
     marginLeft: 'auto',
     paddingHorizontal: 8,

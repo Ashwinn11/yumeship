@@ -1,21 +1,25 @@
-import { useState } from 'react';
-import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
+import { useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { StepDots } from '@/components/ui/StepDots';
+import { WashiTape } from '@/components/deco/WashiTape';
 import { Button } from '@/components/ui/Button';
 import { Field } from '@/components/ui/Field';
-import { UnderInput } from '@/components/ui/UnderInput';
 import { GradientCover } from '@/components/ui/GradientCover';
-import { WashiTape } from '@/components/deco/WashiTape';
 import { IconPlus } from '@/components/ui/Icon';
+import { StepDots } from '@/components/ui/StepDots';
+import { UnderInput } from '@/components/ui/UnderInput';
 import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing } from '@/constants/theme';
+import { setOnbField } from '@/store/onboarding';
 
 export default function OnbFO() {
   const insets = useSafeAreaInsets();
   const [foName, setFoName] = useState('');
   const [fandom, setFandom] = useState('');
+
+  const handleFoName = (v: string) => { setFoName(v); setOnbField('foName', v); };
+  const handleFandom = (v: string) => { setFandom(v); setOnbField('fandom', v); };
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top + Spacing.s1, paddingBottom: insets.bottom + Spacing.s1 }]}>
@@ -47,21 +51,13 @@ export default function OnbFO() {
         {/* Fields */}
         <View style={styles.card}>
           <Field label="Their name">
-            <UnderInput value={foName} onChangeText={setFoName} />
+            <UnderInput value={foName} onChangeText={handleFoName} />
           </Field>
 
           <View style={styles.fieldSpacer} />
 
-          <Field label="From">
-            <UnderInput value={fandom} onChangeText={setFandom} />
-          </Field>
-
-          <View style={styles.fieldSpacer} />
-
-          <Field label="What you call them, when no one's listening">
-            <View style={styles.nicknameBox}>
-              <Text style={styles.nicknameText}>"my whole problem"</Text>
-            </View>
+          <Field label="From (fandom / source)">
+            <UnderInput value={fandom} onChangeText={handleFandom} />
           </Field>
         </View>
       </ScrollView>
@@ -102,7 +98,7 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.s4,
   },
   eyebrow: {
-    fontFamily: FontFamily.mono,
+    fontFamily: FontFamily.marker,
     fontSize: 10,
     color: Colors.plum,
     letterSpacing: 1.6,

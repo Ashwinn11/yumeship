@@ -1,29 +1,47 @@
 import { useState } from 'react';
-import { View, Text, TextInput, Pressable, ScrollView, StyleSheet } from 'react-native';
-import { router } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { View, Text, TextInput, StyleSheet } from 'react-native';
+import Svg, { Line } from 'react-native-svg';
+import { useLocalSearchParams } from 'expo-router';
+import { TemplateScreenWrapper } from '@/components/templates/TemplateScreenWrapper';
 import {
-  MarkerCard, TitleHeader, MarkerHeader, Polaroid, BlankPill, INK,
+  MarkerCard, TitleHeader, Polaroid, BlankPill, INK,
 } from '@/components/templates/primitives';
 import { Heart } from '@/components/deco/Heart';
-import { Colors, FontFamily, Spacing } from '@/constants/theme';
+import { FontFamily } from '@/constants/theme';
+import { useTemplateCtx } from '@/store/templateData';
 
 type EventEntry = { d: string; t: string; body: string };
 const BLANK_EVENTS: EventEntry[] = Array.from({ length: 5 }, () => ({ d: '', t: '', body: '' }));
 
 export function StorylineContent({ editing = false }: { editing?: boolean }) {
-  const [events, setEvents] = useState<EventEntry[]>(BLANK_EVENTS);
+  const ctx = useTemplateCtx();
+
+  const [events, setEvents] = useState<EventEntry[]>(() =>
+    JSON.parse(ctx.get('events', 'null')) ?? BLANK_EVENTS
+  );
+  const [polPhoto, setPolPhoto] = useState(() => ctx.get('polPhoto'));
+  const [timelineH, setTimelineH] = useState(0);
   const e = editing;
 
   const setField = (i: number, field: keyof EventEntry) =>
-    e ? (v: string) => setEvents((p) => p.map((ev, j) => (j === i ? { ...ev, [field]: v } : ev))) : undefined;
+    e ? (v: string) => {
+      setEvents((p) => {
+        const next = p.map((ev, j) => (j === i ? { ...ev, [field]: v } : ev));
+        ctx.set('events', JSON.stringify(next));
+        return next;
+      });
+    } : undefined;
 
   return (
     <MarkerCard tint="#fffbf6" style={s.card}>
       <TitleHeader title="OUR STORYLINE" subtitle="the year so far" by="@plumstamps" />
 
-      <View style={s.timeline}>
-        <View style={s.timelineLine} />
+      <View style={s.timeline} onLayout={(ev) => setTimelineH(ev.nativeEvent.layout.height)}>
+        {timelineH > 0 && (
+          <Svg style={StyleSheet.absoluteFill} width="100%" height={timelineH}>
+            <Line x1="7" y1="6" x2="7" y2={timelineH - 6} stroke={INK} strokeWidth="1.5" strokeDasharray="4,4" />
+          </Svg>
+        )}
         {events.map((ev, i) => {
           const isLast = i === events.length - 1;
           return (
@@ -34,14 +52,14 @@ export function StorylineContent({ editing = false }: { editing?: boolean }) {
                   <View style={s.dateBadge}>
                     <BlankPill
                       width={54}
-                      value={e ? ev.d : undefined}
+                      value={ev.d}
                       onChangeText={setField(i, 'd')}
                       placeholder="date"
                     />
                   </View>
                   <View style={{ flex: 1 }}>
                     <BlankPill
-                      value={e ? ev.t : undefined}
+                      value={ev.t}
                       onChangeText={setField(i, 't')}
                       placeholder="title"
                     />
@@ -58,7 +76,7 @@ export function StorylineContent({ editing = false }: { editing?: boolean }) {
                     style={s.eventBody}
                   />
                 ) : (
-                  <View style={{ height: 18 }}><BlankPill /></View>
+                  <Text style={s.eventBody}>{ev.body || '...'}</Text>
                 )}
               </View>
             </View>
@@ -67,46 +85,24 @@ export function StorylineContent({ editing = false }: { editing?: boolean }) {
       </View>
 
       <View style={s.polaroidRow}>
-        <Polaroid size={110} rotate={6} tapeColor="#fadde5" />
+        <Polaroid size={110} rotate={6} tapeColor="#fadde5" editing={e} uri={polPhoto} onUriChange={e ? (u) => { setPolPhoto(u); ctx.set('polPhoto', u); } : undefined} />
       </View>
     </MarkerCard>
   );
 }
 
 export default function TemplateStoryline() {
-  const insets = useSafeAreaInsets();
+  const { shipId } = useLocalSearchParams<{ shipId?: string }>();
   return (
-    <View style={[s.screen, { paddingTop: insets.top }]}>
-      <View style={s.appBar}>
-        <Pressable onPress={() => router.back()} style={s.back}>
-          <Text style={s.backText}>‹</Text>
-        </Pressable>
-      </View>
-      <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
-        <StorylineContent editing />
-      </ScrollView>
-    </View>
+    <TemplateScreenWrapper templateKey="storyline" shipId={shipId}>
+      <StorylineContent editing />
+    </TemplateScreenWrapper>
   );
 }
 
 const s = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: Colors.paper },
-  appBar: { paddingHorizontal: Spacing.s5, paddingVertical: Spacing.s2 },
-  back: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
-  backText: { fontSize: 24, color: Colors.ink2, fontFamily: FontFamily.ui },
-  scroll: { padding: Spacing.s5, paddingBottom: Spacing.s8 },
   card: { position: 'relative' },
   timeline: { position: 'relative', paddingLeft: 26, marginTop: 14 },
-  timelineLine: {
-    position: 'absolute',
-    left: 7,
-    top: 6,
-    bottom: 6,
-    width: 0,
-    borderLeftWidth: 1.5,
-    borderLeftColor: INK,
-    borderStyle: 'dashed',
-  },
   event: { position: 'relative', marginBottom: 18 },
   dot: {
     position: 'absolute',

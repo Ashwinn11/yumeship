@@ -15,7 +15,7 @@ export function Field({ label, hint, children, style }: Props) {
     <View style={[{ flexDirection: 'column', gap: 6 }, style]}>
       <Text
         style={{
-          fontFamily: FontFamily.mono,
+          fontFamily: FontFamily.marker,
           fontSize: FontSize.hairline,
           color: Colors.ink3,
           letterSpacing: 0.12 * FontSize.hairline,

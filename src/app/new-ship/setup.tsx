@@ -14,6 +14,8 @@ import { Sparkle } from '@/components/deco/Sparkle';
 import { IconPlus } from '@/components/ui/Icon';
 import { type TemplateKey } from './index';
 import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing } from '@/constants/theme';
+import { addShip } from '@/store/ships';
+import { buildInitialData } from '@/store/onboarding';
 
 type RelType = 'romantic' | 'platonic' | 'familial';
 
@@ -172,7 +174,21 @@ export default function NewShipSetup() {
           size="lg"
           full
           disabled={name.trim().length === 0}
-          onPress={() => router.replace((`/template/${template}`) as any)}
+          onPress={() => {
+            const shipId = addShip({
+              templateKey: template!,
+              foName: name.trim() || 'untitled',
+              data: buildInitialData(template!, {
+                userName: '',
+                pronouns: '',
+                foName: name.trim(),
+                fandom: fandom.trim(),
+                relType,
+                shareType: '',
+              }),
+            });
+            router.replace({ pathname: `/template/${template}` as any, params: { shipId } });
+          }}
           icon={<Heart size={14} color={Colors.vellum} />}
           iconPosition="right"
         >

@@ -1,22 +1,43 @@
 import { useState } from 'react';
-import { View, Text, TextInput, Pressable, ScrollView, StyleSheet } from 'react-native';
-import { router } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { View, Text, TextInput, StyleSheet } from 'react-native';
+import { useLocalSearchParams } from 'expo-router';
+import { TemplateScreenWrapper } from '@/components/templates/TemplateScreenWrapper';
 import {
   MarkerCard, TitleHeader, MarkerHeader, BlankPill, INK,
 } from '@/components/templates/primitives';
 import { Heart } from '@/components/deco/Heart';
-import { Colors, FontFamily, Spacing } from '@/constants/theme';
+import { FontFamily } from '@/constants/theme';
+import { useTemplateCtx } from '@/store/templateData';
+
+const BLANK_THINGS = ['', '', '', '', ''];
 
 export function LoveLetterContent({ editing = false }: { editing?: boolean }) {
-  const [dearName, setDearName] = useState('');
-  const [letterBody, setLetterBody] = useState('');
-  const [signName, setSignName] = useState('');
-  const [things, setThings] = useState(['', '', '', '', '']);
+  const ctx = useTemplateCtx();
+
+  const [vals, setVals] = useState<{ dearName: string; letterBody: string; signName: string; things: string[] }>(() => ({
+    dearName: ctx.get('dearName'),
+    letterBody: ctx.get('letterBody'),
+    signName: ctx.get('signName'),
+    things: JSON.parse(ctx.get('things', 'null')) ?? [...BLANK_THINGS],
+  }));
+
   const e = editing;
 
+  const set = (key: 'dearName' | 'letterBody' | 'signName') => (v: string) => {
+    setVals((p) => ({ ...p, [key]: v }));
+    ctx.set(key, v);
+  };
+
   const setThing = (i: number) =>
-    e ? (v: string) => setThings((p) => p.map((t, j) => (j === i ? v : t))) : undefined;
+    e ? (v: string) => {
+      setVals((p) => {
+        const next = p.things.map((t, j) => (j === i ? v : t));
+        ctx.set('things', JSON.stringify(next));
+        return { ...p, things: next };
+      });
+    } : undefined;
+
+  const { dearName, letterBody, signName, things } = vals;
 
   return (
     <MarkerCard tint="#fff5f0">
@@ -33,13 +54,13 @@ export function LoveLetterContent({ editing = false }: { editing?: boolean }) {
             {e ? (
               <TextInput
                 value={dearName}
-                onChangeText={setDearName}
+                onChangeText={set('dearName')}
                 placeholder="name"
                 placeholderTextColor={INK + '44'}
                 style={s.dearNameInput}
               />
             ) : (
-              <Text style={s.dearName}> — </Text>
+              <Text style={s.dearName}>{dearName || ' — '}</Text>
             )}
             <Text style={s.dearText}>,</Text>
           </View>
@@ -48,21 +69,21 @@ export function LoveLetterContent({ editing = false }: { editing?: boolean }) {
         {e ? (
           <TextInput
             value={letterBody}
-            onChangeText={setLetterBody}
+            onChangeText={set('letterBody')}
             placeholder="write your letter here..."
             placeholderTextColor={INK + '33'}
             multiline
             style={s.letterBody}
           />
         ) : (
-          <View style={{ minHeight: 120 }} />
+          <Text style={s.letterBody}>{letterBody || '...'}</Text>
         )}
 
         <Text style={s.signoff}>yours, always —</Text>
         <View style={s.signName}>
           <BlankPill
-            value={e ? signName : undefined}
-            onChangeText={e ? setSignName : undefined}
+            value={signName}
+            onChangeText={e ? set('signName') : undefined}
             width={120}
           />
         </View>
@@ -75,7 +96,7 @@ export function LoveLetterContent({ editing = false }: { editing?: boolean }) {
             <View key={i} style={s.thingCard}>
               <Heart size={11} color={INK} outline={i === 4} />
               <View style={s.thingTextBox}>
-                <BlankPill value={e ? things[i] : undefined} onChangeText={setThing(i)} />
+                <BlankPill value={things[i]} onChangeText={setThing(i)} />
               </View>
             </View>
           ))}
@@ -86,28 +107,16 @@ export function LoveLetterContent({ editing = false }: { editing?: boolean }) {
 }
 
 export default function TemplateLoveLetter() {
-  const insets = useSafeAreaInsets();
+  const { shipId } = useLocalSearchParams<{ shipId?: string }>();
   return (
-    <View style={[s.screen, { paddingTop: insets.top }]}>
-      <View style={s.appBar}>
-        <Pressable onPress={() => router.back()} style={s.back}>
-          <Text style={s.backText}>‹</Text>
-        </Pressable>
-      </View>
-      <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
-        <LoveLetterContent editing />
-      </ScrollView>
-    </View>
+    <TemplateScreenWrapper templateKey="love-letter" shipId={shipId}>
+      <LoveLetterContent editing />
+    </TemplateScreenWrapper>
   );
 }
 
 const s = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: Colors.paper },
-  appBar: { paddingHorizontal: Spacing.s5, paddingVertical: Spacing.s2 },
-  back: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
-  backText: { fontSize: 24, color: Colors.ink2, fontFamily: FontFamily.ui },
-  scroll: { padding: Spacing.s5, paddingBottom: Spacing.s8 },
-  watermark: { position: 'absolute', top: 28, right: 24, opacity: 0.08 },
+  watermark: { position: 'absolute', top: 28, right: 24, opacity: 0.12 },
   letterBox: {
     marginTop: 12,
     padding: 16,

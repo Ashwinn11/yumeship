@@ -1,6 +1,6 @@
-import { View, Text, StyleSheet } from 'react-native';
 import { Heart } from '@/components/deco/Heart';
 import { Colors, FontFamily, FontSize, Radius, Shadow } from '@/constants/theme';
+import { StyleSheet, Text, View } from 'react-native';
 
 // design/cards.jsx — Bubble
 // Chat message bubble: me (sakura-deep, right-aligned) vs them (vellum, left-aligned).
@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
     right: 0,
     fontSize: 10,
     color: Colors.ink3,
-    fontFamily: FontFamily.mono,
+    fontFamily: FontFamily.marker,
     letterSpacing: 0.5,
   },
 });

@@ -1,17 +1,18 @@
-import { useState } from 'react';
-import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
+import { useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { StepDots } from '@/components/ui/StepDots';
-import { Button } from '@/components/ui/Button';
-import { Field } from '@/components/ui/Field';
-import { UnderInput } from '@/components/ui/UnderInput';
-import { Chip } from '@/components/ui/Chip';
-import { Row } from '@/components/ui/Row';
-import { Sparkle } from '@/components/deco/Sparkle';
 import { Heart } from '@/components/deco/Heart';
+import { Sparkle } from '@/components/deco/Sparkle';
+import { Button } from '@/components/ui/Button';
+import { Chip } from '@/components/ui/Chip';
+import { Field } from '@/components/ui/Field';
+import { Row } from '@/components/ui/Row';
+import { StepDots } from '@/components/ui/StepDots';
+import { UnderInput } from '@/components/ui/UnderInput';
 import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing } from '@/constants/theme';
+import { setOnbField } from '@/store/onboarding';
 
 const PRONOUNS = ['she/her', 'he/him', 'they/them', '+'];
 const COLOR_OPTIONS = [
@@ -27,6 +28,9 @@ export default function OnbPersona() {
   const insets = useSafeAreaInsets();
   const [name, setName] = useState('');
   const [pronoun, setPronoun] = useState('she/her');
+
+  const handleNameChange = (v: string) => { setName(v); setOnbField('userName', v); };
+  const handlePronounChange = (p: string) => { setPronoun(p); setOnbField('pronouns', p); };
   const [colorIdx, setColorIdx] = useState(0);
 
   return (
@@ -45,7 +49,7 @@ export default function OnbPersona() {
         {/* Persona card */}
         <View style={styles.card}>
           <Field label="Your name (or theirs for you)">
-            <UnderInput value={name} onChangeText={setName} />
+            <UnderInput value={name} onChangeText={handleNameChange} />
           </Field>
 
           <View style={styles.fieldSpacer} />
@@ -58,7 +62,7 @@ export default function OnbPersona() {
                   color={pronoun === p ? Colors.sakuraDeep : Colors.ink2}
                   bg={pronoun === p ? Colors.sakuraSoft : Colors.paperDeep}
                   active={pronoun === p}
-                  onPress={() => setPronoun(p)}
+                  onPress={() => handlePronounChange(p)}
                 >
                   {p}
                 </Chip>
@@ -141,7 +145,7 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.s4,
   },
   eyebrow: {
-    fontFamily: FontFamily.mono,
+    fontFamily: FontFamily.marker,
     fontSize: 10,
     color: Colors.sakuraDeep,
     letterSpacing: 1.6,

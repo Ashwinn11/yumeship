@@ -1,8 +1,8 @@
-import { View, Text, StyleSheet, Pressable } from 'react-native';
-import { WashiTape } from '@/components/deco/WashiTape';
 import { Pin } from '@/components/deco/Pin';
+import { WashiTape } from '@/components/deco/WashiTape';
 import { GradientCover } from '@/components/ui/GradientCover';
 import { Colors, FontFamily, FontSize, Radius, Shadow } from '@/constants/theme';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 // design/screens.jsx — ShipCard
 // F/O card: 3/4 aspect, gradient cover, washi tape, optional pin + polycule badge.
@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
     color: Colors.vellum,
     fontSize: 9,
     fontWeight: '600',
-    fontFamily: FontFamily.mono,
+    fontFamily: FontFamily.marker,
     letterSpacing: 0.6,
   },
   meta: {
@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
   days: {
     fontSize: 9,
     color: Colors.ink3,
-    fontFamily: FontFamily.mono,
+    fontFamily: FontFamily.marker,
     letterSpacing: 0.5,
   },
 });

@@ -1,17 +1,17 @@
-import { useState } from 'react';
-import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
+import { useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { GradientCover } from '@/components/ui/GradientCover';
-import { Chip } from '@/components/ui/Chip';
-import { IconEdit } from '@/components/ui/Icon';
 import { MiniHC } from '@/components/cards/MiniHC';
-import { SubTabBar, type DetailTab } from '@/components/nav/SubTabBar';
-import { WashiTape } from '@/components/deco/WashiTape';
+import { Heart } from '@/components/deco/Heart';
 import { Pin } from '@/components/deco/Pin';
 import { Sparkle } from '@/components/deco/Sparkle';
-import { Heart } from '@/components/deco/Heart';
+import { WashiTape } from '@/components/deco/WashiTape';
+import { SubTabBar, type DetailTab } from '@/components/nav/SubTabBar';
+import { Chip } from '@/components/ui/Chip';
+import { GradientCover } from '@/components/ui/GradientCover';
+import { IconEdit } from '@/components/ui/Icon';
 import { Colors, FontFamily, FontSize, Radius, Spacing } from '@/constants/theme';
 
 export default function ShipDetail() {
@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.ui,
   },
   appBarTitle: {
-    fontFamily: FontFamily.mono,
+    fontFamily: FontFamily.marker,
     fontSize: 10,
     color: Colors.ink3,
     letterSpacing: 1.4,
@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
   },
   polyculeText: {
     fontSize: 9,
-    fontFamily: FontFamily.mono,
+    fontFamily: FontFamily.marker,
     color: Colors.plum,
     fontWeight: '600',
     letterSpacing: 0.4,
@@ -239,12 +239,12 @@ const styles = StyleSheet.create({
     color: Colors.sakuraDeep,
   },
   anniversaryDate: {
-    fontFamily: FontFamily.mono,
+    fontFamily: FontFamily.marker,
     fontSize: 9,
     color: Colors.sakuraDeep,
   },
   sectionLabel: {
-    fontFamily: FontFamily.mono,
+    fontFamily: FontFamily.marker,
     fontSize: 9,
     color: Colors.ink3,
     letterSpacing: 1.4,

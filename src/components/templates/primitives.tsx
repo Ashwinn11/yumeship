@@ -1,6 +1,9 @@
-import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
+import { useState, useRef } from 'react';
+import { View, Text, TextInput, Pressable, Image, StyleSheet } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import Svg, {
-  Defs, ClipPath, Path, Rect, Circle,
+  Defs, ClipPath, Path, Rect, Circle, G,
+  Image as SvgImage,
   LinearGradient as SvgLinearGradient, Stop,
   Pattern as SvgPattern,
 } from 'react-native-svg';
@@ -62,8 +65,9 @@ type BlankPillProps = {
   value?: string;
   onChangeText?: (t: string) => void;
   placeholder?: string;
+  style?: any;
 };
-export function BlankPill({ width = '100%' as number | string, value, onChangeText, placeholder = '——' }: BlankPillProps) {
+export function BlankPill({ width = '100%' as number | string, value, onChangeText, placeholder = '——', style }: BlankPillProps) {
   if (onChangeText !== undefined) {
     return (
       <TextInput
@@ -71,18 +75,34 @@ export function BlankPill({ width = '100%' as number | string, value, onChangeTe
         onChangeText={onChangeText}
         placeholder={placeholder}
         placeholderTextColor={INK + '44'}
-        style={[s.blankPill, s.blankPillInput, typeof width === 'number' ? { width } : { flex: 1 }]}
+        style={[s.blankPill, s.blankPillInput, typeof width === 'number' ? { width } : { flex: 1 }, style]}
       />
     );
   }
   return (
-    <View style={[s.blankPill, typeof width === 'number' ? { width } : { flex: 1 }]} />
+    <View style={[
+      s.blankPill,
+      value ? s.blankPillInput : null,
+      typeof width === 'number' ? { width } : { flex: 1 },
+      { justifyContent: 'center' },
+      style
+    ]}>
+      {value ? (
+        <Text style={[{ fontFamily: FontFamily.ja, fontSize: 11, color: INK }, style && { fontSize: style.fontSize }]}>{value}</Text>
+      ) : null}
+    </View>
   );
 }
 
 // ─── TemplateField ────────────────────────────────────────────
-type TemplateFieldProps = { label: string; value?: string; valueWidth?: number; onChangeText?: (t: string) => void };
-export function TemplateField({ label, value, valueWidth = 90, onChangeText }: TemplateFieldProps) {
+type TemplateFieldProps = {
+  label: string;
+  value?: string;
+  valueWidth?: number;
+  onChangeText?: (t: string) => void;
+  keyboardType?: 'default' | 'numeric' | 'email-address' | 'phone-pad' | 'number-pad';
+};
+export function TemplateField({ label, value, valueWidth = 90, onChangeText, keyboardType }: TemplateFieldProps) {
   return (
     <View style={s.fieldRow}>
       <Text style={s.fieldLabel}>{label}</Text>
@@ -92,6 +112,7 @@ export function TemplateField({ label, value, valueWidth = 90, onChangeText }: T
           onChangeText={onChangeText}
           placeholder="——"
           placeholderTextColor={INK + '44'}
+          keyboardType={keyboardType}
           style={[s.fieldValueBox, s.fieldValueInput, { width: valueWidth }]}
         />
       ) : value ? (
@@ -137,15 +158,36 @@ export function SquareCheck({ on = false, size = 11, stroke = INK }: { on?: bool
 }
 
 // ─── Dichotomy ────────────────────────────────────────────────
-type DichotomyProps = { left: string; right: string; choice?: 'left' | 'right' | null; onChoiceChange?: (c: 'left' | 'right') => void };
+type DichotomyProps = {
+  left: string;
+  right: string;
+  choice?: 'left' | 'right' | null;
+  onChoiceChange?: (c: 'left' | 'right' | null) => void;
+};
 export function Dichotomy({ left, right, choice, onChoiceChange }: DichotomyProps) {
+  const handlePressLeft = () => {
+    if (choice === 'left') {
+      onChoiceChange?.(null);
+    } else {
+      onChoiceChange?.('left');
+    }
+  };
+
+  const handlePressRight = () => {
+    if (choice === 'right') {
+      onChoiceChange?.(null);
+    } else {
+      onChoiceChange?.('right');
+    }
+  };
+
   return (
     <View style={s.dichotomyRow}>
-      <Pressable onPress={() => onChoiceChange?.('left')} disabled={!onChoiceChange} hitSlop={4}>
+      <Pressable onPress={handlePressLeft} disabled={!onChoiceChange} hitSlop={{ top: 12, bottom: 12, left: 10, right: 6 }}>
         <Text style={[s.dichotomyText, choice === 'left' && s.dichotomyChosen]}>{left}</Text>
       </Pressable>
       <Text style={s.dichotomySlash}>/</Text>
-      <Pressable onPress={() => onChoiceChange?.('right')} disabled={!onChoiceChange} hitSlop={4} style={s.dichotomyRight}>
+      <Pressable onPress={handlePressRight} disabled={!onChoiceChange} hitSlop={{ top: 12, bottom: 12, left: 6, right: 10 }} style={s.dichotomyRight}>
         <Text style={[s.dichotomyText, choice === 'right' && s.dichotomyChosen]}>{right}</Text>
       </Pressable>
       <Check on={!!choice} />
@@ -169,11 +211,32 @@ export function SharingRow({ choice, onChoiceChange }: { choice?: 'Yes' | 'No' |
 }
 
 // ─── AttrSlider ───────────────────────────────────────────────
-export function AttrSlider({ label, value = 0.6 }: { label: string; value?: number }) {
+export function AttrSlider({ label, value = 0, onValueChange }: { label: string; value?: number; onValueChange?: (v: number) => void }) {
+  const [trackW, setTrackW] = useState(0);
+  const trackRef = useRef<View>(null);
+  const clamp = (x: number) => Math.max(0, Math.min(1, x));
+  const responder = onValueChange ? {
+    onStartShouldSetResponder: () => true,
+    onMoveShouldSetResponder: () => true,
+    onResponderTerminationRequest: () => false,
+    onResponderGrant: (e: any) => {
+      (trackRef.current as any)?.requestDisallowInterceptTouchEvent?.(true);
+      if (trackW > 0) onValueChange(clamp(e.nativeEvent.locationX / trackW));
+    },
+    onResponderMove: (e: any) => {
+      (trackRef.current as any)?.requestDisallowInterceptTouchEvent?.(true);
+      if (trackW > 0) onValueChange(clamp(e.nativeEvent.locationX / trackW));
+    },
+  } : {};
   return (
     <View style={s.sliderCol}>
       <Text style={s.sliderLabel}>{label}</Text>
-      <View style={s.sliderTrack}>
+      <View
+        ref={trackRef}
+        style={s.sliderTrack}
+        onLayout={(e) => setTrackW(e.nativeEvent.layout.width)}
+        {...responder}
+      >
         <View style={[s.sliderFill, { width: `${value * 100}%` as any }]} />
         <View style={[s.sliderThumb, { left: `${value * 100}%` as any }]} />
       </View>
@@ -190,25 +253,56 @@ type PhotoBoxProps = {
   width?: number | string;
   height?: number;
   onPress?: () => void;
+  editing?: boolean;
+  uri?: string;
+  onUriChange?: (uri: string) => void;
 };
-export function PhotoBox({ size, round, label, style, width, height, onPress }: PhotoBoxProps) {
-  const inner = (
-    <View
-      style={[
-        s.photoBox,
-        round && s.photoBoxRound,
-        size ? { width: size, height: size } : null,
-        width ? { width } : null,
-        height ? { height } : null,
-        style,
-      ]}
-    >
-      {label && <Text style={s.photoBoxLabel}>{label}</Text>}
-      {onPress && !label && <Text style={s.photoBoxLabel}>tap to add</Text>}
-    </View>
+export function PhotoBox({ size, round, label, style, width, height, onPress, editing, uri: controlledUri, onUriChange }: PhotoBoxProps) {
+  const [localUri, setLocalUri] = useState<string | null>(null);
+  const imageUri = controlledUri !== undefined ? (controlledUri || null) : localUri;
+
+  const handlePress = async () => {
+    if (onPress) { onPress(); return; }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'] as ImagePicker.MediaType[],
+      allowsEditing: true,
+      quality: 0.85,
+    });
+    if (!result.canceled && result.assets[0]) {
+      const u = result.assets[0].uri;
+      if (onUriChange) onUriChange(u);
+      else setLocalUri(u);
+    }
+  };
+
+  const boxStyle = [
+    s.photoBox,
+    round && s.photoBoxRound,
+    size ? { width: size, height: size } : null,
+    width ? { width } : null,
+    height ? { height } : null,
+    style,
+  ] as any;
+
+  const content = (
+    <>
+      {imageUri ? (
+        <Image
+          source={{ uri: imageUri }}
+          style={[StyleSheet.absoluteFill, { borderRadius: round ? 999 : 6 }]}
+          resizeMode="cover"
+        />
+      ) : (
+        <>
+          {label && <Text style={s.photoBoxLabel}>{label}</Text>}
+          {editing && !label && <Text style={s.photoBoxLabel}>tap to add</Text>}
+        </>
+      )}
+    </>
   );
-  if (onPress) return <Pressable onPress={onPress}>{inner}</Pressable>;
-  return inner;
+
+  if (editing || onPress) return <Pressable style={boxStyle} onPress={handlePress}>{content}</Pressable>;
+  return <View style={boxStyle}>{content}</View>;
 }
 
 // ─── Polaroid ─────────────────────────────────────────────────
@@ -216,13 +310,33 @@ type PolaroidProps = {
   size?: number;
   rotate?: number;
   caption?: string;
+  onCaptionChange?: (v: string) => void;
   tapeColor?: string;
   style?: object;
+  editing?: boolean;
+  uri?: string;
+  onUriChange?: (uri: string) => void;
 };
-export function Polaroid({ size = 130, rotate = -4, caption, tapeColor = '#f3b6c4', style }: PolaroidProps) {
+export function Polaroid({ size = 130, rotate = -4, caption, onCaptionChange, tapeColor = '#f3b6c4', style, editing, uri: controlledUri, onUriChange }: PolaroidProps) {
+  const [localUri, setLocalUri] = useState<string | null>(null);
+  const imageUri = controlledUri !== undefined ? (controlledUri || null) : localUri;
+
+  const handlePhotoPress = async () => {
+    if (!editing) return;
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'] as ImagePicker.MediaType[],
+      allowsEditing: true,
+      quality: 0.85,
+    });
+    if (!result.canceled && result.assets[0]) {
+      const u = result.assets[0].uri;
+      if (onUriChange) onUriChange(u);
+      else setLocalUri(u);
+    }
+  };
+
   return (
     <View style={[s.polaroid, { width: size, transform: [{ rotate: `${rotate}deg` }] }, style]}>
-      {/* tape diagonal */}
       <View
         style={[
           s.polaroidTape,
@@ -234,8 +348,25 @@ export function Polaroid({ size = 130, rotate = -4, caption, tapeColor = '#f3b6c
           },
         ]}
       />
-      <View style={[s.polaroidPhoto, { width: size - 16 }]} />
-      {caption && <Text style={s.polaroidCaption}>{caption}</Text>}
+      <Pressable onPress={editing ? handlePhotoPress : undefined} disabled={!editing}>
+        <View style={[s.polaroidPhoto, { width: size - 16 }]}>
+          {imageUri && (
+            <Image source={{ uri: imageUri }} style={[StyleSheet.absoluteFill, { borderRadius: 2 }]} resizeMode="cover" />
+          )}
+          {editing && !imageUri && <Text style={[s.photoBoxLabel, { position: 'absolute', alignSelf: 'center', top: '40%' as any }]}>tap</Text>}
+        </View>
+      </Pressable>
+      {editing && onCaptionChange !== undefined ? (
+        <TextInput
+          value={caption ?? ''}
+          onChangeText={onCaptionChange}
+          placeholder="caption..."
+          placeholderTextColor={INK + '44'}
+          style={s.polaroidCaptionInput}
+        />
+      ) : caption ? (
+        <Text style={s.polaroidCaption}>{caption}</Text>
+      ) : null}
     </View>
   );
 }
@@ -273,38 +404,63 @@ export function WindowFrame({ title, children, style }: WindowFrameProps) {
 
 // ─── MusicPlayer ──────────────────────────────────────────────
 export function MusicPlayer({ track }: { track?: string }) {
+  const [playing, setPlaying] = useState(false);
+  const [progress, setProgress] = useState(0.62);
+  const [barW, setBarW] = useState(0);
+  const barRef = useRef<View>(null);
+  const clamp = (x: number) => Math.max(0, Math.min(1, x));
+  const scrubProps = {
+    onStartShouldSetResponder: () => true,
+    onMoveShouldSetResponder: () => true,
+    onResponderTerminationRequest: () => false,
+    onResponderGrant: (e: any) => {
+      (barRef.current as any)?.requestDisallowInterceptTouchEvent?.(true);
+      if (barW > 0) setProgress(clamp(e.nativeEvent.locationX / barW));
+    },
+    onResponderMove: (e: any) => {
+      (barRef.current as any)?.requestDisallowInterceptTouchEvent?.(true);
+      if (barW > 0) setProgress(clamp(e.nativeEvent.locationX / barW));
+    },
+  };
   return (
     <View style={s.musicPlayer}>
       {track && <Text style={s.musicTrack}>{track}</Text>}
       <View style={s.musicScrubRow}>
-        <View style={s.musicBar}>
-          <View style={s.musicFill} />
-          <View style={s.musicThumb} />
+        <View
+          ref={barRef}
+          style={s.musicBar}
+          onLayout={(e) => setBarW(e.nativeEvent.layout.width)}
+          {...scrubProps}
+        >
+          <View style={[s.musicFill, { width: `${progress * 100}%` as any }]} />
+          <View style={[s.musicThumb, { left: `${progress * 100}%` as any }]} />
         </View>
         <Svg width="18" height="18" viewBox="0 0 16 16" fill={INK}>
           <Path d="M6 2 L12 4 L12 11 A 2 2 0 1 1 10 9 L10 5 L8 4 L8 12 A 2 2 0 1 1 6 10 Z" fill={INK} />
         </Svg>
       </View>
       <View style={s.musicControls}>
-        {/* loop */}
         <Svg width="16" height="16" viewBox="0 0 16 16" fill="none">
           <Path d="M3 8 a5 5 0 0 1 9 -3 M3 5 L3 8 L6 8 M13 8 a5 5 0 0 1 -9 3 M13 11 L13 8 L10 8" stroke={INK} strokeWidth="1.5" strokeLinecap="round" />
         </Svg>
-        {/* prev */}
         <Svg width="16" height="16" viewBox="0 0 16 16" fill={INK}>
           <Path d="M9 4 L4 8 L9 12 Z" /><Rect x="2" y="4" width="1.6" height="8" fill={INK} />
         </Svg>
-        {/* play */}
-        <View style={s.musicPlayBtn}>
-          <Svg width="9" height="9" viewBox="0 0 9 9" fill={INK}>
-            <Path d="M2 1 L8 4.5 L2 8 Z" />
+        <Pressable style={s.musicPlayBtn} onPress={() => setPlaying((p) => !p)} hitSlop={8}>
+          <Svg width="9" height="9" viewBox="0 0 9 9">
+            {playing ? (
+              <>
+                <Rect x="1.5" y="1" width="2" height="7" rx="0.5" fill={INK} />
+                <Rect x="5.5" y="1" width="2" height="7" rx="0.5" fill={INK} />
+              </>
+            ) : (
+              <Path d="M2 1 L8 4.5 L2 8 Z" fill={INK} />
+            )}
           </Svg>
-        </View>
-        {/* next */}
+        </Pressable>
         <Svg width="16" height="16" viewBox="0 0 16 16" fill={INK}>
           <Path d="M7 4 L12 8 L7 12 Z" /><Rect x="12.4" y="4" width="1.6" height="8" fill={INK} />
         </Svg>
-        {/* shuffle */}
         <Svg width="16" height="16" viewBox="0 0 16 16" fill="none">
           <Path d="M3 3 L13 13 M13 3 L3 13" stroke={INK} strokeWidth="1.6" strokeLinecap="round" />
         </Svg>
@@ -331,22 +487,25 @@ type ProfileBlockProps = {
   filled?: FilledState;
   onFilledChange?: (field: keyof FilledState, value: string) => void;
   dicho?: DichoState;
-  onDichoChange?: (field: keyof DichoState, choice: 'left' | 'right') => void;
+  onDichoChange?: (field: keyof DichoState, choice: 'left' | 'right' | null) => void;
   sliders?: [string, number][];
+  onSliderChange?: (label: string, value: number) => void;
   showPhoto?: boolean;
+  photoUri?: string;
+  onPhotoUriChange?: (uri: string) => void;
 };
-export function ProfileBlock({ who, filled = {}, onFilledChange, dicho = {}, onDichoChange, sliders = [['TRUST', 0], ['CLINGY', 0], ['JEALOUSY', 0]], showPhoto }: ProfileBlockProps) {
+export function ProfileBlock({ who, filled = {}, onFilledChange, dicho = {}, onDichoChange, sliders = [['TRUST', 0], ['CLINGY', 0], ['JEALOUSY', 0]], onSliderChange, showPhoto, photoUri, onPhotoUriChange }: ProfileBlockProps) {
   const f = (field: keyof FilledState) => onFilledChange ? (v: string) => onFilledChange(field, v) : undefined;
-  const d = (field: keyof DichoState) => onDichoChange ? (c: 'left' | 'right') => onDichoChange(field, c) : undefined;
+  const d = (field: keyof DichoState) => onDichoChange ? (c: 'left' | 'right' | null) => onDichoChange(field, c) : undefined;
   return (
     <View style={s.profileBlock}>
-      {!showPhoto && <PhotoBox size={80} style={s.profilePhoto} onPress={onFilledChange ? () => {} : undefined} />}
+      {!showPhoto && <PhotoBox size={80} style={s.profilePhoto} editing={!!onFilledChange} uri={photoUri} onUriChange={onPhotoUriChange} />}
       <View style={s.profileContent}>
         <View style={s.profileTopRow}>
           <View style={s.profileWhoTag}>
             <Text style={s.profileWhoText}>{who}</Text>
           </View>
-          <TemplateField label="Age" value={filled.age} onChangeText={f('age')} valueWidth={32} />
+          <TemplateField label="Age" value={filled.age} onChangeText={f('age')} valueWidth={32} keyboardType="numeric" />
           <TemplateField label="Height" value={filled.height} onChangeText={f('height')} valueWidth={44} />
         </View>
         <TemplateField label="Occupation" value={filled.occupation} onChangeText={f('occupation')} valueWidth={120} />
@@ -357,12 +516,22 @@ export function ProfileBlock({ who, filled = {}, onFilledChange, dicho = {}, onD
         </View>
         <View style={s.profileGoodRow}>
           <Text style={s.profileGoodLabel}>I'm good at</Text>
-          <BlankPill value={filled.good} onChangeText={f('good')} placeholder="your strengths" />
+          {onFilledChange !== undefined ? (
+            <TextInput
+              value={filled.good ?? ''}
+              onChangeText={f('good')}
+              placeholder="your strengths"
+              placeholderTextColor={INK + '44'}
+              style={s.profileGoodInput}
+            />
+          ) : (
+            <Text style={s.profileGoodText}>{filled.good || '——'}</Text>
+          )}
         </View>
         <View style={s.profileSliders}>
           {sliders.map(([l, v]) => (
             <View key={l} style={s.profileSliderItem}>
-              <AttrSlider label={l} value={v} />
+              <AttrSlider label={l} value={v} onValueChange={onSliderChange ? (nv) => onSliderChange(l, nv) : undefined} />
             </View>
           ))}
         </View>
@@ -404,23 +573,75 @@ export function TwinProfile({ who, info, onInfoChange }: TwinProfileProps) {
 }
 
 // ─── HeartClipPhoto ───────────────────────────────────────────
-export function HeartClipPhoto({ width = 180, height = 160 }: { width?: number; height?: number }) {
+const HEART_PATH = "M90 145 C 30 110, 5 75, 5 45 C 5 22, 25 5, 50 5 C 68 5, 82 16, 90 35 C 98 16, 112 5, 130 5 C 155 5, 175 22, 175 45 C 175 75, 150 110, 90 145 Z";
+
+type HeartClipPhotoProps = {
+  width?: number;
+  height?: number;
+  leftUri?: string;
+  rightUri?: string;
+  editing?: boolean;
+  onLeftUriChange?: (uri: string) => void;
+  onRightUriChange?: (uri: string) => void;
+};
+export function HeartClipPhoto({ width = 180, height = 160, leftUri, rightUri, editing, onLeftUriChange, onRightUriChange }: HeartClipPhotoProps) {
+  const pickLeft = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'] as ImagePicker.MediaType[], allowsEditing: true, quality: 0.85 });
+    if (!result.canceled && result.assets[0]) onLeftUriChange?.(result.assets[0].uri);
+  };
+  const pickRight = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'] as ImagePicker.MediaType[], allowsEditing: true, quality: 0.85 });
+    if (!result.canceled && result.assets[0]) onRightUriChange?.(result.assets[0].uri);
+  };
+
+  const half = width / 2;
+
   return (
-    <Svg width={width} height={height} viewBox="0 0 180 160">
-      <Defs>
-        <ClipPath id="heartclip">
-          <Path d="M90 145 C 30 110, 5 75, 5 45 C 5 22, 25 5, 50 5 C 68 5, 82 16, 90 35 C 98 16, 112 5, 130 5 C 155 5, 175 22, 175 45 C 175 75, 150 110, 90 145 Z" />
-        </ClipPath>
-      </Defs>
-      <Rect x="0" y="0" width="180" height="160" fill={FILL_GRAY} clipPath="url(#heartclip)" />
-      <Path
-        d="M90 145 C 30 110, 5 75, 5 45 C 5 22, 25 5, 50 5 C 68 5, 82 16, 90 35 C 98 16, 112 5, 130 5 C 155 5, 175 22, 175 45 C 175 75, 150 110, 90 145 Z"
-        fill="none"
-        stroke={INK}
-        strokeWidth="2.2"
-      />
-      <Path d="M90 8 L90 142" stroke={INK} strokeWidth="1.4" strokeDasharray="4,4" />
-    </Svg>
+    <View style={{ width, height, position: 'relative' }}>
+      <Svg width={width} height={height} viewBox="0 0 180 160">
+        <Defs>
+          <ClipPath id="heartclip">
+            <Path d={HEART_PATH} />
+          </ClipPath>
+        </Defs>
+
+        <G clipPath="url(#heartclip)">
+          {/* Left half */}
+          <Rect x="0" y="0" width="90" height="160" fill={FILL_GRAY} />
+          {leftUri ? (
+            <SvgImage x="0" y="0" width="90" height="160" href={leftUri} preserveAspectRatio="xMidYMid slice" />
+          ) : editing ? (
+            <Path d="M45 72 L45 88 M37 80 L53 80" stroke={INK} strokeWidth="1.5" strokeLinecap="round" opacity="0.4" />
+          ) : null}
+
+          {/* Right half */}
+          <Rect x="90" y="0" width="90" height="160" fill={FILL_GRAY_DARK} />
+          {rightUri ? (
+            <SvgImage x="90" y="0" width="90" height="160" href={rightUri} preserveAspectRatio="xMidYMid slice" />
+          ) : editing ? (
+            <Path d="M135 72 L135 88 M127 80 L143 80" stroke={INK} strokeWidth="1.5" strokeLinecap="round" opacity="0.4" />
+          ) : null}
+        </G>
+
+        {/* Outline + divider */}
+        <Path d={HEART_PATH} fill="none" stroke={INK} strokeWidth="2.2" />
+        <Path d="M90 8 L90 142" stroke={INK} strokeWidth="1.4" strokeDasharray="4,4" />
+      </Svg>
+
+      {/* Tap areas when editing */}
+      {editing && (
+        <>
+          <Pressable
+            style={{ position: 'absolute', left: 0, top: 0, width: half, height }}
+            onPress={pickLeft}
+          />
+          <Pressable
+            style={{ position: 'absolute', left: half, top: 0, width: half, height }}
+            onPress={pickRight}
+          />
+        </>
+      )}
+    </View>
   );
 }
 
@@ -474,6 +695,7 @@ const s = StyleSheet.create({
     borderRadius: 999,
   },
   blankPillInput: {
+    backgroundColor: '#fff',
     paddingHorizontal: 10,
     fontFamily: FontFamily.ja,
     fontSize: 11,
@@ -615,6 +837,7 @@ const s = StyleSheet.create({
     borderRadius: 6,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
   },
   photoBoxRound: {
     borderRadius: 999,
@@ -660,6 +883,17 @@ const s = StyleSheet.create({
     fontSize: 12,
     color: INK,
     textAlign: 'center',
+  },
+  polaroidCaptionInput: {
+    marginTop: 6,
+    fontFamily: FontFamily.script,
+    fontSize: 12,
+    color: INK,
+    textAlign: 'center',
+    padding: 0,
+    height: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: INK + '55',
   },
   windowFrame: {
     backgroundColor: '#fff',
@@ -805,7 +1039,7 @@ const s = StyleSheet.create({
   },
   profileGoodRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     gap: 4,
     marginTop: 2,
   },
@@ -824,6 +1058,15 @@ const s = StyleSheet.create({
     color: INK,
     flex: 1,
     lineHeight: 16,
+  },
+  profileGoodInput: {
+    fontFamily: FontFamily.ja,
+    fontSize: 11,
+    color: INK,
+    flex: 1,
+    padding: 0,
+    paddingVertical: 0,
+    height: 18,
   },
   profileSliders: {
     flexDirection: 'row',

@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { View, Text, Pressable, ScrollView, TextInput, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
+import { useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { IconLock, IconSend } from '@/components/ui/Icon';
@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   appBarMeta: {
-    fontFamily: FontFamily.mono,
+    fontFamily: FontFamily.marker,
     fontSize: 8,
     color: Colors.ink3,
     letterSpacing: 0.8,
