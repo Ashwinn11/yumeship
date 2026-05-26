@@ -74,7 +74,7 @@ export function BlankPill({ width = '100%' as number | string, value, onChangeTe
         value={value ?? ''}
         onChangeText={onChangeText}
         placeholder={placeholder}
-        placeholderTextColor={INK + '44'}
+        placeholderTextColor={INK + '88'}
         style={[s.blankPill, s.blankPillInput, typeof width === 'number' ? { width } : { flex: 1 }, style]}
       />
     );
@@ -88,7 +88,7 @@ export function BlankPill({ width = '100%' as number | string, value, onChangeTe
       style
     ]}>
       {value ? (
-        <Text style={[{ fontFamily: FontFamily.ja, fontSize: 11, color: INK }, style && { fontSize: style.fontSize }]}>{value}</Text>
+        <Text style={[{ fontFamily: FontFamily.ja, fontSize: 11, color: INK, fontWeight: '600' }, style && { fontSize: style.fontSize }]}>{value}</Text>
       ) : null}
     </View>
   );
@@ -111,7 +111,7 @@ export function TemplateField({ label, value, valueWidth = 90, onChangeText, key
           value={value ?? ''}
           onChangeText={onChangeText}
           placeholder="——"
-          placeholderTextColor={INK + '44'}
+          placeholderTextColor={INK + '88'}
           keyboardType={keyboardType}
           style={[s.fieldValueBox, s.fieldValueInput, { width: valueWidth }]}
         />
@@ -361,7 +361,7 @@ export function Polaroid({ size = 130, rotate = -4, caption, onCaptionChange, ta
           value={caption ?? ''}
           onChangeText={onCaptionChange}
           placeholder="caption..."
-          placeholderTextColor={INK + '44'}
+          placeholderTextColor={INK + '88'}
           underlineColorAndroid="transparent"
           style={s.polaroidCaptionInput}
         />
@@ -522,7 +522,7 @@ export function ProfileBlock({ who, filled = {}, onFilledChange, dicho = {}, onD
               value={filled.good ?? ''}
               onChangeText={f('good')}
               placeholder="your strengths"
-              placeholderTextColor={INK + '44'}
+              placeholderTextColor={INK + '88'}
               style={s.profileGoodInput}
             />
           ) : (
@@ -558,7 +558,7 @@ export function TwinProfile({ who, info, onInfoChange }: TwinProfileProps) {
                 value={v ?? ''}
                 onChangeText={(t) => onInfoChange(i, t)}
                 placeholder="——"
-                placeholderTextColor={INK + '44'}
+                placeholderTextColor={INK + '88'}
                 style={[s.twinProfileVal, s.twinProfileInput]}
               />
             ) : v ? (
@@ -701,6 +701,7 @@ const s = StyleSheet.create({
     fontFamily: FontFamily.ja,
     fontSize: 11,
     color: INK,
+    fontWeight: '600',
   },
   fieldRow: {
     flexDirection: 'row',
@@ -730,12 +731,14 @@ const s = StyleSheet.create({
     fontSize: 11,
     color: INK,
     textAlign: 'center',
+    fontWeight: '600',
   },
   fieldValueText: {
     fontFamily: FontFamily.ja,
     fontSize: 11,
     color: INK,
     textAlign: 'center',
+    fontWeight: '600',
   },
   dichotomyRow: {
     flexDirection: 'row',
@@ -1120,6 +1123,7 @@ const s = StyleSheet.create({
     fontSize: 11,
     color: INK,
     flex: 1,
+    fontWeight: '600',
   },
   twinProfileInput: {
     height: 16,
@@ -1129,5 +1133,6 @@ const s = StyleSheet.create({
     borderWidth: 1,
     borderColor: INK + '55',
     borderRadius: 3,
+    fontWeight: '600',
   },
 });

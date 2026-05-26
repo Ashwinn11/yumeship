@@ -12,7 +12,7 @@ import { FontFamily } from '@/constants/theme';
 import { useTemplateCtx } from '@/store/templateData';
 import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, TextInput, View } from 'react-native';
 
 const CATS = [
   { ja: '性', name: 'PERSONALITY' },
@@ -56,13 +56,13 @@ export function HeadcanonsContent({ editing = false }: { editing?: boolean }) {
       <View style={s.fieldRow}>
         <TemplateField
           label="F/O"
-          value={e ? fo : undefined}
+          value={fo}
           onChangeText={e ? setFo : undefined}
           valueWidth={90}
         />
         <TemplateField
           label="Source"
-          value={e ? source : undefined}
+          value={source}
           onChangeText={e ? setSource : undefined}
           valueWidth={70}
         />
@@ -92,11 +92,36 @@ export function HeadcanonsContent({ editing = false }: { editing?: boolean }) {
                     <Check on={false} size={11} />
                   )}
                   <View style={s.itemPillWrap}>
-                    <BlankPill
-                      value={e ? item : undefined}
-                      onChangeText={setItem(ci, idx)}
-                      placeholder="headcanon..."
-                    />
+                    {e ? (
+                      <TextInput
+                        value={item}
+                        onChangeText={setItem(ci, idx)}
+                        placeholder=""
+                        underlineColorAndroid="transparent"
+                        style={[
+                          { fontFamily: FontFamily.ja, fontSize: 11, color: INK, padding: 0, minHeight: 18 },
+                          !item && {
+                            height: 14,
+                            backgroundColor: '#e9d8cb',
+                            borderWidth: 1.5,
+                            borderColor: INK,
+                            borderRadius: 999,
+                          }
+                        ]}
+                      />
+                    ) : (
+                      item ? (
+                        <Text style={{ fontFamily: FontFamily.ja, fontSize: 11, color: INK }}>{item}</Text>
+                      ) : (
+                        <View style={{
+                          height: 14,
+                          backgroundColor: '#e9d8cb',
+                          borderWidth: 1.5,
+                          borderColor: INK,
+                          borderRadius: 999,
+                        }} />
+                      )
+                    )}
                   </View>
                 </View>
               ))}

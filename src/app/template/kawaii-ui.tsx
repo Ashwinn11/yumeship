@@ -117,11 +117,12 @@ export function KawaiiUIContent({ editing = false }: { editing?: boolean }) {
                   value={vals[label] ?? ''}
                   onChangeText={set(label)}
                   placeholder="——"
-                  placeholderTextColor={PINK_INK + '44'}
-                  style={{ fontFamily: FontFamily.ja, fontSize: 13, color: PINK_INK, padding: 0, flex: 1 }}
+                  placeholderTextColor={PINK_INK + '88'}
+                  underlineColorAndroid="transparent"
+                  style={{ fontFamily: FontFamily.ja, fontSize: 13, color: PINK_INK, padding: 0, flex: 1, fontWeight: '600' }}
                 />
               ) : (
-                <Text style={{ fontFamily: FontFamily.ja, fontSize: 13, color: PINK_INK }}>
+                <Text style={{ fontFamily: FontFamily.ja, fontSize: 13, color: PINK_INK, fontWeight: '600' }}>
                   {vals[label] || '——'}
                 </Text>
               )}
@@ -152,7 +153,8 @@ export function KawaiiUIContent({ editing = false }: { editing?: boolean }) {
                     value={vals[k] ?? ''}
                     onChangeText={(v) => setVal(k, v)}
                     placeholder="——"
-                    placeholderTextColor={PINK_INK + '44'}
+                    placeholderTextColor={PINK_INK + '88'}
+                    underlineColorAndroid="transparent"
                     style={[
                       s.infoVal,
                       s.infoValInput,
@@ -165,7 +167,8 @@ export function KawaiiUIContent({ editing = false }: { editing?: boolean }) {
                     <Text style={{
                       fontFamily: FontFamily.ja,
                       fontSize: k === 'love language' ? 8.5 : 11,
-                      color: INK
+                      color: INK,
+                      fontWeight: '600',
                     }}>{vals[k]}</Text>
                   </View>
                 )}
@@ -208,11 +211,12 @@ export function KawaiiUIContent({ editing = false }: { editing?: boolean }) {
                   value={vals.song ?? ''}
                   onChangeText={set('song')}
                   placeholder="song title"
-                  placeholderTextColor={PINK_INK + '44'}
-                  style={{ fontFamily: FontFamily.ja, fontSize: 13, color: PINK_INK, padding: 0, flex: 1 }}
+                  placeholderTextColor={PINK_INK + '88'}
+                  underlineColorAndroid="transparent"
+                  style={{ fontFamily: FontFamily.ja, fontSize: 13, color: PINK_INK, padding: 0, flex: 1, fontWeight: '600' }}
                 />
               ) : (
-                <Text style={{ fontFamily: FontFamily.ja, fontSize: 13, color: PINK_INK }}>
+                <Text style={{ fontFamily: FontFamily.ja, fontSize: 13, color: PINK_INK, fontWeight: '600' }}>
                   {vals.song || '——'}
                 </Text>
               )}
@@ -233,7 +237,8 @@ export function KawaiiUIContent({ editing = false }: { editing?: boolean }) {
                     value={vals[`trope${i}`] ?? ''}
                     onChangeText={set(`trope${i}`)}
                     placeholder="trope"
-                    placeholderTextColor={PINK_INK + '44'}
+                    placeholderTextColor={PINK_INK + '88'}
+                    underlineColorAndroid="transparent"
                     style={{ fontFamily: FontFamily.markerBold, fontSize: 9, color: PINK_INK, padding: 0, flex: 1, fontWeight: '700' }}
                   />
                 ) : (
@@ -339,7 +344,7 @@ const s = StyleSheet.create({
   infoRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   infoKey: { fontFamily: FontFamily.markerBold, fontSize: 8, fontWeight: '700', letterSpacing: 0.6, textTransform: 'uppercase', opacity: 0.7, width: 84 },
   infoVal: { flex: 1, height: 20, borderWidth: 1, borderRadius: 4, paddingHorizontal: 6, alignItems: 'center', justifyContent: 'center' },
-  infoValInput: { fontFamily: FontFamily.ja, fontSize: 11, color: INK, padding: 0 },
+  infoValInput: { fontFamily: FontFamily.ja, fontSize: 11, color: INK, padding: 0, fontWeight: '600' },
   mt10: { marginTop: 10 },
   sharingRow: { flexDirection: 'row', justifyContent: 'center', gap: 14 },
   sharingOpt: { flexDirection: 'row', alignItems: 'center', gap: 5 },

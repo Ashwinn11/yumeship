@@ -91,7 +91,7 @@ export type ColorToken = keyof typeof Colors;
 // ─── Typography ───────────────────────────────────────────────────────────────
 // Font family names match the asset filenames loaded via expo-font.
 export const FontFamily = {
-  display: Platform.select({ ios: 'InstrumentSerif-Regular', default: 'serif' }),
+  display: Platform.select({ ios: 'InstrumentSerif-Italic', default: 'serif' }),
   displayItalic: Platform.select({ ios: 'InstrumentSerif-Italic', default: 'serif' }),
   ui: Platform.select({ ios: 'Fredoka-Regular', default: 'sans-serif' }),
   uiMedium: Platform.select({ ios: 'Fredoka-Medium', default: 'sans-serif' }),
@@ -101,8 +101,8 @@ export const FontFamily = {
   markerMedium: Platform.select({ ios: 'Fredoka-Medium', default: 'sans-serif' }),
   markerBold: Platform.select({ ios: 'Fredoka-SemiBold', default: 'sans-serif' }),
   // tokens.css imports Caveat wght@500;700 — base is Medium (500), not Regular (400)
-  script: Platform.select({ ios: 'InstrumentSerif-Italic', default: 'serif' }),
-  scriptBold: Platform.select({ ios: 'InstrumentSerif-Italic', default: 'serif' }),
+  script: 'Caveat-Bold',
+  scriptBold: 'Caveat-Bold',
 } as const;
 
 export const FontSize = {

@@ -40,7 +40,16 @@ export function TemplateScreenWrapper({ templateKey, shipId, children }: Props) 
     <TemplateDataCtx.Provider value={ctx}>
       <View style={[s.screen, { paddingTop: insets.top }]}>
         <View style={s.appBar}>
-          <Pressable onPress={() => router.back()} style={s.back}>
+          <Pressable
+            onPress={() => {
+              if (router.canGoBack()) {
+                router.back();
+              } else {
+                router.replace('/(tabs)' as any);
+              }
+            }}
+            style={s.back}
+          >
             <Text style={s.backText}>‹</Text>
           </Pressable>
 

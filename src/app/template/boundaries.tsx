@@ -75,7 +75,7 @@ export function BoundariesContent({ editing = false }: { editing?: boolean }) {
                     disabled={!editing}
                   >
                     <SquareCheck on={checkStates[si][ci]} size={11} stroke={st.stroke} />
-                    <Text style={[s.checkText, { opacity: checkStates[si][ci] ? 1 : 0.55 }]}>
+                    <Text style={[s.checkText, { opacity: checkStates[si][ci] ? 1 : 0.8 }]}>
                       {label}
                     </Text>
                   </Pressable>

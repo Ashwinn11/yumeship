@@ -56,7 +56,7 @@ export function LoveLetterContent({ editing = false }: { editing?: boolean }) {
                 value={dearName}
                 onChangeText={set('dearName')}
                 placeholder="name"
-                placeholderTextColor={INK + '44'}
+                placeholderTextColor={INK + '88'}
                 underlineColorAndroid="transparent"
                 style={s.dearNameInput}
               />
@@ -72,7 +72,7 @@ export function LoveLetterContent({ editing = false }: { editing?: boolean }) {
             value={letterBody}
             onChangeText={set('letterBody')}
             placeholder="write your letter here..."
-            placeholderTextColor={INK + '33'}
+            placeholderTextColor={INK + '88'}
             multiline
             underlineColorAndroid="transparent"
             style={s.letterBody}
@@ -105,7 +105,7 @@ export function LoveLetterContent({ editing = false }: { editing?: boolean }) {
                     placeholder=""
                     underlineColorAndroid="transparent"
                     style={[
-                      { fontFamily: FontFamily.ja, fontSize: 11, color: INK, padding: 0, minHeight: 18 },
+                      { fontFamily: FontFamily.ja, fontSize: 11, color: INK, padding: 0, minHeight: 18, fontWeight: '600' },
                       !things[i] && {
                         height: 14,
                         backgroundColor: '#e9d8cb',
@@ -177,7 +177,7 @@ const s = StyleSheet.create({
   },
   dearName: {
     fontFamily: FontFamily.ja,
-    fontWeight: '400',
+    fontWeight: '600',
     fontSize: 11,
     color: INK,
   },
@@ -188,6 +188,7 @@ const s = StyleSheet.create({
     minWidth: 60,
     padding: 0,
     paddingHorizontal: 2,
+    fontWeight: '600',
   },
   letterBody: {
     fontFamily: FontFamily.ja,
@@ -197,6 +198,7 @@ const s = StyleSheet.create({
     marginTop: 4,
     minHeight: 120,
     textAlignVertical: 'top',
+    fontWeight: '600',
   },
   signoff: {
     fontFamily: FontFamily.script,

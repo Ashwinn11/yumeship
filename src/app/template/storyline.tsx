@@ -71,8 +71,9 @@ export function StorylineContent({ editing = false }: { editing?: boolean }) {
                     value={ev.body}
                     onChangeText={setField(i, 'body')}
                     placeholder="what happened..."
-                    placeholderTextColor={INK + '33'}
+                    placeholderTextColor={INK + '88'}
                     multiline
+                    underlineColorAndroid="transparent"
                     style={s.eventBody}
                   />
                 ) : (
@@ -133,6 +134,7 @@ const s = StyleSheet.create({
     lineHeight: 18,
     minHeight: 18,
     textAlignVertical: 'top',
+    fontWeight: '600',
   },
   polaroidRow: { alignItems: 'flex-end', marginTop: 16 },
 });

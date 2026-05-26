@@ -109,9 +109,10 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.ja,
     fontSize: 11,
     color: '#1f1219',
+    fontWeight: '600',
   },
   placeholder: {
-    color: '#1f121944',
+    color: '#1f121988',
   },
   backdrop: {
     flex: 1,

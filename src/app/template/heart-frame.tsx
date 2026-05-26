@@ -130,8 +130,9 @@ export function HeartFrameContent({ editing = false }: { editing?: boolean }) {
             value={metText}
             onChangeText={set('metText')}
             placeholder="our story..."
-            placeholderTextColor={INK + '33'}
+            placeholderTextColor={INK + '88'}
             multiline
+            underlineColorAndroid="transparent"
             style={s.metText}
           />
         ) : (
@@ -216,6 +217,7 @@ const s = StyleSheet.create({
     lineHeight: 18,
     minHeight: 60,
     textAlignVertical: 'top',
+    fontWeight: '600',
   },
   anniversaryPill: {
     marginTop: 10,

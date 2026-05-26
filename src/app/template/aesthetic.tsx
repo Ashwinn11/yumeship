@@ -52,7 +52,7 @@ export function AestheticContent({ editing = false }: { editing?: boolean }) {
               value={song ?? ''}
               onChangeText={set('song')}
               placeholder="song title..."
-              placeholderTextColor={INK + '33'}
+              placeholderTextColor={INK + '88'}
               underlineColorAndroid="transparent"
               style={{
                 fontFamily: FontFamily.script,

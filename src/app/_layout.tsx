@@ -9,12 +9,12 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [loaded] = useFonts({
-    'InstrumentSerif-Regular': require('../../assets/fonts/InstrumentSerif-Regular.ttf'),
     'InstrumentSerif-Italic': require('../../assets/fonts/InstrumentSerif-Italic.ttf'),
     'KleeOne-Regular': require('../../assets/fonts/KleeOne-Regular.ttf'),
     'Fredoka-Regular': require('../../assets/fonts/Fredoka-Regular.ttf'),
     'Fredoka-Medium': require('../../assets/fonts/Fredoka-Medium.ttf'),
     'Fredoka-SemiBold': require('../../assets/fonts/Fredoka-SemiBold.ttf'),
+    'Caveat-Bold': require('../../assets/fonts/Caveat-Bold.ttf'),
   });
 
   useEffect(() => {
