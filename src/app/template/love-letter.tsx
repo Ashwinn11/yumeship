@@ -57,6 +57,7 @@ export function LoveLetterContent({ editing = false }: { editing?: boolean }) {
                 onChangeText={set('dearName')}
                 placeholder="name"
                 placeholderTextColor={INK + '44'}
+                underlineColorAndroid="transparent"
                 style={s.dearNameInput}
               />
             ) : (
@@ -73,6 +74,7 @@ export function LoveLetterContent({ editing = false }: { editing?: boolean }) {
             placeholder="write your letter here..."
             placeholderTextColor={INK + '33'}
             multiline
+            underlineColorAndroid="transparent"
             style={s.letterBody}
           />
         ) : (
@@ -96,7 +98,36 @@ export function LoveLetterContent({ editing = false }: { editing?: boolean }) {
             <View key={i} style={s.thingCard}>
               <Heart size={11} color={INK} outline={i === 4} />
               <View style={s.thingTextBox}>
-                <BlankPill value={things[i]} onChangeText={setThing(i)} />
+                {e ? (
+                  <TextInput
+                    value={things[i]}
+                    onChangeText={setThing(i)}
+                    placeholder=""
+                    underlineColorAndroid="transparent"
+                    style={[
+                      { fontFamily: FontFamily.ja, fontSize: 11, color: INK, padding: 0, minHeight: 18 },
+                      !things[i] && {
+                        height: 14,
+                        backgroundColor: '#e9d8cb',
+                        borderWidth: 1.5,
+                        borderColor: INK,
+                        borderRadius: 999,
+                      }
+                    ]}
+                  />
+                ) : (
+                  things[i] ? (
+                    <Text style={{ fontFamily: FontFamily.ja, fontSize: 11, color: INK }}>{things[i]}</Text>
+                  ) : (
+                    <View style={{
+                      height: 14,
+                      backgroundColor: '#e9d8cb',
+                      borderWidth: 1.5,
+                      borderColor: INK,
+                      borderRadius: 999,
+                    }} />
+                  )
+                )}
               </View>
             </View>
           ))}
@@ -155,8 +186,6 @@ const s = StyleSheet.create({
     fontSize: 11,
     color: INK,
     minWidth: 60,
-    borderBottomWidth: 1,
-    borderBottomColor: INK + '66',
     padding: 0,
     paddingHorizontal: 2,
   },

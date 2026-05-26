@@ -47,7 +47,7 @@ export function ThisOrThatContent({ editing = false }: { editing?: boolean }) {
   const { name, choices, note } = vals;
 
   return (
-    <MarkerCard tint="#fffbf6">
+    <View style={{ padding: 10 }}>
       <TitleHeader title="THIS or THAT" subtitle="how do they choose?" by="@softfangs" />
 
       <View style={s.nameRow}>
@@ -81,16 +81,19 @@ export function ThisOrThatContent({ editing = false }: { editing?: boolean }) {
           <TextInput
             value={note}
             onChangeText={setNote}
-            placeholder="add a note..."
-            placeholderTextColor={INK + '33'}
+            placeholder="note: she pretends to be the talker. she's not."
+            placeholderTextColor={INK}
             multiline
+            underlineColorAndroid="transparent"
             style={s.noteText}
           />
         ) : (
-          note ? <Text style={s.noteText}>{note}</Text> : null
+          <Text style={s.noteText}>
+            {note || "note: she pretends to be the talker. she's not."}
+          </Text>
         )}
       </View>
-    </MarkerCard>
+    </View>
   );
 }
 
@@ -109,7 +112,7 @@ const s = StyleSheet.create({
   namePill: { width: 110 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   pairCard: {
-    width: '47%',
+    width: '48.5%',
     borderWidth: 1.5,
     borderColor: INK,
     borderRadius: 6,
@@ -117,13 +120,13 @@ const s = StyleSheet.create({
     backgroundColor: '#fff',
     gap: 4,
   },
-  pairIndex: { fontFamily: FontFamily.markerBold, fontWeight: '600', fontSize: 9, color: INK, opacity: 0.6, letterSpacing: 0.8 },
-  pairRow: { flexDirection: 'row', alignItems: 'center', gap: 2 },
-  pairHalf: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 4 },
-  pairHalfRight: { justifyContent: 'flex-end' },
-  pairText: { fontFamily: FontFamily.marker, fontWeight: '500', fontSize: 12, color: INK, flexShrink: 1 },
+  pairIndex: { fontFamily: FontFamily.markerBold, fontWeight: '600', fontSize: 9, color: INK, opacity: 0.85, letterSpacing: 0.8 },
+  pairRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  pairHalf: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  pairHalfRight: {},
+  pairText: { fontFamily: FontFamily.marker, fontWeight: '500', fontSize: 10.5, color: INK },
   pairChosen: { fontFamily: FontFamily.markerBold, fontWeight: '700', textDecorationLine: 'underline' },
-  pairSlash: { fontFamily: FontFamily.marker, fontSize: 9, color: INK, opacity: 0.5 },
+  pairSlash: { fontFamily: FontFamily.marker, fontSize: 9, color: INK, opacity: 0.7, marginHorizontal: 2 },
   noteBox: {
     marginTop: 12,
     padding: 10,
@@ -131,6 +134,7 @@ const s = StyleSheet.create({
     borderColor: INK,
     borderRadius: 6,
     backgroundColor: '#fff',
+    borderStyle: 'dashed',
   },
   noteText: { fontFamily: FontFamily.script, fontSize: 13, color: INK },
 });

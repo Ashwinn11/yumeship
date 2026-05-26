@@ -362,6 +362,7 @@ export function Polaroid({ size = 130, rotate = -4, caption, onCaptionChange, ta
           onChangeText={onCaptionChange}
           placeholder="caption..."
           placeholderTextColor={INK + '44'}
+          underlineColorAndroid="transparent"
           style={s.polaroidCaptionInput}
         />
       ) : caption ? (
@@ -892,8 +893,6 @@ const s = StyleSheet.create({
     textAlign: 'center',
     padding: 0,
     height: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: INK + '55',
   },
   windowFrame: {
     backgroundColor: '#fff',

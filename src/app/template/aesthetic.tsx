@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, TextInput, StyleSheet } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import {
   MarkerCard, ScriptCredit, PhotoBox, Polaroid, WindowFrame, MusicPlayer, BlankPill, INK,
@@ -46,20 +46,35 @@ export function AestheticContent({ editing = false }: { editing?: boolean }) {
       <View style={s.gap12} />
 
       <WindowFrame title="Our song">
-        {e && (
-          <View style={s.songPill}>
-            <BlankPill value={song} onChangeText={set('song')} placeholder="song title" />
-          </View>
-        )}
-        <MusicPlayer track={song || undefined} />
+        <View style={{ padding: 2 }}>
+          {e ? (
+            <TextInput
+              value={song ?? ''}
+              onChangeText={set('song')}
+              placeholder="song title..."
+              placeholderTextColor={INK + '33'}
+              underlineColorAndroid="transparent"
+              style={{
+                fontFamily: FontFamily.script,
+                fontSize: 16,
+                color: INK,
+                marginBottom: 6,
+                padding: 0,
+              }}
+            />
+          ) : (
+            song ? <Text style={{ fontFamily: FontFamily.script, fontSize: 16, color: INK, marginBottom: 6 }}>{song}</Text> : null
+          )}
+          <MusicPlayer />
+        </View>
       </WindowFrame>
 
       <View style={s.gap12} />
 
       <View style={s.polaroidArea}>
-        <Polaroid size={110} rotate={-7} tapeColor="#fadde5" style={s.pol1} editing={e} caption={cap0} onCaptionChange={e ? set('cap0') : undefined} uri={polPh0} onUriChange={e ? set('polPh0') : undefined} />
-        <Polaroid size={115} rotate={5}  tapeColor="#ece4f7" style={s.pol2} editing={e} caption={cap1} onCaptionChange={e ? set('cap1') : undefined} uri={polPh1} onUriChange={e ? set('polPh1') : undefined} />
-        <Polaroid size={105} rotate={-4} tapeColor="#fbecc4" style={s.pol3} editing={e} caption={cap2} onCaptionChange={e ? set('cap2') : undefined} uri={polPh2} onUriChange={e ? set('polPh2') : undefined} />
+        <Polaroid size={120} rotate={-7} tapeColor="#fadde5" style={s.pol1} editing={e} caption={cap0} onCaptionChange={e ? set('cap0') : undefined} uri={polPh0} onUriChange={e ? set('polPh0') : undefined} />
+        <Polaroid size={125} rotate={5}  tapeColor="#ece4f7" style={s.pol2} editing={e} caption={cap1} onCaptionChange={e ? set('cap1') : undefined} uri={polPh1} onUriChange={e ? set('polPh1') : undefined} />
+        <Polaroid size={115} rotate={-4} tapeColor="#fbecc4" style={s.pol3} editing={e} caption={cap2} onCaptionChange={e ? set('cap2') : undefined} uri={polPh2} onUriChange={e ? set('polPh2') : undefined} />
       </View>
 
       <View style={s.gap12} />
@@ -95,10 +110,10 @@ const s = StyleSheet.create({
   gridPhoto: { flex: 1 },
   gap12: { height: 12 },
   songPill: { marginBottom: 8 },
-  polaroidArea: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'flex-start', marginTop: 4, paddingVertical: 8 },
-  pol1: { marginTop: 0 },
-  pol2: { marginTop: 24 },
-  pol3: { marginTop: 10 },
+  polaroidArea: { flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-start', marginTop: 4, paddingVertical: 8 },
+  pol1: { marginTop: 0, marginRight: -15, zIndex: 1 },
+  pol2: { marginTop: 18, zIndex: 3 },
+  pol3: { marginTop: 40, marginLeft: -15, zIndex: 2 },
   paletteRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
   swatch: { width: 26, height: 26, borderWidth: 1.5, borderColor: INK, borderRadius: 4 },
   footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 14 },
