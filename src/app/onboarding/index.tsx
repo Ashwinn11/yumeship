@@ -1,0 +1,148 @@
+import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { router } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { Mark } from '@/components/ui/Mark';
+import { Button } from '@/components/ui/Button';
+import { Sparkle } from '@/components/deco/Sparkle';
+import { Heart } from '@/components/deco/Heart';
+import { Sakura } from '@/components/deco/Sakura';
+import { Colors, FontFamily, FontSize, Spacing } from '@/constants/theme';
+
+export default function OnbWelcome() {
+  const insets = useSafeAreaInsets();
+
+  return (
+    <View style={[styles.screen, { paddingTop: insets.top + Spacing.s4, paddingBottom: insets.bottom + Spacing.s4 }]}>
+      {/* Sakura petal scatter — background accents */}
+      <View style={styles.decoTL} pointerEvents="none">
+        <Sakura size={28} color={Colors.sakura} />
+      </View>
+      <View style={styles.decoBR} pointerEvents="none">
+        <Sakura size={22} color={Colors.lavenderSoft} />
+      </View>
+      <View style={styles.decoTR} pointerEvents="none">
+        <Sparkle size={16} color={Colors.butterSoft} />
+      </View>
+
+      {/* Main content */}
+      <View style={styles.content}>
+        <View style={styles.markRow}>
+          <Mark size={72} />
+        </View>
+
+        <Text style={styles.title}>yumeship</Text>
+
+        <Text style={styles.ja}>夢 ・ ゆめしっぷ</Text>
+
+        <Text style={styles.quote}>
+          "A quiet place to keep them. Held close, like a letter you never sent."
+        </Text>
+
+        <View style={styles.decoRow}>
+          <Sparkle size={14} color={Colors.sakuraDeep} />
+          <Heart size={14} color={Colors.plum} outline />
+          <Sparkle size={10} color={Colors.lavenderDeep} />
+        </View>
+      </View>
+
+      {/* Bottom actions */}
+      <View style={styles.actions}>
+        <Button
+          variant="primary"
+          size="lg"
+          full
+          onPress={() => router.push('/onboarding/persona')}
+          icon={<Heart size={14} color={Colors.vellum} />}
+          iconPosition="right"
+        >
+          begin · let's meet them
+        </Button>
+
+        <Pressable onPress={() => router.replace('/(tabs)')} style={styles.skipPressable}>
+          <Text style={styles.skip}>I have an account</Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: Colors.paper,
+  },
+  decoTL: {
+    position: 'absolute',
+    top: 80,
+    left: 20,
+    opacity: 0.55,
+  },
+  decoTR: {
+    position: 'absolute',
+    top: 100,
+    right: 24,
+    opacity: 0.6,
+  },
+  decoBR: {
+    position: 'absolute',
+    bottom: 120,
+    right: 30,
+    opacity: 0.45,
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: Spacing.s7,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 0,
+  },
+  markRow: {
+    marginBottom: Spacing.s6,
+  },
+  title: {
+    fontFamily: FontFamily.displayItalic,
+    fontSize: 56,
+    lineHeight: 54,
+    letterSpacing: -1,
+    color: Colors.ink,
+    textAlign: 'center',
+  },
+  ja: {
+    fontFamily: FontFamily.ja,
+    fontSize: 14,
+    color: Colors.ink2,
+    textAlign: 'center',
+    marginTop: Spacing.s2,
+    letterSpacing: 1.4,
+  },
+  quote: {
+    fontFamily: FontFamily.displayItalic,
+    fontSize: FontSize.h5 - 4,
+    lineHeight: 26,
+    color: Colors.ink2,
+    textAlign: 'center',
+    marginTop: Spacing.s7,
+    paddingHorizontal: Spacing.s4,
+  },
+  decoRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: Spacing.s5,
+    alignItems: 'center',
+  },
+  actions: {
+    paddingHorizontal: Spacing.s6,
+    paddingBottom: Spacing.s3,
+    gap: Spacing.s3,
+  },
+  skipPressable: {
+    alignItems: 'center',
+  },
+  skip: {
+    fontFamily: FontFamily.ui,
+    fontSize: FontSize.meta,
+    color: Colors.ink3,
+    textDecorationLine: 'underline',
+  },
+});

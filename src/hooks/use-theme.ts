@@ -1,14 +1,13 @@
-/**
- * Learn more about light and dark modes:
- * https://docs.expo.dev/guides/color-schemes/
- */
-
 import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 
+// Returns a fixed light-mode color map shaped for the Expo starter components.
+// This app is light-only; dark mode is not designed yet.
 export function useTheme() {
-  const scheme = useColorScheme();
-  const theme = scheme === 'unspecified' ? 'light' : scheme;
-
-  return Colors[theme];
+  return {
+    text:                Colors.ink,
+    background:          Colors.paper,
+    backgroundElement:   Colors.paperDeep,
+    backgroundSelected:  Colors.paperSoft,
+    textSecondary:       Colors.ink3,
+  } as const;
 }

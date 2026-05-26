@@ -1,26 +1,37 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>yumeship — design system</title>
   <link rel="stylesheet" href="tokens.css" />
   <style>
-    html, body { margin: 0; background: #f0eee9; }
-    body { font-family: "DM Sans", system-ui, sans-serif; }
+    html,
+    body {
+      margin: 0;
+      background: #f0eee9;
+    }
+
+    body {
+      font-family: "DM Sans", system-ui, sans-serif;
+    }
 
     /* ── Cover ─────────────────────────────── */
     .ys-cover {
       background: linear-gradient(160deg, #fde0ce 0%, #fadde5 50%, #ece4f7 100%);
       padding: 40px 56px;
-      width: 100%; height: 100%;
-      display: flex; flex-direction: column;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
       gap: 12px;
       color: var(--ink);
       border-radius: 20px;
       position: relative;
       overflow: hidden;
     }
+
     .ys-cover-eyebrow {
       font-family: var(--font-mono);
       font-size: 11px;
@@ -29,10 +40,14 @@
       text-transform: uppercase;
       font-weight: 600;
     }
+
     .ys-cover-mark-row {
-      display: flex; align-items: center; gap: 18px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
       margin-top: 2px;
     }
+
     .ys-cover-title {
       font-family: var(--font-display);
       font-size: 108px;
@@ -41,12 +56,14 @@
       font-style: italic;
       color: var(--ink);
     }
+
     .ys-cover-ja {
       font-family: var(--font-ja);
       font-size: 22px;
       color: var(--ink-2);
       letter-spacing: 0.12em;
     }
+
     .ys-cover-tagline {
       font-family: var(--font-display);
       font-style: italic;
@@ -55,6 +72,7 @@
       color: var(--ink-2);
       max-width: 620px;
     }
+
     .ys-cover-meta {
       margin-top: auto;
       display: flex;
@@ -64,6 +82,7 @@
       position: relative;
       z-index: 2;
     }
+
     .ys-cover-meta dl {
       margin: 0;
       display: grid;
@@ -71,6 +90,7 @@
       gap: 4px 16px;
       font-size: 12px;
     }
+
     .ys-cover-meta dt {
       font-family: var(--font-mono);
       font-size: 10px;
@@ -80,7 +100,12 @@
       align-self: center;
       font-weight: 600;
     }
-    .ys-cover-meta dd { margin: 0; color: var(--ink); }
+
+    .ys-cover-meta dd {
+      margin: 0;
+      color: var(--ink);
+    }
+
     .ys-cover-decor {
       position: absolute;
       pointer-events: none;
@@ -88,16 +113,20 @@
 
     /* ── Section note tile ───────────────── */
     .ys-section-note {
-      width: 100%; height: 100%;
+      width: 100%;
+      height: 100%;
       padding: 28px;
       background: linear-gradient(170deg, var(--vellum), var(--sakura-soft));
       border-radius: 18px;
       border: 1px solid var(--sakura);
-      display: flex; flex-direction: column; gap: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
       color: var(--ink);
       position: relative;
       overflow: hidden;
     }
+
     .ys-section-note h3 {
       font-family: var(--font-display);
       font-style: italic;
@@ -106,12 +135,14 @@
       letter-spacing: -0.01em;
       margin: 0;
     }
+
     .ys-section-note p {
       font-size: 13px;
       line-height: 1.6;
       color: var(--ink-2);
       margin: 0;
     }
+
     .ys-section-note .eyebrow {
       font-family: var(--font-mono);
       font-size: 10px;
@@ -120,26 +151,42 @@
       text-transform: uppercase;
       font-weight: 600;
     }
+
     .ys-section-note ul {
-      margin: 0; padding: 0; list-style: none;
-      display: flex; flex-direction: column; gap: 7px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
     }
+
     .ys-section-note ul li {
-      display: flex; gap: 8px;
-      font-size: 12px; color: var(--ink-2);
+      display: flex;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--ink-2);
       line-height: 1.4;
     }
+
     .ys-section-note ul li::before {
-      content: "♡"; color: var(--sakura-deep);
+      content: "♡";
+      color: var(--sakura-deep);
       font-size: 10px;
       flex-shrink: 0;
       margin-top: 2px;
     }
   </style>
 
-  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
-  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
-  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js"
+    integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L"
+    crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"
+    integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm"
+    crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"
+    integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y"
+    crossorigin="anonymous"></script>
 
   <script type="text/babel" src="design-canvas.jsx"></script>
   <script type="text/babel" src="ios-frame.jsx"></script>
@@ -147,10 +194,10 @@
   <script type="text/babel" src="components.jsx"></script>
   <script type="text/babel" src="cards.jsx"></script>
   <script type="text/babel" src="spec.jsx"></script>
-  <script type="text/babel" src="templates.jsx"></script>
   <script type="text/babel" src="template-pages.jsx"></script>
   <script type="text/babel" src="screens.jsx"></script>
 </head>
+
 <body>
   <div id="root"></div>
 
@@ -239,7 +286,7 @@
               letterSpacing: "0.06em",
               fontWeight: 600,
             }}>
-              2026.05.25<br/>
+              2026.05.25<br />
               v0.2 · "kawaii"
             </div>
           </div>
@@ -383,31 +430,31 @@
           </DCSection>
 
           <DCSection id="template-pages" title="Template pages" subtitle="community visual language — 9 styles, fillable sheets">
-            <DCArtboard id="tp-getto"   label="@reversiblekisses · marker"   width={560} height={880}>
+            <DCArtboard id="tp-getto" label="@reversiblekisses · marker" width={560} height={880}>
               <div style={{ padding: 20, display: "grid", placeItems: "center", width: "100%", height: "100%", background: "#f0eee9" }}><YS_T_GetToKnow /></div>
             </DCArtboard>
-            <DCArtboard id="tp-kawaii"  label="@cherrypopstamp · kawaii UI"  width={560} height={880}>
+            <DCArtboard id="tp-kawaii" label="@cherrypopstamp · kawaii UI" width={560} height={880}>
               <div style={{ padding: 20, display: "grid", placeItems: "center", width: "100%", height: "100%", background: "#f0eee9" }}><YS_T_KawaiiUI /></div>
             </DCArtboard>
-            <DCArtboard id="tp-heart"   label="@bunny.thoughts · heart"     width={560} height={880}>
+            <DCArtboard id="tp-heart" label="@bunny.thoughts · heart" width={560} height={880}>
               <div style={{ padding: 20, display: "grid", placeItems: "center", width: "100%", height: "100%", background: "#f0eee9" }}><YS_T_HeartFrame /></div>
             </DCArtboard>
             <DCArtboard id="tp-aesthetic" label="@cloudbloom.kr · aesthetic" width={560} height={880}>
               <div style={{ padding: 20, display: "grid", placeItems: "center", width: "100%", height: "100%", background: "#f0eee9" }}><YS_T_Aesthetic /></div>
             </DCArtboard>
-            <DCArtboard id="tp-thisthat" label="@softfangs · this or that"   width={560} height={880}>
+            <DCArtboard id="tp-thisthat" label="@softfangs · this or that" width={560} height={880}>
               <div style={{ padding: 20, display: "grid", placeItems: "center", width: "100%", height: "100%", background: "#f0eee9" }}><YS_T_ThisOrThat /></div>
             </DCArtboard>
-            <DCArtboard id="tp-bound"   label="@petalpressed · boundaries"  width={560} height={880}>
+            <DCArtboard id="tp-bound" label="@petalpressed · boundaries" width={560} height={880}>
               <div style={{ padding: 20, display: "grid", placeItems: "center", width: "100%", height: "100%", background: "#f0eee9" }}><YS_T_Boundaries /></div>
             </DCArtboard>
-            <DCArtboard id="tp-letter"  label="@inkdrop.diary · love letter" width={560} height={880}>
+            <DCArtboard id="tp-letter" label="@inkdrop.diary · love letter" width={560} height={880}>
               <div style={{ padding: 20, display: "grid", placeItems: "center", width: "100%", height: "100%", background: "#f0eee9" }}><YS_T_LoveLetter /></div>
             </DCArtboard>
-            <DCArtboard id="tp-story"   label="@plumstamps · storyline"     width={560} height={880}>
+            <DCArtboard id="tp-story" label="@plumstamps · storyline" width={560} height={880}>
               <div style={{ padding: 20, display: "grid", placeItems: "center", width: "100%", height: "100%", background: "#f0eee9" }}><YS_T_Storyline /></div>
             </DCArtboard>
-            <DCArtboard id="tp-hc"      label="@daydreamr · headcanons"     width={560} height={880}>
+            <DCArtboard id="tp-hc" label="@daydreamr · headcanons" width={560} height={880}>
               <div style={{ padding: 20, display: "grid", placeItems: "center", width: "100%", height: "100%", background: "#f0eee9" }}><YS_T_Headcanons /></div>
             </DCArtboard>
           </DCSection>
@@ -439,4 +486,5 @@
     ReactDOM.createRoot(document.getElementById("root")).render(<App />);
   </script>
 </body>
+
 </html>
