@@ -1,24 +1,24 @@
 import { useState } from 'react';
 import {
-  Alert, KeyboardAvoidingView, Platform, Pressable,
+  Alert, Image, KeyboardAvoidingView, Platform, Pressable,
   ScrollView, StyleSheet, Text, TextInput, View,
 } from 'react-native';
-import Svg, { Circle, Path } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Svg, { Circle, Path } from 'react-native-svg';
 
-import { TitleHeader, FILL_GRAY, Check, BlankPill } from '@/components/templates/primitives';
 import { Heart } from '@/components/deco/Heart';
+import { BlankPill, Check, FILL_GRAY, TitleHeader } from '@/components/templates/primitives';
 
+import { Sparkle } from '@/components/deco/Sparkle';
 import { AlbumsTab } from '@/components/tabs/AlbumsTab';
 import { DatesTab } from '@/components/tabs/DatesTab';
 import { MessagesTab } from '@/components/tabs/MessagesTab';
 import { StorylineTab } from '@/components/tabs/StorylineTab';
-import { INK, MarkerCard, SquareCheck } from '@/components/templates/primitives';
-import { Sparkle } from '@/components/deco/Sparkle';
+import { INK, SquareCheck } from '@/components/templates/primitives';
 import { IconPlus } from '@/components/ui/Icon';
 import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing } from '@/constants/theme';
 import { addFoMessage, deleteFoMessage, toggleFoMessage, useFoMessages } from '@/store/foNotifications';
-import { addHeadcanon, deleteHeadcanon, useHeadcanons, useHeadcanonCounts } from '@/store/headcanons';
+import { addHeadcanon, deleteHeadcanon, useHeadcanonCounts, useHeadcanons } from '@/store/headcanons';
 import { addScenario, deleteScenario, useScenarios } from '@/store/scenarios';
 import { useShips } from '@/store/ships';
 import { loadTemplateData, saveTemplateData } from '@/store/templateData';
@@ -34,14 +34,14 @@ type Feature =
   | 'fo-messages';
 
 const FEATURES: { id: Feature; ja: string; label: string; desc: string; color: string; bg: string }[] = [
-  { id: 'headcanons',  ja: '想', label: 'Headcanons',     desc: 'personality · habits · favorites', color: Colors.sakuraDeep,    bg: Colors.sakuraSoft },
-  { id: 'scenarios',  ja: '物', label: 'Scenarios',       desc: 'write your stories',               color: Colors.lavenderDeep,  bg: Colors.lavenderSoft },
-  { id: 'messages',   ja: '話', label: 'Messages',        desc: 'conversations & threads',          color: Colors.peachDeep,     bg: Colors.peachSoft },
-  { id: 'albums',     ja: '写', label: 'Albums',          desc: 'photo collections',                color: Colors.sageDeep,      bg: Colors.sageSoft },
-  { id: 'boundaries', ja: '夢', label: 'Boundaries',      desc: 'sharing rules & what\'s ok',      color: Colors.plum,          bg: Colors.lavenderSoft },
-  { id: 'storyline',  ja: '時', label: 'Storyline',       desc: 'timeline of moments',              color: Colors.ink2,          bg: Colors.paperDeep },
-  { id: 'dates',      ja: '日', label: 'Dates',           desc: 'anniversaries & events',           color: Colors.peachDeep,     bg: Colors.peachSoft },
-  { id: 'fo-messages',ja: '♡', label: 'F/O Messages',    desc: 'messages from them ♡',             color: Colors.sakuraInk,     bg: Colors.sakuraSoft },
+  { id: 'headcanons', ja: '想', label: 'Headcanons', desc: 'personality · habits · favorites', color: Colors.sakuraDeep, bg: Colors.sakuraSoft },
+  { id: 'scenarios', ja: '物', label: 'Scenarios', desc: 'write your stories', color: Colors.lavenderDeep, bg: Colors.lavenderSoft },
+  { id: 'messages', ja: '話', label: 'Messages', desc: 'conversations & threads', color: Colors.peachDeep, bg: Colors.peachSoft },
+  { id: 'albums', ja: '写', label: 'Albums', desc: 'photo collections', color: Colors.sageDeep, bg: Colors.sageSoft },
+  { id: 'boundaries', ja: '夢', label: 'Boundaries', desc: 'sharing rules & what\'s ok', color: Colors.plum, bg: Colors.lavenderSoft },
+  { id: 'storyline', ja: '時', label: 'Storyline', desc: 'timeline of moments', color: Colors.ink2, bg: Colors.paperDeep },
+  { id: 'dates', ja: '日', label: 'Dates', desc: 'anniversaries & events', color: Colors.peachDeep, bg: Colors.peachSoft },
+  { id: 'fo-messages', ja: '♡', label: 'F/O Messages', desc: 'messages from them ♡', color: Colors.sakuraInk, bg: Colors.sakuraSoft },
 ];
 
 export default function VaultScreen() {
@@ -56,14 +56,14 @@ export default function VaultScreen() {
   function renderFeature() {
     if (!ship || !activeFeature) return null;
     switch (activeFeature) {
-      case 'headcanons':   return <HeadcanonsFeature shipId={ship.id} shipName={ship.name} />;
-      case 'scenarios':    return <ScenariosFeature shipId={ship.id} shipName={ship.name} />;
-      case 'messages':     return <MessagesTab shipId={ship.id} shipName={ship.name} />;
-      case 'albums':       return <AlbumsTab shipId={ship.id} />;
-      case 'boundaries':   return <BoundariesFeature shipId={ship.id} />;
-      case 'storyline':    return <StorylineTab shipId={ship.id} shipName={ship.name} />;
-      case 'dates':        return <DatesTab shipId={ship.id} />;
-      case 'fo-messages':  return <FoMessagesFeature shipId={ship.id} shipName={ship.name} />;
+      case 'headcanons': return <HeadcanonsFeature shipId={ship.id} shipName={ship.name} />;
+      case 'scenarios': return <ScenariosFeature shipId={ship.id} shipName={ship.name} />;
+      case 'messages': return <MessagesTab shipId={ship.id} shipName={ship.name} />;
+      case 'albums': return <AlbumsTab shipId={ship.id} />;
+      case 'boundaries': return <BoundariesFeature shipId={ship.id} />;
+      case 'storyline': return <StorylineTab shipId={ship.id} shipName={ship.name} />;
+      case 'dates': return <DatesTab shipId={ship.id} />;
+      case 'fo-messages': return <FoMessagesFeature shipId={ship.id} shipName={ship.name} />;
     }
   }
 
@@ -158,9 +158,9 @@ export default function VaultScreen() {
 
 const HC_CATS: { id: string; ja: string; label: string; color: string }[] = [
   { id: 'personality', ja: '性', label: 'Personality', color: Colors.sakuraDeep },
-  { id: 'habits',      ja: '癖', label: 'Habits',      color: Colors.lavenderDeep },
-  { id: 'favorites',   ja: '好', label: 'Favorites',   color: Colors.peachDeep },
-  { id: 'howmet',      ja: '逢', label: 'How Met',     color: Colors.sageDeep },
+  { id: 'habits', ja: '癖', label: 'Habits', color: Colors.lavenderDeep },
+  { id: 'favorites', ja: '好', label: 'Favorites', color: Colors.peachDeep },
+  { id: 'howmet', ja: '逢', label: 'How Met', color: Colors.sageDeep },
 ];
 
 function HeadcanonsFeature({ shipId, shipName }: { shipId: string; shipName: string }) {
@@ -815,7 +815,7 @@ function FoMessagesFeature({ shipId, shipName }: { shipId: string; shipName: str
               timeLabel = `${displayHour} ${ampm}`;
             }
             const displaySender = m.senderName || shipName;
-            
+
             let displayBody = m.body;
             let variationCount = 0;
             try {
@@ -826,7 +826,7 @@ function FoMessagesFeature({ shipId, shipName }: { shipId: string; shipName: str
                   variationCount = arr.length;
                 }
               }
-            } catch (_) {}
+            } catch (_) { }
 
             return (
               <Pressable
@@ -892,6 +892,7 @@ function FoCompose({ shipName, onQueue, onBack }: {
   const [senderName, setSenderName] = useState(shipName);
   const [arrivalDay, setArrivalDay] = useState<'now' | 'today' | 'tomorrow' | 'everyday' | 'random'>('everyday');
   const [aroundTime, setAroundTime] = useState<'morning' | 'afternoon' | 'evening' | 'night'>('morning');
+  const filteredOptions = options.map(o => o.trim()).filter(Boolean);
 
   function pickStarter(presetName: string) {
     const list = STARTER_PRESETS[presetName];
@@ -1035,8 +1036,29 @@ function FoCompose({ shipName, onQueue, onBack }: {
           </>
         )}
 
+        <Text style={fo.sectionLabel}>PREVIEW</Text>
+        <View style={[fo.notifStackContainer, filteredOptions.length > 1 && fo.notifStackActive]}>
+          {filteredOptions.length > 1 && (
+            <>
+              <View style={[fo.notifBanner, fo.notifCardBack2]} />
+              <View style={[fo.notifBanner, fo.notifCardBack1]} />
+            </>
+          )}
+          <View style={fo.notifBanner}>
+            <View style={fo.notifHeader}>
+              <View style={fo.notifAppInfo}>
+                <Image style={fo.notifIcon} source={require('@/assets/images/icon.png')} />
+                <Text style={fo.notifAppName}>YUMESHIP</Text>
+              </View>
+              <Text style={fo.notifTime}>now</Text>
+            </View>
+            <Text style={fo.notifTitle} numberOfLines={1}>{senderName.trim() || shipName}</Text>
+            <Text style={fo.notifBody} numberOfLines={2}>{filteredOptions[0] || 'a message for you~'}</Text>
+          </View>
+        </View>
+
         <View style={fo.previewRow}>
-          <Text style={fo.previewLabel}>Preview</Text>
+          <Text style={fo.previewLabel}>Schedule</Text>
           <Text style={fo.previewValue}>{previewText}</Text>
         </View>
 
@@ -1342,6 +1364,52 @@ const fo = StyleSheet.create({
     borderRadius: Radius.pill, marginTop: 4, marginBottom: Spacing.s4,
   },
   addMsgBtnText: { fontFamily: FontFamily.uiMedium, fontSize: 13, color: Colors.sakuraDeep },
+
+  notifBanner: {
+    backgroundColor: 'rgba(255, 255, 255, 0.88)',
+    borderWidth: 0.5,
+    borderColor: 'rgba(0, 0, 0, 0.1)',
+    borderRadius: 16,
+    paddingVertical: 11,
+    paddingHorizontal: 14,
+    ...Shadow.s1,
+    marginBottom: Spacing.s3,
+  },
+  notifHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 },
+  notifAppInfo: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  notifIcon: { width: 18, height: 18, borderRadius: 4 },
+  notifAppName: { fontFamily: FontFamily.uiSemiBold, fontSize: 10.5, color: Colors.ink, letterSpacing: 0.5, textTransform: 'uppercase' },
+  notifTime: { fontFamily: FontFamily.ui, fontSize: 11, color: Colors.ink3 },
+  notifTitle: { fontFamily: FontFamily.uiSemiBold, fontSize: 13.5, color: Colors.ink, fontWeight: '600' },
+  notifBody: { fontFamily: FontFamily.ui, fontSize: 13, color: Colors.ink2, lineHeight: 17, marginTop: 1 },
+
+  notifStackContainer: {
+    position: 'relative',
+    marginBottom: Spacing.s3,
+  },
+  notifStackActive: {
+    marginBottom: Spacing.s5 + 4, // Reserve space for the offset stacked cards below
+  },
+  notifCardBack1: {
+    position: 'absolute',
+    bottom: -6,
+    left: 8,
+    right: 8,
+    height: 48,
+    zIndex: -1,
+    opacity: 0.6,
+    borderTopWidth: 0,
+  },
+  notifCardBack2: {
+    position: 'absolute',
+    bottom: -12,
+    left: 16,
+    right: 16,
+    height: 40,
+    zIndex: -2,
+    opacity: 0.35,
+    borderTopWidth: 0,
+  },
 
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
