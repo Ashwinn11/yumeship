@@ -10,6 +10,7 @@ import { CozyModal } from '@/components/ui/CozyModal';
 import { IconPlus } from '@/components/ui/Icon';
 import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing } from '@/constants/theme';
 import { addDate, deleteDate, daysUntil, useDates } from '@/store/dates';
+import { requestPermission } from '@/store/notifications';
 import { DateField } from '@/components/ui/DateField';
 
 const DATE_COLORS = [Colors.sakuraDeep, Colors.peachDeep, Colors.lavenderDeep, Colors.sageDeep];
@@ -21,13 +22,19 @@ export function DatesTab({ shipId, shipName }: { shipId: string; shipName?: stri
   const [subtitle, setSubtitle] = useState('');
   const [date, setDate] = useState('');
   const [yearly, setYearly] = useState(true);
+  const [notify, setNotify] = useState(false);
   const [dateToDelete, setDateToDelete] = useState<string | null>(null);
   const [annivInfo, setAnnivInfo] = useState(false);
 
-  function save() {
+  async function save() {
     if (!title.trim() || !date.trim()) return;
-    addDate(shipId, { title: title.trim(), date: date.trim(), yearly, subtitle: subtitle.trim() });
-    setTitle(''); setSubtitle(''); setDate(''); setYearly(true);
+    let notifyEnabled = notify;
+    if (notify) {
+      const granted = await requestPermission();
+      if (!granted) notifyEnabled = false;
+    }
+    await addDate(shipId, { title: title.trim(), date: date.trim(), yearly, notify: notifyEnabled, subtitle: subtitle.trim() });
+    setTitle(''); setSubtitle(''); setDate(''); setYearly(true); setNotify(false);
     setComposing(false);
   }
 
@@ -261,6 +268,19 @@ export function DatesTab({ shipId, shipName }: { shipId: string; shipName?: stri
               <Switch
                 value={yearly}
                 onValueChange={setYearly}
+                trackColor={{ true: Colors.sakuraDeep, false: Colors.line }}
+                thumbColor={Colors.vellum}
+              />
+            </View>
+
+            <View style={s.toggleRow}>
+              <View style={s.toggleLabel}>
+                <Text style={s.toggleTitle}>remind me ♡</Text>
+                <Text style={s.toggleSub}>get a notification on this date</Text>
+              </View>
+              <Switch
+                value={notify}
+                onValueChange={setNotify}
                 trackColor={{ true: Colors.sakuraDeep, false: Colors.line }}
                 thumbColor={Colors.vellum}
               />

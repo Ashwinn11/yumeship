@@ -10,6 +10,7 @@ export function initDb() {
   try { db.execSync(`ALTER TABLE fo_messages ADD COLUMN sender_name TEXT NOT NULL DEFAULT ''`); } catch (_) {}
   try { db.execSync(`ALTER TABLE fo_messages ADD COLUMN current_index INTEGER NOT NULL DEFAULT 0`); } catch (_) {}
   try { db.execSync(`ALTER TABLE dates ADD COLUMN subtitle TEXT NOT NULL DEFAULT ''`); } catch (_) {}
+  try { db.execSync(`ALTER TABLE dates ADD COLUMN notif_id TEXT NOT NULL DEFAULT ''`); } catch (_) {}
   db.execSync(`
     CREATE TABLE IF NOT EXISTS ships (
       id TEXT PRIMARY KEY,
@@ -62,6 +63,7 @@ export function initDb() {
       date TEXT NOT NULL,
       yearly INTEGER NOT NULL DEFAULT 1,
       notify INTEGER NOT NULL DEFAULT 0,
+      notif_id TEXT NOT NULL DEFAULT '',
       subtitle TEXT NOT NULL DEFAULT '',
       created_at INTEGER NOT NULL
     );

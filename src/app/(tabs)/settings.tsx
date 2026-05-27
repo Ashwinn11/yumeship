@@ -1,7 +1,7 @@
 import * as FileSystem from 'expo-file-system/legacy';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Heart } from '@/components/deco/Heart';
@@ -23,7 +23,8 @@ import { Colors, FontFamily, FontSize, Radius, Spacing } from '@/constants/theme
 import {
   getNotifEnabled, requestPermission, setNotifEnabled,
 } from '@/store/notifications';
-import { isPremium, manageSubscriptions, restorePurchases } from '@/store/purchases';
+import { manageSubscriptions, restorePurchases } from '@/store/purchases';
+import { usePremium } from '@/store/premium';
 import { deleteAllData } from '@/store/ships';
 
 // ─── Shared sub-components ────────────────────────────────────────────────────
@@ -138,9 +139,9 @@ export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const [notifEnabled, setNotifEnabledState] = useState(() => getNotifEnabled());
   const [storageLabel, setStorageLabel] = useState('—');
-  const [premium, setPremium] = useState(false);
-  const [checkingPremium, setCheckingPremium] = useState(true);
+  const premium = usePremium();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [alertModal, setAlertModal] = useState<{ title: string; message: string } | null>(null);
 
   useEffect(() => {
     const path = (FileSystem.documentDirectory ?? '') + 'SQLite/yumeship.db';
@@ -152,7 +153,6 @@ export default function SettingsScreen() {
         setStorageLabel('< 1 KB');
       }
     });
-    isPremium().then((v) => { setPremium(v); setCheckingPremium(false); });
   }, []);
 
   async function handleToggleNotif(v: boolean) {
@@ -168,7 +168,7 @@ export default function SettingsScreen() {
     try {
       await manageSubscriptions();
     } catch (e: any) {
-      Alert.alert('Error', e?.message ?? 'Could not open subscription management.');
+      setAlertModal({ title: 'Error', message: e?.message ?? 'Could not open subscription management.' });
     }
   }
 
@@ -176,13 +176,12 @@ export default function SettingsScreen() {
     try {
       const { isPremium: active } = await restorePurchases();
       if (active) {
-        setPremium(true);
-        Alert.alert('Restored!', 'Your premium subscription has been restored.');
+        setAlertModal({ title: 'Restored! ✓', message: 'Your premium subscription has been restored.' });
       } else {
-        Alert.alert('Nothing to restore', 'No active subscription found for this Apple ID.');
+        setAlertModal({ title: 'Nothing to restore', message: 'No active subscription found for this Apple ID.' });
       }
     } catch (e: any) {
-      Alert.alert('Error', e?.message ?? 'Could not restore purchases.');
+      setAlertModal({ title: 'Error', message: e?.message ?? 'Could not restore purchases.' });
     }
   }
 
@@ -213,34 +212,32 @@ export default function SettingsScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Pro card — dynamic based on subscription status */}
-        {!checkingPremium && (
-          premium ? (
-            <View style={[styles.proCard, styles.proCardActive]}>
-              <View style={styles.proSparkle}>
-                <Sparkle size={22} color={Colors.sakuraDeep} />
-              </View>
-              <View style={styles.proEyebrow}>
-                <Heart size={12} color={Colors.sakuraDeep} />
-                <Text style={styles.proLabel}>yumeship premium</Text>
-              </View>
-              <Text style={styles.proText}>Active ✓{'\n'}Thank you for your support!</Text>
+        {premium ? (
+          <View style={[styles.proCard, styles.proCardActive]}>
+            <View style={styles.proSparkle}>
+              <Sparkle size={22} color={Colors.sakuraDeep} />
             </View>
-          ) : (
-            <Pressable
-              style={styles.proCard}
-              onPress={() => router.push('/paywall' as any)}
-              id="settings-upgrade"
-            >
-              <View style={styles.proSparkle}>
-                <Sparkle size={22} color={Colors.sakuraDeep} />
-              </View>
-              <View style={styles.proEyebrow}>
-                <Heart size={12} color={Colors.sakuraDeep} />
-                <Text style={styles.proLabel}>yumeship premium</Text>
-              </View>
-              <Text style={styles.proText}>Unlimited ships.{'\n'}Unlock everything →</Text>
-            </Pressable>
-          )
+            <View style={styles.proEyebrow}>
+              <Heart size={12} color={Colors.sakuraDeep} />
+              <Text style={styles.proLabel}>yumeship premium</Text>
+            </View>
+            <Text style={styles.proText}>Active ✓{'\n'}Thank you for your support!</Text>
+          </View>
+        ) : (
+          <Pressable
+            style={styles.proCard}
+            onPress={() => router.push('/paywall' as any)}
+            id="settings-upgrade"
+          >
+            <View style={styles.proSparkle}>
+              <Sparkle size={22} color={Colors.sakuraDeep} />
+            </View>
+            <View style={styles.proEyebrow}>
+              <Heart size={12} color={Colors.sakuraDeep} />
+              <Text style={styles.proLabel}>yumeship premium</Text>
+            </View>
+            <Text style={styles.proText}>Unlimited ships.{'\n'}Unlock everything →</Text>
+          </Pressable>
         )}
 
         <SettingGroup ja="便" name="Notifications">
@@ -307,6 +304,13 @@ export default function SettingsScreen() {
         }}
         onClose={() => setShowDeleteModal(false)}
         isDestructive={true}
+      />
+      <CozyModal
+        visible={!!alertModal}
+        title={alertModal?.title}
+        message={alertModal?.message}
+        confirmText="OK"
+        onClose={() => setAlertModal(null)}
       />
     </View>
   );

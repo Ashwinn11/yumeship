@@ -7,11 +7,12 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { initDb } from '@/db/init';
 import { configureRevenueCat } from '@/store/purchases';
+import { refreshPremium } from '@/store/premium';
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  useMemo(() => { initDb(); configureRevenueCat(); }, []);
+  useMemo(() => { initDb(); configureRevenueCat(); refreshPremium(); }, []);
 
   const [loaded] = useFonts({
     'InstrumentSerif-Italic': require('../../assets/fonts/InstrumentSerif-Italic.ttf'),

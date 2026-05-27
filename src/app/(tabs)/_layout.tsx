@@ -4,6 +4,8 @@ import { View } from 'react-native';
 
 import { RootTabBar, type RootTab } from '@/components/nav/RootTabBar';
 import { resetOnb } from '@/store/onboarding';
+import { usePremium } from '@/store/premium';
+import { useShips } from '@/store/ships';
 
 const ROUTE_TO_TAB: Record<string, RootTab> = {
   index:    'home',
@@ -27,6 +29,8 @@ type TabBarProps = {
 
 function CustomTabBar({ state, navigation, descriptors }: TabBarProps) {
   const insets = useSafeAreaInsets();
+  const ships = useShips();
+  const premium = usePremium();
   const activeRoute = state.routes[state.index];
   const activeOptions = descriptors[activeRoute?.key ?? '']?.options ?? {};
   const tabBarStyle = activeOptions.tabBarStyle as { display?: string } | undefined;
@@ -35,15 +39,21 @@ function CustomTabBar({ state, navigation, descriptors }: TabBarProps) {
 
   const active = ROUTE_TO_TAB[activeRoute?.name ?? 'index'] ?? 'home';
 
+  function handlePlus() {
+    if (!premium && ships.length >= 1) {
+      router.push('/paywall');
+      return;
+    }
+    resetOnb();
+    router.push({ pathname: '/onboarding/fo', params: { mode: 'new' } });
+  }
+
   return (
     <View style={{ paddingBottom: insets.bottom }}>
       <RootTabBar
         active={active}
         onPress={(tab) => navigation.navigate(TAB_TO_ROUTE[tab])}
-        onPlusPress={() => {
-          resetOnb();
-          router.push({ pathname: '/onboarding/fo', params: { mode: 'new' } });
-        }}
+        onPlusPress={handlePlus}
       />
     </View>
   );

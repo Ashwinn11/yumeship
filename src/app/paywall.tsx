@@ -2,7 +2,6 @@ import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Image,
   Pressable,
   ScrollView,
@@ -18,7 +17,9 @@ import {
   StickerSakuraBranch, StickerEnvelope, StickerWaxSeal, StickerHeartPatch,
 } from '@/components/deco/Stickers';
 import { WashiTape } from '@/components/deco/WashiTape';
+import { CozyModal } from '@/components/ui';
 import { Colors, FontFamily, FontSize, Radius, Spacing } from '@/constants/theme';
+import { refreshPremium } from '@/store/premium';
 import {
   getAvailablePackages,
   getIntroOfferInfo,
@@ -169,6 +170,7 @@ export default function PaywallScreen() {
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState(false);
   const [restoring, setRestoring] = useState(false);
+  const [alertModal, setAlertModal] = useState<{ title: string; message: string; onClose?: () => void } | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -232,14 +234,17 @@ export default function PaywallScreen() {
     try {
       const result = await purchasePackage(selected);
       if (result.success) {
-        Alert.alert('🎉 Welcome to Premium!', 'Your subscription is now active.', [
-          { text: 'Continue', onPress: () => router.back() },
-        ]);
+        await refreshPremium();
+        setAlertModal({
+          title: '🎉 Welcome to Premium!',
+          message: 'Your subscription is now active.',
+          onClose: () => router.back(),
+        });
       } else if (!result.cancelled) {
-        Alert.alert('Purchase failed', result.error ?? 'Something went wrong. Please try again.');
+        setAlertModal({ title: 'Purchase failed', message: result.error ?? 'Something went wrong. Please try again.' });
       }
     } catch (e: any) {
-      Alert.alert('Error', e.message ?? 'Something went wrong.');
+      setAlertModal({ title: 'Error', message: e.message ?? 'Something went wrong.' });
     } finally {
       setPurchasing(false);
     }
@@ -250,14 +255,17 @@ export default function PaywallScreen() {
     try {
       const { isPremium: active } = await restorePurchases();
       if (active) {
-        Alert.alert('Restored!', 'Your premium subscription has been restored.', [
-          { text: 'Continue', onPress: () => router.back() },
-        ]);
+        await refreshPremium();
+        setAlertModal({
+          title: 'Restored! ✓',
+          message: 'Your premium subscription has been restored.',
+          onClose: () => router.back(),
+        });
       } else {
-        Alert.alert('Nothing to restore', 'No active subscription found for this Apple ID.');
+        setAlertModal({ title: 'Nothing to restore', message: 'No active subscription found for this Apple ID.' });
       }
     } catch (e: any) {
-      Alert.alert('Error', e.message ?? 'Could not restore purchases.');
+      setAlertModal({ title: 'Error', message: e.message ?? 'Could not restore purchases.' });
     } finally {
       setRestoring(false);
     }
@@ -327,19 +335,19 @@ export default function PaywallScreen() {
         </View>
 
         {/* Title */}
-        <Text style={styles.heroTitle}>{'unlock everything\nfor your F/O ♡'}</Text>
+        <Text style={styles.heroTitle}>{'your F/O deserves\nthe full vault ♡'}</Text>
         <Text style={styles.heroSub}>
-          No caps. No limits. Every feature, forever.
+          every ship, every story, no limits.
         </Text>
 
         {/* Features card */}
         <View style={styles.featCard}>
           {[
-            { icon: '♡', label: 'Unlimited ships & F/Os' },
-            { icon: '♡', label: 'All templates — now & future' },
-            { icon: '♡', label: 'Export & share to camera roll' },
-            { icon: '♡', label: 'F/O message scheduling' },
-            { icon: '♡', label: 'Priority support & updates' },
+            { icon: '♡', label: 'Unlimited ships — all your F/Os' },
+            { icon: '♡', label: 'Unlimited scenarios — no story caps' },
+            { icon: '♡', label: 'Albums, Storyline & Love Letters' },
+            { icon: '♡', label: 'F/O notifications & date reminders' },
+            { icon: '♡', label: 'Export & share templates to camera roll' },
           ].map((f, i, arr) => (
             <View key={f.label} style={[styles.featRow, i < arr.length - 1 && styles.featRowBorder]}>
               <View style={styles.featPill}>
@@ -546,6 +554,17 @@ export default function PaywallScreen() {
           </Pressable>
         </View>
       </ScrollView>
+      <CozyModal
+        visible={!!alertModal}
+        title={alertModal?.title}
+        message={alertModal?.message}
+        confirmText="OK"
+        onClose={() => {
+          const cb = alertModal?.onClose;
+          setAlertModal(null);
+          cb?.();
+        }}
+      />
     </View>
   );
 }

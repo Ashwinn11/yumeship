@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { captureRef } from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
+import { usePremium } from '@/store/premium';
 import { getShip, updateShip } from '@/store/ships';
 import { TemplateDataCtx, loadTemplateData, saveTemplateData, buildPreFill, migrateTemplateData } from '@/store/templateData';
 import { CozyModal } from '@/components/ui/CozyModal';
@@ -36,6 +37,7 @@ type Props = {
 export function TemplateScreenWrapper({ templateKey, shipId, children }: Props) {
   const insets = useSafeAreaInsets();
   const ship = shipId ? getShip(shipId) : undefined;
+  const premium = usePremium();
   const [showPicker, setShowPicker] = useState(false);
   const [selected, setSelected] = useState(templateKey);
   const [confirming, setConfirming] = useState(false);
@@ -72,6 +74,7 @@ export function TemplateScreenWrapper({ templateKey, shipId, children }: Props) 
   }), [shipId, templateKey]);
 
   async function exportImage() {
+    if (!premium) { router.push('/paywall'); return; }
     if (!exportRef.current) return;
     setExporting(true);
     try {

@@ -9,18 +9,29 @@ import { Sparkle } from '@/components/deco/Sparkle';
 
 import { StickerSakuraFlower, StickerSparkle, WashiTape } from '@/components/deco';
 import { CozyModal } from '@/components/ui/CozyModal';
-import { IconPlus, IconSearch } from '@/components/ui/Icon';
+import { IconLockSolid, IconPlus, IconSearch } from '@/components/ui/Icon';
 import { Mark } from '@/components/ui/Mark';
 import { Colors, FontFamily, FontSize, Radius, Spacing } from '@/constants/theme';
 import { resetOnb } from '@/store/onboarding';
+import { usePremium } from '@/store/premium';
 import { daysTogetherLabel, daysAgo, deleteShip, useShips } from '@/store/ships';
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const ships = useShips();
+  const premium = usePremium();
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
   const [shipToDelete, setShipToDelete] = useState<string | null>(null);
+
+  function handleNewShip() {
+    if (!premium && ships.length >= 1) {
+      router.push('/paywall');
+      return;
+    }
+    resetOnb();
+    router.push({ pathname: '/onboarding/fo', params: { mode: 'new' } });
+  }
 
   const filteredShips = ships.filter((ship) => {
     const q = searchQuery.toLowerCase().trim();
@@ -134,7 +145,7 @@ export default function HomeScreen() {
               elevation: 1,
               marginTop: 10,
             }}
-            onPress={() => { resetOnb(); router.push({ pathname: '/onboarding/fo', params: { mode: 'new' } }); }}
+            onPress={handleNewShip}
           >
             <IconPlus size={12} color={Colors.vellum} />
             <Text style={{ fontFamily: FontFamily.uiMedium, fontSize: 14, color: Colors.vellum }}>start a new ship</Text>
@@ -192,14 +203,17 @@ export default function HomeScreen() {
               />
             ))}
             {/* Add new card */}
-            <Pressable style={styles.addCard} onPress={() => { resetOnb(); router.push({ pathname: '/onboarding/fo', params: { mode: 'new' } }); }}>
+            <Pressable style={styles.addCard} onPress={handleNewShip}>
               <View style={{ position: 'absolute', top: 0, left: -8, zIndex: 10 }}>
                 <WashiTape width={56} height={14} pattern="floral" color={Colors.sakura} rotate={-6} />
               </View>
               <View style={styles.addIcon}>
-                <IconPlus size={18} color={Colors.sakuraDeep} />
+                {!premium && ships.length >= 1
+                  ? <IconLockSolid size={18} color={Colors.sakuraDeep} />
+                  : <IconPlus size={18} color={Colors.sakuraDeep} />
+                }
               </View>
-              <Text style={styles.addText}>start a new ship</Text>
+              <Text style={styles.addText}>{!premium && ships.length >= 1 ? 'premium' : 'start a new ship'}</Text>
             </Pressable>
           </Pressable>
         </ScrollView>

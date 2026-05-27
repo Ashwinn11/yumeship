@@ -89,3 +89,41 @@ export async function getScheduledNotifications() {
   return await Notifications.getAllScheduledNotificationsAsync();
 }
 
+// Schedules a yearly calendar notification for anniversaries/dates.
+// dateStr must be YYYY-MM-DD. Returns the notification ID or null on failure.
+export async function scheduleAnniversaryNotification(
+  title: string,
+  dateStr: string,
+  hour: number = 9,
+): Promise<string | null> {
+  try {
+    const { status } = await Notifications.getPermissionsAsync();
+    if (status !== 'granted') return null;
+
+    const parts = dateStr.split('-').map(Number);
+    if (parts.length !== 3 || parts.some(isNaN)) return null;
+    const [, month, day] = parts;
+
+    const discreet = getDiscreetMode();
+
+    const identifier = await Notifications.scheduleNotificationAsync({
+      content: {
+        title: discreet ? '♡' : 'a special day',
+        body: discreet ? 'a reminder for you~' : `${title} is today ♡`,
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
+        repeats: true,
+        month,
+        day,
+        hour,
+        minute: 0,
+      },
+    });
+
+    return identifier;
+  } catch {
+    return null;
+  }
+}
+
