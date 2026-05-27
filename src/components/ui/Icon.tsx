@@ -244,6 +244,15 @@ export function IconDocumentSolid({ size = 14, color = Colors.sakuraDeep }: Icon
   );
 }
 
+export function IconExport({ size = 14, color = Colors.ink }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 16 16" fill="none">
+      <Path d="M8 1v8M5 4l3-3 3 3" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <Path d="M2 10v3.5A1.5 1.5 0 0 0 3.5 15h9A1.5 1.5 0 0 0 14 13.5V10" stroke={color} strokeWidth="1.5" strokeLinecap="round" />
+    </Svg>
+  );
+}
+
 export function IconLockSolid({ size = 14, color = Colors.sakuraDeep }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 16 16" fill={color}>

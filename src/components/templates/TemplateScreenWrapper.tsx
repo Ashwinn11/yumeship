@@ -1,10 +1,13 @@
 import { useMemo, useRef, useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, TouchableWithoutFeedback, View } from 'react-native';
+import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, TouchableWithoutFeedback, View } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { captureRef } from 'react-native-view-shot';
+import * as Sharing from 'expo-sharing';
 import { getShip, updateShip } from '@/store/ships';
 import { TemplateDataCtx, loadTemplateData, saveTemplateData, buildPreFill, migrateTemplateData } from '@/store/templateData';
 import { CozyModal } from '@/components/ui/CozyModal';
+import { IconExport } from '@/components/ui/Icon';
 import { WashiTape } from '@/components/deco/WashiTape';
 import { Cloud } from '@/components/deco/Cloud';
 import { Heart } from '@/components/deco/Heart';
@@ -34,6 +37,8 @@ export function TemplateScreenWrapper({ templateKey, shipId, children }: Props) 
   const [showPicker, setShowPicker] = useState(false);
   const [selected, setSelected] = useState(templateKey);
   const [confirming, setConfirming] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const exportRef = useRef<View>(null);
 
   const initData = (): Record<string, string> => {
     if (!shipId) return {};
@@ -58,6 +63,19 @@ export function TemplateScreenWrapper({ templateKey, shipId, children }: Props) 
       }
     },
   }), [shipId, templateKey]);
+
+  async function exportImage() {
+    if (!exportRef.current) return;
+    setExporting(true);
+    try {
+      const uri = await captureRef(exportRef, { format: 'png', quality: 1, result: 'tmpfile' });
+      await Sharing.shareAsync(uri, { mimeType: 'image/png', dialogTitle: 'save or share' });
+    } catch (e) {
+      // user cancelled or error — do nothing
+    } finally {
+      setExporting(false);
+    }
+  }
 
   function applyTemplate() {
     if (!shipId || selected === templateKey) { setShowPicker(false); return; }
@@ -136,6 +154,13 @@ export function TemplateScreenWrapper({ templateKey, shipId, children }: Props) 
             )}
           </View>
 
+          <Pressable style={s.exportBtn} onPress={exportImage} disabled={exporting}>
+            {exporting
+              ? <ActivityIndicator size="small" color={Colors.ink2} />
+              : <IconExport size={14} color={Colors.ink2} />
+            }
+          </Pressable>
+
           <Pressable
             onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)' as any)}
             style={s.saveBtn}
@@ -149,7 +174,9 @@ export function TemplateScreenWrapper({ templateKey, shipId, children }: Props) 
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {children}
+          <View ref={exportRef} style={s.exportCapture} collapsable={false}>
+            {children}
+          </View>
         </ScrollView>
 
         {/* Change template picker */}
@@ -238,9 +265,14 @@ const s = StyleSheet.create({
     borderRadius: Radius.pill,
   },
   styleChipText: { fontFamily: FontFamily.marker, fontSize: 8, color: Colors.ink3, letterSpacing: 0.8 },
+  exportBtn: {
+    width: 32, height: 32, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: Colors.vellum, borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.pill,
+  },
   saveBtn: { paddingHorizontal: 14, paddingVertical: 7, backgroundColor: Colors.sakuraDeep, borderRadius: 999 },
   saveBtnText: { fontFamily: FontFamily.markerBold, fontSize: 12, color: Colors.vellum, letterSpacing: 0.3 },
   scroll: { padding: Spacing.s5, paddingBottom: Spacing.s8 },
+  exportCapture: { backgroundColor: Colors.paper },
   decoTL: { position: 'absolute', top: 130, left: 20 },
   decoBR: { position: 'absolute', bottom: 120, right: 30 },
 
