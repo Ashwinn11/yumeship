@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Cloud } from '@/components/deco/Cloud';
 import { Heart } from '@/components/deco/Heart';
 import { Sparkle } from '@/components/deco/Sparkle';
 import { Button } from '@/components/ui/Button';
@@ -35,6 +36,14 @@ export default function OnbPersona() {
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top + Spacing.s1, paddingBottom: insets.bottom + Spacing.s1 }]}>
+      {/* Background accents */}
+      <View style={styles.decoTR} pointerEvents="none">
+        <Cloud size={32} color={Colors.sakuraSoft} />
+      </View>
+      <View style={styles.decoBL} pointerEvents="none">
+        <Sparkle size={18} color={Colors.lavenderSoft} />
+      </View>
+
       <View style={styles.dotsRow}>
         <StepDots step={0} total={3} />
       </View>
@@ -114,13 +123,11 @@ export default function OnbPersona() {
           variant="primary"
           size="lg"
           full
+          disabled={name.trim().length === 0}
           onPress={() => router.push('/onboarding/fo')}
         >
-          continue · meet them
+          {!name.trim() ? 'enter your name first' : 'continue · meet them'}
         </Button>
-        <Pressable onPress={() => router.push('/onboarding/fo')} style={styles.skipPressable}>
-          <Text style={styles.skip}>add later</Text>
-        </Pressable>
       </View>
     </View>
   );
@@ -225,5 +232,17 @@ const styles = StyleSheet.create({
     fontSize: FontSize.meta,
     color: Colors.ink3,
     textDecorationLine: 'underline',
+  },
+  decoTR: {
+    position: 'absolute',
+    top: 100,
+    right: 24,
+    opacity: 0.6,
+  },
+  decoBL: {
+    position: 'absolute',
+    bottom: 140,
+    left: 24,
+    opacity: 0.45,
   },
 });

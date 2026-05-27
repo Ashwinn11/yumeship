@@ -5,6 +5,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getShip, updateShip } from '@/store/ships';
 import { TemplateDataCtx, loadTemplateData, saveTemplateData, buildPreFill } from '@/store/templateData';
 import { Colors, FontFamily, Spacing } from '@/constants/theme';
+import { Cloud } from '@/components/deco/Cloud';
+import { Heart } from '@/components/deco/Heart';
+import { Ribbon } from '@/components/deco/Ribbon';
+import { Sakura } from '@/components/deco/Sakura';
+import { Sparkle } from '@/components/deco/Sparkle';
+import { Star } from '@/components/deco/Star';
 
 type Props = {
   templateKey: string;
@@ -40,9 +46,57 @@ export function TemplateScreenWrapper({ templateKey, shipId, children }: Props) 
     },
   }), [shipId, templateKey]);
 
+  const renderTemplateDecos = () => {
+    switch (templateKey) {
+      case 'get-to-know':
+        return (
+          <>
+            <View style={s.decoTL} pointerEvents="none"><Sakura size={24} color={Colors.sakura} /></View>
+            <View style={s.decoBR} pointerEvents="none"><Sparkle size={18} color={Colors.lavenderSoft} /></View>
+          </>
+        );
+      case 'kawaii-ui':
+        return (
+          <>
+            <View style={s.decoTL} pointerEvents="none"><Cloud size={28} color={Colors.sakuraSoft} /></View>
+            <View style={s.decoBR} pointerEvents="none"><Ribbon size={24} color={Colors.lavenderSoft} /></View>
+          </>
+        );
+      case 'heart-frame':
+        return (
+          <>
+            <View style={s.decoTL} pointerEvents="none"><Heart size={20} color={Colors.sakuraSoft} /></View>
+            <View style={s.decoBR} pointerEvents="none"><Heart size={18} color={Colors.lavenderSoft} outline /></View>
+          </>
+        );
+      case 'love-letter':
+        return (
+          <>
+            <View style={s.decoTL} pointerEvents="none"><Ribbon size={24} color={Colors.sakuraSoft} /></View>
+            <View style={s.decoBR} pointerEvents="none"><Sparkle size={18} color={Colors.butterSoft} /></View>
+          </>
+        );
+      case 'aesthetic':
+        return (
+          <>
+            <View style={s.decoTL} pointerEvents="none"><Star size={20} color={Colors.butterSoft} /></View>
+            <View style={s.decoBR} pointerEvents="none"><Cloud size={28} color={Colors.sakuraSoft} /></View>
+          </>
+        );
+      default:
+        return (
+          <>
+            <View style={s.decoTL} pointerEvents="none"><Star size={18} color={Colors.lavenderSoft} /></View>
+            <View style={s.decoBR} pointerEvents="none"><Heart size={16} color={Colors.sakuraSoft} outline /></View>
+          </>
+        );
+    }
+  };
+
   return (
     <TemplateDataCtx.Provider value={ctx}>
       <View style={[s.screen, { paddingTop: insets.top }]}>
+        {renderTemplateDecos()}
         <View style={s.appBar}>
           <Pressable
             onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)' as any)}
@@ -52,7 +106,7 @@ export function TemplateScreenWrapper({ templateKey, shipId, children }: Props) 
           </Pressable>
 
           <Text style={s.nameText} numberOfLines={1}>
-            {ship?.name || templateKey.replace(/-/g, ' ')}
+            {ship?.shipName || ship?.name || templateKey.replace(/-/g, ' ')}
           </Text>
 
           <Pressable
@@ -91,4 +145,16 @@ const s = StyleSheet.create({
   saveBtn: { paddingHorizontal: 14, paddingVertical: 7, backgroundColor: Colors.sakuraDeep, borderRadius: 999 },
   saveBtnText: { fontFamily: FontFamily.markerBold, fontSize: 12, color: Colors.vellum, letterSpacing: 0.3 },
   scroll: { padding: Spacing.s5, paddingBottom: Spacing.s8 },
+  decoTL: {
+    position: 'absolute',
+    top: 80,
+    left: 20,
+    opacity: 0.55,
+  },
+  decoBR: {
+    position: 'absolute',
+    bottom: 120,
+    right: 30,
+    opacity: 0.45,
+  },
 });

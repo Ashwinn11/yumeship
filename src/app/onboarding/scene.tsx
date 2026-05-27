@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Star } from '@/components/deco/Star';
 import { WashiTape } from '@/components/deco/WashiTape';
 import { Heart } from '@/components/deco/Heart';
 import { Button } from '@/components/ui/Button';
@@ -77,6 +78,14 @@ export default function OnbScene() {
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top + Spacing.s1, paddingBottom: insets.bottom + Spacing.s1 }]}>
+      {/* Background accents */}
+      <View style={styles.decoTL} pointerEvents="none">
+        <WashiTape width={65} height={14} pattern="stripe" color={Colors.sakuraSoft} rotate={4} />
+      </View>
+      <View style={styles.decoBR} pointerEvents="none">
+        <Star size={20} color={Colors.butterSoft} />
+      </View>
+
       <View style={styles.dotsRow}>
         <StepDots step={4} />
       </View>
@@ -174,4 +183,16 @@ const styles = StyleSheet.create({
   actions: { paddingHorizontal: Spacing.s6, paddingBottom: Spacing.s3, gap: Spacing.s2 },
   skipPressable: { alignItems: 'center' },
   skip: { fontFamily: FontFamily.ui, fontSize: FontSize.meta, color: Colors.ink3, textDecorationLine: 'underline' },
+  decoTL: {
+    position: 'absolute',
+    top: 80,
+    left: 20,
+    opacity: 0.55,
+  },
+  decoBR: {
+    position: 'absolute',
+    bottom: 120,
+    right: 30,
+    opacity: 0.45,
+  },
 });

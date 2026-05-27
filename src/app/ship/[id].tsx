@@ -9,6 +9,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MiniHC } from '@/components/cards/MiniHC';
 import { Heart } from '@/components/deco/Heart';
 import { Pin } from '@/components/deco/Pin';
+import { Ribbon } from '@/components/deco/Ribbon';
+import { Sakura } from '@/components/deco/Sakura';
 import { Sparkle } from '@/components/deco/Sparkle';
 import { WashiTape } from '@/components/deco/WashiTape';
 import { SubTabBar, type DetailTab } from '@/components/nav/SubTabBar';
@@ -76,6 +78,14 @@ export default function ShipDetail() {
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]}>
+      {/* Background accents */}
+      <View style={styles.decoTR} pointerEvents="none">
+        <Ribbon size={24} color={Colors.sakuraSoft} />
+      </View>
+      <View style={styles.decoBL} pointerEvents="none">
+        <Sakura size={22} color={Colors.lavenderSoft} />
+      </View>
+
       <View style={styles.appBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <Text style={styles.back}>‹</Text>
@@ -562,5 +572,16 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.ui, fontSize: 15, color: Colors.ink,
     lineHeight: 24, flex: 1, textAlignVertical: 'top',
   },
-
+  decoTR: {
+    position: 'absolute',
+    top: 100,
+    right: 24,
+    opacity: 0.6,
+  },
+  decoBL: {
+    position: 'absolute',
+    bottom: 140,
+    left: 24,
+    opacity: 0.45,
+  },
 });

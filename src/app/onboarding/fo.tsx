@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Ribbon } from '@/components/deco/Ribbon';
 import { Sparkle } from '@/components/deco/Sparkle';
 import { Button } from '@/components/ui/Button';
 import { Field } from '@/components/ui/Field';
@@ -49,6 +50,14 @@ export default function OnbFO() {
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top + Spacing.s1, paddingBottom: insets.bottom + Spacing.s1 }]}>
+      {/* Background accents */}
+      <View style={styles.decoTL} pointerEvents="none">
+        <Ribbon size={24} color={Colors.sakuraSoft} />
+      </View>
+      <View style={styles.decoBR} pointerEvents="none">
+        <Sparkle size={18} color={Colors.lavenderSoft} />
+      </View>
+
       {isNew ? (
         <View style={styles.header}>
           <Pressable onPress={() => { resetOnb(); router.back(); }} style={styles.closeBtn}>
@@ -188,4 +197,16 @@ const styles = StyleSheet.create({
   actions: { paddingHorizontal: Spacing.s6, paddingBottom: Spacing.s3, gap: Spacing.s2 },
   skipPressable: { alignItems: 'center' },
   skip: { fontFamily: FontFamily.ui, fontSize: FontSize.meta, color: Colors.ink3, textDecorationLine: 'underline' },
+  decoTL: {
+    position: 'absolute',
+    top: 80,
+    left: 20,
+    opacity: 0.55,
+  },
+  decoBR: {
+    position: 'absolute',
+    bottom: 120,
+    right: 30,
+    opacity: 0.45,
+  },
 });

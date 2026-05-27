@@ -4,8 +4,10 @@ import { useState } from 'react';
 
 import { Mark } from '@/components/ui/Mark';
 import { IconBell } from '@/components/ui/Icon';
+import { Cloud } from '@/components/deco/Cloud';
 import { Sakura } from '@/components/deco/Sakura';
 import { Sparkle } from '@/components/deco/Sparkle';
+import { Star } from '@/components/deco/Star';
 import { Colors, FontFamily, FontSize, Radius, Spacing, RelationshipColors } from '@/constants/theme';
 import { useAllUpcomingDates, daysUntil } from '@/store/dates';
 import { MiniUpcoming } from '@/components/cards/MiniUpcoming';
@@ -38,6 +40,14 @@ export default function UpcomingScreen() {
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]}>
+      {/* Background accents */}
+      <View style={styles.decoTL} pointerEvents="none">
+        <Star size={18} color={Colors.butterSoft} />
+      </View>
+      <View style={styles.decoBR} pointerEvents="none">
+        <Cloud size={28} color={Colors.sakuraSoft} />
+      </View>
+
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerRow}>
@@ -206,5 +216,17 @@ const styles = StyleSheet.create({
     color: Colors.ink3,
     textAlign: 'center',
     paddingHorizontal: Spacing.s8,
+  },
+  decoTL: {
+    position: 'absolute',
+    top: 80,
+    left: 20,
+    opacity: 0.55,
+  },
+  decoBR: {
+    position: 'absolute',
+    bottom: 120,
+    right: 30,
+    opacity: 0.45,
   },
 });

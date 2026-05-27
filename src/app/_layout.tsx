@@ -5,11 +5,12 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { initDb } from '@/db/init';
+import { configureRevenueCat } from '@/store/purchases';
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  useMemo(() => { initDb(); }, []);
+  useMemo(() => { initDb(); configureRevenueCat(); }, []);
 
   const [loaded] = useFonts({
     'InstrumentSerif-Italic': require('../../assets/fonts/InstrumentSerif-Italic.ttf'),
@@ -36,6 +37,9 @@ export default function RootLayout() {
         <Stack.Screen name="ship/[id]" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="messages" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="template" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="paywall" options={{ animation: 'slide_from_bottom', presentation: 'modal' }} />
+        <Stack.Screen name="terms" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="privacy" options={{ animation: 'slide_from_right' }} />
       </Stack>
     </SafeAreaProvider>
   );

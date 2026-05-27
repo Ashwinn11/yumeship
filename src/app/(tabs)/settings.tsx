@@ -5,16 +5,17 @@ import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Heart } from '@/components/deco/Heart';
+import { Pin } from '@/components/deco/Pin';
 import { Sparkle } from '@/components/deco/Sparkle';
 import { SparkleCluster } from '@/components/deco/SparkleCluster';
-import { IconBell, IconLock } from '@/components/ui/Icon';
+import { IconBell } from '@/components/ui/Icon';
 import { Mark } from '@/components/ui/Mark';
 import { Toggle } from '@/components/ui/Toggle';
 import { Colors, FontFamily, FontSize, Radius, Spacing } from '@/constants/theme';
 import {
-  getDiscreetMode, getNotifEnabled, getScheduledNotifications, requestPermission,
-  setDiscreetMode, setNotifEnabled,
+  getNotifEnabled, requestPermission, setNotifEnabled,
 } from '@/store/notifications';
+import { isPremium, manageSubscriptions, restorePurchases } from '@/store/purchases';
 import { deleteAllData } from '@/store/ships';
 
 // ─── Shared sub-components ────────────────────────────────────────────────────
@@ -129,8 +130,9 @@ const meta = StyleSheet.create({
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const [notifEnabled, setNotifEnabledState] = useState(() => getNotifEnabled());
-  const [discreet, setDiscreetState] = useState(() => getDiscreetMode());
   const [storageLabel, setStorageLabel] = useState('—');
+  const [premium, setPremium] = useState(false);
+  const [checkingPremium, setCheckingPremium] = useState(true);
 
   useEffect(() => {
     const path = (FileSystem.documentDirectory ?? '') + 'SQLite/yumeship.db';
@@ -142,6 +144,7 @@ export default function SettingsScreen() {
         setStorageLabel('< 1 KB');
       }
     });
+    isPremium().then((v) => { setPremium(v); setCheckingPremium(false); });
   }, []);
 
   async function handleToggleNotif(v: boolean) {
@@ -153,32 +156,38 @@ export default function SettingsScreen() {
     setNotifEnabledState(v);
   }
 
-  function handleToggleDiscreet(v: boolean) {
-    setDiscreetMode(v);
-    setDiscreetState(v);
+  async function handleManageSubscription() {
+    try {
+      await manageSubscriptions();
+    } catch (e: any) {
+      Alert.alert('Error', e?.message ?? 'Could not open subscription management.');
+    }
   }
 
-  async function handleCheckNotifications() {
+  async function handleRestorePurchases() {
     try {
-      const list = await getScheduledNotifications();
-      if (list.length === 0) {
-        Alert.alert('Notification Store', 'No notifications are currently scheduled in the OS store.');
+      const { isPremium: active } = await restorePurchases();
+      if (active) {
+        setPremium(true);
+        Alert.alert('Restored!', 'Your premium subscription has been restored.');
       } else {
-        const details = list.map((n, i) => {
-          return `${i + 1}. [ID: ${n.identifier}]\nTitle: ${n.content.title || '(none)'}\nBody: ${n.content.body || '(none)'}\nTrigger: ${JSON.stringify(n.trigger)}`;
-        }).join('\n\n');
-        Alert.alert(
-          'Scheduled Notifications',
-          `Active count: ${list.length}\n\n${details}`,
-        );
+        Alert.alert('Nothing to restore', 'No active subscription found for this Apple ID.');
       }
     } catch (e: any) {
-      Alert.alert('Error', e?.message || 'Failed to fetch scheduled notifications');
+      Alert.alert('Error', e?.message ?? 'Could not restore purchases.');
     }
   }
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]}>
+      {/* Background accents */}
+      <View style={styles.decoTL} pointerEvents="none">
+        <Pin size={18} color={Colors.sakuraDeep} />
+      </View>
+      <View style={styles.decoBR} pointerEvents="none">
+        <Sparkle size={18} color={Colors.lavenderSoft} />
+      </View>
+
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerRow}>
@@ -196,29 +205,36 @@ export default function SettingsScreen() {
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
       >
-        {/* Pro card */}
-        <View style={styles.proCard}>
-          <View style={styles.proSparkle}>
-            <SparkleCluster color={Colors.sakuraDeep} />
-          </View>
-          <View style={styles.proEyebrow}>
-            <Heart size={12} color={Colors.sakuraDeep} />
-            <Text style={styles.proLabel}>yumeship pro</Text>
-          </View>
-          <Text style={styles.proText}>iCloud sync.{'\n'}Coming soon.</Text>
-        </View>
-
-        <SettingGroup ja="鍵" name="App lock">
-          <SettingRow
-            label="Face ID lock"
-            icon={<IconLock size={12} color={Colors.ink2} />}
-            trailing={<Toggle value={true} onValueChange={() => { }} />}
-          />
-          <SettingRow
-            label="Timeout"
-            trailing={<MetaText>1 min</MetaText>}
-          />
-        </SettingGroup>
+        {/* Pro card — dynamic based on subscription status */}
+        {!checkingPremium && (
+          premium ? (
+            <View style={[styles.proCard, styles.proCardActive]}>
+              <View style={styles.proSparkle}>
+                <SparkleCluster color={Colors.sakuraDeep} />
+              </View>
+              <View style={styles.proEyebrow}>
+                <Heart size={12} color={Colors.sakuraDeep} />
+                <Text style={styles.proLabel}>yumeship premium</Text>
+              </View>
+              <Text style={styles.proText}>Active ✓{'\n'}Thank you for your support!</Text>
+            </View>
+          ) : (
+            <Pressable
+              style={styles.proCard}
+              onPress={() => router.push('/paywall' as any)}
+              id="settings-upgrade"
+            >
+              <View style={styles.proSparkle}>
+                <SparkleCluster color={Colors.sakuraDeep} />
+              </View>
+              <View style={styles.proEyebrow}>
+                <Heart size={12} color={Colors.sakuraDeep} />
+                <Text style={styles.proLabel}>yumeship premium</Text>
+              </View>
+              <Text style={styles.proText}>Unlimited ships.{'\n'}Unlock everything →</Text>
+            </Pressable>
+          )
+        )}
 
         <SettingGroup ja="便" name="Notifications">
           <SettingRow
@@ -226,13 +242,17 @@ export default function SettingsScreen() {
             icon={<IconBell size={12} color={Colors.ink2} />}
             trailing={<Toggle value={notifEnabled} onValueChange={handleToggleNotif} />}
           />
+        </SettingGroup>
+
+        <SettingGroup ja="課" name="Subscription">
           <SettingRow
-            label="Discreet preview"
-            trailing={<Toggle value={discreet} onValueChange={handleToggleDiscreet} />}
+            label="Manage subscription"
+            onPress={handleManageSubscription}
+            trailing={<MetaText>›</MetaText>}
           />
           <SettingRow
-            label="Check scheduled notifications"
-            onPress={handleCheckNotifications}
+            label="Restore purchases"
+            onPress={handleRestorePurchases}
           />
         </SettingGroup>
 
@@ -253,6 +273,19 @@ export default function SettingsScreen() {
                 { text: 'Cancel', style: 'cancel' },
               ],
             )}
+          />
+        </SettingGroup>
+
+        <SettingGroup ja="法" name="Legal">
+          <SettingRow
+            label="Terms of Service"
+            onPress={() => router.push('/terms' as any)}
+            trailing={<MetaText>›</MetaText>}
+          />
+          <SettingRow
+            label="Privacy Policy"
+            onPress={() => router.push('/privacy' as any)}
+            trailing={<MetaText>›</MetaText>}
           />
         </SettingGroup>
       </ScrollView>
@@ -310,6 +343,9 @@ const styles = StyleSheet.create({
     position: 'relative',
     overflow: 'hidden',
   },
+  proCardActive: {
+    borderColor: Colors.sakuraDeep,
+  },
   proSparkle: {
     position: 'absolute',
     top: 8,
@@ -334,5 +370,17 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     color: Colors.ink,
     marginTop: Spacing.s1,
+  },
+  decoTL: {
+    position: 'absolute',
+    top: 80,
+    left: 20,
+    opacity: 0.55,
+  },
+  decoBR: {
+    position: 'absolute',
+    bottom: 120,
+    right: 30,
+    opacity: 0.45,
   },
 });

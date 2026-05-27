@@ -3,6 +3,8 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Heart } from '@/components/deco/Heart';
+import { Sparkle } from '@/components/deco/Sparkle';
 import { IconLock, IconSend } from '@/components/ui/Icon';
 import { Colors, FontFamily, FontSize, Radius, Spacing } from '@/constants/theme';
 
@@ -12,6 +14,14 @@ export default function MessagesScreen() {
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+      {/* Background accents */}
+      <View style={styles.decoTR} pointerEvents="none">
+        <Sparkle size={18} color={Colors.sakuraSoft} />
+      </View>
+      <View style={styles.decoBL} pointerEvents="none">
+        <Heart size={20} color={Colors.lavenderSoft} outline />
+      </View>
+
       {/* App bar */}
       <View style={styles.appBar}>
         <Pressable onPress={() => router.back()}>
@@ -209,5 +219,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
+  },
+  decoTR: {
+    position: 'absolute',
+    top: 100,
+    right: 24,
+    opacity: 0.6,
+  },
+  decoBL: {
+    position: 'absolute',
+    bottom: 140,
+    left: 24,
+    opacity: 0.45,
   },
 });

@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Mark } from '@/components/ui/Mark';
+import { Ribbon } from '@/components/deco/Ribbon';
 import { WashiTape } from '@/components/deco/WashiTape';
 import { Sparkle } from '@/components/deco/Sparkle';
 import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing } from '@/constants/theme';
@@ -20,6 +21,14 @@ export default function TemplatesScreen() {
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]}>
+      {/* Background accents */}
+      <View style={styles.decoTR} pointerEvents="none">
+        <Ribbon size={24} color={Colors.sakuraSoft} />
+      </View>
+      <View style={styles.decoBL} pointerEvents="none">
+        <Sparkle size={18} color={Colors.lavenderSoft} />
+      </View>
+
       <View style={styles.header}>
         <View style={styles.headerRow}>
           <Mark size={26} />
@@ -121,5 +130,17 @@ const styles = StyleSheet.create({
     lineHeight: 17,
     textTransform: 'uppercase',
     letterSpacing: 0.3,
+  },
+  decoTR: {
+    position: 'absolute',
+    top: 100,
+    right: 24,
+    opacity: 0.6,
+  },
+  decoBL: {
+    position: 'absolute',
+    bottom: 140,
+    left: 24,
+    opacity: 0.45,
   },
 });

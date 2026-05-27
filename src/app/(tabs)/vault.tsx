@@ -6,7 +6,9 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
+import { Cloud } from '@/components/deco/Cloud';
 import { Heart } from '@/components/deco/Heart';
+import { Star } from '@/components/deco/Star';
 import { BlankPill, Check, FILL_GRAY, TitleHeader } from '@/components/templates/primitives';
 
 import { Sparkle } from '@/components/deco/Sparkle';
@@ -73,6 +75,14 @@ export default function VaultScreen() {
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]}>
+      {/* Background accents */}
+      <View style={styles.decoTL} pointerEvents="none">
+        <Cloud size={30} color={Colors.sakuraSoft} />
+      </View>
+      <View style={styles.decoBR} pointerEvents="none">
+        <Star size={18} color={Colors.lavenderSoft} />
+      </View>
+
       {/* Header */}
       <View style={styles.header}>
         {activeFeature ? (
@@ -1336,6 +1346,18 @@ const styles = StyleSheet.create({
   emptyShips: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: Spacing.s3, paddingBottom: Spacing.s9 },
   emptyTitle: { fontFamily: FontFamily.displayItalic, fontSize: FontSize.h5, color: Colors.ink },
   emptySub: { fontFamily: FontFamily.displayItalic, fontSize: FontSize.meta, color: Colors.ink3, textAlign: 'center', paddingHorizontal: Spacing.s7 },
+  decoTL: {
+    position: 'absolute',
+    top: 80,
+    left: 20,
+    opacity: 0.55,
+  },
+  decoBR: {
+    position: 'absolute',
+    bottom: 120,
+    right: 30,
+    opacity: 0.45,
+  },
 });
 
 const hc = StyleSheet.create({

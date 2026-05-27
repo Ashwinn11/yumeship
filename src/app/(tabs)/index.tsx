@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ShipCard } from '@/components/cards/ShipCard';
 import { Heart } from '@/components/deco/Heart';
 import { Sparkle } from '@/components/deco/Sparkle';
+import { SparkleCluster } from '@/components/deco/SparkleCluster';
 import { IconPlus, IconSearch } from '@/components/ui/Icon';
 import { Mark } from '@/components/ui/Mark';
 import { Colors, FontFamily, FontSize, Radius, Spacing } from '@/constants/theme';
@@ -17,6 +18,14 @@ export default function HomeScreen() {
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]}>
+      {/* Background accents */}
+      <View style={styles.decoTR} pointerEvents="none">
+        <SparkleCluster color={Colors.sakuraSoft} />
+      </View>
+      <View style={styles.decoBL} pointerEvents="none">
+        <Heart size={24} color={Colors.lavenderSoft} outline />
+      </View>
+
       <View style={styles.header}>
         <View style={styles.headerRow}>
           <Mark size={26} />
@@ -143,4 +152,16 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.sakuraDeep, paddingHorizontal: Spacing.s5, paddingVertical: 12, borderRadius: Radius.pill,
   },
   emptyBtnText: { fontFamily: FontFamily.uiMedium, fontSize: FontSize.body, color: Colors.vellum },
+  decoTR: {
+    position: 'absolute',
+    top: 100,
+    right: 24,
+    opacity: 0.6,
+  },
+  decoBL: {
+    position: 'absolute',
+    bottom: 140,
+    left: 24,
+    opacity: 0.45,
+  },
 });

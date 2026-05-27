@@ -5,6 +5,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Heart } from '@/components/deco/Heart';
+import { Pin } from '@/components/deco/Pin';
 import { WashiTape } from '@/components/deco/WashiTape';
 import { Button } from '@/components/ui/Button';
 import { Field } from '@/components/ui/Field';
@@ -80,6 +81,14 @@ export default function OnbRules() {
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top + Spacing.s1, paddingBottom: insets.bottom + Spacing.s1 }]}>
+      {/* Background accents */}
+      <View style={styles.decoTR} pointerEvents="none">
+        <Pin size={18} color={Colors.sakuraDeep} />
+      </View>
+      <View style={styles.decoBL} pointerEvents="none">
+        <Heart size={20} color={Colors.lavenderSoft} outline />
+      </View>
+
       {isNew ? (
         <View style={styles.header}>
           <Pressable onPress={() => router.back()} style={styles.backBtn}>
@@ -223,4 +232,16 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   templateCheckText: { fontSize: 10, color: Colors.vellum, fontFamily: FontFamily.uiSemiBold },
+  decoTR: {
+    position: 'absolute',
+    top: 100,
+    right: 24,
+    opacity: 0.6,
+  },
+  decoBL: {
+    position: 'absolute',
+    bottom: 140,
+    left: 24,
+    opacity: 0.45,
+  },
 });
