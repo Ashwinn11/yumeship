@@ -122,7 +122,7 @@ export function DatesTab({ shipId }: { shipId: string }) {
                 justifyContent: 'center',
               }}
               textStyle={{
-                fontFamily: FontFamily.displayItalic,
+                fontFamily: FontFamily.ui,
                 fontSize: 14,
                 color: date ? Colors.ink : Colors.ink3,
               }}
@@ -195,7 +195,7 @@ const s = StyleSheet.create({
   sheetClose: { fontSize: 13, color: Colors.ink3, fontFamily: FontFamily.ui },
   sheetContent: { padding: Spacing.s5, gap: 6 },
   fieldLabel: { fontFamily: FontFamily.marker, fontSize: 9, color: Colors.ink3, letterSpacing: 1.2, marginTop: 10, marginBottom: 4 },
-  input: { fontFamily: FontFamily.displayItalic, fontSize: 14, color: Colors.ink, borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.r2, paddingVertical: 9, paddingHorizontal: 12, backgroundColor: Colors.vellum },
+  input: { fontFamily: FontFamily.ui, fontSize: 14, color: Colors.ink, borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.r2, paddingVertical: 9, paddingHorizontal: 12, backgroundColor: Colors.vellum },
   toggleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 14, padding: Spacing.s4, backgroundColor: Colors.vellum, borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.r3 },
   toggleLabel: { flex: 1, gap: 2 },
   toggleTitle: { fontFamily: FontFamily.uiMedium, fontSize: 14, color: Colors.ink },

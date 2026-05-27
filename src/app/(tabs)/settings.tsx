@@ -1,4 +1,6 @@
+import * as FileSystem from 'expo-file-system/legacy';
 import { router } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -9,6 +11,10 @@ import { IconBell, IconLock } from '@/components/ui/Icon';
 import { Mark } from '@/components/ui/Mark';
 import { Toggle } from '@/components/ui/Toggle';
 import { Colors, FontFamily, FontSize, Radius, Spacing } from '@/constants/theme';
+import {
+  getDiscreetMode, getNotifEnabled, requestPermission,
+  setDiscreetMode, setNotifEnabled,
+} from '@/store/notifications';
 import { deleteAllData } from '@/store/ships';
 
 // ─── Shared sub-components ────────────────────────────────────────────────────
@@ -122,6 +128,35 @@ const meta = StyleSheet.create({
 
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
+  const [notifEnabled, setNotifEnabledState] = useState(() => getNotifEnabled());
+  const [discreet, setDiscreetState] = useState(() => getDiscreetMode());
+  const [storageLabel, setStorageLabel] = useState('—');
+
+  useEffect(() => {
+    const path = (FileSystem.documentDirectory ?? '') + 'SQLite/yumeship.db';
+    FileSystem.getInfoAsync(path).then((info) => {
+      if (info.exists && 'size' in info && info.size) {
+        const kb = info.size / 1024;
+        setStorageLabel(kb < 1024 ? `${Math.round(kb)} KB` : `${(kb / 1024).toFixed(1)} MB`);
+      } else {
+        setStorageLabel('< 1 KB');
+      }
+    });
+  }, []);
+
+  async function handleToggleNotif(v: boolean) {
+    if (v) {
+      const granted = await requestPermission();
+      if (!granted) return;
+    }
+    setNotifEnabled(v);
+    setNotifEnabledState(v);
+  }
+
+  function handleToggleDiscreet(v: boolean) {
+    setDiscreetMode(v);
+    setDiscreetState(v);
+  }
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]}>
@@ -170,16 +205,16 @@ export default function SettingsScreen() {
           <SettingRow
             label="Allow notifications"
             icon={<IconBell size={12} color={Colors.ink2} />}
-            trailing={<Toggle value={true} onValueChange={() => { }} />}
+            trailing={<Toggle value={notifEnabled} onValueChange={handleToggleNotif} />}
           />
           <SettingRow
             label="Discreet preview"
-            trailing={<Toggle value={true} onValueChange={() => { }} />}
+            trailing={<Toggle value={discreet} onValueChange={handleToggleDiscreet} />}
           />
         </SettingGroup>
 
         <SettingGroup ja="蔵" name="Data">
-          <SettingRow label="Storage" trailing={<MetaText>0 MB</MetaText>} />
+          <SettingRow label="Storage" trailing={<MetaText>{storageLabel}</MetaText>} />
           <SettingRow
             label="Delete all data"
             destructive

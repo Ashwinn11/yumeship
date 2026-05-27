@@ -5,11 +5,11 @@ import { notifyDates } from './dates';
 export type Ship = {
   id: string;
   name: string;
+  shipName: string;
+  myName: string;
   fandom: string;
   relType: 'romantic' | 'platonic' | 'familial';
   shareType: string;
-  nickname: string;
-  coverUri: string;
   aboutText: string;
   gradStart: string;
   gradEnd: string;
@@ -28,11 +28,11 @@ function rowToShip(row: Record<string, unknown>): Ship {
   return {
     id: row.id as string,
     name: row.name as string,
+    shipName: (row.ship_name as string) ?? '',
+    myName: (row.my_name as string) ?? '',
     fandom: row.fandom as string,
     relType: (row.rel_type as Ship['relType']) ?? 'romantic',
     shareType: row.share_type as string,
-    nickname: row.nickname as string,
-    coverUri: row.cover_uri as string,
     aboutText: row.about_text as string,
     gradStart: row.grad_start as string,
     gradEnd: row.grad_end as string,
@@ -57,10 +57,11 @@ export function getShip(id: string): Ship | undefined {
 
 export function addShip(d: {
   name: string;
+  shipName?: string;
+  myName?: string;
   fandom?: string;
   relType?: string;
   shareType?: string;
-  nickname?: string;
   gradStart?: string;
   gradEnd?: string;
   tapePattern?: string;
@@ -69,14 +70,16 @@ export function addShip(d: {
 }): string {
   const id = String(Date.now());
   getDb().runSync(
-    `INSERT INTO ships (id, name, fandom, rel_type, share_type, nickname, grad_start, grad_end, tape_pattern, tape_color, template_key, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO ships (id, name, ship_name, my_name, fandom, rel_type, share_type, nickname, grad_start, grad_end, tape_pattern, tape_color, template_key, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     id,
     d.name,
+    d.shipName ?? '',
+    d.myName ?? '',
     d.fandom ?? '',
     d.relType ?? 'romantic',
     d.shareType ?? '',
-    d.nickname ?? '',
+    '',
     d.gradStart ?? '#f3b6c4',
     d.gradEnd ?? '#d77a8d',
     d.tapePattern ?? 'heart',
@@ -93,11 +96,11 @@ export function updateShip(id: string, d: Partial<Omit<Ship, 'id' | 'createdAt'>
   const values: unknown[] = [];
 
   if (d.name !== undefined)        { fields.push('name = ?');         values.push(d.name); }
+  if (d.shipName !== undefined)    { fields.push('ship_name = ?');    values.push(d.shipName); }
+  if (d.myName !== undefined)      { fields.push('my_name = ?');      values.push(d.myName); }
   if (d.fandom !== undefined)      { fields.push('fandom = ?');        values.push(d.fandom); }
   if (d.relType !== undefined)     { fields.push('rel_type = ?');      values.push(d.relType); }
   if (d.shareType !== undefined)   { fields.push('share_type = ?');    values.push(d.shareType); }
-  if (d.nickname !== undefined)    { fields.push('nickname = ?');      values.push(d.nickname); }
-  if (d.coverUri !== undefined)    { fields.push('cover_uri = ?');     values.push(d.coverUri); }
   if (d.aboutText !== undefined)   { fields.push('about_text = ?');    values.push(d.aboutText); }
   if (d.gradStart !== undefined)   { fields.push('grad_start = ?');    values.push(d.gradStart); }
   if (d.gradEnd !== undefined)     { fields.push('grad_end = ?');      values.push(d.gradEnd); }
@@ -132,6 +135,7 @@ export function deleteShip(id: string) {
   getDb().runSync('DELETE FROM fo_messages WHERE ship_id = ?', id);
   getDb().runSync('DELETE FROM template_data WHERE ship_id = ?', id);
   notify();
+  notifyDates();
 }
 
 export function deleteAllData() {
@@ -151,6 +155,7 @@ export function deleteAllData() {
     DELETE FROM template_data;
   `);
   notify();
+  notifyDates();
 }
 
 export function useShips(): Ship[] {

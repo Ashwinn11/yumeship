@@ -11,6 +11,8 @@ type TapePattern = 'stripe' | 'dot' | 'heart' | 'check' | 'solid';
 
 type Props = {
   name: string;
+  shipName?: string;
+  myName?: string;
   src: string;
   initial: string;
   gradStart: string;
@@ -34,6 +36,8 @@ const TYPE_COLORS: Record<string, string> = {
 
 export function ShipCard({
   name,
+  shipName,
+  myName,
   src,
   initial,
   gradStart,
@@ -48,6 +52,8 @@ export function ShipCard({
   onLongPress,
   style,
 }: Props) {
+  const displayTitle = shipName || name;
+  const pairingLine = myName ? `${myName} × ${name}` : '';
   const typeColor = TYPE_COLORS[type];
 
   return (
@@ -74,11 +80,11 @@ export function ShipCard({
 
       <View style={styles.meta}>
         <View style={styles.metaRow}>
-          <Text style={styles.name}>{name}</Text>
+          <Text style={styles.name} numberOfLines={1}>{displayTitle}</Text>
           <View style={[styles.typeDot, { backgroundColor: typeColor }]} />
         </View>
         <View style={styles.metaRow}>
-          <Text style={styles.src}>{src}</Text>
+          <Text style={styles.src} numberOfLines={1}>{pairingLine || src}</Text>
           <Text style={styles.days}>{days}</Text>
         </View>
       </View>

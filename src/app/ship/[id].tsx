@@ -119,9 +119,6 @@ export default function ShipDetail() {
         <View style={styles.nameBlock}>
           <View style={styles.nameRow}>
             <Text style={styles.name}>{ship.name}</Text>
-            {ship.nickname ? (
-              <Text style={styles.nickname}>· "{ship.nickname}"</Text>
-            ) : null}
           </View>
         </View>
 
@@ -460,8 +457,6 @@ const styles = StyleSheet.create({
   nameBlock: { paddingHorizontal: Spacing.s5, paddingTop: 12, paddingBottom: Spacing.s1 },
   nameRow: { flexDirection: 'row', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' },
   name: { fontFamily: FontFamily.displayItalic, fontSize: 32, lineHeight: 33, color: Colors.ink },
-  nickname: { fontFamily: FontFamily.displayItalic, fontSize: 14, color: Colors.ink2, fontStyle: 'italic' },
-
   // Profile tab
   profileContent: { paddingHorizontal: Spacing.s5, paddingTop: Spacing.s1, paddingBottom: Spacing.s6, gap: 14 },
   anniversary: {
@@ -480,7 +475,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.vellum, padding: Spacing.s3,
   },
   aboutInput: {
-    fontFamily: FontFamily.displayItalic, fontSize: 14,
+    fontFamily: FontFamily.ui, fontSize: 14,
     color: Colors.ink, lineHeight: 21, minHeight: 80, textAlignVertical: 'top',
   },
   aboutEditActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 10, marginTop: 8 },
@@ -521,7 +516,7 @@ const styles = StyleSheet.create({
   sheetInput: {
     flex: 1, paddingVertical: 9, paddingHorizontal: 14,
     backgroundColor: Colors.vellum, borderWidth: 1, borderColor: Colors.line,
-    borderRadius: Radius.pill, fontFamily: FontFamily.displayItalic, fontSize: 14, color: Colors.ink,
+    borderRadius: Radius.pill, fontFamily: FontFamily.ui, fontSize: 14, color: Colors.ink,
   },
   sheetAdd: {
     width: 36, height: 36, borderRadius: Radius.pill,
@@ -562,12 +557,12 @@ const styles = StyleSheet.create({
   sceneSaveBtn: { paddingVertical: 6, paddingHorizontal: 16, backgroundColor: Colors.sakuraDeep, borderRadius: Radius.pill },
   sceneSaveText: { fontFamily: FontFamily.uiMedium, fontSize: 14, color: Colors.vellum },
   sceneTitleInput: {
-    fontFamily: FontFamily.displayItalic, fontSize: 22, color: Colors.ink,
+    fontFamily: FontFamily.ui, fontSize: 18, color: Colors.ink,
     borderBottomWidth: 1, borderBottomColor: Colors.line, paddingVertical: 6,
   },
   sceneBodyInput: {
-    fontFamily: FontFamily.displayItalic, fontSize: 16, color: Colors.ink,
-    lineHeight: 26, flex: 1, textAlignVertical: 'top',
+    fontFamily: FontFamily.ui, fontSize: 15, color: Colors.ink,
+    lineHeight: 24, flex: 1, textAlignVertical: 'top',
   },
 
 });

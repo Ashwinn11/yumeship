@@ -3,16 +3,17 @@ import {
   Alert, KeyboardAvoidingView, Platform, Pressable,
   ScrollView, StyleSheet, Text, TextInput, View,
 } from 'react-native';
+import Svg, { Circle, Path } from 'react-native-svg';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { TitleHeader, INK, FILL_GRAY, Check, BlankPill } from '@/components/templates/primitives';
+import { TitleHeader, FILL_GRAY, Check, BlankPill } from '@/components/templates/primitives';
 import { Heart } from '@/components/deco/Heart';
 
 import { AlbumsTab } from '@/components/tabs/AlbumsTab';
 import { DatesTab } from '@/components/tabs/DatesTab';
 import { MessagesTab } from '@/components/tabs/MessagesTab';
-import { OutfitsTab } from '@/components/tabs/OutfitsTab';
 import { StorylineTab } from '@/components/tabs/StorylineTab';
+import { INK, MarkerCard, SquareCheck } from '@/components/templates/primitives';
 import { Sparkle } from '@/components/deco/Sparkle';
 import { IconPlus } from '@/components/ui/Icon';
 import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing } from '@/constants/theme';
@@ -20,13 +21,14 @@ import { addFoMessage, deleteFoMessage, toggleFoMessage, useFoMessages } from '@
 import { addHeadcanon, deleteHeadcanon, useHeadcanons, useHeadcanonCounts } from '@/store/headcanons';
 import { addScenario, deleteScenario, useScenarios } from '@/store/scenarios';
 import { useShips } from '@/store/ships';
+import { loadTemplateData, saveTemplateData } from '@/store/templateData';
 
 type Feature =
   | 'headcanons'
   | 'scenarios'
   | 'messages'
   | 'albums'
-  | 'outfits'
+  | 'boundaries'
   | 'storyline'
   | 'dates'
   | 'fo-messages';
@@ -36,7 +38,7 @@ const FEATURES: { id: Feature; ja: string; label: string; desc: string; color: s
   { id: 'scenarios',  ja: '物', label: 'Scenarios',       desc: 'write your stories',               color: Colors.lavenderDeep,  bg: Colors.lavenderSoft },
   { id: 'messages',   ja: '話', label: 'Messages',        desc: 'conversations & threads',          color: Colors.peachDeep,     bg: Colors.peachSoft },
   { id: 'albums',     ja: '写', label: 'Albums',          desc: 'photo collections',                color: Colors.sageDeep,      bg: Colors.sageSoft },
-  { id: 'outfits',    ja: '服', label: 'Outfits',         desc: 'fit pics & looks',                 color: Colors.butterDeep,    bg: Colors.butterSoft },
+  { id: 'boundaries', ja: '夢', label: 'Boundaries',      desc: 'sharing rules & what\'s ok',      color: Colors.plum,          bg: Colors.lavenderSoft },
   { id: 'storyline',  ja: '時', label: 'Storyline',       desc: 'timeline of moments',              color: Colors.ink2,          bg: Colors.paperDeep },
   { id: 'dates',      ja: '日', label: 'Dates',           desc: 'anniversaries & events',           color: Colors.peachDeep,     bg: Colors.peachSoft },
   { id: 'fo-messages',ja: '♡', label: 'F/O Messages',    desc: 'messages from them ♡',             color: Colors.sakuraInk,     bg: Colors.sakuraSoft },
@@ -58,7 +60,7 @@ export default function VaultScreen() {
       case 'scenarios':    return <ScenariosFeature shipId={ship.id} shipName={ship.name} />;
       case 'messages':     return <MessagesTab shipId={ship.id} shipName={ship.name} />;
       case 'albums':       return <AlbumsTab shipId={ship.id} />;
-      case 'outfits':      return <OutfitsTab shipId={ship.id} shipName={ship.name} />;
+      case 'boundaries':   return <BoundariesFeature shipId={ship.id} />;
       case 'storyline':    return <StorylineTab shipId={ship.id} shipName={ship.name} />;
       case 'dates':        return <DatesTab shipId={ship.id} />;
       case 'fo-messages':  return <FoMessagesFeature shipId={ship.id} shipName={ship.name} />;
@@ -92,8 +94,8 @@ export default function VaultScreen() {
       {ships.length > 0 && (
         <Pressable style={styles.shipSelector} onPress={() => setShowShipPicker(true)}>
           <View style={[styles.shipDot, { backgroundColor: ship?.gradStart ?? Colors.sakura }]} />
-          <Text style={styles.shipName}>{ship?.name ?? '—'}</Text>
-          {ship?.fandom ? <Text style={styles.shipFandom}>· {ship.fandom}</Text> : null}
+          <Text style={styles.shipName}>{ship ? (ship.shipName || ship.name) : '—'}</Text>
+          {ship?.myName && ship?.name ? <Text style={styles.shipFandom}>· {ship.myName} × {ship.name}</Text> : ship?.fandom ? <Text style={styles.shipFandom}>· {ship.fandom}</Text> : null}
           <Text style={styles.shipChevron}>›</Text>
         </Pressable>
       )}
@@ -139,8 +141,8 @@ export default function VaultScreen() {
               >
                 <View style={[styles.pickerDot, { backgroundColor: s.gradStart }]} />
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.pickerName, i === selectedShipIdx && { color: Colors.sakuraDeep }]}>{s.name}</Text>
-                  {s.fandom ? <Text style={styles.pickerFandom}>{s.fandom}</Text> : null}
+                  <Text style={[styles.pickerName, i === selectedShipIdx && { color: Colors.sakuraDeep }]}>{s.shipName || s.name}</Text>
+                  {s.myName && s.name ? <Text style={styles.pickerFandom}>{s.myName} × {s.name}</Text> : s.fandom ? <Text style={styles.pickerFandom}>{s.fandom}</Text> : null}
                 </View>
                 {i === selectedShipIdx && <Text style={styles.pickerCheck}>✓</Text>}
               </Pressable>
@@ -340,9 +342,253 @@ function HCList({ shipId, shipName, catId, catLabel, catColor, onBack }: {
   );
 }
 
+// ─── Boundaries feature ───────────────────────────────────────────────────────
+
+type BState = {
+  title: string;
+  ja: string;
+  tint: string;
+  stroke: string;
+  desc: string;
+  checks: { label: string; on: boolean }[];
+};
+
+const DEFAULT_STATES: BState[] = [
+  {
+    title: 'NO SHARING', ja: '夢', tint: '#ffd6e2', stroke: '#c44e75',
+    desc: "they're mine. doubles dni.",
+    checks: [
+      { label: 'doubles interact', on: false },
+      { label: 'fan art with double f/o', on: false },
+      { label: 'double tags / hashtags', on: false },
+      { label: 'RP with double', on: false },
+    ],
+  },
+  {
+    title: 'SELECTIVE', ja: '限', tint: '#fde9c6', stroke: '#b58732',
+    desc: 'case by case. ask me first.',
+    checks: [
+      { label: 'mutuals only', on: true },
+      { label: 'platonic doubles ok', on: true },
+      { label: 'fan art if tagged', on: true },
+      { label: 'non-shipping discussions', on: true },
+    ],
+  },
+  {
+    title: 'OK SHARING', ja: '可', tint: '#d6ecda', stroke: '#3f8157',
+    desc: 'the more the merrier.',
+    checks: [
+      { label: 'all doubles welcome', on: true },
+      { label: 'co-headcanons', on: true },
+      { label: 'polyship intros', on: true },
+      { label: 'scenario swaps', on: true },
+    ],
+  },
+];
+
+function BoundariesFeature({ shipId }: { shipId: string }) {
+  const [editing, setEditing] = useState(false);
+
+  const init = (): BState[] => {
+    const saved = loadTemplateData(shipId, 'boundaries');
+    return saved.states ? JSON.parse(saved.states) : DEFAULT_STATES;
+  };
+
+  const [states, setStates] = useState<BState[]>(init);
+  const [footer, setFooter] = useState<string>(() => {
+    const saved = loadTemplateData(shipId, 'boundaries');
+    return saved.footer ?? "let's keep the yumeship community happy ♡";
+  });
+
+  function persist(nextStates: BState[], nextFooter = footer) {
+    saveTemplateData(shipId, 'boundaries', {
+      states: JSON.stringify(nextStates),
+      footer: nextFooter,
+    });
+  }
+
+  function toggleCheck(si: number, ci: number) {
+    setStates((prev) => {
+      const next = prev.map((st, i) =>
+        i !== si ? st : {
+          ...st,
+          checks: st.checks.map((c, j) => j !== ci ? c : { ...c, on: !c.on }),
+        },
+      );
+      persist(next);
+      return next;
+    });
+  }
+
+  function updateField(si: number, field: keyof Omit<BState, 'checks' | 'tint' | 'stroke'>, val: string) {
+    setStates((prev) => {
+      const next = prev.map((st, i) => i !== si ? st : { ...st, [field]: val });
+      persist(next);
+      return next;
+    });
+  }
+
+  function updateCheckLabel(si: number, ci: number, val: string) {
+    setStates((prev) => {
+      const next = prev.map((st, i) =>
+        i !== si ? st : {
+          ...st,
+          checks: st.checks.map((c, j) => j !== ci ? c : { ...c, label: val }),
+        },
+      );
+      persist(next);
+      return next;
+    });
+  }
+
+  function addCheck(si: number) {
+    setStates((prev) => {
+      const next = prev.map((st, i) =>
+        i !== si ? st : { ...st, checks: [...st.checks, { label: 'new item', on: true }] },
+      );
+      persist(next);
+      return next;
+    });
+  }
+
+  function removeCheck(si: number, ci: number) {
+    setStates((prev) => {
+      const next = prev.map((st, i) =>
+        i !== si ? st : { ...st, checks: st.checks.filter((_, j) => j !== ci) },
+      );
+      persist(next);
+      return next;
+    });
+  }
+
+  return (
+    <View style={bn.wrap}>
+      <View style={bn.topRow}>
+        <Text style={bn.eyebrow}>BOUNDARIES</Text>
+        <Pressable
+          style={[bn.editBtn, editing && bn.editBtnOn]}
+          onPress={() => setEditing((v) => !v)}
+        >
+          <Text style={[bn.editBtnText, editing && bn.editBtnTextOn]}>
+            {editing ? 'done' : 'edit'}
+          </Text>
+        </Pressable>
+      </View>
+
+      {/* Title */}
+      <View style={bn.titleCenter}>
+        <View style={bn.titlePill}>
+          <Text style={bn.titleJa}>夢</Text>
+          <Text style={bn.titleText}>BOUNDARIES</Text>
+        </View>
+        <Text style={bn.titleSub}>sharing status &amp; what's ok</Text>
+      </View>
+
+      {/* State cards */}
+      <View style={bn.states}>
+        {states.map((st, si) => (
+          <View key={si} style={[bn.stateCard, { backgroundColor: st.tint, borderColor: st.stroke }]}>
+            <View style={[bn.seal, { borderColor: st.stroke }]}>
+              {editing ? (
+                <TextInput
+                  value={st.ja}
+                  onChangeText={(v) => updateField(si, 'ja', v)}
+                  style={[bn.sealJa, { color: st.stroke }]}
+                  maxLength={2}
+                  textAlign="center"
+                />
+              ) : (
+                <Text style={[bn.sealJa, { color: st.stroke }]}>{st.ja}</Text>
+              )}
+            </View>
+
+            <View style={bn.stateContent}>
+              {editing ? (
+                <TextInput
+                  value={st.title}
+                  onChangeText={(v) => updateField(si, 'title', v)}
+                  style={[bn.stateTitle, { color: st.stroke }]}
+                />
+              ) : (
+                <Text style={[bn.stateTitle, { color: st.stroke }]}>{st.title}</Text>
+              )}
+
+              {editing ? (
+                <TextInput
+                  value={st.desc}
+                  onChangeText={(v) => updateField(si, 'desc', v)}
+                  style={bn.stateDesc}
+                  multiline
+                />
+              ) : (
+                <Text style={bn.stateDesc}>{st.desc}</Text>
+              )}
+
+              <View style={bn.checkGrid}>
+                {st.checks.map((c, ci) => (
+                  <View key={ci} style={bn.checkRow}>
+                    <Pressable onPress={() => toggleCheck(si, ci)}>
+                      <SquareCheck on={c.on} size={11} stroke={st.stroke} />
+                    </Pressable>
+                    {editing ? (
+                      <TextInput
+                        value={c.label}
+                        onChangeText={(v) => updateCheckLabel(si, ci, v)}
+                        style={bn.checkInput}
+                      />
+                    ) : (
+                      <Text style={[bn.checkText, { opacity: c.on ? 1 : 0.6 }]}>{c.label}</Text>
+                    )}
+                    {editing && (
+                      <Pressable onPress={() => removeCheck(si, ci)} hitSlop={6}>
+                        <Text style={bn.removeCheck}>✕</Text>
+                      </Pressable>
+                    )}
+                  </View>
+                ))}
+                {editing && (
+                  <Pressable style={bn.addCheckBtn} onPress={() => addCheck(si)}>
+                    <Text style={[bn.addCheckText, { color: st.stroke }]}>+ add item</Text>
+                  </Pressable>
+                )}
+              </View>
+            </View>
+
+            <Svg width={44} height={54} viewBox="0 0 50 60" style={bn.chibi}>
+              <Circle cx="25" cy="18" r="13" fill="#fff" stroke={st.stroke} strokeWidth="1.5" />
+              <Path d="M14 35 L 16 56 L 34 56 L 36 35 Z" fill="#fff" stroke={st.stroke} strokeWidth="1.5" strokeLinejoin="round" />
+              <Circle cx="20" cy="18" r="1.2" fill={INK} />
+              <Circle cx="30" cy="18" r="1.2" fill={INK} />
+              <Path d="M22 23 Q 25 25, 28 23" stroke={INK} strokeWidth="1.2" fill="none" strokeLinecap="round" />
+            </Svg>
+          </View>
+        ))}
+      </View>
+
+      {/* Footer */}
+      {editing ? (
+        <TextInput
+          value={footer}
+          onChangeText={(v) => { setFooter(v); persist(states, v); }}
+          style={bn.footerInput}
+          textAlign="center"
+        />
+      ) : (
+        <Text style={bn.footer}>{footer}</Text>
+      )}
+      <View style={{ height: Spacing.s9 }} />
+    </View>
+  );
+}
+
 // ─── Scenarios feature ────────────────────────────────────────────────────────
 
-const PROMPTS = ['雨 rainy day', '夜 late call', '朝 morning after', '初 first meeting'];
+const SC_PROMPTS: { ja: string; label: string }[] = [
+  { ja: '雨', label: 'rainy day' },
+  { ja: '夜', label: 'late call' },
+  { ja: '朝', label: 'morning after' },
+  { ja: '初', label: 'first meeting' },
+];
 
 function ScenariosFeature({ shipId, shipName }: { shipId: string; shipName: string }) {
   const scenarios = useScenarios(shipId);
@@ -365,21 +611,31 @@ function ScenariosFeature({ shipId, shipName }: { shipId: string; shipName: stri
 
   return (
     <View style={sc.wrap}>
-      <View style={sc.header}>
-        <Text style={sc.label}>scenarios · {scenarios.length}</Text>
-        <Pressable hitSlop={8} onPress={() => setEditing({ id: null, title: '', body: '' })}>
-          <IconPlus size={14} color={Colors.sakuraDeep} />
+      <View style={sc.topRow}>
+        <Text style={sc.eyebrow}>SCENARIOS · {scenarios.length}</Text>
+        <Pressable
+          style={sc.newBtn}
+          onPress={() => setEditing({ id: null, title: '', body: '' })}
+        >
+          <IconPlus size={12} color={Colors.vellum} />
+          <Text style={sc.newBtnText}>new</Text>
         </Pressable>
       </View>
 
       {scenarios.length === 0 ? (
         <View style={sc.empty}>
+          <Heart size={28} color={Colors.sakuraSoft} outline />
           <Text style={sc.emptyTitle}>no scenarios yet.</Text>
           <Text style={sc.emptySub}>what would happen if {shipName} walked in right now?</Text>
           <View style={sc.prompts}>
-            {PROMPTS.map((p) => (
-              <Pressable key={p} style={sc.prompt} onPress={() => setEditing({ id: null, title: p, body: '' })}>
-                <Text style={sc.promptText}>{p}</Text>
+            {SC_PROMPTS.map((p) => (
+              <Pressable
+                key={p.ja}
+                style={sc.prompt}
+                onPress={() => setEditing({ id: null, title: p.label, body: '' })}
+              >
+                <Text style={sc.promptJa}>{p.ja}</Text>
+                <Text style={sc.promptLabel}>{p.label}</Text>
               </Pressable>
             ))}
           </View>
@@ -391,11 +647,24 @@ function ScenariosFeature({ shipId, shipName }: { shipId: string; shipName: stri
               key={s.id}
               style={sc.card}
               onPress={() => setEditing({ id: s.id, title: s.title, body: s.body })}
+              onLongPress={() => Alert.alert('Delete?', s.title || 'this scenario', [
+                { text: 'Delete', style: 'destructive', onPress: () => deleteScenario(s.id) },
+                { text: 'Cancel', style: 'cancel' },
+              ])}
             >
-              <Text style={sc.cardTitle}>{s.title || 'untitled'}</Text>
-              {s.body ? <Text style={sc.cardPreview} numberOfLines={2}>{s.body}</Text> : null}
+              <View style={sc.cardStripe} />
+              <View style={sc.cardBody}>
+                <Text style={sc.cardTitle}>{s.title || 'untitled'}</Text>
+                {s.body ? (
+                  <Text style={sc.cardPreview} numberOfLines={2}>{s.body}</Text>
+                ) : (
+                  <Text style={sc.cardEmpty}>tap to write...</Text>
+                )}
+                <Text style={sc.cardDate}>{new Date(s.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</Text>
+              </View>
             </Pressable>
           ))}
+          <View style={{ height: Spacing.s9 }} />
         </View>
       )}
     </View>
@@ -411,40 +680,45 @@ function ScenarioEditor({ initial, shipName, onSave, onDelete, onBack }: {
 }) {
   const [title, setTitle] = useState(initial.title);
   const [body, setBody] = useState(initial.body);
+  const wordCount = body.trim() ? body.trim().split(/\s+/).length : 0;
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={sc.editor} keyboardVerticalOffset={120}>
-      <View style={sc.editorHeader}>
-        <Pressable onPress={onBack} hitSlop={8}><Text style={sc.backText}>‹</Text></Pressable>
-        <View style={{ flexDirection: 'row', gap: 12 }}>
+      <View style={sc.editorBar}>
+        <Pressable onPress={onBack} hitSlop={8}>
+          <Text style={sc.barBack}>‹ back</Text>
+        </Pressable>
+        <Text style={sc.barWords}>{wordCount} words</Text>
+        <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
           {onDelete && (
-            <Pressable onPress={() => Alert.alert('Delete scenario?', '', [
+            <Pressable hitSlop={8} onPress={() => Alert.alert('Delete scenario?', '', [
               { text: 'Delete', style: 'destructive', onPress: onDelete },
               { text: 'Cancel', style: 'cancel' },
             ])}>
-              <Text style={sc.deleteText}>delete</Text>
+              <Text style={sc.barDelete}>delete</Text>
             </Pressable>
           )}
-          <Pressable onPress={() => onSave(title, body)} style={sc.saveBtn}>
-            <Text style={sc.saveBtnText}>save</Text>
+          <Pressable onPress={() => onSave(title, body)} style={sc.barSave}>
+            <Text style={sc.barSaveText}>save</Text>
           </Pressable>
         </View>
       </View>
       <TextInput
         value={title}
         onChangeText={setTitle}
-        placeholder="title..."
+        placeholder="give it a title..."
         placeholderTextColor={Colors.ink3}
         style={sc.titleInput}
       />
       <TextInput
         value={body}
         onChangeText={setBody}
-        placeholder={`write about ${shipName}...`}
+        placeholder={`what happens with ${shipName}...`}
         placeholderTextColor={Colors.ink3}
         style={sc.bodyInput}
         multiline
         textAlignVertical="top"
+        autoFocus={!initial.body}
       />
     </KeyboardAvoidingView>
   );
@@ -452,77 +726,192 @@ function ScenarioEditor({ initial, shipName, onSave, onDelete, onBack }: {
 
 // ─── F/O Messages feature ─────────────────────────────────────────────────────
 
+function getFoStarters(foName: string) {
+  return [
+    { emoji: '☀️', text: `good morning from ${foName}~` },
+    { emoji: '🌙', text: 'goodnight ♡' },
+    { emoji: '💭', text: `${foName} is thinking of you` },
+    { emoji: '💧', text: 'drink some water!' },
+    { emoji: '🫂', text: 'you okay? ♡' },
+    { emoji: '✉️', text: `${foName} misses you~` },
+  ];
+}
+
+const FO_TIMES: { id: string; label: string; hour: number }[] = [
+  { id: '6am',       label: '6 am',      hour: 6  },
+  { id: 'morning',   label: '8 am',      hour: 8  },
+  { id: '10am',      label: '10 am',     hour: 10 },
+  { id: 'noon',      label: '12 pm',     hour: 12 },
+  { id: 'afternoon', label: '2 pm',      hour: 14 },
+  { id: '4pm',       label: '4 pm',      hour: 16 },
+  { id: 'evening',   label: '6 pm',      hour: 18 },
+  { id: '8pm',       label: '8 pm',      hour: 20 },
+  { id: '10pm',      label: '10 pm',     hour: 22 },
+  { id: 'random',    label: 'random ✦',  hour: -1 },
+];
+
 function FoMessagesFeature({ shipId, shipName }: { shipId: string; shipName: string }) {
   const messages = useFoMessages(shipId);
-  const [draft, setDraft] = useState('');
-  const [hour, setHour] = useState('9');
+  const [composing, setComposing] = useState(false);
+  const activeCount = messages.filter((m) => m.active).length;
 
-  function add() {
-    const h = parseInt(hour, 10);
-    if (!draft.trim() || isNaN(h)) return;
-    addFoMessage(shipId, draft.trim(), Math.max(0, Math.min(23, h)));
-    setDraft('');
+  if (composing) {
+    return (
+      <FoCompose
+        shipName={shipName}
+        onQueue={async (body, hour) => {
+          await addFoMessage(shipId, body, hour, shipName);
+          setComposing(false);
+        }}
+        onBack={() => setComposing(false)}
+      />
+    );
   }
 
   return (
     <View style={fo.wrap}>
-      <Text style={fo.hint}>write messages {shipName} would send you. they arrive as notifications ♡</Text>
-
-      <View style={fo.addBox}>
-        <TextInput
-          value={draft}
-          onChangeText={setDraft}
-          placeholder={`${shipName} says...`}
-          placeholderTextColor={Colors.ink3}
-          style={fo.draftInput}
-          multiline
-        />
-        <View style={fo.addFooter}>
-          <View style={fo.hourRow}>
-            <Text style={fo.hourLabel}>send at</Text>
-            <TextInput
-              value={hour}
-              onChangeText={setHour}
-              keyboardType="number-pad"
-              style={fo.hourInput}
-              maxLength={2}
-            />
-            <Text style={fo.hourLabel}>:00</Text>
-          </View>
-          <Pressable style={fo.addBtn} onPress={add}>
-            <Text style={fo.addBtnText}>add ♡</Text>
-          </Pressable>
+      <View style={fo.hubHeader}>
+        <View style={fo.hubLeft}>
+          <Text style={fo.eyebrow}>TRACKING</Text>
+          <Text style={fo.activeCount}>{activeCount} active</Text>
+          {messages.length === 0 && <Text style={fo.noSaved}>no saved notifications yet.</Text>}
         </View>
+        <Pressable style={fo.newBtn} onPress={() => setComposing(true)}>
+          <IconPlus size={12} color={Colors.sakuraDeep} />
+          <Text style={fo.newBtnText}>New</Text>
+        </Pressable>
       </View>
 
       {messages.length === 0 ? (
-        <View style={fo.empty}>
-          <Text style={fo.emptyTitle}>no messages yet.</Text>
-          <Text style={fo.emptySub}>write what {shipName} might say to you</Text>
+        <View style={fo.emptyCard}>
+          <Text style={fo.emptyCardText}>no saved notifications yet.</Text>
+          <Pressable style={fo.createBtn} onPress={() => setComposing(true)}>
+            <IconPlus size={13} color={Colors.sakuraDeep} />
+            <Text style={fo.createBtnText}>Create notification</Text>
+          </Pressable>
         </View>
       ) : (
         <View style={fo.list}>
-          {messages.map((m) => (
-            <Pressable
-              key={m.id}
-              style={[fo.msgCard, !m.active && fo.msgCardInactive]}
-              onLongPress={() => Alert.alert('Delete?', m.body.slice(0, 60), [
-                { text: 'Delete', style: 'destructive', onPress: () => deleteFoMessage(m.id) },
-                { text: 'Cancel', style: 'cancel' },
-              ])}
-            >
-              <Text style={[fo.msgBody, !m.active && fo.msgBodyInactive]}>{m.body}</Text>
-              <View style={fo.msgMeta}>
-                <Text style={fo.msgHour}>{m.scheduledHour}:00</Text>
-                <Pressable onPress={() => toggleFoMessage(m.id, !m.active)} style={[fo.toggle, m.active && fo.toggleActive]}>
-                  <Text style={[fo.toggleText, m.active && fo.toggleTextActive]}>{m.active ? 'active' : 'paused'}</Text>
-                </Pressable>
-              </View>
-            </Pressable>
-          ))}
+          {messages.map((m) => {
+            const timeLabel = FO_TIMES.find((t) => t.hour === m.scheduledHour)?.label
+              ?? (m.scheduledHour >= 0 ? `${m.scheduledHour}:00` : 'random');
+            return (
+              <Pressable
+                key={m.id}
+                style={[fo.msgCard, !m.active && fo.msgCardOff]}
+                onLongPress={() => Alert.alert('Delete?', m.body.slice(0, 60), [
+                  { text: 'Delete', style: 'destructive', onPress: () => { deleteFoMessage(m.id); } },
+                  { text: 'Cancel', style: 'cancel' },
+                ])}
+              >
+                <Text style={[fo.msgBody, !m.active && fo.msgBodyOff]}>{m.body}</Text>
+                <View style={fo.msgFooter}>
+                  <View style={fo.timePill}>
+                    <Text style={fo.timePillText}>{timeLabel}</Text>
+                  </View>
+                  <Pressable
+                    onPress={() => { toggleFoMessage(m.id, !m.active, shipName); }}
+                    style={[fo.togglePill, m.active && fo.togglePillOn]}
+                  >
+                    <Text style={[fo.togglePillText, m.active && fo.togglePillTextOn]}>
+                      {m.active ? 'active' : 'paused'}
+                    </Text>
+                  </Pressable>
+                </View>
+              </Pressable>
+            );
+          })}
+          <View style={{ height: Spacing.s9 }} />
         </View>
       )}
     </View>
+  );
+}
+
+function FoCompose({ shipName, onQueue, onBack }: {
+  shipName: string;
+  onQueue: (body: string, hour: number) => void;
+  onBack: () => void;
+}) {
+  const [body, setBody] = useState('');
+  const [timeId, setTimeId] = useState<string>('morning');
+  const starters = getFoStarters(shipName);
+
+  function pickStarter(text: string) {
+    setBody(text);
+  }
+
+  function queue() {
+    if (!body.trim()) return;
+    const hour = FO_TIMES.find((t) => t.id === timeId)?.hour ?? 8;
+    const resolvedHour = hour === -1 ? [6, 8, 10, 12, 14, 16, 18, 20, 22][Math.floor(Math.random() * 9)] : hour;
+    onQueue(body.trim(), resolvedHour);
+  }
+
+  const timeChosen = FO_TIMES.find((t) => t.id === timeId);
+  const previewText = timeId === 'random' ? 'arrives at a random time' : `arrives at ${timeChosen?.label ?? ''}`;
+
+  return (
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={fo.compose} keyboardVerticalOffset={120}>
+      <ScrollView contentContainerStyle={fo.composeContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        <Pressable onPress={onBack} hitSlop={8} style={fo.composeBack}>
+          <Text style={fo.composeBackText}>‹ back</Text>
+        </Pressable>
+
+        <Text style={fo.sectionLabel}>START WITH</Text>
+        <View style={fo.starterRow}>
+          {starters.map((s) => (
+            <Pressable
+              key={s.emoji}
+              style={[fo.starter, body === s.text && fo.starterActive]}
+              onPress={() => pickStarter(s.text)}
+            >
+              <Text style={fo.starterEmoji}>{s.emoji}</Text>
+              <Text style={fo.starterText} numberOfLines={2}>{s.text}</Text>
+            </Pressable>
+          ))}
+        </View>
+
+        <Text style={fo.sectionLabel}>WHAT THEY MIGHT SAY</Text>
+        <View style={fo.msgInputWrap}>
+          <TextInput
+            value={body}
+            onChangeText={setBody}
+            placeholder={`${shipName} says...`}
+            placeholderTextColor={Colors.ink3}
+            style={fo.msgInput}
+            multiline
+            textAlignVertical="top"
+          />
+        </View>
+
+        <Text style={fo.sectionLabel}>WHEN SHOULD THIS ARRIVE?</Text>
+        <View style={fo.chipRow}>
+          {FO_TIMES.map((t) => (
+            <Pressable
+              key={t.id}
+              style={[fo.chip, timeId === t.id && fo.chipActive]}
+              onPress={() => setTimeId(t.id)}
+            >
+              <Text style={[fo.chipText, timeId === t.id && fo.chipTextActive]}>{t.label}</Text>
+            </Pressable>
+          ))}
+        </View>
+
+        <View style={fo.previewRow}>
+          <Text style={fo.previewLabel}>Preview</Text>
+          <Text style={fo.previewValue}>{previewText}</Text>
+        </View>
+
+        <Pressable
+          style={[fo.queueBtn, !body.trim() && fo.queueBtnDisabled]}
+          onPress={queue}
+          disabled={!body.trim()}
+        >
+          <Text style={fo.queueBtnText}>Queue message ♡</Text>
+        </Pressable>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -651,95 +1040,223 @@ const hc = StyleSheet.create({
 });
 
 const sc = StyleSheet.create({
-  wrap: { paddingHorizontal: Spacing.s5, paddingTop: Spacing.s3, paddingBottom: Spacing.s6 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.s3 },
-  label: { fontFamily: FontFamily.marker, fontSize: 9, color: Colors.ink3, letterSpacing: 1.4, textTransform: 'uppercase' },
-  empty: { alignItems: 'center', gap: Spacing.s3, paddingVertical: Spacing.s7 },
+  wrap: { paddingHorizontal: Spacing.s5, paddingTop: Spacing.s4, paddingBottom: Spacing.s6 },
+  topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: Spacing.s4 },
+  eyebrow: { fontFamily: FontFamily.marker, fontSize: 9, color: Colors.ink3, letterSpacing: 1.4 },
+  newBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    paddingVertical: 5, paddingHorizontal: 12,
+    backgroundColor: Colors.sakuraDeep, borderRadius: Radius.pill,
+  },
+  newBtnText: { fontFamily: FontFamily.uiMedium, fontSize: 11, color: Colors.vellum },
+
+  empty: { alignItems: 'center', gap: Spacing.s3, paddingVertical: Spacing.s7, paddingHorizontal: Spacing.s4 },
   emptyTitle: { fontFamily: FontFamily.displayItalic, fontSize: FontSize.h5, color: Colors.ink },
-  emptySub: { fontFamily: FontFamily.displayItalic, fontSize: FontSize.meta, color: Colors.ink2, textAlign: 'center' },
+  emptySub: { fontFamily: FontFamily.displayItalic, fontSize: FontSize.meta, color: Colors.ink2, textAlign: 'center', lineHeight: 20 },
   prompts: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center', marginTop: Spacing.s2 },
   prompt: {
-    paddingVertical: 6, paddingHorizontal: 14,
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    paddingVertical: 7, paddingHorizontal: 14,
     backgroundColor: Colors.vellum, borderWidth: 1, borderColor: Colors.line,
-    borderRadius: Radius.pill,
+    borderRadius: Radius.pill, ...Shadow.s1,
   },
-  promptText: { fontFamily: FontFamily.ja, fontSize: 12, color: Colors.ink2 },
+  promptJa: { fontFamily: FontFamily.ja, fontSize: 14, color: Colors.sakuraDeep },
+  promptLabel: { fontFamily: FontFamily.ui, fontSize: 12, color: Colors.ink2 },
+
   list: { gap: 10 },
   card: {
-    padding: Spacing.s4, backgroundColor: Colors.vellum,
-    borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.r3, gap: 4,
+    flexDirection: 'row',
+    backgroundColor: Colors.vellum,
+    borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.r3,
+    overflow: 'hidden', ...Shadow.s1,
   },
-  cardTitle: { fontFamily: FontFamily.displayItalic, fontSize: 15, color: Colors.ink },
-  cardPreview: { fontFamily: FontFamily.ui, fontSize: 12, color: Colors.ink2, lineHeight: 18 },
+  cardStripe: { width: 4, backgroundColor: Colors.sakura },
+  cardBody: { flex: 1, padding: Spacing.s4, gap: 3 },
+  cardTitle: { fontFamily: FontFamily.displayItalic, fontSize: 16, color: Colors.ink },
+  cardPreview: { fontFamily: FontFamily.script, fontSize: 14, color: Colors.ink2, lineHeight: 20 },
+  cardEmpty: { fontFamily: FontFamily.displayItalic, fontSize: 13, color: Colors.ink3, fontStyle: 'italic' },
+  cardDate: { fontFamily: FontFamily.marker, fontSize: 9, color: Colors.ink3, letterSpacing: 0.5, marginTop: 4 },
 
-  editor: { flex: 1, backgroundColor: Colors.paper },
-  editorHeader: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+  editor: { flex: 1, backgroundColor: Colors.vellum },
+  editorBar: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: Spacing.s5, paddingVertical: Spacing.s3,
     borderBottomWidth: 1, borderBottomColor: Colors.line,
+    backgroundColor: Colors.paper,
   },
-  backText: { fontSize: 22, color: Colors.ink2, fontFamily: FontFamily.ui },
-  deleteText: { fontFamily: FontFamily.ui, fontSize: 13, color: Colors.ember },
-  saveBtn: { paddingVertical: 5, paddingHorizontal: 16, backgroundColor: Colors.sakuraDeep, borderRadius: Radius.pill },
-  saveBtnText: { fontFamily: FontFamily.uiMedium, fontSize: 13, color: Colors.vellum },
+  barBack: { fontFamily: FontFamily.ui, fontSize: 14, color: Colors.ink2 },
+  barWords: { fontFamily: FontFamily.marker, fontSize: 9, color: Colors.ink3, letterSpacing: 0.8 },
+  barDelete: { fontFamily: FontFamily.ui, fontSize: 13, color: Colors.ember },
+  barSave: { paddingVertical: 5, paddingHorizontal: 16, backgroundColor: Colors.sakuraDeep, borderRadius: Radius.pill },
+  barSaveText: { fontFamily: FontFamily.uiMedium, fontSize: 13, color: Colors.vellum },
   titleInput: {
-    paddingHorizontal: Spacing.s5, paddingTop: Spacing.s4, paddingBottom: Spacing.s2,
-    fontFamily: FontFamily.displayItalic, fontSize: 22, color: Colors.ink,
-    borderBottomWidth: 1, borderBottomColor: Colors.line,
+    paddingHorizontal: Spacing.s5, paddingTop: Spacing.s5, paddingBottom: Spacing.s3,
+    fontFamily: FontFamily.ui, fontSize: 18, color: Colors.ink,
+    borderBottomWidth: 1, borderBottomColor: Colors.line, backgroundColor: Colors.vellum,
   },
   bodyInput: {
     flex: 1, paddingHorizontal: Spacing.s5, paddingTop: Spacing.s4,
-    fontFamily: FontFamily.ui, fontSize: 14, color: Colors.ink, lineHeight: 22,
-    minHeight: 300,
+    fontFamily: FontFamily.ui, fontSize: 15, color: Colors.ink, lineHeight: 24,
+    minHeight: 300, backgroundColor: Colors.vellum,
   },
 });
 
 const fo = StyleSheet.create({
-  wrap: { paddingHorizontal: Spacing.s5, paddingTop: Spacing.s3, paddingBottom: Spacing.s6, gap: 16 },
-  hint: { fontFamily: FontFamily.ui, fontSize: 12, color: Colors.ink3, lineHeight: 18 },
-  addBox: {
-    padding: Spacing.s4, backgroundColor: Colors.sakuraSoft,
-    borderWidth: 1, borderColor: Colors.sakura, borderRadius: Radius.r3, gap: 10,
+  // Hub
+  wrap: { paddingHorizontal: Spacing.s5, paddingTop: Spacing.s4, paddingBottom: Spacing.s6 },
+  hubHeader: {
+    flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between',
+    padding: Spacing.s4, backgroundColor: Colors.vellum,
+    borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.r3, marginBottom: Spacing.s3,
   },
-  draftInput: {
-    fontFamily: FontFamily.ui, fontSize: 13, color: Colors.ink,
-    minHeight: 60, textAlignVertical: 'top',
+  hubLeft: { gap: 2 },
+  eyebrow: { fontFamily: FontFamily.marker, fontSize: 9, color: Colors.ink3, letterSpacing: 1.4 },
+  activeCount: { fontFamily: FontFamily.displayItalic, fontSize: 22, color: Colors.ink },
+  noSaved: { fontFamily: FontFamily.ui, fontSize: 12, color: Colors.ink3, marginTop: 2 },
+  newBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    paddingVertical: 5, paddingHorizontal: 12,
+    backgroundColor: Colors.sakuraSoft, borderWidth: 1, borderColor: Colors.sakura,
+    borderRadius: Radius.pill,
   },
-  addFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  hourRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  hourLabel: { fontFamily: FontFamily.ui, fontSize: 12, color: Colors.ink3 },
-  hourInput: {
-    width: 36, paddingVertical: 3, paddingHorizontal: 8,
-    backgroundColor: Colors.vellum, borderWidth: 1, borderColor: Colors.line,
-    borderRadius: Radius.r2, fontFamily: FontFamily.uiMedium, fontSize: 13, color: Colors.ink,
-    textAlign: 'center',
-  },
-  addBtn: {
-    paddingVertical: 6, paddingHorizontal: 18,
-    backgroundColor: Colors.sakuraDeep, borderRadius: Radius.pill,
-  },
-  addBtnText: { fontFamily: FontFamily.uiMedium, fontSize: 13, color: Colors.vellum },
+  newBtnText: { fontFamily: FontFamily.uiMedium, fontSize: 11, color: Colors.sakuraDeep },
 
-  empty: { alignItems: 'center', gap: Spacing.s2, paddingVertical: Spacing.s5 },
-  emptyTitle: { fontFamily: FontFamily.displayItalic, fontSize: FontSize.h5, color: Colors.ink },
-  emptySub: { fontFamily: FontFamily.displayItalic, fontSize: FontSize.meta, color: Colors.ink3, textAlign: 'center' },
+  emptyCard: {
+    padding: Spacing.s5, backgroundColor: Colors.vellum,
+    borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.r3,
+    alignItems: 'flex-start', gap: Spacing.s3,
+  },
+  emptyCardText: { fontFamily: FontFamily.ui, fontSize: 13, color: Colors.ink3 },
+  createBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingVertical: 8, paddingHorizontal: 16,
+    backgroundColor: Colors.sakuraSoft, borderWidth: 1, borderColor: Colors.sakura,
+    borderRadius: Radius.pill,
+  },
+  createBtnText: { fontFamily: FontFamily.uiMedium, fontSize: 13, color: Colors.sakuraDeep },
 
   list: { gap: 10 },
   msgCard: {
     padding: Spacing.s4, backgroundColor: Colors.vellum,
-    borderWidth: 1, borderColor: Colors.sakura, borderRadius: Radius.r3,
-    borderLeftWidth: 3, borderLeftColor: Colors.sakuraDeep, gap: 8,
+    borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.r3, gap: 8,
   },
-  msgCardInactive: { borderLeftColor: Colors.line, opacity: 0.6 },
-  msgBody: { fontFamily: FontFamily.ui, fontSize: 13, color: Colors.ink, lineHeight: 20 },
-  msgBodyInactive: { color: Colors.ink3 },
-  msgMeta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  msgHour: { fontFamily: FontFamily.marker, fontSize: 10, color: Colors.ink3, letterSpacing: 0.6 },
-  toggle: {
+  msgCardOff: { opacity: 0.55 },
+  msgBody: { fontFamily: FontFamily.ui, fontSize: 14, color: Colors.ink, lineHeight: 20 },
+  msgBodyOff: { color: Colors.ink3 },
+  msgFooter: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  timePill: {
     paddingVertical: 3, paddingHorizontal: 10, borderRadius: Radius.pill,
     backgroundColor: Colors.paperDeep, borderWidth: 1, borderColor: Colors.line,
   },
-  toggleActive: { backgroundColor: Colors.sageSoft, borderColor: Colors.sage },
-  toggleText: { fontFamily: FontFamily.ui, fontSize: 11, color: Colors.ink3 },
-  toggleTextActive: { color: Colors.sageDeep },
+  timePillText: { fontFamily: FontFamily.ui, fontSize: 11, color: Colors.ink3 },
+  togglePill: {
+    paddingVertical: 3, paddingHorizontal: 10, borderRadius: Radius.pill,
+    backgroundColor: Colors.paperDeep, borderWidth: 1, borderColor: Colors.line,
+  },
+  togglePillOn: { backgroundColor: Colors.sageSoft, borderColor: Colors.sage },
+  togglePillText: { fontFamily: FontFamily.ui, fontSize: 11, color: Colors.ink3 },
+  togglePillTextOn: { color: Colors.sageDeep },
+
+  // Compose
+  compose: { flex: 1, backgroundColor: Colors.paper },
+  composeContent: { paddingHorizontal: Spacing.s5, paddingBottom: Spacing.s9 },
+  composeBack: { paddingVertical: Spacing.s3 },
+  composeBackText: { fontFamily: FontFamily.ui, fontSize: 14, color: Colors.ink2 },
+
+  sectionLabel: {
+    fontFamily: FontFamily.marker, fontSize: 9, color: Colors.ink3,
+    letterSpacing: 1.4, marginTop: Spacing.s4, marginBottom: Spacing.s2,
+  },
+  starterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  starter: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingVertical: 8, paddingHorizontal: 14,
+    backgroundColor: Colors.vellum, borderWidth: 1, borderColor: Colors.line,
+    borderRadius: Radius.pill, ...Shadow.s1,
+  },
+  starterActive: { backgroundColor: Colors.sakuraSoft, borderColor: Colors.sakura },
+  starterEmoji: { fontSize: 14 },
+  starterText: { fontFamily: FontFamily.ui, fontSize: 12, color: Colors.ink2 },
+
+  msgInputWrap: {
+    backgroundColor: Colors.vellum, borderWidth: 1, borderColor: Colors.line,
+    borderRadius: Radius.r3, padding: Spacing.s3,
+  },
+  msgInput: {
+    fontFamily: FontFamily.ui, fontSize: 14, color: Colors.ink,
+    minHeight: 72, textAlignVertical: 'top', lineHeight: 22,
+  },
+
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  chip: {
+    paddingVertical: 8, paddingHorizontal: 16,
+    backgroundColor: Colors.vellum, borderWidth: 1, borderColor: Colors.line,
+    borderRadius: Radius.pill,
+  },
+  chipActive: { backgroundColor: Colors.paperDeep, borderColor: Colors.lineStrong },
+  chipText: { fontFamily: FontFamily.ui, fontSize: 13, color: Colors.ink2 },
+  chipTextActive: { color: Colors.ink, fontFamily: FontFamily.uiMedium },
+
+  previewRow: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    marginTop: Spacing.s4, paddingVertical: Spacing.s3,
+    borderTopWidth: 1, borderTopColor: Colors.line,
+  },
+  previewLabel: { fontFamily: FontFamily.uiSemiBold, fontSize: 13, color: Colors.ink },
+  previewValue: { fontFamily: FontFamily.ui, fontSize: 13, color: Colors.ink3 },
+
+  queueBtn: {
+    marginTop: Spacing.s4, backgroundColor: Colors.sakuraDeep,
+    borderRadius: Radius.pill, paddingVertical: 14, alignItems: 'center',
+  },
+  queueBtnDisabled: { opacity: 0.4 },
+  queueBtnText: { fontFamily: FontFamily.uiSemiBold, fontSize: 15, color: Colors.vellum },
+});
+
+const bn = StyleSheet.create({
+  wrap: { paddingHorizontal: Spacing.s5, paddingTop: Spacing.s4, paddingBottom: Spacing.s6 },
+  topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: Spacing.s3 },
+  eyebrow: { fontFamily: FontFamily.marker, fontSize: 9, color: Colors.ink3, letterSpacing: 1.4 },
+  editBtn: {
+    paddingVertical: 5, paddingHorizontal: 14,
+    borderRadius: Radius.pill, borderWidth: 1, borderColor: Colors.line,
+    backgroundColor: Colors.vellum,
+  },
+  editBtnOn: { backgroundColor: Colors.sakuraDeep, borderColor: Colors.sakuraDeep },
+  editBtnText: { fontFamily: FontFamily.uiMedium, fontSize: 12, color: Colors.ink2 },
+  editBtnTextOn: { color: Colors.vellum },
+
+  titleCenter: { alignItems: 'center', marginBottom: 6, gap: 4 },
+  titlePill: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    backgroundColor: INK, paddingHorizontal: 18, paddingVertical: 6, borderRadius: 999,
+  },
+  titleJa: { fontFamily: FontFamily.ja, fontWeight: '600', fontSize: 18, color: '#fff' },
+  titleText: { fontFamily: FontFamily.markerBold, fontWeight: '700', fontSize: 16, color: '#fff', letterSpacing: 0.8 },
+  titleSub: { fontFamily: FontFamily.ui, fontSize: 12, color: INK, opacity: 0.7 },
+
+  states: { marginTop: 14, gap: 10 },
+  stateCard: {
+    borderWidth: 2, borderRadius: 16, padding: 12,
+    flexDirection: 'row', gap: 10, alignItems: 'flex-start',
+  },
+  seal: {
+    width: 44, height: 44, borderRadius: 999, borderWidth: 2,
+    backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+  },
+  sealJa: { fontFamily: FontFamily.ja, fontWeight: '600', fontSize: 22, textAlign: 'center' },
+  stateContent: { flex: 1, minWidth: 0 },
+  stateTitle: { fontFamily: FontFamily.markerBold, fontWeight: '700', fontSize: 14, letterSpacing: 0.5 },
+  stateDesc: { fontFamily: FontFamily.ui, fontSize: 11, color: INK, marginTop: 2 },
+  checkGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 6 },
+  checkRow: { flexDirection: 'row', alignItems: 'center', gap: 4, width: '48%', minWidth: 0 },
+  checkText: { fontFamily: FontFamily.marker, fontSize: 9, fontWeight: '500', color: INK, flex: 1 },
+  checkInput: { fontFamily: FontFamily.ui, fontSize: 9, color: INK, flex: 1, padding: 0 },
+  removeCheck: { fontSize: 9, color: INK, opacity: 0.4 },
+  addCheckBtn: { paddingVertical: 2, paddingHorizontal: 4 },
+  addCheckText: { fontFamily: FontFamily.uiMedium, fontSize: 10 },
+  chibi: { flexShrink: 0, alignSelf: 'center' },
+
+  footer: { textAlign: 'center', fontFamily: FontFamily.ui, fontSize: 11, color: INK, opacity: 0.7, marginTop: 14 },
+  footerInput: { textAlign: 'center', fontFamily: FontFamily.ui, fontSize: 11, color: INK, marginTop: 14, borderBottomWidth: 1, borderBottomColor: INK + '33', paddingBottom: 2 },
 });

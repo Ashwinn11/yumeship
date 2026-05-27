@@ -8,6 +8,7 @@ import { Sparkle } from '@/components/deco/Sparkle';
 import { IconPlus, IconSearch } from '@/components/ui/Icon';
 import { Mark } from '@/components/ui/Mark';
 import { Colors, FontFamily, FontSize, Radius, Spacing } from '@/constants/theme';
+import { resetOnb } from '@/store/onboarding';
 import { daysTogetherLabel, daysAgo, deleteShip, useShips } from '@/store/ships';
 
 export default function HomeScreen() {
@@ -23,7 +24,7 @@ export default function HomeScreen() {
             <Pressable style={styles.iconBtn}>
               <IconSearch size={14} color={Colors.ink2} />
             </Pressable>
-            <Pressable style={styles.iconBtn} onPress={() => router.push('/new-ship')}>
+            <Pressable style={styles.iconBtn} onPress={() => { resetOnb(); router.push({ pathname: '/onboarding/fo', params: { mode: 'new' } }); }}>
               <IconPlus size={14} color={Colors.ink2} />
             </Pressable>
           </View>
@@ -46,7 +47,7 @@ export default function HomeScreen() {
           </View>
           <Text style={styles.emptyTitle}>no ships yet</Text>
           <Text style={styles.emptySub}>your first F/O is waiting</Text>
-          <Pressable style={styles.emptyBtn} onPress={() => router.push('/new-ship')}>
+          <Pressable style={styles.emptyBtn} onPress={() => { resetOnb(); router.push({ pathname: '/onboarding/fo', params: { mode: 'new' } }); }}>
             <IconPlus size={13} color={Colors.vellum} />
             <Text style={styles.emptyBtnText}>start a new ship</Text>
           </Pressable>
@@ -58,8 +59,10 @@ export default function HomeScreen() {
               key={ship.id}
               style={styles.card}
               name={ship.name}
+              shipName={ship.shipName}
+              myName={ship.myName}
               src={ship.fandom || '—'}
-              initial={ship.name.charAt(0).toUpperCase() || '♡'}
+              initial={(ship.shipName || ship.name).charAt(0).toUpperCase() || '♡'}
               gradStart={ship.gradStart}
               gradEnd={ship.gradEnd}
               type={ship.relType}
@@ -69,7 +72,7 @@ export default function HomeScreen() {
               pinned={ship.pinned}
               onPress={() => router.push(`/template/${ship.templateKey ?? 'get-to-know'}?shipId=${ship.id}` as any)}
               onLongPress={() => Alert.alert(
-                `Remove ${ship.name}?`,
+                `Remove ${ship.shipName || ship.name}?`,
                 'This will delete the ship and all its data.',
                 [
                   { text: 'Delete', style: 'destructive', onPress: () => deleteShip(ship.id) },
@@ -79,7 +82,7 @@ export default function HomeScreen() {
             />
           ))}
           {/* Add new card */}
-          <Pressable style={styles.addCard} onPress={() => router.push('/new-ship')}>
+          <Pressable style={styles.addCard} onPress={() => { resetOnb(); router.push({ pathname: '/onboarding/fo', params: { mode: 'new' } }); }}>
             <View style={styles.addIcon}>
               <IconPlus size={18} color={Colors.sakuraDeep} />
             </View>

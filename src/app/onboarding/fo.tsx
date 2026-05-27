@@ -1,54 +1,80 @@
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { WashiTape } from '@/components/deco/WashiTape';
+import { Sparkle } from '@/components/deco/Sparkle';
 import { Button } from '@/components/ui/Button';
 import { Field } from '@/components/ui/Field';
-import { GradientCover } from '@/components/ui/GradientCover';
-import { IconPlus } from '@/components/ui/Icon';
+import { Mark } from '@/components/ui/Mark';
 import { StepDots } from '@/components/ui/StepDots';
 import { UnderInput } from '@/components/ui/UnderInput';
-import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing } from '@/constants/theme';
-import { setOnbField } from '@/store/onboarding';
+import { Colors, FontFamily, FontSize, Radius, Spacing } from '@/constants/theme';
+import { resetOnb, setOnbField } from '@/store/onboarding';
+
+export const COVER_PALETTES: { id: string; start: string; end: string }[] = [
+  { id: 'sakura', start: '#f3b6c4', end: '#9b4f6e' },
+  { id: 'plum', start: '#e0b0d8', end: '#6e2b5e' },
+  { id: 'lavender', start: '#c9b8e8', end: '#6b4da3' },
+  { id: 'sky', start: '#b8d4f0', end: '#3a6fa8' },
+  { id: 'midnight', start: '#a0b0d0', end: '#1a2a4a' },
+  { id: 'sage', start: '#b4cba5', end: '#4a7050' },
+  { id: 'peach', start: '#f4c09a', end: '#c06840' },
+  { id: 'gold', start: '#f0daa0', end: '#9b7c20' },
+];
 
 export default function OnbFO() {
   const insets = useSafeAreaInsets();
+  const { mode } = useLocalSearchParams<{ mode?: string }>();
+  const isNew = mode === 'new';
+
   const [foName, setFoName] = useState('');
+  const [shipName, setShipName] = useState('');
   const [fandom, setFandom] = useState('');
+  const [paletteId, setPaletteId] = useState('sakura');
 
   const handleFoName = (v: string) => { setFoName(v); setOnbField('foName', v); };
+  const handleShipName = (v: string) => { setShipName(v); setOnbField('shipName', v); };
   const handleFandom = (v: string) => { setFandom(v); setOnbField('fandom', v); };
+
+  function selectPalette(p: typeof COVER_PALETTES[0]) {
+    setPaletteId(p.id);
+    setOnbField('gradStart', p.start);
+    setOnbField('gradEnd', p.end);
+  }
+
+  function goToRules() {
+    router.push({ pathname: '/onboarding/rules', params: isNew ? { mode: 'new' } : {} });
+  }
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top + Spacing.s1, paddingBottom: insets.bottom + Spacing.s1 }]}>
-      <View style={styles.dotsRow}>
-        <StepDots step={1} total={3} />
-      </View>
+      {isNew ? (
+        <View style={styles.header}>
+          <Pressable onPress={() => { resetOnb(); router.back(); }} style={styles.closeBtn}>
+            <Text style={styles.closeBtnText}>✕</Text>
+          </Pressable>
+          <View style={styles.headerCenter}>
+            <Mark size={22} />
+            <Text style={styles.headerTitle}>new ship</Text>
+          </View>
+          <View style={{ width: 32 }} />
+        </View>
+      ) : (
+        <View style={styles.dotsRow}>
+          <StepDots step={1} total={3} />
+        </View>
+      )}
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <Text style={styles.eyebrow}>step two · them</Text>
-        <Text style={styles.heading}>Who's the one?</Text>
+        {!isNew && <Text style={styles.eyebrow}>step two · them</Text>}
+        <Text style={[styles.heading, isNew && styles.headingNew]}>Who's the one?</Text>
         <Text style={styles.sub}>
-          The first F/O. You can add more later — even a whole polycule if you want.
+          {isNew
+            ? 'You can add more any time.'
+            : 'The first F/O. You can add more later — even a whole polycule if you want.'}
         </Text>
 
-        {/* Cover placeholder */}
-        <GradientCover
-          gradStart="#f3b6c4"
-          gradEnd="#6b3d5b"
-          style={styles.coverArea}
-        >
-          <View style={styles.coverTape}>
-            <WashiTape width={80} height={16} pattern="heart" color="rgba(255,255,255,0.9)" rotate={-5} />
-          </View>
-          <View style={styles.coverAvatar}>
-            <IconPlus size={28} color="rgba(255,255,255,0.9)" />
-          </View>
-        </GradientCover>
-
-        {/* Fields */}
         <View style={styles.card}>
           <Field label="Their name">
             <UnderInput value={foName} onChangeText={handleFoName} />
@@ -56,8 +82,41 @@ export default function OnbFO() {
 
           <View style={styles.fieldSpacer} />
 
+          <Field label="Ship name (what you call this pairing)">
+            <UnderInput value={shipName} onChangeText={handleShipName} placeholder="e.g. Starlight" />
+          </Field>
+
+          <View style={styles.fieldSpacer} />
+
           <Field label="From (fandom / source)">
             <UnderInput value={fandom} onChangeText={handleFandom} />
+          </Field>
+
+          <View style={styles.fieldSpacer} />
+
+          <Field label="Card color">
+            <View style={styles.paletteRow}>
+              {COVER_PALETTES.map((p) => (
+                <Pressable
+                  key={p.id}
+                  onPress={() => selectPalette(p)}
+                  style={[
+                    styles.swatch,
+                    {
+                      backgroundColor: p.start,
+                      borderWidth: paletteId === p.id ? 2 : 1.5,
+                      borderColor: paletteId === p.id ? Colors.ink : Colors.line,
+                    },
+                  ]}
+                >
+                  {paletteId === p.id && (
+                    <View style={styles.swatchSparkle}>
+                      <Sparkle size={9} color={Colors.sakuraDeep} />
+                    </View>
+                  )}
+                </Pressable>
+              ))}
+            </View>
           </Field>
         </View>
       </ScrollView>
@@ -67,120 +126,66 @@ export default function OnbFO() {
           variant="primary"
           size="lg"
           full
-          onPress={() => router.push('/onboarding/rules')}
+          disabled={foName.trim().length === 0 || shipName.trim().length === 0}
+          onPress={goToRules}
         >
-          continue · the rules
+          {!foName.trim()
+            ? 'enter their name first'
+            : !shipName.trim()
+              ? 'enter ship name first'
+              : 'continue · the rules'}
         </Button>
-        <Pressable onPress={() => router.push('/onboarding/rules')} style={styles.skipPressable}>
-          <Text style={styles.skip}>add later</Text>
-        </Pressable>
+        {!isNew && (
+          <Pressable onPress={goToRules} style={styles.skipPressable}>
+            <Text style={styles.skip}>add later</Text>
+          </Pressable>
+        )}
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: Colors.paper,
+  screen: { flex: 1, backgroundColor: Colors.paper },
+  dotsRow: { paddingHorizontal: Spacing.s6, paddingTop: Spacing.s4, paddingBottom: Spacing.s1 },
+  header: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: Spacing.s5, paddingVertical: Spacing.s2,
   },
-  dotsRow: {
-    paddingHorizontal: Spacing.s6,
-    paddingTop: Spacing.s4,
-    paddingBottom: Spacing.s1,
+  closeBtn: {
+    width: 32, height: 32, borderRadius: Radius.pill,
+    backgroundColor: Colors.paperDeep, alignItems: 'center', justifyContent: 'center',
   },
-  scroll: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: Spacing.s6,
-    paddingTop: Spacing.s6,
-    paddingBottom: Spacing.s4,
-  },
+  closeBtnText: { fontSize: 12, color: Colors.ink2, fontFamily: FontFamily.ui },
+  headerCenter: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  headerTitle: { fontFamily: FontFamily.displayItalic, fontSize: FontSize.h6, color: Colors.ink },
+  scroll: { flex: 1 },
+  scrollContent: { paddingHorizontal: Spacing.s6, paddingTop: Spacing.s6, paddingBottom: Spacing.s4 },
   eyebrow: {
-    fontFamily: FontFamily.marker,
-    fontSize: 10,
-    color: Colors.plum,
-    letterSpacing: 1.6,
-    textTransform: 'uppercase',
-    fontWeight: '600',
+    fontFamily: FontFamily.marker, fontSize: 10, color: Colors.plum,
+    letterSpacing: 1.6, textTransform: 'uppercase', fontWeight: '600',
   },
   heading: {
-    fontFamily: FontFamily.displayItalic,
-    fontSize: 32,
-    lineHeight: 34,
-    letterSpacing: -0.3,
-    color: Colors.ink,
-    marginTop: Spacing.s2,
+    fontFamily: FontFamily.displayItalic, fontSize: 32, lineHeight: 34,
+    letterSpacing: -0.3, color: Colors.ink, marginTop: Spacing.s2,
   },
+  headingNew: { marginTop: 0 },
   sub: {
-    fontFamily: FontFamily.displayItalic,
-    fontSize: FontSize.meta,
-    color: Colors.ink2,
-    lineHeight: 20,
-    marginTop: Spacing.s2,
-  },
-  coverArea: {
-    marginTop: Spacing.s5,
-    borderRadius: Radius.r4,
-    height: 140,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...Shadow.s2,
-  },
-  coverTape: {
-    position: 'absolute',
-    top: 12,
-    left: 14,
-  },
-  coverAvatar: {
-    width: 72,
-    height: 72,
-    borderRadius: Radius.pill,
-    backgroundColor: 'rgba(255,255,255,0.25)',
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.8)',
-    borderStyle: 'dashed',
-    alignItems: 'center',
-    justifyContent: 'center',
+    fontFamily: FontFamily.script, fontSize: FontSize.h6,
+    color: Colors.ink2, lineHeight: 20, marginTop: Spacing.s2,
   },
   card: {
-    marginTop: Spacing.s4,
-    padding: Spacing.s4,
-    paddingHorizontal: Spacing.s4,
-    backgroundColor: Colors.vellum,
-    borderWidth: 1,
-    borderColor: Colors.line,
-    borderRadius: Radius.r4,
+    marginTop: Spacing.s4, padding: Spacing.s4,
+    backgroundColor: Colors.vellum, borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.r4,
   },
-  fieldSpacer: {
-    height: 14,
+  fieldSpacer: { height: 14 },
+  paletteRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap', marginTop: 6 },
+  swatch: {
+    width: 26, height: 26, borderRadius: Radius.pill,
+    position: 'relative',
   },
-  nicknameBox: {
-    paddingVertical: 8,
-    paddingHorizontal: 10,
-    borderWidth: 1,
-    borderColor: Colors.line,
-    borderRadius: Radius.r2,
-    backgroundColor: Colors.paperSoft,
-  },
-  nicknameText: {
-    fontFamily: FontFamily.displayItalic,
-    fontSize: FontSize.body,
-    color: Colors.sakuraInk,
-  },
-  actions: {
-    paddingHorizontal: Spacing.s6,
-    paddingBottom: Spacing.s3,
-    gap: Spacing.s2,
-  },
-  skipPressable: {
-    alignItems: 'center',
-  },
-  skip: {
-    fontFamily: FontFamily.ui,
-    fontSize: FontSize.meta,
-    color: Colors.ink3,
-    textDecorationLine: 'underline',
-  },
+  swatchSparkle: { position: 'absolute', top: -6, left: -6 },
+  actions: { paddingHorizontal: Spacing.s6, paddingBottom: Spacing.s3, gap: Spacing.s2 },
+  skipPressable: { alignItems: 'center' },
+  skip: { fontFamily: FontFamily.ui, fontSize: FontSize.meta, color: Colors.ink3, textDecorationLine: 'underline' },
 });

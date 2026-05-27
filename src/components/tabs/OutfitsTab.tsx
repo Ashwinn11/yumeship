@@ -199,7 +199,7 @@ const s = StyleSheet.create({
   photoEmpty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: Colors.paperDeep },
   photoEmptyText: { fontFamily: FontFamily.ui, fontSize: 13, color: Colors.ink3 },
   fieldLabel: { fontFamily: FontFamily.marker, fontSize: 9, color: Colors.ink3, letterSpacing: 1.2, marginTop: 10, marginBottom: 4 },
-  input: { fontFamily: FontFamily.displayItalic, fontSize: 14, color: Colors.ink, borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.r2, paddingVertical: 9, paddingHorizontal: 12, backgroundColor: Colors.vellum },
+  input: { fontFamily: FontFamily.ui, fontSize: 14, color: Colors.ink, borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.r2, paddingVertical: 9, paddingHorizontal: 12, backgroundColor: Colors.vellum },
   inputMulti: { minHeight: 70, textAlignVertical: 'top' },
   occasionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   occasionBtn: { paddingVertical: 5, paddingHorizontal: 12, borderRadius: Radius.pill, borderWidth: 1, borderColor: Colors.line, backgroundColor: Colors.paperDeep },

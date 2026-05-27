@@ -2,10 +2,12 @@ export type OnbState = {
   userName: string;
   pronouns: string;
   foName: string;
+  shipName: string;
   fandom: string;
-  nickname: string;
   relType: string;
   shareType: string;
+  gradStart: string;
+  gradEnd: string;
 };
 
 import { getDb } from '@/db/client';
@@ -34,10 +36,12 @@ let state: OnbState = {
   userName: getGlobalSetting('user_name'),
   pronouns: 'she/her',
   foName: '',
+  shipName: '',
   fandom: '',
-  nickname: '',
   relType: 'romantic',
   shareType: 'mirror',
+  gradStart: '',
+  gradEnd: '',
 };
 
 export function getOnbState(): OnbState {
@@ -59,10 +63,12 @@ export function resetOnb() {
     userName: getGlobalSetting('user_name'),
     pronouns: 'she/her',
     foName: '',
+    shipName: '',
     fandom: '',
-    nickname: '',
     relType: 'romantic',
     shareType: 'mirror',
+    gradStart: '',
+    gradEnd: '',
   };
 }
 

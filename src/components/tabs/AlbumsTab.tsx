@@ -181,7 +181,7 @@ const s = StyleSheet.create({
     borderWidth: 1, borderColor: Colors.sakura, borderRadius: Radius.r3, gap: 10,
   },
   newInput: {
-    fontFamily: FontFamily.displayItalic, fontSize: 15, color: Colors.ink,
+    fontFamily: FontFamily.ui, fontSize: 15, color: Colors.ink,
     borderBottomWidth: 1, borderBottomColor: Colors.line, paddingBottom: 6,
   },
   newActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 12 },

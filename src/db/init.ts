@@ -4,6 +4,9 @@ export function initDb() {
   const db = getDb();
   // migrations for existing tables
   try { db.execSync(`ALTER TABLE ships ADD COLUMN template_key TEXT NOT NULL DEFAULT 'get-to-know'`); } catch (_) {}
+  try { db.execSync(`ALTER TABLE ships ADD COLUMN ship_name TEXT NOT NULL DEFAULT ''`); } catch (_) {}
+  try { db.execSync(`ALTER TABLE ships ADD COLUMN my_name TEXT NOT NULL DEFAULT ''`); } catch (_) {}
+  try { db.execSync(`ALTER TABLE fo_messages ADD COLUMN notif_id TEXT NOT NULL DEFAULT ''`); } catch (_) {}
   db.execSync(`
     CREATE TABLE IF NOT EXISTS ships (
       id TEXT PRIMARY KEY,

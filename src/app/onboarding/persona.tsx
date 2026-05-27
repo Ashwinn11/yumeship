@@ -161,8 +161,8 @@ const styles = StyleSheet.create({
     marginTop: Spacing.s2,
   },
   sub: {
-    fontFamily: FontFamily.displayItalic,
-    fontSize: FontSize.meta,
+    fontFamily: FontFamily.script,
+    fontSize: FontSize.h6,
     color: Colors.ink2,
     lineHeight: 20,
     marginTop: Spacing.s2,

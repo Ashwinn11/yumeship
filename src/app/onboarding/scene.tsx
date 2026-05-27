@@ -41,7 +41,6 @@ export default function OnbScene() {
       fandom: state.fandom,
       relType,
       shareType: state.shareType,
-      nickname: state.nickname ?? '',
       gradStart: grad[0],
       gradEnd: grad[1],
       tapePattern: tape.pattern,
@@ -158,8 +157,8 @@ const styles = StyleSheet.create({
   sceneTape: { position: 'absolute', top: -8, left: 16 },
   sceneLabel: { fontFamily: FontFamily.marker, fontSize: 9, color: Colors.ink3, letterSpacing: 1.4, textTransform: 'uppercase' },
   sceneInput: {
-    marginTop: 8, fontFamily: FontFamily.displayItalic, fontSize: 18,
-    lineHeight: 27, color: Colors.ink, minHeight: 160,
+    marginTop: 8, fontFamily: FontFamily.ui, fontSize: 15,
+    lineHeight: 24, color: Colors.ink, minHeight: 160,
   },
   promptSection: { marginTop: Spacing.s4 },
   promptLabel: { fontFamily: FontFamily.marker, fontSize: 9, color: Colors.ink3, letterSpacing: 1.2, textTransform: 'uppercase' },
