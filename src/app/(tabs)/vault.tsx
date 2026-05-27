@@ -16,8 +16,10 @@ import { MessagesTab } from '@/components/tabs/MessagesTab';
 import { StorylineTab } from '@/components/tabs/StorylineTab';
 import { INK, SquareCheck } from '@/components/templates/primitives';
 import { IconPlus } from '@/components/ui/Icon';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing } from '@/constants/theme';
-import { addFoMessage, deleteFoMessage, toggleFoMessage, useFoMessages } from '@/store/foNotifications';
+import { requestPermission } from '@/store/notifications';
+import { addFoMessage, deleteFoMessage, toggleFoMessage, updateFoMessage, useFoMessages } from '@/store/foNotifications';
 import { addHeadcanon, deleteHeadcanon, useHeadcanonCounts, useHeadcanons } from '@/store/headcanons';
 import { addScenario, deleteScenario, useScenarios } from '@/store/scenarios';
 import { useShips } from '@/store/ships';
@@ -764,18 +766,23 @@ const STARTERS = [
 
 function FoMessagesFeature({ shipId, shipName }: { shipId: string; shipName: string }) {
   const messages = useFoMessages(shipId);
-  const [composing, setComposing] = useState(false);
+  const [composingMsg, setComposingMsg] = useState<FoMessage | 'new' | null>(null);
   const activeCount = messages.filter((m) => m.active).length;
 
-  if (composing) {
+  if (composingMsg !== null) {
     return (
       <FoCompose
         shipName={shipName}
+        initialMessage={composingMsg === 'new' ? undefined : composingMsg}
         onQueue={async (body, hour, senderName) => {
-          await addFoMessage(shipId, body, hour, senderName);
-          setComposing(false);
+          if (composingMsg === 'new') {
+            await addFoMessage(shipId, body, hour, senderName);
+          } else {
+            await updateFoMessage(composingMsg.id, body, hour, senderName, shipName);
+          }
+          setComposingMsg(null);
         }}
-        onBack={() => setComposing(false)}
+        onBack={() => setComposingMsg(null)}
       />
     );
   }
@@ -788,7 +795,7 @@ function FoMessagesFeature({ shipId, shipName }: { shipId: string; shipName: str
           <Text style={fo.activeCount}>{activeCount} active</Text>
           {messages.length === 0 && <Text style={fo.noSaved}>nothing from them yet.</Text>}
         </View>
-        <Pressable style={fo.newBtn} onPress={() => setComposing(true)}>
+        <Pressable style={fo.newBtn} onPress={() => setComposingMsg('new')}>
           <IconPlus size={12} color={Colors.sakuraDeep} />
           <Text style={fo.newBtnText}>new</Text>
         </Pressable>
@@ -797,7 +804,7 @@ function FoMessagesFeature({ shipId, shipName }: { shipId: string; shipName: str
       {messages.length === 0 ? (
         <View style={fo.emptyCard}>
           <Text style={fo.emptyCardText}>nothing from them yet.</Text>
-          <Pressable style={fo.createBtn} onPress={() => setComposing(true)}>
+          <Pressable style={fo.createBtn} onPress={() => setComposingMsg('new')}>
             <IconPlus size={13} color={Colors.sakuraDeep} />
             <Text style={fo.createBtnText}>write their first message</Text>
           </Pressable>
@@ -809,6 +816,8 @@ function FoMessagesFeature({ shipId, shipName }: { shipId: string; shipName: str
             let timeLabel = '';
             if (hour === -1) {
               timeLabel = 'random ✦';
+            } else if (hour === -2) {
+              timeLabel = 'now';
             } else {
               const ampm = hour >= 12 ? 'pm' : 'am';
               const displayHour = hour % 12 === 0 ? 12 : hour % 12;
@@ -829,13 +838,9 @@ function FoMessagesFeature({ shipId, shipName }: { shipId: string; shipName: str
             } catch (_) { }
 
             return (
-              <Pressable
+              <View
                 key={m.id}
                 style={[fo.msgCard, !m.active && fo.msgCardOff]}
-                onLongPress={() => Alert.alert('Delete?', displayBody.slice(0, 60), [
-                  { text: 'Delete', style: 'destructive', onPress: () => { deleteFoMessage(m.id); } },
-                  { text: 'Cancel', style: 'cancel' },
-                ])}
               >
                 <View style={fo.msgHeader}>
                   <Text style={fo.msgSender}>{displaySender}</Text>
@@ -849,16 +854,38 @@ function FoMessagesFeature({ shipId, shipName }: { shipId: string; shipName: str
                   </Text>
                 )}
                 <View style={fo.msgFooter}>
-                  <Pressable
-                    onPress={() => { toggleFoMessage(m.id, !m.active, m.senderName || shipName); }}
-                    style={[fo.togglePill, m.active && fo.togglePillOn]}
-                  >
-                    <Text style={[fo.togglePillText, m.active && fo.togglePillTextOn]}>
-                      {m.active ? 'active' : 'paused'}
-                    </Text>
-                  </Pressable>
+                  <View style={fo.timePill}>
+                    <Text style={fo.timePillText}>{timeLabel}</Text>
+                  </View>
+                  <View style={fo.actionRow}>
+                    <Pressable
+                      onPress={() => { toggleFoMessage(m.id, !m.active, m.senderName || shipName); }}
+                      style={[fo.actionBtn, m.active ? fo.actionBtnPause : fo.actionBtnActive]}
+                    >
+                      <Text style={[fo.actionBtnText, m.active ? fo.actionBtnTextPause : fo.actionBtnTextActive]}>
+                        {m.active ? 'Pause' : 'Resume'}
+                      </Text>
+                    </Pressable>
+
+                    <Pressable
+                      onPress={() => setComposingMsg(m)}
+                      style={fo.actionBtn}
+                    >
+                      <Text style={fo.actionBtnText}>Edit</Text>
+                    </Pressable>
+
+                    <Pressable
+                      onPress={() => Alert.alert('Delete?', displayBody.slice(0, 60), [
+                        { text: 'Delete', style: 'destructive', onPress: () => { deleteFoMessage(m.id); } },
+                        { text: 'Cancel', style: 'cancel' },
+                      ])}
+                      style={[fo.actionBtn, { borderColor: Colors.ember }]}
+                    >
+                      <Text style={[fo.actionBtnText, { color: Colors.ember }]}>Delete</Text>
+                    </Pressable>
+                  </View>
                 </View>
-              </Pressable>
+              </View>
             );
           })}
           <View style={{ height: Spacing.s9 }} />
@@ -883,15 +910,42 @@ const AROUND_TIMES = [
   { id: 'night', label: 'Night', hour: 21 },
 ] as const;
 
-function FoCompose({ shipName, onQueue, onBack }: {
+import { FoMessage } from '@/store/foNotifications';
+
+function FoCompose({ shipName, initialMessage, onQueue, onBack }: {
   shipName: string;
+  initialMessage?: FoMessage;
   onQueue: (body: string, hour: number, senderName: string) => void;
   onBack: () => void;
 }) {
-  const [options, setOptions] = useState<string[]>(['']);
-  const [senderName, setSenderName] = useState(shipName);
-  const [arrivalDay, setArrivalDay] = useState<'now' | 'today' | 'tomorrow' | 'everyday' | 'random'>('everyday');
-  const [aroundTime, setAroundTime] = useState<'morning' | 'afternoon' | 'evening' | 'night'>('morning');
+  const [options, setOptions] = useState<string[]>(() => {
+    if (initialMessage) {
+      try {
+        if (initialMessage.body.startsWith('[')) {
+          const parsed = JSON.parse(initialMessage.body);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      } catch (_) {}
+      return [initialMessage.body];
+    }
+    return [''];
+  });
+  const [senderName, setSenderName] = useState(initialMessage?.senderName || shipName);
+  const [arrivalDay, setArrivalDay] = useState<'now' | 'today' | 'tomorrow' | 'everyday' | 'random'>(() => {
+    if (!initialMessage) return 'everyday';
+    const hr = initialMessage.scheduledHour;
+    if (hr === -2) return 'now';
+    if (hr === -1) return 'random';
+    return 'everyday';
+  });
+  const [aroundTime, setAroundTime] = useState<'morning' | 'afternoon' | 'evening' | 'night'>(() => {
+    if (!initialMessage) return 'morning';
+    const hr = initialMessage.scheduledHour;
+    if (hr === -1 || hr === -2) return 'morning';
+    const match = AROUND_TIMES.find(t => t.hour === hr);
+    return match ? match.id : 'morning';
+  });
+  const [randomPreviewHour, setRandomPreviewHour] = useState(12);
   const filteredOptions = options.map(o => o.trim()).filter(Boolean);
 
   function pickStarter(presetName: string) {
@@ -901,13 +955,30 @@ function FoCompose({ shipName, onQueue, onBack }: {
     }
   }
 
-  function queue() {
+  async function queue() {
     const filtered = options.map(o => o.trim()).filter(Boolean);
     if (filtered.length === 0) return;
 
+    const granted = await requestPermission();
+    if (!granted) {
+      Alert.alert(
+        'Notifications Disabled',
+        'Enable notifications in your device settings to receive messages from your F/O! Would you like to save it in the vault anyway?',
+        [
+          { text: 'Save Anyway', onPress: () => proceedWithQueue(filtered) },
+          { text: 'Cancel', style: 'cancel' }
+        ]
+      );
+      return;
+    }
+
+    proceedWithQueue(filtered);
+  }
+
+  function proceedWithQueue(filtered: string[]) {
     let resolvedHour = 9;
     if (arrivalDay === 'now') {
-      resolvedHour = new Date().getHours();
+      resolvedHour = -2;
     } else if (arrivalDay === 'random') {
       resolvedHour = -1;
     } else {
@@ -933,6 +1004,33 @@ function FoCompose({ shipName, onQueue, onBack }: {
     const matchHour = AROUND_TIMES.find(t => t.id === aroundTime)?.hour ?? 9;
     const hour12 = matchHour > 12 ? `${matchHour - 12} PM` : `${matchHour} AM`;
     previewText = `arrives ${dayLabel} in the ${timeLabel} (${hour12})`;
+  }
+
+  const dateOptions = { weekday: 'long', month: 'long', day: 'numeric' } as const;
+  let lockscreenDateText = '';
+  let lockscreenTimeText = '';
+  const now = new Date();
+
+  if (arrivalDay === 'now') {
+    lockscreenDateText = now.toLocaleDateString('en-US', dateOptions);
+    const hrs = String(now.getHours()).padStart(2, '0');
+    const mins = String(now.getMinutes()).padStart(2, '0');
+    lockscreenTimeText = `${hrs}:${mins}`;
+  } else if (arrivalDay === 'random') {
+    lockscreenDateText = now.toLocaleDateString('en-US', dateOptions);
+    lockscreenTimeText = `${String(randomPreviewHour).padStart(2, '0')}:00`;
+  } else {
+    if (arrivalDay === 'tomorrow') {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      lockscreenDateText = tomorrow.toLocaleDateString('en-US', dateOptions);
+    } else {
+      lockscreenDateText = now.toLocaleDateString('en-US', dateOptions);
+    }
+
+    const match = AROUND_TIMES.find(t => t.id === aroundTime);
+    const hr = match ? match.hour : 9;
+    lockscreenTimeText = `${String(hr).padStart(2, '0')}:00`;
   }
 
   const hasContent = options.some(o => o.trim().length > 0);
@@ -1012,7 +1110,13 @@ function FoCompose({ shipName, onQueue, onBack }: {
             <Pressable
               key={d.id}
               style={[fo.chip, arrivalDay === d.id && fo.chipActive]}
-              onPress={() => setArrivalDay(d.id)}
+              onPress={() => {
+                setArrivalDay(d.id);
+                if (d.id === 'random') {
+                  const pool = [6, 8, 10, 12, 14, 16, 18, 20, 22];
+                  setRandomPreviewHour(pool[Math.floor(Math.random() * pool.length)]);
+                }
+              }}
             >
               <Text style={[fo.chipText, arrivalDay === d.id && fo.chipTextActive]}>{d.label}</Text>
             </Pressable>
@@ -1037,30 +1141,37 @@ function FoCompose({ shipName, onQueue, onBack }: {
         )}
 
         <Text style={fo.sectionLabel}>PREVIEW</Text>
-        <View style={[fo.notifStackContainer, filteredOptions.length > 1 && fo.notifStackActive]}>
-          {filteredOptions.length > 1 && (
-            <>
-              <View style={[fo.notifBanner, fo.notifCardBack2]} />
-              <View style={[fo.notifBanner, fo.notifCardBack1]} />
-            </>
-          )}
-          <View style={fo.notifBanner}>
-            <View style={fo.notifHeader}>
-              <View style={fo.notifAppInfo}>
-                <Image style={fo.notifIcon} source={require('@/assets/images/icon.png')} />
-                <Text style={fo.notifAppName}>YUMESHIP</Text>
-              </View>
-              <Text style={fo.notifTime}>now</Text>
-            </View>
-            <Text style={fo.notifTitle} numberOfLines={1}>{senderName.trim() || shipName}</Text>
-            <Text style={fo.notifBody} numberOfLines={2}>{filteredOptions[0] || 'a message for you~'}</Text>
+        <LinearGradient
+          colors={['#27122b', '#100512']}
+          style={[fo.lockscreenBg, filteredOptions.length > 1 && fo.lockscreenBgActive]}
+        >
+          <View style={fo.lockscreenClockContainer}>
+            <Text style={fo.lockscreenDate}>{lockscreenDateText}</Text>
+            <Text style={fo.lockscreenTime}>{lockscreenTimeText}</Text>
           </View>
-        </View>
 
-        <View style={fo.previewRow}>
-          <Text style={fo.previewLabel}>Schedule</Text>
-          <Text style={fo.previewValue}>{previewText}</Text>
-        </View>
+          <View style={[fo.notifStackContainer, filteredOptions.length > 1 && fo.notifStackActive]}>
+            {filteredOptions.length > 1 && (
+              <>
+                <View style={[fo.notifBanner, fo.notifCardBack2]} />
+                <View style={[fo.notifBanner, fo.notifCardBack1]} />
+              </>
+            )}
+            <View style={fo.notifBanner}>
+              <View style={fo.notifHeader}>
+                <View style={fo.notifAppInfo}>
+                  <Image style={fo.notifIcon} source={require('@/assets/images/icon.png')} />
+                  <Text style={fo.notifAppName}>Yumeship</Text>
+                </View>
+                <Text style={fo.notifTime}>now</Text>
+              </View>
+              <Text style={fo.notifTitle} numberOfLines={1}>{senderName.trim() || shipName}</Text>
+              <Text style={fo.notifBody} numberOfLines={2}>{filteredOptions[0] || 'a message for you~'}</Text>
+            </View>
+          </View>
+        </LinearGradient>
+
+
 
         <Pressable
           style={[fo.queueBtn, !hasContent && fo.queueBtnDisabled]}
@@ -1320,13 +1431,16 @@ const fo = StyleSheet.create({
     backgroundColor: Colors.paperDeep, borderWidth: 1, borderColor: Colors.line,
   },
   timePillText: { fontFamily: FontFamily.ui, fontSize: 11, color: Colors.ink3 },
-  togglePill: {
-    paddingVertical: 3, paddingHorizontal: 10, borderRadius: Radius.pill,
-    backgroundColor: Colors.paperDeep, borderWidth: 1, borderColor: Colors.line,
+  actionRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1, justifyContent: 'flex-end' },
+  actionBtn: {
+    paddingVertical: 5, paddingHorizontal: 12, borderRadius: Radius.pill,
+    backgroundColor: Colors.vellum, borderWidth: 1, borderColor: Colors.line,
   },
-  togglePillOn: { backgroundColor: Colors.sageSoft, borderColor: Colors.sage },
-  togglePillText: { fontFamily: FontFamily.ui, fontSize: 11, color: Colors.ink3 },
-  togglePillTextOn: { color: Colors.sageDeep },
+  actionBtnActive: { backgroundColor: Colors.sageSoft, borderColor: Colors.sage },
+  actionBtnPause: { backgroundColor: Colors.paperDeep, borderColor: Colors.line },
+  actionBtnText: { fontFamily: FontFamily.uiMedium, fontSize: 11, color: Colors.ink2 },
+  actionBtnTextActive: { color: Colors.sageDeep },
+  actionBtnTextPause: { color: Colors.ink3 },
 
   // Compose
   compose: { flex: 1, backgroundColor: Colors.paper },
@@ -1377,19 +1491,47 @@ const fo = StyleSheet.create({
   },
   notifHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 },
   notifAppInfo: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  notifIcon: { width: 18, height: 18, borderRadius: 4 },
-  notifAppName: { fontFamily: FontFamily.uiSemiBold, fontSize: 10.5, color: Colors.ink, letterSpacing: 0.5, textTransform: 'uppercase' },
-  notifTime: { fontFamily: FontFamily.ui, fontSize: 11, color: Colors.ink3 },
-  notifTitle: { fontFamily: FontFamily.uiSemiBold, fontSize: 13.5, color: Colors.ink, fontWeight: '600' },
-  notifBody: { fontFamily: FontFamily.ui, fontSize: 13, color: Colors.ink2, lineHeight: 17, marginTop: 1 },
+  notifIcon: { width: 20, height: 20, borderRadius: 4.5 },
+  notifAppName: { fontFamily: FontFamily.uiSemiBold, fontSize: 11.5, color: 'rgba(0, 0, 0, 0.55)', letterSpacing: 0.2 },
+  notifTime: { fontFamily: FontFamily.ui, fontSize: 11, color: 'rgba(0, 0, 0, 0.45)' },
+  notifTitle: { fontFamily: FontFamily.uiSemiBold, fontSize: 13.5, color: '#000000', fontWeight: '700' },
+  notifBody: { fontFamily: FontFamily.ui, fontSize: 13, color: 'rgba(0, 0, 0, 0.75)', lineHeight: 17, marginTop: 1 },
+
+  lockscreenBg: {
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingTop: 16,
+    paddingBottom: 22,
+    borderWidth: 1,
+    borderColor: Colors.lineStrong,
+    marginBottom: Spacing.s4,
+  },
+  lockscreenBgActive: {
+    paddingBottom: 32,
+  },
+  lockscreenClockContainer: {
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  lockscreenDate: {
+    color: 'rgba(255, 255, 255, 0.9)',
+    fontSize: 11,
+    fontFamily: FontFamily.uiSemiBold,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  lockscreenTime: {
+    color: '#ffffff',
+    fontSize: 64,
+    fontFamily: FontFamily.ui,
+    fontWeight: '300',
+    marginTop: 2,
+  },
 
   notifStackContainer: {
     position: 'relative',
-    marginBottom: Spacing.s3,
   },
-  notifStackActive: {
-    marginBottom: Spacing.s5 + 4, // Reserve space for the offset stacked cards below
-  },
+  notifStackActive: {},
   notifCardBack1: {
     position: 'absolute',
     bottom: -6,

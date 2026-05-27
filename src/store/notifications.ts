@@ -43,22 +43,27 @@ export async function scheduleDailyNotification(
   body: string,
   hour: number,
   foName: string,
+  isImmediate = false,
 ): Promise<string | null> {
   try {
     const { status } = await Notifications.getPermissionsAsync();
     if (status !== 'granted') return null;
 
     const discreet = getDiscreetMode();
+    const trigger = isImmediate
+      ? { seconds: 5 } as any
+      : {
+          type: Notifications.SchedulableTriggerInputTypes.DAILY,
+          hour,
+          minute: 0,
+        };
+
     const identifier = await Notifications.scheduleNotificationAsync({
       content: {
         title: discreet ? '♡' : (foName || 'F/O'),
         body: discreet ? 'a message for you~' : body,
       },
-      trigger: {
-        type: Notifications.SchedulableTriggerInputTypes.DAILY,
-        hour,
-        minute: 0,
-      },
+      trigger,
     });
     return identifier;
   } catch {

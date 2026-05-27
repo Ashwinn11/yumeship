@@ -58,11 +58,12 @@ export async function addFoMessage(
     }
   } catch (_) {}
 
+  const isImmediate = scheduledHour === -2;
   const targetHour = scheduledHour === -1
     ? [6, 8, 10, 12, 14, 16, 18, 20, 22][Math.floor(Math.random() * 9)]
-    : scheduledHour;
+    : isImmediate ? 0 : scheduledHour;
 
-  const notifId = await scheduleDailyNotification(triggerBody, targetHour, senderName);
+  const notifId = await scheduleDailyNotification(triggerBody, targetHour, senderName, isImmediate);
   if (notifId) {
     getDb().runSync('UPDATE fo_messages SET notif_id = ? WHERE id = ?', notifId, id);
   }
@@ -90,16 +91,60 @@ export async function toggleFoMessage(id: string, active: boolean, foName = ''):
       }
     } catch (_) {}
 
+    const isImmediate = msg.scheduledHour === -2;
     const targetHour = msg.scheduledHour === -1
       ? [6, 8, 10, 12, 14, 16, 18, 20, 22][Math.floor(Math.random() * 9)]
-      : msg.scheduledHour;
+      : isImmediate ? 0 : msg.scheduledHour;
 
-    const newId = await scheduleDailyNotification(triggerBody, targetHour, msg.senderName || foName);
+    const newId = await scheduleDailyNotification(triggerBody, targetHour, msg.senderName || foName, isImmediate);
     getDb().runSync(
       'UPDATE fo_messages SET active = 1, notif_id = ? WHERE id = ?',
       newId ?? '', id,
     );
   }
+
+  notify();
+}
+
+export async function updateFoMessage(
+  id: string,
+  body: string,
+  scheduledHour: number,
+  senderName: string,
+  foName = '',
+): Promise<void> {
+  const row = getDb().getFirstSync('SELECT * FROM fo_messages WHERE id = ?', id) as Record<string, unknown> | null;
+  if (!row) return;
+  const msg = rowToMsg(row);
+
+  if (msg.notifId) {
+    await cancelNotification(msg.notifId);
+  }
+
+  let notifId = '';
+  if (msg.active) {
+    let triggerBody = body;
+    try {
+      if (body.startsWith('[')) {
+        const parsed = JSON.parse(body);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          triggerBody = parsed[Math.floor(Math.random() * parsed.length)];
+        }
+      }
+    } catch (_) {}
+
+    const isImmediate = scheduledHour === -2;
+    const targetHour = scheduledHour === -1
+      ? [6, 8, 10, 12, 14, 16, 18, 20, 22][Math.floor(Math.random() * 9)]
+      : isImmediate ? 0 : scheduledHour;
+
+    notifId = await scheduleDailyNotification(triggerBody, targetHour, senderName, isImmediate) ?? '';
+  }
+
+  getDb().runSync(
+    'UPDATE fo_messages SET body = ?, sender_name = ?, scheduled_hour = ?, notif_id = ? WHERE id = ?',
+    body, senderName, scheduledHour, notifId, id,
+  );
 
   notify();
 }
