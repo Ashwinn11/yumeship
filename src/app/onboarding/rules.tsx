@@ -1,5 +1,4 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import * as StoreReview from 'expo-store-review';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -12,8 +11,7 @@ import { Button } from '@/components/ui/Button';
 import { Field } from '@/components/ui/Field';
 import { StepDots } from '@/components/ui/StepDots';
 import { Colors, FontFamily, FontSize, Radius, Spacing } from '@/constants/theme';
-import { requestPermission } from '@/store/notifications';
-import { getGlobalSetting, getOnbState, resetOnb, saveGlobalSetting } from '@/store/onboarding';
+import { getOnbState, resetOnb } from '@/store/onboarding';
 import { addShip, REL_GRADS } from '@/store/ships';
 
 const VISUAL_TEMPLATES = [
@@ -39,13 +37,13 @@ export default function OnbRules() {
 
   const [templateKey, setTemplateKey] = useState<string>('get-to-know');
 
-  async function finish() {
+  function finish() {
     const state = getOnbState();
     const relType = state.relType || 'romantic';
     const shareType = state.shareType || 'mirror';
     const relGrad = REL_GRADS[relType] ?? REL_GRADS.romantic;
     const tape = TAPE_BY_REL[relType] ?? TAPE_BY_REL.romantic;
-    addShip({
+    const shipId = addShip({
       name: state.foName || 'untitled',
       shipName: state.shipName || state.foName || 'untitled',
       myName: state.userName || '',
@@ -58,20 +56,14 @@ export default function OnbRules() {
       tapeColor: tape.color,
       templateKey,
     });
-    resetOnb();
 
-    if (!isNew) {
-      await requestPermission();
-
-      if (getGlobalSetting('rating_prompted') !== 'true') {
-        saveGlobalSetting('rating_prompted', 'true');
-        if (await StoreReview.isAvailableAsync()) {
-          await StoreReview.requestReview();
-        }
-      }
+    if (isNew) {
+      resetOnb();
+      router.replace('/(tabs)');
+      return;
     }
 
-    router.replace('/(tabs)');
+    router.replace({ pathname: '/onboarding/ready', params: { shipId } });
   }
 
   return (
@@ -94,12 +86,12 @@ export default function OnbRules() {
         </View>
       ) : (
         <View style={styles.dotsRow}>
-          <StepDots step={2} total={3} />
+          <StepDots step={4} total={5} />
         </View>
       )}
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {!isNew && <Text style={styles.eyebrow}>step three · style</Text>}
+        {!isNew && <Text style={styles.eyebrow}>step five · style</Text>}
         <Text style={[styles.heading, isNew && styles.headingNew]}>
           A style that feels{"\n"}like your world.
         </Text>
@@ -145,7 +137,7 @@ export default function OnbRules() {
           icon={<Bullets.Heart size={14} color={Colors.vellum} />}
           iconPosition="right"
         >
-          launch the ship
+          {isNew ? 'launch the ship' : 'save them somewhere soft'}
         </Button>
       </View>
     </View>

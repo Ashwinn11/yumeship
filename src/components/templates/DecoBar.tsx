@@ -4,7 +4,7 @@ import {
   Text, TextInput, TouchableWithoutFeedback, View,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import Animated, { useSharedValue, useAnimatedStyle, runOnJS } from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, runOnJS, type SharedValue } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { PaperLined, PaperScalloped, PaperPolaroid, PaperGrid } from '@/components/deco/Papers';
 import {
@@ -20,6 +20,10 @@ export type DecoItem =
   | { id: string; type: 'photo';   uri: string;       x: number; y: number; scale?: number }
   | { id: string; type: 'sticker'; stickerKey: string; x: number; y: number; scale?: number }
   | { id: string; type: 'paper';   paperKey: string; paperText: string; x: number; y: number; scale?: number };
+
+type AddableDecoItem<T extends DecoItem = DecoItem> = T extends DecoItem
+  ? Omit<T, 'id' | 'x' | 'y'>
+  : never;
 
 type DecoTab = 'photo' | 'sticker' | 'paper';
 
@@ -65,7 +69,7 @@ function DraggableItem({
   initX, initY, initScale, canvasW: canvasWSv, editing, onEnd, onRemove, children,
 }: {
   initX: number; initY: number; initScale: number;
-  canvasW: Animated.SharedValue<number>;
+  canvasW: SharedValue<number>;
   editing: boolean;
   onEnd: (x: number, y: number, scale: number) => void;
   onRemove: () => void;
@@ -144,7 +148,7 @@ export function DecoBar({ editing, itemsJson, onItemsChange }: Props) {
     onItemsChange(JSON.stringify(next));
   }
 
-  function addItem(item: Omit<DecoItem, 'id' | 'x' | 'y'>) {
+  function addItem(item: AddableDecoItem) {
     const sameType = items.filter(i => i.type === item.type).length;
     const [x, y] = newPos(item.type, sameType, canvasW.value);
     save([...items, { ...item, id: uid(), x, y } as DecoItem]);
@@ -435,4 +439,3 @@ const s = StyleSheet.create({
     fontWeight: '600',
   },
 });
-

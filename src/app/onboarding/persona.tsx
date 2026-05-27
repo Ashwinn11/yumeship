@@ -47,11 +47,11 @@ export default function OnbPersona() {
       </View>
 
       <View style={styles.dotsRow}>
-        <StepDots step={0} total={3} />
+        <StepDots step={2} total={5} />
       </View>
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <Text style={styles.eyebrow}>step one · you</Text>
+        <Text style={styles.eyebrow}>step three · you</Text>
         <Text style={styles.heading}>Who are you,{'\n'}in their world?</Text>
 
         {/* Persona card */}

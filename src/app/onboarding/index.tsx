@@ -67,7 +67,7 @@ export default function OnbWelcome() {
           variant="primary"
           size="lg"
           full
-          onPress={() => router.push('/onboarding/persona')}
+          onPress={() => router.push('/onboarding/intent')}
           icon={<Heart size={14} color={Colors.vellum} />}
           iconPosition="right"
         >
@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1.4,
   },
   quote: {
-    fontFamily: FontFamily.displayItalic,
+    fontFamily: FontFamily.script,
     fontSize: FontSize.h5 - 4,
     lineHeight: 26,
     color: Colors.ink2,

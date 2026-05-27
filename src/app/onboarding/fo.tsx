@@ -76,12 +76,12 @@ export default function OnbFO() {
         </View>
       ) : (
         <View style={styles.dotsRow}>
-          <StepDots step={1} total={3} />
+          <StepDots step={3} total={5} />
         </View>
       )}
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {!isNew && <Text style={styles.eyebrow}>step two · them</Text>}
+        {!isNew && <Text style={styles.eyebrow}>step four · them</Text>}
         <Text style={[styles.heading, isNew && styles.headingNew]}>
           Meet them,{"\n"}your forever-someone.
         </Text>
