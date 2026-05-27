@@ -27,7 +27,7 @@ import {
   addHeadcanon, deleteHeadcanon, updateHeadcanon, useHeadcanonCounts, useHeadcanons,
 } from '@/store/headcanons';
 import { addScenario, deleteScenario, useScenarios } from '@/store/scenarios';
-import { getGlobalSetting, saveGlobalSetting } from '@/store/onboarding';
+import { getGlobalSetting, requestReviewIfEligible, saveGlobalSetting } from '@/store/onboarding';
 import { deleteShip, daysTogetherLabel, updateShip, useShip } from '@/store/ships';
 
 const REL_CHIP_COLOR: Record<string, string> = {
@@ -294,6 +294,10 @@ function HCSheet({
     if (!draft.trim()) return;
     addHeadcanon(shipId, categoryId, draft.trim());
     setDraft('');
+    if (getGlobalSetting('first_hc_saved') !== 'true') {
+      saveGlobalSetting('first_hc_saved', 'true');
+      requestReviewIfEligible();
+    }
   }
 
   function saveEdit() {

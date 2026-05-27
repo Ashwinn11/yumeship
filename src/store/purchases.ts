@@ -13,28 +13,38 @@ import Purchases, {
   PurchasesPackage,
 } from 'react-native-purchases';
 
-const RC_API_KEY = process.env.EXPO_PUBLIC_RC_API_KEY!;
-const ENTITLEMENT_ID = process.env.EXPO_PUBLIC_RC_ENTITLEMENT_ID!;
+const RC_API_KEY = process.env.EXPO_PUBLIC_RC_API_KEY ?? '';
+const ENTITLEMENT_ID = process.env.EXPO_PUBLIC_RC_ENTITLEMENT_ID ?? '';
+let configured = false;
 
-if (!RC_API_KEY) throw new Error('Missing EXPO_PUBLIC_RC_API_KEY in .env');
-if (!ENTITLEMENT_ID) throw new Error('Missing EXPO_PUBLIC_RC_ENTITLEMENT_ID in .env');
+function canUsePurchases() {
+  return configured && !!RC_API_KEY && !!ENTITLEMENT_ID;
+}
 
 // ─── Configure ────────────────────────────────────────────────────────────────
 
 export function configureRevenueCat(userId?: string | null) {
+  if (!RC_API_KEY || !ENTITLEMENT_ID) {
+    console.warn('RevenueCat is not configured. Missing EXPO_PUBLIC_RC_API_KEY or EXPO_PUBLIC_RC_ENTITLEMENT_ID.');
+    return;
+  }
+
   Purchases.setLogLevel(__DEV__ ? LOG_LEVEL.DEBUG : LOG_LEVEL.ERROR);
   Purchases.configure({ apiKey: RC_API_KEY, appUserID: userId ?? null });
+  configured = true;
 }
 
 // ─── Customer & entitlement ───────────────────────────────────────────────────
 
 export async function getCustomerInfo(): Promise<CustomerInfo> {
+  if (!canUsePurchases()) throw new Error('RevenueCat is not configured.');
   return Purchases.getCustomerInfo();
 }
 
 /** Returns true if the user has an active "premium" entitlement */
 export async function isPremium(): Promise<boolean> {
   try {
+    if (!canUsePurchases()) return false;
     const info = await Purchases.getCustomerInfo();
     return info.entitlements.active[ENTITLEMENT_ID] !== undefined;
   } catch {
@@ -51,6 +61,7 @@ export async function isPremium(): Promise<boolean> {
  */
 export async function getCurrentOffering(): Promise<PurchasesOffering | null> {
   try {
+    if (!canUsePurchases()) return null;
     const { current } = await Purchases.getOfferings();
     return current ?? null;
   } catch {
@@ -104,6 +115,7 @@ export async function purchasePackage(
   pkg: PurchasesPackage,
 ): Promise<{ success: boolean; customerInfo?: CustomerInfo; cancelled?: boolean; error?: string }> {
   try {
+    if (!canUsePurchases()) return { success: false, error: 'RevenueCat is not configured.' };
     const { customerInfo } = await Purchases.purchasePackage(pkg);
     return { success: true, customerInfo };
   } catch (e: any) {
@@ -118,6 +130,7 @@ export async function restorePurchases(): Promise<{
   isPremium: boolean;
   customerInfo: CustomerInfo;
 }> {
+  if (!canUsePurchases()) throw new Error('RevenueCat is not configured.');
   const customerInfo = await Purchases.restorePurchases();
   return {
     isPremium: customerInfo.entitlements.active[ENTITLEMENT_ID] !== undefined,
@@ -128,5 +141,6 @@ export async function restorePurchases(): Promise<{
 // ─── Manage subscriptions ─────────────────────────────────────────────────────
 
 export async function manageSubscriptions(): Promise<void> {
+  if (!canUsePurchases()) return;
   await Purchases.showManageSubscriptions();
 }

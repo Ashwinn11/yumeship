@@ -15,6 +15,8 @@ export function initDb() {
     CREATE TABLE IF NOT EXISTS ships (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL DEFAULT '',
+      ship_name TEXT NOT NULL DEFAULT '',
+      my_name TEXT NOT NULL DEFAULT '',
       fandom TEXT NOT NULL DEFAULT '',
       rel_type TEXT NOT NULL DEFAULT 'romantic',
       share_type TEXT NOT NULL DEFAULT '',
@@ -27,6 +29,7 @@ export function initDb() {
       tape_color TEXT NOT NULL DEFAULT 'rgba(255,255,255,0.9)',
       pinned INTEGER NOT NULL DEFAULT 0,
       start_date TEXT NOT NULL DEFAULT '',
+      template_key TEXT NOT NULL DEFAULT 'get-to-know',
       created_at INTEGER NOT NULL
     );
     CREATE TABLE IF NOT EXISTS headcanons (
@@ -101,6 +104,7 @@ export function initDb() {
       ship_id TEXT NOT NULL,
       body TEXT NOT NULL,
       sender_name TEXT NOT NULL DEFAULT '',
+      notif_id TEXT NOT NULL DEFAULT '',
       scheduled_hour INTEGER NOT NULL DEFAULT 9,
       active INTEGER NOT NULL DEFAULT 1,
       current_index INTEGER NOT NULL DEFAULT 0,

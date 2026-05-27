@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "yumeship",
+    "name": "Yumeship",
     "slug": "yumeship",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -13,7 +13,18 @@
     "ios": {
       "icon": "./assets/images/icon.png",
       "bundleIdentifier": "com.yumeship.app",
-      "supportsTablet": false
+      "supportsTablet": false,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/f579f23c-2b74-4e06-a3c6-0fb9e3dfb024",
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0
     },
     "plugins": [
       "expo-router",
@@ -30,6 +41,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "f579f23c-2b74-4e06-a3c6-0fb9e3dfb024"
+      }
+    },
+    "owner": "yumeship"
   }
 }

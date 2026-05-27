@@ -221,7 +221,7 @@ export default function SettingsScreen() {
               <Heart size={12} color={Colors.sakuraDeep} />
               <Text style={styles.proLabel}>yumeship premium</Text>
             </View>
-            <Text style={styles.proText}>Active ✓{'\n'}Thank you for your support!</Text>
+            <Text style={styles.proText}>your vault is yours, fully.{'\n'}every ship, every secret. ♡</Text>
           </View>
         ) : (
           <Pressable

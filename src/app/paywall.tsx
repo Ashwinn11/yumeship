@@ -20,6 +20,7 @@ import { WashiTape } from '@/components/deco/WashiTape';
 import { CozyModal } from '@/components/ui';
 import { Colors, FontFamily, FontSize, Radius, Spacing } from '@/constants/theme';
 import { refreshPremium } from '@/store/premium';
+import { requestReviewIfEligible } from '@/store/onboarding';
 import {
   getAvailablePackages,
   getIntroOfferInfo,
@@ -235,6 +236,7 @@ export default function PaywallScreen() {
       const result = await purchasePackage(selected);
       if (result.success) {
         await refreshPremium();
+        requestReviewIfEligible();
         setAlertModal({
           title: '🎉 Welcome to Premium!',
           message: 'Your subscription is now active.',

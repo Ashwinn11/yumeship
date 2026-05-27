@@ -78,6 +78,16 @@ export function resetOnb() {
   };
 }
 
+export async function requestReviewIfEligible() {
+  const count = parseInt(getGlobalSetting('review_prompted_count', '0'), 10);
+  if (count >= 3) return;
+  const { isAvailableAsync, requestReview } = await import('expo-store-review');
+  if (await isAvailableAsync()) {
+    saveGlobalSetting('review_prompted_count', String(count + 1));
+    await requestReview();
+  }
+}
+
 export function buildInitialData(templateKey: string, s: OnbState): Record<string, string> {
   const d: Record<string, string> = {};
   switch (templateKey) {

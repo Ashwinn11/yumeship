@@ -1,5 +1,4 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import * as StoreReview from 'expo-store-review';
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -10,7 +9,7 @@ import { Button } from '@/components/ui/Button';
 import { IconBell, IconJournalOutline } from '@/components/ui/Icon';
 import { StepDots } from '@/components/ui/StepDots';
 import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing } from '@/constants/theme';
-import { getGlobalSetting, getOnbState, resetOnb, saveGlobalSetting } from '@/store/onboarding';
+import { getOnbState, requestReviewIfEligible, resetOnb } from '@/store/onboarding';
 import { requestPermission } from '@/store/notifications';
 import { daysAgo, getShip } from '@/store/ships';
 
@@ -46,7 +45,7 @@ export default function OnbReady() {
   useEffect(() => {
     const timer = setTimeout(() => {
       maybeRequestReview();
-    }, 900);
+    }, 300);
 
     return () => clearTimeout(timer);
   }, []);
@@ -58,11 +57,7 @@ export default function OnbReady() {
   }
 
   async function maybeRequestReview() {
-    if (getGlobalSetting('rating_prompted') === 'true') return;
-    saveGlobalSetting('rating_prompted', 'true');
-    if (await StoreReview.isAvailableAsync()) {
-      await StoreReview.requestReview();
-    }
+    await requestReviewIfEligible();
   }
 
   async function openFirstPiece() {
