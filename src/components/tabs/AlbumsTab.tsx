@@ -9,6 +9,7 @@ import { CozyModal } from '@/components/ui/CozyModal';
 import { IconPlus, IconTrashSolid } from '@/components/ui/Icon';
 import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing } from '@/constants/theme';
 import { addAlbum, addAlbumPhoto, deleteAlbum, deleteAlbumPhoto, useAlbumPhotos, useAlbums } from '@/store/albums';
+import { StickerPolaroid } from '@/components/deco';
 
 const SCREEN_W = Dimensions.get('window').width;
 const GRID_PAD = 2;
@@ -91,12 +92,34 @@ export function AlbumsTab({ shipId, setCustomBack }: { shipId: string; setCustom
       )}
 
       {albums.length === 0 && !creating ? (
-        <View style={s.empty}>
-          <Text style={s.emptyTitle}>no albums yet.</Text>
-          <Text style={s.emptySub}>save fan art, screenshots, anything.</Text>
-          <Pressable style={s.emptyBtn} onPress={() => setCreating(true)}>
-            <IconPlus size={13} color={Colors.vellum} />
-            <Text style={s.emptyBtnText}>new album</Text>
+        <View style={[s.empty, { paddingVertical: 60, paddingHorizontal: 20, gap: 12 }]}>
+          <StickerPolaroid size={88} />
+          <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: 26, color: Colors.ink, textAlign: 'center', marginTop: 10 }}>
+            no memories yet
+          </Text>
+          <Text style={{ fontFamily: FontFamily.script, fontSize: 18, lineHeight: 22, color: Colors.ink2, textAlign: 'center', marginVertical: 8 }}>
+            candid snaps, cozy dates, and polaroids —{"\n"}keep them safe.
+          </Text>
+          <Pressable
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 6,
+              backgroundColor: Colors.sakuraDeep,
+              paddingHorizontal: 20,
+              paddingVertical: 10,
+              borderRadius: 99,
+              shadowColor: 'rgba(110, 58, 90, 0.12)',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 1,
+              shadowRadius: 3,
+              elevation: 1,
+              marginTop: 10,
+            }}
+            onPress={() => setCreating(true)}
+          >
+            <IconPlus size={12} color={Colors.vellum} />
+            <Text style={{ fontFamily: FontFamily.uiMedium, fontSize: 14, color: Colors.vellum }}>new album</Text>
           </Pressable>
         </View>
       ) : (
@@ -210,12 +233,34 @@ function AlbumView({ albumId, albumTitle, onBack }: { albumId: string; albumTitl
       </View>
 
       {photos.length === 0 ? (
-        <View style={s.empty}>
-          <Text style={s.emptyTitle}>empty album.</Text>
-          <Text style={s.emptySub}>tap + to add photos.</Text>
-          <Pressable style={s.emptyBtn} onPress={pickPhoto}>
-            <IconPlus size={13} color={Colors.vellum} />
-            <Text style={s.emptyBtnText}>add photos</Text>
+        <View style={[s.empty, { paddingVertical: 60, paddingHorizontal: 20, gap: 12 }]}>
+          <StickerPolaroid size={88} />
+          <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: 26, color: Colors.ink, textAlign: 'center', marginTop: 10 }}>
+            empty album
+          </Text>
+          <Text style={{ fontFamily: FontFamily.script, fontSize: 18, lineHeight: 22, color: Colors.ink2, textAlign: 'center', marginVertical: 8 }}>
+            save your favorite moments —{"\n"}tap to add photos.
+          </Text>
+          <Pressable
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 6,
+              backgroundColor: Colors.sakuraDeep,
+              paddingHorizontal: 20,
+              paddingVertical: 10,
+              borderRadius: 99,
+              shadowColor: 'rgba(110, 58, 90, 0.12)',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 1,
+              shadowRadius: 3,
+              elevation: 1,
+              marginTop: 10,
+            }}
+            onPress={pickPhoto}
+          >
+            <IconPlus size={12} color={Colors.vellum} />
+            <Text style={{ fontFamily: FontFamily.uiMedium, fontSize: 14, color: Colors.vellum }}>add photos</Text>
           </Pressable>
         </View>
       ) : (
@@ -327,7 +372,7 @@ const s = StyleSheet.create({
   albumInfo: { padding: Spacing.s3 },
   albumInfoRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   albumTitle: { fontFamily: FontFamily.uiSemiBold, fontSize: 13, color: Colors.ink, flex: 1, marginRight: 4 },
-  albumCount: { fontFamily: FontFamily.marker, fontSize: 9, color: Colors.ink3, letterSpacing: 0.6, marginTop: 2 },
+  albumCount: { fontFamily: FontFamily.script, fontSize: 14, color: Colors.ink3, marginTop: 2 },
 
   // Album view
   albumView: { flex: 1, backgroundColor: Colors.paper },

@@ -6,12 +6,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Cloud } from '@/components/deco/Cloud';
 import { Heart } from '@/components/deco/Heart';
 import { Sparkle } from '@/components/deco/Sparkle';
+import { StickerSakuraBranch } from '@/components/deco';
 import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
 import { Field } from '@/components/ui/Field';
 import { Row } from '@/components/ui/Row';
 import { StepDots } from '@/components/ui/StepDots';
 import { UnderInput } from '@/components/ui/UnderInput';
+import { CalloutBubble } from '@/components/ui';
 import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing } from '@/constants/theme';
 import { setOnbField } from '@/store/onboarding';
 
@@ -38,7 +40,7 @@ export default function OnbPersona() {
     <View style={[styles.screen, { paddingTop: insets.top + Spacing.s1, paddingBottom: insets.bottom + Spacing.s1 }]}>
       {/* Background accents */}
       <View style={styles.decoTR} pointerEvents="none">
-        <Cloud size={32} color={Colors.sakura} />
+        <StickerSakuraBranch size={60} />
       </View>
       <View style={styles.decoBL} pointerEvents="none">
         <Sparkle size={18} color={Colors.lavenderDeep} />
@@ -105,13 +107,10 @@ export default function OnbPersona() {
         </View>
 
         {/* Reassurance note */}
-        <View style={styles.note}>
-          <View style={styles.noteHeart}>
-            <Heart size={10} color={Colors.sakuraDeep} />
-          </View>
-          <Text style={styles.noteText}>
-            "A self-insert is you in their story. Or someone you've imagined for it. There's no wrong way."
-          </Text>
+        <View style={{ marginTop: 24, alignItems: 'center' }}>
+          <CalloutBubble tone="pink">
+            a self-insert is{'\n'}you in their story.{'\n'}no wrong way.
+          </CalloutBubble>
         </View>
       </ScrollView>
 

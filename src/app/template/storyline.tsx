@@ -6,7 +6,7 @@ import { TemplateScreenWrapper } from '@/components/templates/TemplateScreenWrap
 import {
   MarkerCard, TitleHeader, Polaroid, INK,
 } from '@/components/templates/primitives';
-import { Heart } from '@/components/deco/Heart';
+import { Bullets, WashiTape } from '@/components/deco';
 import { FontFamily } from '@/constants/theme';
 import { useTemplateCtx } from '@/store/templateData';
 import { DateField } from '@/components/ui/DateField';
@@ -35,6 +35,9 @@ export function StorylineContent({ editing = false }: { editing?: boolean }) {
 
   return (
     <MarkerCard tint="#fffbf6" style={s.card}>
+      <View style={{ position: 'absolute', top: -7, right: 24, zIndex: 10 }}>
+        <WashiTape width={65} height={14} pattern="star" color="#b8902a" rotate={5} />
+      </View>
       <TitleHeader title="OUR STORYLINE" subtitle="the year so far" by="@plumstamps" />
 
       <View style={s.timeline} onLayout={(ev) => setTimelineH(ev.nativeEvent.layout.height)}>
@@ -47,7 +50,16 @@ export function StorylineContent({ editing = false }: { editing?: boolean }) {
           const isLast = i === events.length - 1;
           return (
             <View key={i} style={s.event}>
-              <View style={[s.dot, isLast && s.dotFilled]} />
+              <View style={{ position: 'absolute', left: -26, top: 4, width: 14, height: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: '#fffbf6', borderRadius: 999 }}>
+                {(() => {
+                  if (isLast) return <Bullets.Heart size={12} color={INK} />;
+                  switch (i % 3) {
+                    case 0: return <Bullets.Sakura size={12} color={INK} />;
+                    case 1: return <Bullets.Star size={12} color={INK} />;
+                    default: return <Bullets.Crescent size={12} color={INK} />;
+                  }
+                })()}
+              </View>
               <View style={s.eventContent}>
                 <View style={s.eventHeader}>
                   <View style={s.dateBadge}>
@@ -90,7 +102,7 @@ export function StorylineContent({ editing = false }: { editing?: boolean }) {
                       <Text style={s.eventTitle}>{ev.t || '———'}</Text>
                     )}
                   </View>
-                  {isLast && <Heart size={14} color={INK} />}
+                  {isLast && <Bullets.Heart size={14} color={INK} />}
                 </View>
                 {e ? (
                   <TextInput

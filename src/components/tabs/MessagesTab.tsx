@@ -5,17 +5,21 @@ import {
 } from 'react-native';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { CozyModal } from '@/components/ui/CozyModal';
 import { IconSend } from '@/components/ui/Icon';
 import { Colors, FontFamily, Radius, Spacing } from '@/constants/theme';
 import { addMessage, addThread, deleteMessage, useMessages, useThreads } from '@/store/messages';
+import { useShip } from '@/store/ships';
+import { StickerEnvelope, WashiTape } from '@/components/deco';
 
-export function MessagesTab({ shipId, shipName, sender: externalSender, onSenderChange }: {
+export function MessagesTab({ shipId, shipName, sender: externalSender, onSenderChange, onBack }: {
   shipId: string;
   shipName: string;
   sender?: 'me' | 'them';
   onSenderChange?: (s: 'me' | 'them') => void;
+  onBack?: () => void;
 }) {
   const threads = useThreads(shipId);
   const [initialized, setInitialized] = useState(false);
@@ -43,22 +47,32 @@ export function MessagesTab({ shipId, shipName, sender: externalSender, onSender
       <ThreadView
         threadId={thread.id}
         shipName={shipName}
+        shipId={shipId}
         externalSender={externalSender}
         onSenderChange={onSenderChange}
+        onBack={onBack}
       />
     </View>
   );
 }
 
 function ThreadView({
-  threadId, shipName, externalSender, onSenderChange,
+  threadId, shipName, shipId, externalSender, onSenderChange, onBack,
 }: {
   threadId: string;
   shipName: string;
+  shipId: string;
   externalSender?: 'me' | 'them';
   onSenderChange?: (s: 'me' | 'them') => void;
+  onBack?: () => void;
 }) {
   const insets = useSafeAreaInsets();
+  const ship = useShip(shipId);
+  const gradStart = ship?.gradStart ?? Colors.sakura;
+  const gradEnd = ship?.gradEnd ?? Colors.sakuraDeep;
+  // foName = the F/O character name, shipName = the ship title label
+  const foName = ship?.name || shipName;
+  const shipTitle = ship?.shipName || '';
   const messages = useMessages(threadId);
   const [internalSender, setInternalSender] = useState<'me' | 'them'>('me');
   const sender = externalSender ?? internalSender;
@@ -68,6 +82,7 @@ function ThreadView({
   const [msgToDelete, setMsgToDelete] = useState<string | null>(null);
   const [keyboardOpen, setKeyboardOpen] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
+  const inputRef = useRef<TextInput>(null);
 
   useEffect(() => {
     const show = Keyboard.addListener('keyboardWillShow', () => {
@@ -88,8 +103,8 @@ function ThreadView({
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      style={s.threadView}
-      keyboardVerticalOffset={100}
+      style={{ flex: 1 }}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
       <CozyModal
         visible={!!msgToDelete}
@@ -100,70 +115,202 @@ function ThreadView({
         onConfirm={() => { if (msgToDelete) deleteMessage(msgToDelete); setMsgToDelete(null); }}
         onClose={() => setMsgToDelete(null)}
       />
-      {showToggle && (
-        <View style={s.threadHeader}>
-          <Text style={s.threadViewTitle}>MESSAGES</Text>
-          <View style={s.senderToggle}>
-            <Pressable style={[s.senderBtn, sender === 'me' && s.senderBtnActive]} onPress={() => setSender('me')}>
-              <Text style={[s.senderBtnText, sender === 'me' && s.senderBtnTextActive]}>me</Text>
-            </Pressable>
-            <Pressable style={[s.senderBtn, sender === 'them' && s.senderBtnActive]} onPress={() => setSender('them')}>
-              <Text style={[s.senderBtnText, sender === 'them' && s.senderBtnTextActive]}>{shipName} ♡</Text>
-            </Pressable>
-          </View>
-        </View>
-      )}
 
-      <ScrollView
-        ref={scrollRef}
-        style={s.bubbleScroll}
-        contentContainerStyle={s.bubbleContent}
-        showsVerticalScrollIndicator={false}
+      {/* ── Header ── */}
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 10,
+          paddingHorizontal: 16,
+          paddingTop: 18,
+          paddingBottom: 10,
+          borderBottomWidth: 1,
+          borderBottomColor: Colors.line,
+          backgroundColor: Colors.paper,
+          zIndex: 10,
+          overflow: 'visible',
+        }}
       >
-        {messages.length === 0 ? (
-          <Text style={s.noMessages}>imagined texts — never sent, always read ♡</Text>
-        ) : (
-          (() => {
-            const list: React.ReactNode[] = [];
-            let lastTime = 0;
+        {/* Washi tape strip across top edge of header */}
+        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 20 }} pointerEvents="none">
+          <WashiTape pattern="floral" width={110} height={11} rotate={-1} color={Colors.sakura} />
+        </View>
 
-            messages.forEach((m, idx) => {
-              const showTime = idx === 0 || (m.createdAt - lastTime > 15 * 60 * 1000);
-              if (showTime) {
-                const dateObj = new Date(m.createdAt);
-                const weekday = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
-                const time = dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }).toLowerCase();
-                list.push(
-                  <Text key={`time-${m.id}`} style={s.dayLabel}>
-                    {weekday}, {time}
-                  </Text>
-                );
-              }
-              lastTime = m.createdAt;
-              list.push(
-                <Pressable
-                  key={m.id}
-                  style={[s.bubbleRow, m.sender === 'me' ? s.bubbleRowMe : s.bubbleRowThem]}
-                  onLongPress={() => setMsgToDelete(m.id)}
-                >
-                  <View style={[s.bubble, m.sender === 'me' ? s.bubbleMe : s.bubbleThem]}>
-                    <Text style={[s.bubbleText, m.sender === 'me' ? s.bubbleTextMe : s.bubbleTextThem]}>
-                      {m.body}
-                    </Text>
-                  </View>
-                </Pressable>
-              );
-            });
-            return list;
-          })()
+        {/* Back chevron */}
+        {onBack && (
+          <Pressable onPress={onBack} hitSlop={8} style={{ marginRight: 2 }}>
+            <Text style={{ fontSize: 28, color: Colors.ink2, fontFamily: FontFamily.ui, lineHeight: 28 }}>‹</Text>
+          </Pressable>
         )}
-      </ScrollView>
+
+        {/* F/O Avatar Circle */}
+        <LinearGradient
+          colors={[gradStart, gradEnd]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: 22,
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderWidth: 2,
+            borderColor: '#ffffff',
+            shadowColor: 'rgba(110,58,90,0.18)',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 1,
+            shadowRadius: 4,
+            elevation: 2,
+          }}
+        >
+          <Text style={{ color: '#fff', fontFamily: FontFamily.displayItalic, fontSize: 21 }}>
+            {foName.charAt(0).toUpperCase()}
+          </Text>
+        </LinearGradient>
+
+        {/* Name + subtitle */}
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: 19, color: Colors.ink, lineHeight: 21 }}>
+            {foName}
+          </Text>
+          <Text style={{ fontFamily: FontFamily.script, fontSize: 13, color: Colors.sakuraInk, marginTop: 1 }}>
+            {shipTitle || 'imagined ♡'}
+          </Text>
+        </View>
+
+        {/* Segmented sender control — single rounded track */}
+        <View style={{
+          flexDirection: 'row',
+          backgroundColor: Colors.vellum,
+          borderRadius: 99,
+          borderWidth: 1.2,
+          borderColor: Colors.line,
+          padding: 3,
+        }}>
+          <Pressable
+            onPress={() => setSender('me')}
+            style={{
+              paddingVertical: 5,
+              paddingHorizontal: 14,
+              borderRadius: 99,
+              backgroundColor: sender === 'me' ? Colors.sakuraDeep : 'transparent',
+            }}
+          >
+            <Text style={{
+              fontFamily: FontFamily.uiMedium,
+              fontSize: 12,
+              color: sender === 'me' ? Colors.vellum : Colors.ink2,
+            }}>
+              me
+            </Text>
+          </Pressable>
+
+          <Pressable
+            onPress={() => setSender('them')}
+            style={{
+              paddingVertical: 5,
+              paddingHorizontal: 14,
+              borderRadius: 99,
+              backgroundColor: sender === 'them' ? Colors.sakuraDeep : 'transparent',
+            }}
+          >
+            <Text style={{
+              fontFamily: FontFamily.uiMedium,
+              fontSize: 12,
+              color: sender === 'them' ? Colors.vellum : Colors.ink2,
+            }}>
+              {foName}
+            </Text>
+          </Pressable>
+        </View>
+      </View>
+
+      {/* Message Container Area */}
+      <View style={{ flex: 1, position: 'relative' }}>
+        <ScrollView
+          ref={scrollRef}
+          style={s.bubbleScroll}
+          contentContainerStyle={[s.bubbleContent, messages.length === 0 && { flexGrow: 1, justifyContent: 'center' }]}
+          showsVerticalScrollIndicator={false}
+        >
+          {messages.length === 0 ? (
+            <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 60, paddingHorizontal: 20, gap: 12 }}>
+              <StickerEnvelope size={88} />
+              <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: 26, color: Colors.ink, textAlign: 'center', marginTop: 10 }}>
+                your conversation starts here
+              </Text>
+              <Text style={{ fontFamily: FontFamily.script, fontSize: 18, lineHeight: 22, color: Colors.ink2, textAlign: 'center', marginVertical: 8 }}>
+                imagined texts —{"\n"}never sent, always read.
+              </Text>
+              <Pressable
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 6,
+                  backgroundColor: Colors.sakuraDeep,
+                  paddingHorizontal: 20,
+                  paddingVertical: 10,
+                  borderRadius: 99,
+                  shadowColor: 'rgba(110, 58, 90, 0.12)',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 1,
+                  shadowRadius: 3,
+                  elevation: 1,
+                  marginTop: 10,
+                }}
+                onPress={() => inputRef.current?.focus()}
+              >
+                <IconSend size={11} color={Colors.vellum} />
+                <Text style={{ fontFamily: FontFamily.uiMedium, fontSize: 14, color: Colors.vellum }}>write the first one</Text>
+              </Pressable>
+            </View>
+          ) : (
+            (() => {
+              const list: React.ReactNode[] = [];
+              let lastTime = 0;
+
+              messages.forEach((m, idx) => {
+                const showTime = idx === 0 || (m.createdAt - lastTime > 15 * 60 * 1000);
+                if (showTime) {
+                  const dateObj = new Date(m.createdAt);
+                  const weekday = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
+                  const time = dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }).toLowerCase();
+                  list.push(
+                    <View key={`time-${m.id}`} style={{ alignItems: 'center', marginVertical: 14 }}>
+                      <Text style={{ fontFamily: FontFamily.marker, fontSize: 10, color: Colors.ink3, letterSpacing: 1.2, textTransform: 'uppercase' }}>
+                        🌸 {weekday.toUpperCase()} · {time.toUpperCase()}
+                      </Text>
+                    </View>
+                  );
+                }
+                lastTime = m.createdAt;
+                list.push(
+                  <Pressable
+                    key={m.id}
+                    style={[s.bubbleRow, m.sender === 'me' ? s.bubbleRowMe : s.bubbleRowThem]}
+                    onLongPress={() => setMsgToDelete(m.id)}
+                  >
+                    <View style={[s.bubble, m.sender === 'me' ? s.bubbleMe : s.bubbleThem]}>
+                      <Text style={[s.bubbleText, m.sender === 'me' ? s.bubbleTextMe : s.bubbleTextThem]}>
+                        {m.body}
+                      </Text>
+                    </View>
+                  </Pressable>
+                );
+              });
+              return list;
+            })()
+          )}
+        </ScrollView>
+      </View>
 
       <View style={[s.inputRow, { paddingBottom: keyboardOpen ? Spacing.s3 : Math.max(insets.bottom, Spacing.s3) }]}>
         <TextInput
+          ref={inputRef}
           value={draft}
           onChangeText={setDraft}
-          placeholder={sender === 'me' ? 'write to them...' : `${shipName} says...`}
+          placeholder={sender === 'me' ? 'write to them...' : `${foName} says...`}
           placeholderTextColor={Colors.ink3}
           style={s.input}
           multiline

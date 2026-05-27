@@ -21,6 +21,7 @@ import { INK, SquareCheck } from '@/components/templates/primitives';
 import { CozyModal } from '@/components/ui/CozyModal';
 import { IconPlus, IconChevronLeft, IconTrashSolid } from '@/components/ui/Icon';
 import { Mark } from '@/components/ui/Mark';
+import { WashiTape, Bullets, StickerSakuraBranch, StickerEnvelope } from '@/components/deco';
 import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing } from '@/constants/theme';
 import { addFoMessage, deleteFoMessage, toggleFoMessage, updateFoMessage, useFoMessages } from '@/store/foNotifications';
 import { addHeadcanon, clearCategoryHeadcanons, deleteHeadcanon, updateHeadcanon, useHeadcanonCounts, useHeadcanons } from '@/store/headcanons';
@@ -49,7 +50,7 @@ const FEATURES: { id: Feature; ja: string; label: string; desc: string; color: s
   { id: 'boundaries', ja: '夢', label: 'Boundaries', desc: 'sharing rules & what\'s ok', color: Colors.plum, bg: Colors.lavenderSoft },
   { id: 'storyline', ja: '時', label: 'Storyline', desc: 'timeline of moments', color: Colors.ink2, bg: Colors.paperDeep },
   { id: 'dates', ja: '日', label: 'Dates', desc: 'anniversaries & events', color: Colors.peachDeep, bg: Colors.peachSoft },
-  { id: 'fo-messages', ja: '信', label: 'F/O Messages', desc: 'messages from them ♡', color: Colors.sakuraInk, bg: Colors.sakuraSoft },
+  { id: 'fo-messages', ja: '通', label: 'F/O Notifications', desc: 'notes & nudges from them ♡', color: Colors.sakuraInk, bg: Colors.sakuraSoft },
 ];
 
 export default function VaultScreen() {
@@ -84,7 +85,7 @@ export default function VaultScreen() {
     switch (activeFeature) {
       case 'headcanons': return <HeadcanonsFeature shipId={ship.id} shipName={ship.name} setCustomBack={setCustomBack} />;
       case 'scenarios': return <ScenariosFeature shipId={ship.id} shipName={ship.name} setCustomBack={setCustomBack} />;
-      case 'messages': return <MessagesTab shipId={ship.id} shipName={ship.name} sender={msgSender} onSenderChange={setMsgSender} />;
+      case 'messages': return <MessagesTab shipId={ship.id} shipName={ship.name} onBack={() => setActiveFeature(null)} />;
       case 'albums': return <AlbumsTab shipId={ship.id} setCustomBack={setCustomBack} />;
       case 'boundaries': return <BoundariesFeature shipId={ship.id} />;
       case 'storyline': return <StorylineTab shipId={ship.id} shipName={ship.name} />;
@@ -97,69 +98,62 @@ export default function VaultScreen() {
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]}>
-      {/* Background accents */}
-      <View style={styles.decoTR} pointerEvents="none">
-        <Cloud size={30} color={Colors.sakura} />
-      </View>
-      <View style={styles.decoBR} pointerEvents="none">
-        <Star size={18} color={Colors.lavenderDeep} />
-      </View>
+      {/* Background accents — hidden inside messages so the chat UI is clean */}
+      {activeFeature !== 'messages' && (
+        <>
+          <View style={styles.decoTR} pointerEvents="none">
+            <Cloud size={30} color={Colors.sakura} />
+          </View>
+          <View style={styles.decoBR} pointerEvents="none">
+            <Star size={18} color={Colors.lavenderDeep} />
+          </View>
+        </>
+      )}
 
-      {/* Header */}
-      {activeFeature ? (
-        <View style={styles.subHeader}>
-          <Pressable style={styles.backBtn} onPress={handleBack}>
-            <IconChevronLeft size={14} color={Colors.ink2} />
-          </Pressable>
-          <View style={styles.subHeaderCenter}>
+      {/* Header — hidden when in messages (MessagesTab owns its own header) */}
+      {activeFeature !== 'messages' && (
+        activeFeature ? (
+          <View style={styles.subHeader}>
+            <Pressable style={styles.backBtn} onPress={handleBack}>
+              <IconChevronLeft size={14} color={Colors.ink2} />
+            </Pressable>
+            <View style={styles.subHeaderCenter}>
+              {ships.length > 0 ? (
+                <Pressable onPress={() => setShowShipPicker(true)} style={styles.subHeaderPickerBtn}>
+                  <View style={[styles.titleShipDot, { backgroundColor: ship?.gradStart ?? Colors.sakura }]} />
+                  <Text style={styles.subHeaderShipName} numberOfLines={1}>
+                    {ship ? (ship.shipName || ship.name) : 'select ship'}
+                  </Text>
+                  <Text style={styles.subHeaderChevron}>▾</Text>
+                </Pressable>
+              ) : (
+                <Text style={styles.subHeaderShipName}>no ship</Text>
+              )}
+            </View>
+            <View style={{ width: 32 }} />
+          </View>
+        ) : (
+          <View style={styles.header}>
+            <View style={styles.headerRow}>
+              <Mark size={26} />
+            </View>
             {ships.length > 0 ? (
-              <Pressable onPress={() => setShowShipPicker(true)} style={styles.subHeaderPickerBtn}>
-                <View style={[styles.titleShipDot, { backgroundColor: ship?.gradStart ?? Colors.sakura }]} />
-                <Text style={styles.subHeaderShipName} numberOfLines={1}>
-                  {ship ? (ship.shipName || ship.name) : 'select ship'}
-                </Text>
-                <Text style={styles.subHeaderChevron}>▾</Text>
+              <Pressable style={styles.titleRow} onPress={() => setShowShipPicker(true)}>
+                <View style={styles.titlePickerContainer}>
+                  <View style={[styles.titleShipDot, { backgroundColor: ship?.gradStart ?? Colors.sakura }]} />
+                  <Text style={styles.title} numberOfLines={1}>
+                    {ship ? (ship.shipName || ship.name) : 'vault'}
+                  </Text>
+                  <Text style={styles.titleChevron}>▾</Text>
+                </View>
               </Pressable>
             ) : (
-              <Text style={styles.subHeaderShipName}>no ship</Text>
+              <View style={styles.titleRow}>
+                <Text style={styles.title}>vault</Text>
+              </View>
             )}
           </View>
-          {activeFeature === 'messages' ? (
-            <View style={styles.msgSenderToggle}>
-              <Pressable style={[styles.msgSenderBtn, msgSender === 'me' && styles.msgSenderBtnActive]} onPress={() => setMsgSender('me')}>
-                <Text style={[styles.msgSenderBtnText, msgSender === 'me' && styles.msgSenderBtnTextActive]}>me</Text>
-              </Pressable>
-              <Pressable style={[styles.msgSenderBtn, msgSender === 'them' && styles.msgSenderBtnActive]} onPress={() => setMsgSender('them')}>
-                <Text style={[styles.msgSenderBtnText, msgSender === 'them' && styles.msgSenderBtnTextActive]}>{ship?.name || 'them'} ♡</Text>
-              </Pressable>
-            </View>
-          ) : (
-            <View style={{ width: 32 }} />
-          )}
-        </View>
-
-      ) : (
-        <View style={styles.header}>
-          <View style={styles.headerRow}>
-            <Mark size={26} />
-          </View>
-
-          {ships.length > 0 ? (
-            <Pressable style={styles.titleRow} onPress={() => setShowShipPicker(true)}>
-              <View style={styles.titlePickerContainer}>
-                <View style={[styles.titleShipDot, { backgroundColor: ship?.gradStart ?? Colors.sakura }]} />
-                <Text style={styles.title} numberOfLines={1}>
-                  {ship ? (ship.shipName || ship.name) : 'vault'}
-                </Text>
-                <Text style={styles.titleChevron}>▾</Text>
-              </View>
-            </Pressable>
-          ) : (
-            <View style={styles.titleRow}>
-              <Text style={styles.title}>vault</Text>
-            </View>
-          )}
-        </View>
+        )
       )}
 
       {ships.length === 0 ? (
@@ -740,30 +734,84 @@ function ScenariosFeature({ shipId, shipName, setCustomBack }: { shipId: string;
 
   return (
     <View style={sc.wrap}>
-      <View style={sc.topRow}>
-        <Text style={sc.eyebrow}>SCENARIOS · {scenarios.length}</Text>
+      {/* Redesigned Scenarios Header */}
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 14, paddingHorizontal: 4 }}>
+        <View>
+          <Text style={{ fontFamily: FontFamily.marker, fontSize: 9, color: Colors.sakuraDeep, letterSpacing: 1.4, textTransform: 'uppercase', marginBottom: 2 }}>
+            SCENARIOS · {scenarios.length} SAVED
+          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: 34, color: Colors.ink, lineHeight: 36 }}>
+              what-ifs
+            </Text>
+            <Bullets.Sakura size={12} color={Colors.sakuraDeep} />
+          </View>
+        </View>
         <Pressable
-          style={sc.newBtn}
           onPress={() => {
             setEditing({ id: null, title: '', body: '' });
             setCustomBack(() => () => { setEditing(null); setCustomBack(null); });
           }}
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: 16,
+            backgroundColor: Colors.vellum,
+            borderWidth: 1,
+            borderColor: Colors.line,
+            alignItems: 'center',
+            justifyContent: 'center',
+            shadowColor: 'rgba(110, 58, 90, 0.05)',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 1,
+            shadowRadius: 3,
+            elevation: 1,
+          }}
         >
-          <IconPlus size={12} color={Colors.vellum} />
-          <Text style={sc.newBtnText}>new</Text>
+          <IconPlus size={12} color={Colors.sakuraDeep} />
         </Pressable>
       </View>
 
       {scenarios.length === 0 ? (
-        <View style={sc.empty}>
-          <Heart size={28} color={Colors.sakuraSoft} outline />
-          <Text style={sc.emptyTitle}>nothing written yet.</Text>
-          <Text style={sc.emptySub}>what would happen if {shipName} walked in right now?</Text>
+        <View style={[sc.empty, { paddingVertical: 60, paddingHorizontal: 20, gap: 12 }]}>
+          <StickerSakuraBranch size={88} />
+          <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: 26, color: Colors.ink, textAlign: 'center', marginTop: 10 }}>
+            no daydreams yet
+          </Text>
+          <Text style={{ fontFamily: FontFamily.script, fontSize: 18, lineHeight: 22, color: Colors.ink2, textAlign: 'center', marginVertical: 8 }}>
+            the rainy afternoons,{"\n"}the airport goodbyes —{"\n"}start somewhere.
+          </Text>
+          <Pressable
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 6,
+              backgroundColor: Colors.sakuraDeep,
+              paddingHorizontal: 20,
+              paddingVertical: 10,
+              borderRadius: 99,
+              shadowColor: 'rgba(110, 58, 90, 0.12)',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 1,
+              shadowRadius: 3,
+              elevation: 1,
+              marginTop: 10,
+              marginBottom: 14,
+            }}
+            onPress={() => {
+              setEditing({ id: null, title: '', body: '' });
+              setCustomBack(() => () => { setEditing(null); setCustomBack(null); });
+            }}
+          >
+            <IconPlus size={12} color={Colors.vellum} />
+            <Text style={{ fontFamily: FontFamily.uiMedium, fontSize: 14, color: Colors.vellum }}>write a scenario</Text>
+          </Pressable>
+
           <View style={sc.prompts}>
             {SC_PROMPTS.map((p) => (
               <Pressable
                 key={p.ja}
-                style={sc.prompt}
+                style={[sc.prompt, { paddingVertical: 6, paddingHorizontal: 12 }]}
                 onPress={() => setEditing({ id: null, title: p.label, body: '' })}
               >
                 <Text style={sc.promptJa}>{p.ja}</Text>
@@ -784,32 +832,96 @@ function ScenariosFeature({ shipId, shipName, setCustomBack }: { shipId: string;
             onConfirm={() => { if (scDeleteTarget) deleteScenario(scDeleteTarget); setScDeleteTarget(null); }}
             onClose={() => setScDeleteTarget(null)}
           />
-          {scenarios.map((s) => (
-            <Pressable
-              key={s.id}
-              style={sc.card}
-              onPress={() => {
-                setEditing({ id: s.id, title: s.title, body: s.body });
-                setCustomBack(() => () => { setEditing(null); setCustomBack(null); });
-              }}
-            >
-              <View style={sc.cardStripe} />
-              <View style={sc.cardBody}>
-                <View style={sc.cardTitleRow}>
-                  <Text style={sc.cardTitle} numberOfLines={1}>{s.title || 'untitled'}</Text>
-                  <Pressable hitSlop={8} onPress={() => setScDeleteTarget(s.id)}>
-                    <IconTrashSolid size={12} color={Colors.ink3} />
-                  </Pressable>
+          {scenarios.map((s, scIdx) => {
+            const scDate = new Date(s.createdAt).toLocaleDateString('en-US', { month: 'short', day: '2-digit' }).toUpperCase();
+            const wordCount = s.body ? s.body.split(/\s+/).filter(Boolean).length : 0;
+            const readTime = Math.max(1, Math.ceil(wordCount / 180)) + ' MIN READ';
+            const tapePattern = (scIdx % 2 === 0 ? 'dot' : 'floral') as any;
+            const tapeColor = scIdx % 2 === 0 ? Colors.sakura : Colors.lavender;
+
+            return (
+              <Pressable
+                key={s.id}
+                onPress={() => {
+                  setEditing({ id: s.id, title: s.title, body: s.body });
+                  setCustomBack(() => () => { setEditing(null); setCustomBack(null); });
+                }}
+                style={[
+                  sc.card,
+                  {
+                    position: 'relative',
+                    overflow: 'visible',
+                    backgroundColor: Colors.vellum,
+                    borderColor: Colors.line,
+                    borderRadius: 14,
+                    padding: 16,
+                    shadowColor: 'rgba(110, 58, 90, 0.06)',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 1,
+                    shadowRadius: 6,
+                    elevation: 1,
+                    borderWidth: 1,
+                    marginVertical: 6,
+                    flexDirection: 'column',
+                  }
+                ]}
+              >
+                {/* horizontal washi tape centered at top edge */}
+                <View style={{ position: 'absolute', top: -7, left: '50%', transform: [{ translateX: -35 }], zIndex: 10 }}>
+                  <WashiTape width={70} height={14} pattern={tapePattern} color={tapeColor} rotate={0} />
                 </View>
-                {s.body ? (
-                  <Text style={sc.cardPreview} numberOfLines={2}>{s.body}</Text>
-                ) : (
-                  <Text style={sc.cardEmpty}>tap to write...</Text>
-                )}
-                <Text style={sc.cardDate}>{new Date(s.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</Text>
-              </View>
-            </Pressable>
-          ))}
+
+                <View style={{ flex: 1, width: '100%', paddingVertical: 4 }}>
+                  {/* metadata row with Sakura flower bullet */}
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Text style={{ fontFamily: FontFamily.marker, fontSize: 9, color: Colors.sakuraDeep, fontWeight: '600', letterSpacing: 1 }}>
+                        {scDate}
+                      </Text>
+                      <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: Colors.lineStrong }} />
+                      <Text style={{ fontFamily: FontFamily.marker, fontSize: 9, color: Colors.ink3, letterSpacing: 0.8, textTransform: 'uppercase' }}>
+                        RAINY DAY
+                      </Text>
+                      <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: Colors.lineStrong }} />
+                      <Text style={{ fontFamily: FontFamily.marker, fontSize: 9, color: Colors.ink3, letterSpacing: 0.8 }}>
+                        {readTime}
+                      </Text>
+                    </View>
+                    <Bullets.Sakura size={11} color={Colors.sakuraDeep} />
+                  </View>
+
+                  {/* title row */}
+                  <View style={sc.cardTitleRow}>
+                    <Text style={[sc.cardTitle, { fontFamily: FontFamily.displayItalic, fontSize: 20, textTransform: 'none', fontWeight: 'normal', color: Colors.ink }]} numberOfLines={1}>
+                      {s.title || 'untitled'}
+                    </Text>
+                    <Pressable hitSlop={8} onPress={() => setScDeleteTarget(s.id)}>
+                      <IconTrashSolid size={12} color={Colors.ink3} />
+                    </Pressable>
+                  </View>
+
+                  {/* body in Caveat script font */}
+                  {s.body ? (
+                    <Text style={[sc.cardPreview, { fontFamily: FontFamily.script, fontSize: 16, lineHeight: 20, color: Colors.ink2, marginTop: 4 }]} numberOfLines={4}>
+                      “{s.body}”
+                    </Text>
+                  ) : (
+                    <Text style={[sc.cardEmpty, { fontFamily: FontFamily.script, fontSize: 16, color: Colors.ink3, marginTop: 4 }]}>tap to write...</Text>
+                  )}
+
+                  {/* chip tags */}
+                  <View style={{ flexDirection: 'row', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
+                    <View style={{ paddingHorizontal: 8, paddingVertical: 3, backgroundColor: Colors.sakuraSoft, borderColor: Colors.sakura, borderWidth: 1, borderRadius: 999 }}>
+                      <Text style={{ fontSize: 10, fontFamily: FontFamily.ui, color: Colors.sakuraInk }}>♡ comfort</Text>
+                    </View>
+                    <View style={{ paddingHorizontal: 8, paddingVertical: 3, backgroundColor: Colors.lavenderSoft, borderColor: Colors.lavender, borderWidth: 1, borderRadius: 999 }}>
+                      <Text style={{ fontSize: 10, fontFamily: FontFamily.ui, color: Colors.lavenderDeep }}>✿ slowburn</Text>
+                    </View>
+                  </View>
+                </View>
+              </Pressable>
+            );
+          })}
           <View style={{ height: Spacing.s9 }} />
         </View>
       )}
@@ -826,10 +938,10 @@ function ScenarioEditor({ initial, shipName, onSave, onDelete }: {
   const [title, setTitle] = useState(initial.title);
   const [body, setBody] = useState(initial.body);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const wordCount = body.trim() ? body.trim().split(/\s+/).length : 0;
+  const wordCount = body.trim() ? body.trim().split(/\s+/).filter(Boolean).length : 0;
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={sc.editor} keyboardVerticalOffset={120}>
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={[sc.editor, { backgroundColor: Colors.paper }]} keyboardVerticalOffset={120}>
       <CozyModal
         visible={confirmDelete}
         title="delete this scene?"
@@ -839,33 +951,103 @@ function ScenarioEditor({ initial, shipName, onSave, onDelete }: {
         onConfirm={() => { setConfirmDelete(false); onDelete?.(); }}
         onClose={() => setConfirmDelete(false)}
       />
-      <View style={sc.editorBar}>
-        <Text style={sc.barWords}>{wordCount} {wordCount === 1 ? 'word' : 'words'}</Text>
+
+      {/* Cozy Custom Editor Header */}
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          paddingHorizontal: 16,
+          paddingVertical: 12,
+          borderBottomWidth: 1,
+          borderBottomColor: Colors.line,
+          backgroundColor: Colors.paper,
+        }}
+      >
+        <Text style={{ fontFamily: FontFamily.marker, fontSize: 9, color: Colors.ink3, letterSpacing: 1.2, textTransform: 'uppercase' }}>
+          writing what-if
+        </Text>
         <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
           {onDelete && (
             <Pressable hitSlop={8} onPress={() => setConfirmDelete(true)}>
-              <Text style={sc.barDelete}>delete</Text>
+              <Text style={{ fontFamily: FontFamily.ui, fontSize: 13, color: Colors.ember }}>delete</Text>
             </Pressable>
           )}
-          <Pressable onPress={() => onSave(title, body)} style={sc.barSave}>
-            <Text style={sc.barSaveText}>save</Text>
+          <Pressable
+            onPress={() => onSave(title, body)}
+            style={{
+              paddingVertical: 6,
+              paddingHorizontal: 16,
+              backgroundColor: Colors.sakuraDeep,
+              borderRadius: 99,
+              shadowColor: 'rgba(110, 58, 90, 0.1)',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 1,
+              shadowRadius: 3,
+              elevation: 1,
+            }}
+          >
+            <Text style={{ fontFamily: FontFamily.uiMedium, fontSize: 13, color: Colors.vellum }}>save</Text>
           </Pressable>
         </View>
       </View>
-      <TextInput
-        value={title}
-        onChangeText={setTitle}
-        placeholder="give it a title..."
-        placeholderTextColor={Colors.ink3}
-        style={sc.titleInput}
-      />
-      <View style={sc.bodyWrap}>
+
+      {/* Writing Paper Sheet Container */}
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: Colors.vellum,
+          margin: 16,
+          borderRadius: 16,
+          borderWidth: 1,
+          borderColor: Colors.line,
+          padding: 18,
+          position: 'relative',
+          overflow: 'visible',
+          shadowColor: 'rgba(110, 58, 90, 0.05)',
+          shadowOffset: { width: 0, height: 3 },
+          shadowOpacity: 1,
+          shadowRadius: 6,
+          elevation: 1,
+        }}
+      >
+        {/* Horizontal washi tape overlapping top edge */}
+        <View style={{ position: 'absolute', top: -7, left: '50%', transform: [{ translateX: -35 }], zIndex: 10 }}>
+          <WashiTape width={70} height={14} pattern="dot" color={Colors.sakura} rotate={0} />
+        </View>
+
+        {/* Title Input — Elegant Display Italic */}
+        <TextInput
+          value={title}
+          onChangeText={setTitle}
+          placeholder="give this moment a name..."
+          placeholderTextColor={Colors.ink3}
+          style={{
+            fontFamily: FontFamily.displayItalic,
+            fontSize: 22,
+            color: Colors.ink,
+            borderBottomWidth: 1,
+            borderBottomColor: Colors.line,
+            paddingVertical: 8,
+            marginBottom: 12,
+          }}
+        />
+
+        {/* Body Input — Cursive Caveat script font */}
         <TextInput
           value={body}
           onChangeText={setBody}
           placeholder={`what happens with ${shipName}...`}
           placeholderTextColor={Colors.ink3}
-          style={sc.bodyInput}
+          style={{
+            fontFamily: FontFamily.script,
+            fontSize: 18,
+            color: Colors.ink2,
+            lineHeight: 26,
+            flex: 1,
+            textAlignVertical: 'top',
+          }}
           multiline
           textAlignVertical="top"
           autoFocus={!initial.body}
@@ -875,7 +1057,7 @@ function ScenarioEditor({ initial, shipName, onSave, onDelete }: {
   );
 }
 
-// ─── F/O Messages feature ─────────────────────────────────────────────────────
+// ─── F/O Notifications feature ───────────────────────────────────────────────
 
 const STARTER_PRESETS: Record<string, string[]> = {
   'Good morning': [
@@ -965,14 +1147,37 @@ function FoMessagesFeature({ shipId, shipName, setCustomBack }: { shipId: string
       </View>
 
       {messages.length === 0 ? (
-        <View style={fo.emptyCard}>
-          <Text style={fo.emptyCardText}>nothing from them yet.</Text>
-          <Pressable style={fo.createBtn} onPress={() => {
-            setComposingMsg('new');
-            setCustomBack(() => () => { setComposingMsg(null); setCustomBack(null); });
-          }}>
-            <IconPlus size={13} color={Colors.sakuraDeep} />
-            <Text style={fo.createBtnText}>write their first message</Text>
+        <View style={[fo.emptyCard, { paddingVertical: 60, paddingHorizontal: 20, gap: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent', borderWidth: 0 }]}>
+          <StickerEnvelope size={88} />
+          <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: 26, color: Colors.ink, textAlign: 'center', marginTop: 10 }}>
+            no notifications yet
+          </Text>
+          <Text style={{ fontFamily: FontFamily.script, fontSize: 18, lineHeight: 22, color: Colors.ink2, textAlign: 'center', marginVertical: 8 }}>
+            little notes from them —{"\n"}straight to your lock screen.
+          </Text>
+          <Pressable
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 6,
+              backgroundColor: Colors.sakuraDeep,
+              paddingHorizontal: 20,
+              paddingVertical: 10,
+              borderRadius: 99,
+              shadowColor: 'rgba(110, 58, 90, 0.12)',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 1,
+              shadowRadius: 3,
+              elevation: 1,
+              marginTop: 10,
+            }}
+            onPress={() => {
+              setComposingMsg('new');
+              setCustomBack(() => () => { setComposingMsg(null); setCustomBack(null); });
+            }}
+          >
+            <IconPlus size={12} color={Colors.vellum} />
+            <Text style={{ fontFamily: FontFamily.uiMedium, fontSize: 14, color: Colors.vellum }}>add a notification</Text>
           </Pressable>
         </View>
       ) : (
@@ -1008,48 +1213,53 @@ function FoMessagesFeature({ shipId, shipName, setCustomBack }: { shipId: string
                 key={m.id}
                 style={[fo.msgCard, !m.active && fo.msgCardOff]}
               >
-                <View style={fo.msgHeader}>
+                {/* Washi tape corner accent — per usage-map */}
+                <View style={{ position: 'absolute', top: -3, left: 12, zIndex: 10 }} pointerEvents="none">
+                  <WashiTape pattern="floral" width={52} height={10} rotate={-4} color={Colors.sakura} />
+                </View>
+
+                {/* Top row: sender name (left) + time eyebrow (right) */}
+                <View style={fo.msgCardTop}>
                   <Text style={fo.msgSender}>{displaySender}</Text>
-                  <Text style={fo.msgTimeDot}>•</Text>
                   <Text style={fo.msgTime}>{timeLabel}</Text>
                 </View>
+
+                {/* Message body in Caveat script */}
                 <Text style={[fo.msgBody, !m.active && fo.msgBodyOff]}>{displayBody}</Text>
+
                 {variationCount > 1 && (
-                  <Text style={{ fontFamily: FontFamily.ja, fontSize: 11, color: Colors.sakuraDeep, marginTop: -4 }}>
-                    + {variationCount - 1} other variation{variationCount > 2 ? 's' : ''}
+                  <Text style={fo.msgVariation}>
+                    + {variationCount - 1} more variation{variationCount > 2 ? 's' : ''}
                   </Text>
                 )}
-                <View style={fo.msgFooter}>
-                  <View style={fo.timePill}>
-                    <Text style={fo.timePillText}>{timeLabel}</Text>
-                  </View>
-                  <View style={fo.actionRow}>
-                    <Pressable
-                      onPress={() => { toggleFoMessage(m.id, !m.active, m.senderName || shipName); }}
-                      style={[fo.actionBtn, m.active ? fo.actionBtnPause : fo.actionBtnActive]}
-                    >
-                      <Text style={[fo.actionBtnText, m.active ? fo.actionBtnTextPause : fo.actionBtnTextActive]}>
-                        {m.active ? 'Pause' : 'Resume'}
-                      </Text>
-                    </Pressable>
 
-                    <Pressable
-                      onPress={() => {
-                        setComposingMsg(m);
-                        setCustomBack(() => () => { setComposingMsg(null); setCustomBack(null); });
-                      }}
-                      style={fo.actionBtn}
-                    >
-                      <Text style={fo.actionBtnText}>Edit</Text>
-                    </Pressable>
+                {/* Action row */}
+                <View style={fo.actionRow}>
+                  <Pressable
+                    onPress={() => { toggleFoMessage(m.id, !m.active, m.senderName || shipName); }}
+                    style={[fo.actionBtn, m.active ? fo.actionBtnPause : fo.actionBtnResume]}
+                  >
+                    <Text style={[fo.actionBtnText, m.active ? fo.actionBtnTextPause : fo.actionBtnTextResume]}>
+                      {m.active ? 'pause' : 'wake ♡'}
+                    </Text>
+                  </Pressable>
 
-                    <Pressable
-                      onPress={() => setMsgDeleteTarget(m.id)}
-                      style={[fo.actionBtn, { borderColor: Colors.ember }]}
-                    >
-                      <Text style={[fo.actionBtnText, { color: Colors.ember }]}>Delete</Text>
-                    </Pressable>
-                  </View>
+                  <Pressable
+                    onPress={() => {
+                      setComposingMsg(m);
+                      setCustomBack(() => () => { setComposingMsg(null); setCustomBack(null); });
+                    }}
+                    style={fo.actionBtn}
+                  >
+                    <Text style={fo.actionBtnText}>edit</Text>
+                  </Pressable>
+
+                  <Pressable
+                    onPress={() => setMsgDeleteTarget(m.id)}
+                    style={[fo.actionBtn, fo.actionBtnDelete]}
+                  >
+                    <Text style={[fo.actionBtnText, fo.actionBtnTextDelete]}>delete</Text>
+                  </Pressable>
                 </View>
               </View>
             );
@@ -1261,7 +1471,7 @@ function FoCompose({ shipName, initialMessage, onQueue }: {
       <CozyModal
         visible={notifDenied}
         title="notifications off"
-        message="Enable notifications in Settings to receive their messages. Save to vault anyway?"
+        message="Enable notifications in Settings to receive their nudges. Save to vault anyway?"
         confirmText="save anyway"
         cancelText="cancel"
         onConfirm={() => { setNotifDenied(false); if (pendingQueue) { proceedWithQueue(pendingQueue); setPendingQueue(null); } }}
@@ -1293,7 +1503,7 @@ function FoCompose({ shipName, initialMessage, onQueue }: {
           />
         </View>
 
-        <Text style={fo.sectionLabel}>WHAT THEY MIGHT SAY</Text>
+        <Text style={fo.sectionLabel}>WHAT THEY MIGHT SEND</Text>
         {options.map((opt, index) => (
           <View key={index} style={[fo.msgInputWrap, { marginBottom: 8, flexDirection: 'row', alignItems: 'center' }]}>
             <TextInput
@@ -1749,42 +1959,44 @@ const fo = StyleSheet.create({
   },
   createBtnText: { fontFamily: FontFamily.uiMedium, fontSize: 13, color: Colors.sakuraDeep },
 
-  list: { gap: 10 },
+  list: { gap: 12 },
+
+  // Notification card
   msgCard: {
-    padding: Spacing.s4, backgroundColor: Colors.vellum,
-    borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.r3, gap: 8,
+    paddingTop: Spacing.s5, paddingHorizontal: Spacing.s4, paddingBottom: Spacing.s4,
+    backgroundColor: Colors.vellum,
+    borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.r3,
+    gap: 6, overflow: 'visible', position: 'relative',
   },
-  msgCardOff: { opacity: 0.55 },
-  msgHeader: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  msgSender: { fontFamily: FontFamily.ja, fontSize: 12, color: Colors.ink, fontWeight: '600' },
-  msgTimeDot: { fontSize: 12, color: Colors.ink3 },
-  msgTime: { fontFamily: FontFamily.ja, fontSize: 11, color: Colors.ink3 },
-  msgBody: { fontFamily: FontFamily.ja, fontSize: 13, color: Colors.ink, lineHeight: 20 },
+  msgCardOff: { opacity: 0.5 },
+  msgCardTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 },
+  msgSender: { fontFamily: FontFamily.displayItalic, fontSize: 16, color: Colors.ink, lineHeight: 18 },
+  msgTime: { fontFamily: FontFamily.marker, fontSize: 9, color: Colors.ink3, letterSpacing: 1.2, textTransform: 'uppercase' },
+  msgBody: { fontFamily: FontFamily.script, fontSize: 16, color: Colors.ink, lineHeight: 22 },
   msgBodyOff: { color: Colors.ink3 },
-  msgFooter: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  msgVariation: { fontFamily: FontFamily.uiMedium, fontSize: 11, color: Colors.sakuraDeep },
+
+  actionRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 },
+  actionBtn: {
+    paddingVertical: 5, paddingHorizontal: 12, borderRadius: Radius.pill,
+    backgroundColor: 'transparent', borderWidth: 1, borderColor: Colors.line,
+  },
+  actionBtnResume: { backgroundColor: Colors.sageSoft, borderColor: Colors.sage },
+  actionBtnPause: { backgroundColor: Colors.sakuraSoft, borderColor: Colors.sakura },
+  actionBtnDelete: { borderColor: Colors.ember },
+  actionBtnText: { fontFamily: FontFamily.uiMedium, fontSize: 11, color: Colors.ink2 },
+  actionBtnTextResume: { color: Colors.sageDeep },
+  actionBtnTextPause: { color: Colors.sakuraInk },
+  actionBtnTextDelete: { color: Colors.ember },
+
   fromInputWrap: {
     backgroundColor: Colors.vellum, borderWidth: 1, borderColor: Colors.line,
     borderRadius: Radius.r3, paddingHorizontal: Spacing.s3, paddingVertical: 10,
   },
   fromInput: {
-    fontFamily: FontFamily.ja, fontSize: 13, color: Colors.ink,
+    fontFamily: FontFamily.script, fontSize: 15, color: Colors.ink,
     padding: 0,
   },
-  timePill: {
-    paddingVertical: 3, paddingHorizontal: 10, borderRadius: Radius.pill,
-    backgroundColor: Colors.paperDeep, borderWidth: 1, borderColor: Colors.line,
-  },
-  timePillText: { fontFamily: FontFamily.ja, fontSize: 10, color: Colors.ink3 },
-  actionRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1, justifyContent: 'flex-end' },
-  actionBtn: {
-    paddingVertical: 5, paddingHorizontal: 12, borderRadius: Radius.pill,
-    backgroundColor: Colors.vellum, borderWidth: 1, borderColor: Colors.line,
-  },
-  actionBtnActive: { backgroundColor: Colors.sageSoft, borderColor: Colors.sage },
-  actionBtnPause: { backgroundColor: Colors.paperDeep, borderColor: Colors.line },
-  actionBtnText: { fontFamily: FontFamily.ja, fontSize: 11, color: Colors.ink2 },
-  actionBtnTextActive: { color: Colors.sageDeep },
-  actionBtnTextPause: { color: Colors.ink3 },
 
   // Compose
   compose: { flex: 1, backgroundColor: Colors.paper },
@@ -1812,8 +2024,8 @@ const fo = StyleSheet.create({
     borderRadius: Radius.r3, padding: Spacing.s3,
   },
   msgInput: {
-    fontFamily: FontFamily.ja, fontSize: 13, color: Colors.ink,
-    minHeight: 72, textAlignVertical: 'top', lineHeight: 22,
+    fontFamily: FontFamily.script, fontSize: 16, color: Colors.ink,
+    minHeight: 72, textAlignVertical: 'top', lineHeight: 24,
   },
   addMsgBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,

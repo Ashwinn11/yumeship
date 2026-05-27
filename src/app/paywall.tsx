@@ -217,7 +217,6 @@ export default function PaywallScreen() {
         };
         return getOrder(a) - getOrder(b);
       });
-
       setPackages(sorted);
       // pre-select the annual (first) package if available
       if (sorted.length > 0) setSelected(sorted[0]);
@@ -517,7 +516,7 @@ const styles = StyleSheet.create({
   },
   planNameSel: { color: Colors.sakuraDeep },
   planPrice: {
-    fontFamily: FontFamily.displayItalic, fontSize: 20, color: Colors.ink,
+    fontFamily: FontFamily.uiSemiBold, fontSize: 18, color: Colors.ink,
   },
   planPriceSel: { color: Colors.ink },
   planPeriod: {

@@ -1,0 +1,193 @@
+/* yumeship design tokens — matching src/constants/theme.ts */
+
+:root {
+  /* Paper */
+  --paper: #fdf3ee;
+  --paper-deep: #f7e6dc;
+  --paper-soft: #fcf7f2;
+  --vellum: #fffaf5;
+
+  /* Ink */
+  --ink: #2b1a26;
+  --ink-2: #5a3f53;
+  --ink-3: #8a7383;
+
+  /* Line */
+  --line: #f0d8c8;
+  --line-strong: #e5b9a0;
+
+  /* Default palette = Sakura */
+  --primary: #d77a8d;
+  --primary-soft: #fadde5;
+  --primary-tint: #f3b6c4;
+  --primary-ink: #8b3a4a;
+
+  /* Always-available palette accents */
+  --plum: #6e3a5a;
+  --lavender: #c7b5e3;
+  --lavender-soft: #ece4f7;
+  --lavender-deep: #8b6fc4;
+  --sage: #b4c8a5;
+  --sage-soft: #e0ebd4;
+  --sage-deep: #6e8762;
+  --butter: #f0d189;
+  --butter-soft: #fbecc4;
+  --butter-deep: #b8902a;
+  --peach: #f4b89a;
+  --peach-soft: #fde0ce;
+  --peach-deep: #b76b48;
+
+  /* Type */
+  --font-display: 'Instrument Serif', Georgia, serif;
+  --font-ui: 'Fredoka', system-ui, sans-serif;
+  --font-script: 'Caveat', cursive;
+  --font-ja: 'Klee One', serif;
+  --font-marker: 'Fredoka', sans-serif;
+
+  /* Shadow tint */
+  --shadow-c: rgba(110, 58, 90, 1);
+}
+
+/* Theme palette modifiers — applied to .theme-* */
+.theme-sakura {
+  --primary: #d77a8d; --primary-soft: #fadde5; --primary-tint: #f3b6c4; --primary-ink: #8b3a4a;
+}
+.theme-lavender {
+  --primary: #8b6fc4; --primary-soft: #ece4f7; --primary-tint: #c7b5e3; --primary-ink: #4d3982;
+}
+.theme-sage {
+  --primary: #6e8762; --primary-soft: #e0ebd4; --primary-tint: #b4c8a5; --primary-ink: #3f5234;
+}
+.theme-butter {
+  --primary: #b8902a; --primary-soft: #fbecc4; --primary-tint: #f0d189; --primary-ink: #6b5114;
+}
+.theme-peach {
+  --primary: #b76b48; --primary-soft: #fde0ce; --primary-tint: #f4b89a; --primary-ink: #6b3a23;
+}
+.theme-plum {
+  --primary: #6e3a5a; --primary-soft: #ecd6e0; --primary-tint: #b88aa1; --primary-ink: #3f1b30;
+}
+
+/* ─── Base reset ─── */
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0;
+  background: #ede0d4;
+  font-family: var(--font-ui);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── Phone frame ─── */
+.phone {
+  width: 320px; height: 640px;
+  background: var(--paper);
+  border-radius: 36px;
+  overflow: hidden;
+  position: relative;
+  box-shadow:
+    0 0 0 8px #1a1014,
+    0 0 0 10px #2a1c22,
+    0 24px 60px rgba(110, 58, 90, 0.25);
+}
+.phone-status {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 14px 24px 4px;
+  font-family: var(--font-ui); font-weight: 500; font-size: 13px;
+  color: var(--ink);
+}
+.phone-status-icons { display: flex; gap: 6px; align-items: center; }
+.phone-content { height: calc(100% - 36px); overflow: hidden; position: relative; }
+.phone-notch {
+  position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
+  width: 90px; height: 24px; background: #1a1014; border-radius: 100px; z-index: 30;
+}
+
+/* ─── Generic markers ─── */
+.eyebrow {
+  font-family: var(--font-marker); font-size: 9px; font-weight: 600;
+  color: var(--primary); letter-spacing: 1.6px; text-transform: uppercase;
+}
+.display {
+  font-family: var(--font-display); font-style: italic;
+  color: var(--ink); letter-spacing: -0.3px;
+}
+.script { font-family: var(--font-script); color: var(--primary-ink); }
+
+/* ─── Buttons ─── */
+.btn {
+  font-family: var(--font-ui); font-weight: 500; font-size: 13px;
+  padding: 10px 18px; border-radius: 999px; border: none; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.btn-primary {
+  background: var(--primary); color: white;
+  box-shadow: 0 2px 8px rgba(110,58,90,0.18);
+}
+.btn-secondary {
+  background: white; color: var(--ink);
+  border: 1.4px solid var(--line);
+}
+.btn-soft {
+  background: var(--primary-soft); color: var(--primary-ink);
+}
+
+/* ─── Chip ─── */
+.chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 10px; border-radius: 999px;
+  font-family: var(--font-ui); font-size: 11px; color: var(--primary-ink);
+  background: var(--primary-soft);
+  border: 1px solid var(--primary-tint);
+}
+.chip-x {
+  font-size: 9px; opacity: 0.6; cursor: pointer;
+}
+
+/* ─── Card / paper ─── */
+.card {
+  background: var(--vellum);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow: 0 2px 6px rgba(110, 58, 90, 0.05);
+}
+
+/* ─── Divider helpers ─── */
+.divider-soft {
+  height: 1px; background: var(--line); border: none;
+  margin: 14px 0;
+}
+
+/* ─── Input field ─── */
+.input {
+  width: 100%; padding: 10px 14px;
+  border: 1.4px solid var(--line); border-radius: 999px;
+  background: var(--vellum);
+  font-family: var(--font-ui); font-size: 12px; color: var(--ink);
+  outline: none;
+}
+.input::placeholder { color: var(--ink-3); }
+.input-soft {
+  background: var(--vellum); border-radius: 14px;
+  padding: 10px 14px; border: 1.4px solid var(--line);
+}
+
+/* ─── Field block ─── */
+.field-block {
+  background: var(--vellum); border: 1.5px solid var(--line);
+  border-radius: 12px; padding: 8px 12px;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.field-block-label {
+  font-family: var(--font-marker); font-size: 9px; font-weight: 600;
+  color: var(--ink-3); letter-spacing: 1.4px; text-transform: uppercase;
+}
+.field-block-value {
+  font-family: var(--font-script); font-size: 18px; color: var(--primary-ink);
+  line-height: 1.1;
+}
+
+/* ─── Scrollbar hide ─── */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; }

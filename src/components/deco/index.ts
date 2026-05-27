@@ -1,9 +1,13 @@
 export { Cloud } from './Cloud';
 export { Heart } from './Heart';
 export { Pin } from './Pin';
-export { Ribbon } from './Ribbon';
+export { Ribbon, StickerBow } from './Ribbon';
 export { Sakura } from './Sakura';
 export { Sparkle } from './Sparkle';
 export { SparkleCluster } from './SparkleCluster';
 export { Star } from './Star';
 export { WashiTape } from './WashiTape';
+export { Bullets } from './Bullets';
+export * from './Stickers';
+export * from './Papers';
+export * from './Dividers';

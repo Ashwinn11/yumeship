@@ -109,6 +109,9 @@ export default function UpcomingScreen() {
                 tint={tint}
                 featured={featured}
                 muted={muted}
+                dateStr={d.date}
+                yearly={d.yearly}
+                subtitle={d.subtitle}
               />
             );
           })}

@@ -5,8 +5,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
-import { Heart } from '@/components/deco/Heart';
-import { Sparkle } from '@/components/deco/Sparkle';
+import { StickerTicket, WashiTape, Bullets, Sparkle } from '@/components/deco';
 import { CozyModal } from '@/components/ui/CozyModal';
 import { IconPlus } from '@/components/ui/Icon';
 import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing } from '@/constants/theme';
@@ -19,6 +18,7 @@ export function DatesTab({ shipId, shipName }: { shipId: string; shipName?: stri
   const dates = useDates(shipId);
   const [composing, setComposing] = useState(false);
   const [title, setTitle] = useState('');
+  const [subtitle, setSubtitle] = useState('');
   const [date, setDate] = useState('');
   const [yearly, setYearly] = useState(true);
   const [dateToDelete, setDateToDelete] = useState<string | null>(null);
@@ -26,8 +26,8 @@ export function DatesTab({ shipId, shipName }: { shipId: string; shipName?: stri
 
   function save() {
     if (!title.trim() || !date.trim()) return;
-    addDate(shipId, { title: title.trim(), date: date.trim(), yearly });
-    setTitle(''); setDate(''); setYearly(true);
+    addDate(shipId, { title: title.trim(), date: date.trim(), yearly, subtitle: subtitle.trim() });
+    setTitle(''); setSubtitle(''); setDate(''); setYearly(true);
     setComposing(false);
   }
 
@@ -60,13 +60,34 @@ export function DatesTab({ shipId, shipName }: { shipId: string; shipName?: stri
       </View>
 
       {dates.length === 0 ? (
-        <View style={s.empty}>
-          <Heart size={24} color={Colors.sakura} />
-          <Text style={s.emptyTitle}>no dates saved.</Text>
-          <Text style={s.emptySub}>anniversaries, character birthdays, release dates — anything worth remembering.</Text>
-          <Pressable style={s.emptyBtn} onPress={() => setComposing(true)}>
-            <IconPlus size={13} color={Colors.vellum} />
-            <Text style={s.emptyBtnText}>add a date</Text>
+        <View style={[s.empty, { paddingVertical: 60, paddingHorizontal: 20, gap: 12 }]}>
+          <StickerTicket size={88} />
+          <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: 26, color: Colors.ink, textAlign: 'center', marginTop: 10 }}>
+            no dates saved
+          </Text>
+          <Text style={{ fontFamily: FontFamily.script, fontSize: 18, lineHeight: 22, color: Colors.ink2, textAlign: 'center', marginVertical: 8 }}>
+            anniversaries, character birthdays, release dates —{"\n"}anything worth remembering.
+          </Text>
+          <Pressable
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 6,
+              backgroundColor: Colors.sakuraDeep,
+              paddingHorizontal: 20,
+              paddingVertical: 10,
+              borderRadius: 99,
+              shadowColor: 'rgba(110, 58, 90, 0.12)',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 1,
+              shadowRadius: 3,
+              elevation: 1,
+              marginTop: 10,
+            }}
+            onPress={() => setComposing(true)}
+          >
+            <IconPlus size={12} color={Colors.vellum} />
+            <Text style={{ fontFamily: FontFamily.uiMedium, fontSize: 14, color: Colors.vellum }}>add a date</Text>
           </Pressable>
         </View>
       ) : (
@@ -75,41 +96,103 @@ export function DatesTab({ shipId, shipName }: { shipId: string; shipName?: stri
           const isAnn = d.id.startsWith('ship-ann-');
           const tint = DATE_COLORS[idx % DATE_COLORS.length];
 
-          const numDisplay = days === 0 ? '♡' : days !== null && days > 0 ? String(days) : null;
-          const unitDisplay = days === 0 ? null : days !== null && days > 0 ? 'DAYS' : 'PAST';
+          let monthStr = 'DEC';
+          let dayStr = '25';
+          try {
+            const dateObj = new Date(d.date);
+            if (!isNaN(dateObj.getTime())) {
+              monthStr = dateObj.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+              dayStr = dateObj.toLocaleDateString('en-US', { day: 'numeric' });
+            }
+          } catch (e) {}
+
+          const numDisplay = days === 0 ? '♡' : days !== null && days > 0 ? String(days) : '0';
+          const unitDisplay = days === 0 ? 'NOW' : days !== null && days > 0 ? 'DAYS' : 'PAST';
 
           return (
             <Pressable
               key={d.id}
               onLongPress={() => isAnn ? setAnnivInfo(true) : setDateToDelete(d.id)}
             >
-              <LinearGradient
-                colors={[tint + '18', tint + '50']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={[s.dateCard, { borderColor: tint + '60' }]}
+              <View
+                style={[
+                  s.dateCard,
+                  {
+                    backgroundColor: Colors.vellum,
+                    borderColor: Colors.line,
+                    borderRadius: 14,
+                    padding: 14,
+                    shadowColor: 'rgba(110, 58, 90, 0.06)',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 1,
+                    shadowRadius: 6,
+                    elevation: 1,
+                    borderWidth: 1,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 14,
+                    position: 'relative',
+                    overflow: 'visible',
+                    marginVertical: 4,
+                  }
+                ]}
               >
-                {isAnn && (
-                  <View style={s.annHeart}>
-                    <Heart size={12} color={tint} />
+                {/* Washi tape corner */}
+                <View style={{ position: 'absolute', top: -6, left: 18, zIndex: 10 }}>
+                  <WashiTape
+                    pattern={['floral', 'heart', 'star', 'dot'][idx % 4] as any}
+                    width={42}
+                    height={12}
+                    rotate={-8}
+                    color={tint}
+                  />
+                </View>
+
+                {/* date block left — rounded block with light mix background */}
+                <View
+                  style={{
+                    width: 56,
+                    paddingVertical: 6,
+                    paddingHorizontal: 8,
+                    borderRadius: 8,
+                    backgroundColor: tint + '18', // color-mix tint
+                    borderWidth: 1,
+                    borderColor: tint + '55',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Text style={{ fontFamily: FontFamily.marker, fontSize: 9, fontWeight: '600', color: tint, letterSpacing: 1.4, textAlign: 'center' }}>
+                    {monthStr}
+                  </Text>
+                  <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: 28, lineHeight: 28, color: tint, marginTop: -1, textAlign: 'center' }}>
+                    {dayStr}
+                  </Text>
+                </View>
+
+                {/* center text */}
+                <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: 16, color: Colors.ink, lineHeight: 18 }} numberOfLines={1}>
+                      {d.title}
+                    </Text>
+                    {isAnn && <Bullets.Heart size={10} color={tint} />}
                   </View>
-                )}
-                <View style={s.cardLeft}>
-                  {numDisplay !== null && (
-                    <Text style={[s.cardNum, { color: tint }]}>{numDisplay}</Text>
-                  )}
-                  {unitDisplay !== null && (
-                    <Text style={[s.cardUnit, { color: tint }]}>{unitDisplay}</Text>
-                  )}
+                  <Text style={{ fontFamily: FontFamily.script, fontSize: 16, color: Colors.ink2, marginTop: 2 }} numberOfLines={1}>
+                    {d.subtitle || (isAnn ? 'the day we met' : (d.yearly ? 'repeating yearly ♡' : 'one-time memory'))}
+                  </Text>
                 </View>
-                <View style={s.cardInfo}>
-                  <Text style={s.cardTitle} numberOfLines={1}>{d.title}</Text>
-                  {shipName ? (
-                    <Text style={s.cardSub} numberOfLines={1}>{shipName}</Text>
-                  ) : null}
+
+                {/* countdown right */}
+                <View style={{ alignItems: 'flex-end', justifyContent: 'center' }}>
+                  <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: 22, color: tint, lineHeight: 22 }}>
+                    {numDisplay}
+                  </Text>
+                  <Text style={{ fontFamily: FontFamily.marker, fontSize: 8, color: Colors.ink3, letterSpacing: 1.4 }}>
+                    {unitDisplay}
+                  </Text>
                 </View>
-                <Sparkle size={11} color={tint} />
-              </LinearGradient>
+              </View>
             </Pressable>
           );
         })
@@ -136,6 +219,15 @@ export function DatesTab({ shipId, shipName }: { shipId: string; shipName?: stri
               placeholder="e.g. their birthday, our anniversary"
               placeholderTextColor={Colors.ink3}
               style={s.input}
+            />
+
+            <Text style={s.fieldLabel}>subtitle (optional)</Text>
+            <TextInput
+              value={subtitle}
+              onChangeText={setSubtitle}
+              placeholder="e.g. fictional pisces ♡, we hold hands here"
+              placeholderTextColor={Colors.ink3}
+              style={[s.input, { fontFamily: FontFamily.script, fontSize: 16, paddingTop: 4, paddingBottom: 4 }]}
             />
 
             <Text style={s.fieldLabel}>when is it?</Text>

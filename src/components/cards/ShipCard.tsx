@@ -7,7 +7,7 @@ import { Pressable, StyleSheet, Text, View, ViewStyle } from 'react-native';
 // design/screens.jsx — ShipCard
 // F/O card: 3/4 aspect, gradient cover, washi tape, optional pin + polycule badge.
 
-type TapePattern = 'stripe' | 'dot' | 'heart' | 'check' | 'solid';
+type TapePattern = 'stripe' | 'dot' | 'heart' | 'check' | 'floral' | 'lace' | 'grid' | 'gingham' | 'star' | 'solid';
 
 type Props = {
   name: string;
@@ -84,7 +84,10 @@ export function ShipCard({
           <View style={[styles.typeDot, { backgroundColor: typeColor }]} />
         </View>
         <View style={styles.metaRow}>
-          <Text style={styles.src} numberOfLines={1}>{pairingLine || src}</Text>
+          <Text style={styles.src} numberOfLines={1}>
+            <Text style={{ color: typeColor, fontFamily: FontFamily.uiMedium }}>{type}</Text>
+            {src ? ` · ${src}` : ''}
+          </Text>
           <Text style={styles.days}>{days}</Text>
         </View>
       </View>

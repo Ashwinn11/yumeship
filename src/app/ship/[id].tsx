@@ -11,8 +11,7 @@ import { Heart } from '@/components/deco/Heart';
 import { Pin } from '@/components/deco/Pin';
 import { Ribbon } from '@/components/deco/Ribbon';
 import { Sakura } from '@/components/deco/Sakura';
-import { Sparkle } from '@/components/deco/Sparkle';
-import { WashiTape } from '@/components/deco/WashiTape';
+import { StickerSakuraBranch, WashiTape, Bullets, Sparkle } from '@/components/deco';
 import { SubTabBar, type DetailTab } from '@/components/nav/SubTabBar';
 import { AlbumsTab } from '@/components/tabs/AlbumsTab';
 import { DatesTab } from '@/components/tabs/DatesTab';
@@ -420,32 +419,107 @@ function ScenariosTab({ shipId, shipName }: { shipId: string; shipName: string }
 
   if (composing) {
     return (
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.scenarioCompose}>
-        <View style={styles.sceneHeader}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={[styles.scenarioCompose, { backgroundColor: Colors.paper }]} keyboardVerticalOffset={80}>
+        {/* Cozy Custom Editor Header */}
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            paddingHorizontal: 16,
+            paddingVertical: 12,
+            borderBottomWidth: 1,
+            borderBottomColor: Colors.line,
+            backgroundColor: Colors.paper,
+            width: '100%',
+          }}
+        >
           <Pressable onPress={() => setComposing(false)} hitSlop={8}>
-            <Text style={styles.sceneCancel}>cancel</Text>
+            <Text style={{ fontFamily: FontFamily.ui, fontSize: 14, color: Colors.ink2 }}>cancel</Text>
           </Pressable>
-          <Pressable onPress={save} style={styles.sceneSaveBtn}>
-            <Text style={styles.sceneSaveText}>save</Text>
+          <Pressable
+            onPress={save}
+            style={{
+              paddingVertical: 6,
+              paddingHorizontal: 16,
+              backgroundColor: Colors.sakuraDeep,
+              borderRadius: 99,
+              shadowColor: 'rgba(110, 58, 90, 0.1)',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 1,
+              shadowRadius: 3,
+              elevation: 1,
+            }}
+          >
+            <Text style={{ fontFamily: FontFamily.uiMedium, fontSize: 13, color: Colors.vellum }}>save</Text>
           </Pressable>
         </View>
-        <TextInput
-          value={title}
-          onChangeText={setTitle}
-          placeholder="give this moment a name..."
-          placeholderTextColor={Colors.ink3}
-          style={styles.sceneTitleInput}
-        />
-        <TextInput
-          value={body}
-          onChangeText={setBody}
-          placeholder={`what would happen if ${shipName} walked into the room right now?`}
-          placeholderTextColor={Colors.ink3}
-          multiline
-          autoFocus
-          style={styles.sceneBodyInput}
-        />
-        <View style={styles.promptRow}>
+
+        {/* Writing Paper Sheet Container */}
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: Colors.vellum,
+            margin: 16,
+            borderRadius: 16,
+            borderWidth: 1,
+            borderColor: Colors.line,
+            padding: 18,
+            position: 'relative',
+            overflow: 'visible',
+            width: '92%',
+            alignSelf: 'center',
+            shadowColor: 'rgba(110, 58, 90, 0.05)',
+            shadowOffset: { width: 0, height: 3 },
+            shadowOpacity: 1,
+            shadowRadius: 6,
+            elevation: 1,
+          }}
+        >
+          {/* Horizontal washi tape overlapping top edge */}
+          <View style={{ position: 'absolute', top: -7, left: '50%', transform: [{ translateX: -35 }], zIndex: 10 }}>
+            <WashiTape width={70} height={14} pattern="dot" color={Colors.sakura} rotate={0} />
+          </View>
+
+          {/* Title Input — Elegant Display Italic */}
+          <TextInput
+            value={title}
+            onChangeText={setTitle}
+            placeholder="give this moment a name..."
+            placeholderTextColor={Colors.ink3}
+            style={{
+              fontFamily: FontFamily.displayItalic,
+              fontSize: 22,
+              color: Colors.ink,
+              borderBottomWidth: 1,
+              borderBottomColor: Colors.line,
+              paddingVertical: 8,
+              marginBottom: 12,
+            }}
+          />
+
+          {/* Body Input — Cursive Caveat script font */}
+          <TextInput
+            value={body}
+            onChangeText={setBody}
+            placeholder={`what would happen if ${shipName} walked into the room right now?`}
+            placeholderTextColor={Colors.ink3}
+            style={{
+              fontFamily: FontFamily.script,
+              fontSize: 18,
+              color: Colors.ink2,
+              lineHeight: 26,
+              flex: 1,
+              textAlignVertical: 'top',
+            }}
+            multiline
+            autoFocus
+            textAlignVertical="top"
+          />
+        </View>
+
+        {/* Preset prompt helper row */}
+        <View style={[styles.promptRow, { paddingHorizontal: 16, paddingBottom: 24 }]}>
           {SCENARIO_PROMPTS.map((p) => (
             <Pressable
               key={p.ja}
@@ -473,51 +547,155 @@ function ScenariosTab({ shipId, shipName }: { shipId: string; shipName: string }
         onConfirm={() => { if (scDeleteTarget) deleteScenario(scDeleteTarget); setScDeleteTarget(null); }}
         onClose={() => setScDeleteTarget(null)}
       />
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionLabel}>scenarios · {scenarios.length}</Text>
-        <Pressable onPress={() => setComposing(true)} hitSlop={8}>
-          <IconPlus size={14} color={Colors.sakuraDeep} />
+
+      {/* Redesigned Scenarios Header */}
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 14, paddingHorizontal: 4 }}>
+        <View>
+          <Text style={{ fontFamily: FontFamily.marker, fontSize: 9, color: Colors.sakuraDeep, letterSpacing: 1.4, textTransform: 'uppercase', marginBottom: 2 }}>
+            SCENARIOS · {scenarios.length} SAVED
+          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: 34, color: Colors.ink, lineHeight: 36 }}>
+              what-ifs
+            </Text>
+            <Bullets.Sakura size={12} color={Colors.sakuraDeep} />
+          </View>
+        </View>
+        <Pressable
+          onPress={() => setComposing(true)}
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: 16,
+            backgroundColor: Colors.vellum,
+            borderWidth: 1,
+            borderColor: Colors.line,
+            alignItems: 'center',
+            justifyContent: 'center',
+            shadowColor: 'rgba(110, 58, 90, 0.05)',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 1,
+            shadowRadius: 3,
+            elevation: 1,
+          }}
+        >
+          <IconPlus size={12} color={Colors.sakuraDeep} />
         </Pressable>
       </View>
 
       {scenarios.length === 0 ? (
-        <View style={styles.sceneEmpty}>
-          <Text style={styles.sceneEmptyTitle}>no scenarios written.</Text>
-          <Text style={styles.sceneEmptySub}>
-            what would happen if {shipName} walked into the room right now?
+        <View style={[styles.sceneEmpty, { paddingVertical: 60, paddingHorizontal: 20, gap: 12, alignItems: 'center', justifyContent: 'center' }]}>
+          <StickerSakuraBranch size={88} />
+          <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: 26, color: Colors.ink, textAlign: 'center', marginTop: 10 }}>
+            no daydreams yet
           </Text>
-          <View style={styles.promptRow}>
-            {SCENARIO_PROMPTS.map((p) => (
-              <Pressable
-                key={p.ja}
-                style={styles.promptChip}
-                onPress={() => { setTitle(p.label); setComposing(true); }}
-              >
-                <Text style={styles.promptJa}>{p.ja}</Text>
-                <Text style={styles.promptLabel}>{p.label}</Text>
-              </Pressable>
-            ))}
-          </View>
-          <Pressable style={styles.sceneAddBtn} onPress={() => setComposing(true)}>
-            <IconPlus size={13} color={Colors.vellum} />
-            <Text style={styles.sceneAddText}>write a scene</Text>
+          <Text style={{ fontFamily: FontFamily.script, fontSize: 18, lineHeight: 22, color: Colors.ink2, textAlign: 'center', marginVertical: 8 }}>
+            the rainy afternoons,{"\n"}the airport goodbyes —{"\n"}start somewhere.
+          </Text>
+          <Pressable
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 6,
+              backgroundColor: Colors.sakuraDeep,
+              paddingHorizontal: 20,
+              paddingVertical: 10,
+              borderRadius: 99,
+              shadowColor: 'rgba(110, 58, 90, 0.12)',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 1,
+              shadowRadius: 3,
+              elevation: 1,
+              marginTop: 10,
+            }}
+            onPress={() => setComposing(true)}
+          >
+            <IconPlus size={12} color={Colors.vellum} />
+            <Text style={{ fontFamily: FontFamily.uiMedium, fontSize: 14, color: Colors.vellum }}>write a scenario</Text>
           </Pressable>
         </View>
       ) : (
-        scenarios.map((sc) => (
-          <View key={sc.id} style={styles.scenarioCard}>
-            <View style={{ flex: 1 }}>
-              <View style={styles.scCardTitleRow}>
-                <Text style={styles.scCardTitle} numberOfLines={1}>{sc.title || 'untitled'}</Text>
-                <Pressable hitSlop={8} onPress={() => setScDeleteTarget(sc.id)}>
-                  <IconTrashSolid size={12} color={Colors.ink3} />
-                </Pressable>
+        scenarios.map((sc, scIdx) => {
+          const scDate = new Date(sc.createdAt).toLocaleDateString('en-US', { month: 'short', day: '2-digit' }).toUpperCase();
+          const wordCount = sc.body.split(/\s+/).filter(Boolean).length;
+          const readTime = Math.max(1, Math.ceil(wordCount / 180)) + ' MIN READ';
+          const tapePattern = (scIdx % 2 === 0 ? 'dot' : 'floral') as any;
+          const tapeColor = scIdx % 2 === 0 ? Colors.sakura : Colors.lavender;
+
+          return (
+            <View
+              key={sc.id}
+              style={[
+                styles.scenarioCard,
+                {
+                  position: 'relative',
+                  overflow: 'visible',
+                  backgroundColor: Colors.vellum,
+                  borderColor: Colors.line,
+                  borderRadius: 14,
+                  padding: 16,
+                  shadowColor: 'rgba(110, 58, 90, 0.06)',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 1,
+                  shadowRadius: 6,
+                  elevation: 1,
+                  borderWidth: 1,
+                  marginVertical: 6,
+                }
+              ]}
+            >
+              {/* horizontal washi tape centered at top edge */}
+              <View style={{ position: 'absolute', top: -7, left: '50%', transform: [{ translateX: -35 }], zIndex: 10 }}>
+                <WashiTape width={70} height={14} pattern={tapePattern} color={tapeColor} rotate={0} />
               </View>
-              <Text style={styles.scCardPreview} numberOfLines={2}>{sc.body}</Text>
-              <Text style={styles.scCardDate}>{new Date(sc.createdAt).toLocaleDateString()}</Text>
+
+              <View style={{ flex: 1, paddingVertical: 4 }}>
+                {/* metadata row with Sakura flower bullet */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <Text style={{ fontFamily: FontFamily.marker, fontSize: 9, color: Colors.sakuraDeep, fontWeight: '600', letterSpacing: 1 }}>
+                      {scDate}
+                    </Text>
+                    <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: Colors.lineStrong }} />
+                    <Text style={{ fontFamily: FontFamily.marker, fontSize: 9, color: Colors.ink3, letterSpacing: 0.8, textTransform: 'uppercase' }}>
+                      RAINY DAY
+                    </Text>
+                    <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: Colors.lineStrong }} />
+                    <Text style={{ fontFamily: FontFamily.marker, fontSize: 9, color: Colors.ink3, letterSpacing: 0.8 }}>
+                      {readTime}
+                    </Text>
+                  </View>
+                  <Bullets.Sakura size={11} color={Colors.sakuraDeep} />
+                </View>
+
+                {/* title row */}
+                <View style={styles.scCardTitleRow}>
+                  <Text style={[styles.scCardTitle, { fontFamily: FontFamily.displayItalic, fontSize: 20, textTransform: 'none', fontWeight: 'normal', color: Colors.ink }]} numberOfLines={1}>
+                    {sc.title || 'untitled'}
+                  </Text>
+                  <Pressable hitSlop={8} onPress={() => setScDeleteTarget(sc.id)}>
+                    <IconTrashSolid size={12} color={Colors.ink3} />
+                  </Pressable>
+                </View>
+
+                {/* body in Caveat script font */}
+                <Text style={[styles.scCardPreview, { fontFamily: FontFamily.script, fontSize: 16, lineHeight: 20, color: Colors.ink2, marginTop: 4 }]} numberOfLines={4}>
+                  “{sc.body}”
+                </Text>
+
+                {/* chip tags */}
+                <View style={{ flexDirection: 'row', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
+                  <View style={{ paddingHorizontal: 8, paddingVertical: 3, backgroundColor: Colors.sakuraSoft, borderColor: Colors.sakura, borderWidth: 1, borderRadius: 999 }}>
+                    <Text style={{ fontSize: 10, fontFamily: FontFamily.ui, color: Colors.sakuraInk }}>♡ comfort</Text>
+                  </View>
+                  <View style={{ paddingHorizontal: 8, paddingVertical: 3, backgroundColor: Colors.lavenderSoft, borderColor: Colors.lavender, borderWidth: 1, borderRadius: 999 }}>
+                    <Text style={{ fontSize: 10, fontFamily: FontFamily.ui, color: Colors.lavenderDeep }}>✿ slowburn</Text>
+                  </View>
+                </View>
+              </View>
             </View>
-          </View>
-        ))
+          );
+        })
       )}
     </View>
   );

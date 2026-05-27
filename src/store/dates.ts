@@ -8,6 +8,7 @@ export type ShipDate = {
   date: string;
   yearly: boolean;
   notify: boolean;
+  subtitle: string;
   createdAt: number;
 };
 
@@ -22,6 +23,7 @@ function rowToDate(r: Record<string, unknown>): ShipDate {
     date: r.date as string,
     yearly: !!(r.yearly as number),
     notify: !!(r.notify as number),
+    subtitle: (r.subtitle as string) ?? '',
     createdAt: r.created_at as number,
   };
 }
@@ -41,6 +43,7 @@ export function getDates(shipId: string): ShipDate[] {
       date: ship.start_date,
       yearly: true,
       notify: false,
+      subtitle: 'the day we met',
       createdAt: 0,
     });
   }
@@ -68,6 +71,7 @@ export function getAllUpcomingDates(): (ShipDate & { shipName: string; relType: 
     date: s.start_date,
     yearly: true,
     notify: false,
+    subtitle: 'the day we met',
     createdAt: 0,
     shipName: s.name,
     relType: s.rel_type ?? 'romantic',
@@ -81,11 +85,11 @@ export function getAllUpcomingDates(): (ShipDate & { shipName: string; relType: 
   });
 }
 
-export function addDate(shipId: string, d: { title: string; date: string; yearly?: boolean; notify?: boolean }): string {
+export function addDate(shipId: string, d: { title: string; date: string; yearly?: boolean; notify?: boolean; subtitle?: string }): string {
   const id = String(Date.now());
   getDb().runSync(
-    'INSERT INTO dates (id, ship_id, title, date, yearly, notify, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
-    id, shipId, d.title, d.date, d.yearly ? 1 : 0, d.notify ? 1 : 0, Date.now(),
+    'INSERT INTO dates (id, ship_id, title, date, yearly, notify, subtitle, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+    id, shipId, d.title, d.date, d.yearly ? 1 : 0, d.notify ? 1 : 0, d.subtitle ?? '', Date.now(),
   );
   notifyDates();
   return id;

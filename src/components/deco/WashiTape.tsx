@@ -1,10 +1,18 @@
 import { Colors } from '@/constants/theme';
-import { useMemo } from 'react';
-import Svg, { Defs, Path, Pattern as SvgPattern, Rect, Circle } from 'react-native-svg';
+import React, { useMemo } from 'react';
+import Svg, { Defs, Path, Pattern as SvgPattern, Rect, Circle, Ellipse, G } from 'react-native-svg';
 
-// design/deco.jsx — WashiTape
-// Tape strip with patterned fill. Patterns: stripe / dot / heart / check
-type TapePattern = 'stripe' | 'dot' | 'heart' | 'check' | 'solid';
+export type TapePattern =
+  | 'stripe'
+  | 'dot'
+  | 'heart'
+  | 'check'
+  | 'floral'
+  | 'lace'
+  | 'grid'
+  | 'gingham'
+  | 'star'
+  | 'solid';
 
 type Props = {
   width?: number;
@@ -12,14 +20,16 @@ type Props = {
   pattern?: TapePattern;
   color?: string;
   rotate?: number;
+  style?: any;
 };
 
 export function WashiTape({
   width = 80,
   height = 18,
-  pattern = 'stripe',
+  pattern = 'heart',
   color = Colors.sakura,
-  rotate = -3,
+  rotate = -4,
+  style = {},
 }: Props) {
   const id = useMemo(() => 'wt-' + Math.random().toString(36).slice(2, 7), []);
 
@@ -33,24 +43,73 @@ export function WashiTape({
         );
       case 'dot':
         return (
-          <SvgPattern id={id} width="6" height="6" patternUnits="userSpaceOnUse">
-            <Circle cx="3" cy="3" r="1.2" fill={color} />
+          <SvgPattern id={id} width="8" height="8" patternUnits="userSpaceOnUse">
+            <Circle cx="4" cy="4" r="1.5" fill={color} />
           </SvgPattern>
         );
       case 'heart':
         return (
-          <SvgPattern id={id} width="10" height="10" patternUnits="userSpaceOnUse">
+          <SvgPattern id={id} width="12" height="12" patternUnits="userSpaceOnUse">
             <Path
-              d="M5 8 C 2 6, 1.5 4.5, 2.5 3.5 C 3.5 2.5, 5 3.5, 5 4.5 C 5 3.5, 6.5 2.5, 7.5 3.5 C 8.5 4.5, 8 6, 5 8 Z"
+              d="M6 9.5C3 7.5 2 6 2.8 4.6 3.6 3.2 5.2 4 6 5.2 6.8 4 8.4 3.2 9.2 4.6 10 6 9 7.5 6 9.5Z"
               fill={color}
             />
           </SvgPattern>
         );
       case 'check':
         return (
+          <SvgPattern id={id} width="8" height="8" patternUnits="userSpaceOnUse">
+            <Rect width="4" height="4" fill={color} />
+            <Rect x="4" y="4" width="4" height="4" fill={color} />
+          </SvgPattern>
+        );
+      case 'floral':
+        return (
+          <SvgPattern id={id} width="14" height="14" patternUnits="userSpaceOnUse">
+            {[0, 72, 144, 216, 288].map((r) => (
+              <Ellipse
+                key={r}
+                cx="7"
+                cy="4"
+                rx="1.6"
+                ry="2.6"
+                fill={color}
+                transform={`rotate(${r} 7 7)`}
+              />
+            ))}
+            <Circle cx="7" cy="7" r="0.9" fill="#fff" opacity={0.5} />
+          </SvgPattern>
+        );
+      case 'lace':
+        return (
+          <SvgPattern id={id} width="10" height="10" patternUnits="userSpaceOnUse">
+            <Circle cx="5" cy="5" r="1.2" fill="none" stroke={color} strokeWidth="0.7" />
+            <Circle cx="0" cy="0" r="1.2" fill="none" stroke={color} strokeWidth="0.7" />
+            <Circle cx="10" cy="10" r="1.2" fill="none" stroke={color} strokeWidth="0.7" />
+          </SvgPattern>
+        );
+      case 'grid':
+        return (
           <SvgPattern id={id} width="6" height="6" patternUnits="userSpaceOnUse">
-            <Rect width="3" height="3" fill={color} />
-            <Rect x="3" y="3" width="3" height="3" fill={color} />
+            <Path d="M6 0v6M0 6h6" stroke={color} strokeWidth="0.7" />
+          </SvgPattern>
+        );
+      case 'gingham':
+        return (
+          <SvgPattern id={id} width="8" height="8" patternUnits="userSpaceOnUse">
+            <Rect width="4" height="4" fill={color} opacity="0.7" />
+            <Rect x="4" y="4" width="4" height="4" fill={color} opacity="0.7" />
+            <Rect x="4" width="4" height="4" fill={color} opacity="0.3" />
+            <Rect y="4" width="4" height="4" fill={color} opacity="0.3" />
+          </SvgPattern>
+        );
+      case 'star':
+        return (
+          <SvgPattern id={id} width="14" height="14" patternUnits="userSpaceOnUse">
+            <Path
+              d="M7 2l1.3 3.4L11.7 6 9 8.4 9.7 12 7 10.2 4.3 12 5 8.4 2.3 6l3.4-.6L7 2Z"
+              fill={color}
+            />
           </SvgPattern>
         );
       default:
@@ -63,7 +122,7 @@ export function WashiTape({
       width={width}
       height={height}
       viewBox={`0 0 ${width} ${height}`}
-      style={{ transform: [{ rotate: `${rotate}deg` }], opacity: 0.85 }}
+      style={[{ transform: [{ rotate: `${rotate}deg` }], opacity: 0.92 }, style]}
     >
       <Defs>{renderPattern()}</Defs>
       {/* patterned layer */}
@@ -71,12 +130,13 @@ export function WashiTape({
         width={width}
         height={height}
         fill={pattern === 'solid' ? color : `url(#${id})`}
-        opacity={0.55}
+        opacity={0.6}
       />
       {/* base translucent layer */}
-      <Rect width={width} height={height} fill={color} opacity={0.25} />
-      {/* deckle edge highlight */}
-      <Path d={`M 0 0 L ${width} 0 L ${width} 2 L 0 2 Z`} fill="rgba(255,255,255,0.15)" />
+      <Rect width={width} height={height} fill={color} opacity={0.22} />
+      {/* highlights */}
+      <Rect width={width} height={2} fill="rgba(255,255,255,0.25)" />
+      <Rect y={height - 2} width={width} height={2} fill="rgba(0,0,0,0.05)" />
     </Svg>
   );
 }

@@ -7,6 +7,7 @@ import { ShipCard } from '@/components/cards/ShipCard';
 import { Heart } from '@/components/deco/Heart';
 import { Sparkle } from '@/components/deco/Sparkle';
 import { SparkleCluster } from '@/components/deco/SparkleCluster';
+import { StickerSakuraFlower, StickerSparkle, WashiTape } from '@/components/deco';
 import { CozyModal } from '@/components/ui/CozyModal';
 import { IconPlus, IconSearch } from '@/components/ui/Icon';
 import { Mark } from '@/components/ui/Mark';
@@ -109,17 +110,34 @@ export default function HomeScreen() {
       </View>
 
       {ships.length === 0 ? (
-        <View style={styles.emptyState}>
-          <View style={styles.emptyDeco}>
-            <Sparkle size={12} color={Colors.sakura} />
-            <Heart size={32} color={Colors.sakuraSoft} outline />
-            <Sparkle size={8} color={Colors.lavender} />
-          </View>
-          <Text style={styles.emptyTitle}>no ships yet</Text>
-          <Text style={styles.emptySub}>your first F/O is waiting</Text>
-          <Pressable style={styles.emptyBtn} onPress={() => { resetOnb(); router.push({ pathname: '/onboarding/fo', params: { mode: 'new' } }); }}>
-            <IconPlus size={13} color={Colors.vellum} />
-            <Text style={styles.emptyBtnText}>start a new ship</Text>
+        <View style={[styles.emptyState, { paddingVertical: 60, paddingHorizontal: 20, gap: 12 }]}>
+          <StickerSakuraFlower size={88} />
+          <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: 26, color: Colors.ink, textAlign: 'center', marginTop: 10 }}>
+            no ships yet
+          </Text>
+          <Text style={{ fontFamily: FontFamily.script, fontSize: 18, lineHeight: 22, color: Colors.ink2, textAlign: 'center', marginVertical: 8 }}>
+            your first F/O is waiting —{"\n"}let's build your notebook.
+          </Text>
+          <Pressable
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 6,
+              backgroundColor: Colors.sakuraDeep,
+              paddingHorizontal: 20,
+              paddingVertical: 10,
+              borderRadius: 99,
+              shadowColor: 'rgba(110, 58, 90, 0.12)',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 1,
+              shadowRadius: 3,
+              elevation: 1,
+              marginTop: 10,
+            }}
+            onPress={() => { resetOnb(); router.push({ pathname: '/onboarding/fo', params: { mode: 'new' } }); }}
+          >
+            <IconPlus size={12} color={Colors.vellum} />
+            <Text style={{ fontFamily: FontFamily.uiMedium, fontSize: 14, color: Colors.vellum }}>start a new ship</Text>
           </Pressable>
         </View>
       ) : filteredShips.length === 0 ? (
@@ -132,14 +150,14 @@ export default function HomeScreen() {
             }
           }}
         >
-          <View style={styles.emptyState}>
-            <View style={styles.emptyDeco}>
-              <Sparkle size={12} color={Colors.sakura} />
-              <Heart size={32} color={Colors.sakuraSoft} outline />
-              <Sparkle size={8} color={Colors.lavender} />
-            </View>
-            <Text style={styles.emptyTitle}>no ships found</Text>
-            <Text style={styles.emptySub}>try adjusting your search term</Text>
+          <View style={[styles.emptyState, { paddingVertical: 60, paddingHorizontal: 20, gap: 12 }]}>
+            <StickerSakuraFlower size={88} />
+            <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: 26, color: Colors.ink, textAlign: 'center', marginTop: 10 }}>
+              no ships found
+            </Text>
+            <Text style={{ fontFamily: FontFamily.script, fontSize: 18, lineHeight: 22, color: Colors.ink2, textAlign: 'center', marginVertical: 8 }}>
+              try adjusting your search term —{"\n"}they are out there.
+            </Text>
           </View>
         </Pressable>
       ) : (
@@ -175,6 +193,9 @@ export default function HomeScreen() {
             ))}
             {/* Add new card */}
             <Pressable style={styles.addCard} onPress={() => { resetOnb(); router.push({ pathname: '/onboarding/fo', params: { mode: 'new' } }); }}>
+              <View style={{ position: 'absolute', top: 0, left: -8, zIndex: 10 }}>
+                <WashiTape width={56} height={14} pattern="floral" color={Colors.sakura} rotate={-6} />
+              </View>
               <View style={styles.addIcon}>
                 <IconPlus size={18} color={Colors.sakuraDeep} />
               </View>

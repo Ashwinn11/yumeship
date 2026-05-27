@@ -1,16 +1,16 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 
-import { Ribbon } from '@/components/deco/Ribbon';
-import { Sparkle } from '@/components/deco/Sparkle';
-import { Heart } from '@/components/deco/Heart';
+import { Sparkle, WashiTape, Bullets, StickerWaxSeal } from '@/components/deco';
 import { Button } from '@/components/ui/Button';
 import { Field } from '@/components/ui/Field';
 import { Mark } from '@/components/ui/Mark';
 import { StepDots } from '@/components/ui/StepDots';
 import { UnderInput } from '@/components/ui/UnderInput';
+import { ThoughtCloud } from '@/components/ui';
 import { Colors, FontFamily, FontSize, Radius, Spacing } from '@/constants/theme';
 import { resetOnb, setOnbField } from '@/store/onboarding';
 
@@ -34,6 +34,8 @@ export default function OnbFO() {
   const [shipName, setShipName] = useState('');
   const [fandom, setFandom] = useState('');
   const [paletteId, setPaletteId] = useState('sakura');
+  const [relType, setRelType] = useState<'romantic' | 'platonic' | 'familial'>('romantic');
+  const [shareType, setShareType] = useState<'ng' | 'welcome' | 'mirror'>('mirror');
 
   const handleFoName = (v: string) => { setFoName(v); setOnbField('foName', v); };
   const handleShipName = (v: string) => { setShipName(v); setOnbField('shipName', v); };
@@ -46,14 +48,18 @@ export default function OnbFO() {
   }
 
   function goToRules() {
+    setOnbField('relType', relType);
+    setOnbField('shareType', shareType);
     router.push({ pathname: '/onboarding/rules', params: isNew ? { mode: 'new' } : {} });
   }
+
+  const selectedPalette = COVER_PALETTES.find((p) => p.id === paletteId) || COVER_PALETTES[0];
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top + Spacing.s1, paddingBottom: insets.bottom + Spacing.s1 }]}>
       {/* Background accents */}
       <View style={styles.decoTR} pointerEvents="none">
-        <Ribbon size={24} color={Colors.sakura} />
+        <StickerWaxSeal size={60} />
       </View>
       <View style={styles.decoBR} pointerEvents="none">
         <Sparkle size={18} color={Colors.lavenderDeep} />
@@ -78,28 +84,165 @@ export default function OnbFO() {
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {!isNew && <Text style={styles.eyebrow}>step two · them</Text>}
-        <Text style={[styles.heading, isNew && styles.headingNew]}>Who's the one?</Text>
+        <Text style={[styles.heading, isNew && styles.headingNew]}>
+          Meet them,{"\n"}your forever-someone.
+        </Text>
 
+        {/* Premium redesign card containing all fields in step two */}
         <View style={styles.card}>
-          <Field label="Their name">
-            <UnderInput value={foName} onChangeText={handleFoName} />
-          </Field>
+          {/* washi tape corner overlay */}
+          <View style={{ position: 'absolute', top: -7, left: -6, zIndex: 10 }}>
+            <WashiTape width={56} height={14} pattern="heart" color={selectedPalette.start} rotate={-6} />
+          </View>
 
-          <View style={styles.fieldSpacer} />
+          {/* SHIP NAME field */}
+          <View style={{ marginBottom: 20 }}>
+            <Text style={styles.fieldLabel}>SHIP NAME · what you call this</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1.4, borderBottomColor: Colors.line, paddingBottom: 4, marginTop: 4 }}>
+              <TextInput
+                value={shipName}
+                onChangeText={handleShipName}
+                placeholder="e.g. Mei x Kuroo"
+                placeholderTextColor={Colors.ink3}
+                style={{ flex: 1, paddingVertical: 0, fontFamily: FontFamily.ui, fontSize: 18, color: Colors.ink, height: 28 }}
+              />
+              <Bullets.Heart size={12} color={Colors.sakuraDeep} />
+            </View>
+            <Text style={{ fontFamily: FontFamily.script, fontSize: 13, color: Colors.ink3, marginTop: 4 }}>
+              the headline that appears on cards & letters
+            </Text>
+          </View>
 
-          <Field label="What do you call this pairing?">
-            <UnderInput value={shipName} onChangeText={handleShipName} placeholder="e.g. Starlight" />
-          </Field>
+          {/* Avatar Preview Tile & inputs */}
+          <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
+            <LinearGradient
+              colors={[selectedPalette.start, selectedPalette.end]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{
+                width: 60,
+                height: 76,
+                borderRadius: 10,
+                alignItems: 'center',
+                justifyContent: 'center',
+                position: 'relative',
+                shadowColor: 'rgba(110, 58, 90, 0.15)',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 1,
+                shadowRadius: 6,
+                elevation: 2,
+              }}
+            >
+              <Text style={{ color: '#ffffff', fontFamily: FontFamily.displayItalic, fontSize: 36, fontWeight: 'bold' }}>
+                {foName.charAt(0).toUpperCase() || '♡'}
+              </Text>
+              <View style={{ position: 'absolute', top: -4, left: -8, zIndex: 15 }}>
+                <WashiTape pattern="heart" width={28} height={10} color={selectedPalette.start} rotate={-8} />
+              </View>
+            </LinearGradient>
 
-          <View style={styles.fieldSpacer} />
+            <View style={{ flex: 1, gap: 8 }}>
+              <View>
+                <Text style={styles.fieldLabel}>THEIR NAME</Text>
+                <TextInput
+                  value={foName}
+                  onChangeText={handleFoName}
+                  placeholder="e.g. Kuroo Tetsurou"
+                  placeholderTextColor={Colors.ink3}
+                  style={{ borderBottomWidth: 1, borderBottomColor: Colors.line, paddingVertical: 2, fontFamily: FontFamily.ui, fontSize: 15, color: Colors.ink }}
+                />
+              </View>
 
-          <Field label="From">
-            <UnderInput value={fandom} onChangeText={handleFandom} />
-          </Field>
+              <View>
+                <Text style={styles.fieldLabel}>SOURCE</Text>
+                <TextInput
+                  value={fandom}
+                  onChangeText={handleFandom}
+                  placeholder="e.g. Haikyuu!! · canon"
+                  placeholderTextColor={Colors.ink3}
+                  style={{ borderBottomWidth: 1, borderBottomColor: Colors.line, paddingVertical: 2, fontFamily: FontFamily.ui, fontSize: 12, color: Colors.ink2 }}
+                />
+              </View>
+            </View>
+          </View>
 
-          <View style={styles.fieldSpacer} />
+          <View style={styles.cardDivider} />
 
-          <Field label="A color that feels like them">
+          {/* RELATIONSHIP field */}
+          <View>
+            <Text style={styles.fieldLabel}>RELATIONSHIP</Text>
+            <View style={{ flexDirection: 'row', gap: 6, marginTop: 6 }}>
+              {(['romantic', 'platonic', 'familial'] as const).map((r) => {
+                const isActive = relType === r;
+                let activeColor: string = Colors.sakuraDeep;
+                let activeBg: string = Colors.sakuraSoft;
+                if (r === 'platonic') { activeColor = Colors.sageDeep; activeBg = Colors.sageSoft; }
+                if (r === 'familial') { activeColor = Colors.peachDeep; activeBg = Colors.peachSoft; }
+
+                return (
+                  <Pressable
+                    key={r}
+                    onPress={() => setRelType(r)}
+                    style={{
+                      paddingVertical: 5,
+                      paddingHorizontal: 12,
+                      borderRadius: 14,
+                      borderWidth: 1,
+                      borderColor: isActive ? activeColor : Colors.line,
+                      backgroundColor: isActive ? activeBg : Colors.paperDeep,
+                    }}
+                  >
+                    <Text style={{ fontSize: 11, fontFamily: FontFamily.uiMedium, color: isActive ? activeColor : Colors.ink2 }}>
+                      {r}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+
+          <View style={styles.cardDivider} />
+
+          {/* SHARING NG / welcome / mirror */}
+          <View>
+            <Text style={styles.fieldLabel}>DOUBLES / SHARING</Text>
+            <View style={{ flexDirection: 'row', gap: 6, marginTop: 6 }}>
+              {(['ng', 'welcome', 'mirror'] as const).map((s) => {
+                const isActive = shareType === s;
+                const label = s === 'ng' ? 'sharing NG' : s;
+                let activeColor: string = Colors.sakuraDeep;
+                let activeBg: string = Colors.sakuraSoft;
+                if (s === 'ng') { activeColor = Colors.ember; activeBg = '#fde0d4'; }
+                if (s === 'welcome') { activeColor = Colors.sageDeep; activeBg = Colors.sageSoft; }
+                if (s === 'mirror') { activeColor = Colors.lavenderDeep; activeBg = Colors.lavenderSoft; }
+
+                return (
+                  <Pressable
+                    key={s}
+                    onPress={() => setShareType(s)}
+                    style={{
+                      paddingVertical: 5,
+                      paddingHorizontal: 12,
+                      borderRadius: 14,
+                      borderWidth: 1,
+                      borderColor: isActive ? activeColor : Colors.line,
+                      backgroundColor: isActive ? activeBg : Colors.paperDeep,
+                    }}
+                  >
+                    <Text style={{ fontSize: 11, fontFamily: FontFamily.uiMedium, color: isActive ? activeColor : Colors.ink2 }}>
+                      {label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+
+          <View style={styles.cardDivider} />
+
+          {/* THEIR COLOR field */}
+          <View>
+            <Text style={styles.fieldLabel}>THEIR COLOR</Text>
             <View style={styles.paletteRow}>
               {COVER_PALETTES.map((p) => (
                 <Pressable
@@ -122,19 +265,16 @@ export default function OnbFO() {
                 </Pressable>
               ))}
             </View>
-          </Field>
+          </View>
         </View>
 
-        {/* Reassurance note */}
-        <View style={styles.note}>
-          <View style={styles.noteHeart}>
-            <Heart size={10} color={Colors.sakuraDeep} />
-          </View>
-          <Text style={styles.noteText}>
-            {isNew
-              ? '"You can add more any time."'
-              : '"The first F/O. You can add more later — even a whole polycule if you want."'}
-          </Text>
+        {/* Thought cloud at bottom */}
+        <View style={{ marginTop: 22, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <ThoughtCloud tone="lavender">
+            love them how you want.{"\n"}
+            this corner of your{"\n"}
+            heart is just yours.
+          </ThoughtCloud>
         </View>
       </ScrollView>
 
@@ -150,13 +290,8 @@ export default function OnbFO() {
             ? 'enter their name first'
             : !shipName.trim()
               ? 'enter ship name first'
-              : 'continue · the rules'}
+              : 'continue · style'}
         </Button>
-        {!isNew && (
-          <Pressable onPress={goToRules} style={styles.skipPressable}>
-            <Text style={styles.skip}>add later</Text>
-          </Pressable>
-        )}
       </View>
     </View>
   );
@@ -177,45 +312,26 @@ const styles = StyleSheet.create({
   headerCenter: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   headerTitle: { fontFamily: FontFamily.displayItalic, fontSize: FontSize.h6, color: Colors.ink },
   scroll: { flex: 1 },
-  scrollContent: { paddingHorizontal: Spacing.s6, paddingTop: Spacing.s6, paddingBottom: Spacing.s4 },
+  scrollContent: { paddingHorizontal: Spacing.s6, paddingTop: Spacing.s5, paddingBottom: Spacing.s4 },
   eyebrow: {
     fontFamily: FontFamily.marker, fontSize: 10, color: Colors.plum,
     letterSpacing: 1.6, textTransform: 'uppercase', fontWeight: '600',
   },
   heading: {
-    fontFamily: FontFamily.displayItalic, fontSize: 32, lineHeight: 34,
+    fontFamily: FontFamily.displayItalic, fontSize: 26, lineHeight: 28,
     letterSpacing: -0.3, color: Colors.ink, marginTop: Spacing.s2,
   },
   headingNew: { marginTop: 0 },
-  note: {
-    marginTop: Spacing.s4,
-    padding: Spacing.s3,
-    paddingHorizontal: Spacing.s4,
-    backgroundColor: Colors.sakuraSoft,
-    borderWidth: 1,
-    borderColor: Colors.sakura,
-    borderRadius: Radius.r3,
-    position: 'relative',
-  },
-  noteHeart: {
-    position: 'absolute',
-    top: -6,
-    left: 12,
-  },
-  noteText: {
-    fontFamily: FontFamily.script,
-    fontSize: FontSize.h6,
-    color: Colors.sakuraInk,
-    lineHeight: 18,
-  },
   card: {
-    marginTop: Spacing.s4, padding: Spacing.s4,
+    marginTop: Spacing.s4, padding: 16,
     backgroundColor: Colors.vellum, borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.r4,
+    shadowColor: 'rgba(110, 58, 90, 0.05)', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 1, shadowRadius: 4, elevation: 1,
   },
-  fieldSpacer: { height: 14 },
+  cardDivider: { height: 1.2, backgroundColor: Colors.line, marginVertical: 14, opacity: 0.6 },
+  fieldLabel: { fontFamily: FontFamily.marker, fontSize: 8, color: Colors.ink3, letterSpacing: 1.4, fontWeight: '600' },
   paletteRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap', marginTop: 6 },
   swatch: {
-    width: 26, height: 26, borderRadius: Radius.pill,
+    width: 24, height: 24, borderRadius: Radius.pill,
     position: 'relative',
   },
   swatchSparkle: { position: 'absolute', top: -6, left: -6 },
@@ -224,7 +340,7 @@ const styles = StyleSheet.create({
   skip: { fontFamily: FontFamily.ui, fontSize: FontSize.meta, color: Colors.ink3, textDecorationLine: 'underline' },
   decoTR: {
     position: 'absolute',
-    top: 130,
+    top: 100,
     right: 20,
   },
   decoBR: {

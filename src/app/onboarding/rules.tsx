@@ -4,17 +4,16 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Heart } from '@/components/deco/Heart';
 import { Pin } from '@/components/deco/Pin';
 import { WashiTape } from '@/components/deco/WashiTape';
+import { StickerHeartPatch, Bullets } from '@/components/deco';
 import { Button } from '@/components/ui/Button';
 import { Field } from '@/components/ui/Field';
 import { IconLock } from '@/components/ui/Icon';
-import { PickerOption } from '@/components/ui/PickerOption';
 import { StepDots } from '@/components/ui/StepDots';
 import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing } from '@/constants/theme';
 import { requestPermission } from '@/store/notifications';
-import { getGlobalSetting, getOnbState, resetOnb, saveGlobalSetting, setOnbField } from '@/store/onboarding';
+import { getGlobalSetting, getOnbState, resetOnb, saveGlobalSetting } from '@/store/onboarding';
 import { addShip, REL_GRADS } from '@/store/ships';
 
 const VISUAL_TEMPLATES = [
@@ -31,23 +30,17 @@ const TAPE_BY_REL: Record<string, { color: string; pattern: 'stripe' | 'dot' | '
   familial: { color: 'rgba(255,255,255,0.8)', pattern: 'stripe' },
 };
 
-type RelType = 'romantic' | 'platonic' | 'familial';
-type ShareType = 'ng' | 'welcome' | 'mirror';
-
 export default function OnbRules() {
   const insets = useSafeAreaInsets();
   const { mode } = useLocalSearchParams<{ mode?: string }>();
   const isNew = mode === 'new';
 
-  const [relType, setRelType] = useState<RelType>('romantic');
-  const [shareType, setShareType] = useState<ShareType>('mirror');
   const [templateKey, setTemplateKey] = useState<string>('get-to-know');
-
-  const handleRelType = (v: RelType) => { setRelType(v); setOnbField('relType', v); };
-  const handleShareType = (v: ShareType) => { setShareType(v); setOnbField('shareType', v); };
 
   async function finish() {
     const state = getOnbState();
+    const relType = state.relType || 'romantic';
+    const shareType = state.shareType || 'mirror';
     const relGrad = REL_GRADS[relType] ?? REL_GRADS.romantic;
     const tape = TAPE_BY_REL[relType] ?? TAPE_BY_REL.romantic;
     addShip({
@@ -86,7 +79,7 @@ export default function OnbRules() {
         <Pin size={18} color={Colors.sakuraDeep} />
       </View>
       <View style={styles.decoBL} pointerEvents="none">
-        <Heart size={20} color={Colors.lavenderDeep} outline />
+        <StickerHeartPatch size={48} />
       </View>
 
       {isNew ? (
@@ -94,7 +87,7 @@ export default function OnbRules() {
           <Pressable onPress={() => router.back()} style={styles.backBtn}>
             <Text style={styles.backBtnText}>‹</Text>
           </Pressable>
-          <Text style={styles.headerTitle}>the rules</Text>
+          <Text style={styles.headerTitle}>choose a style</Text>
           <View style={{ width: 32 }} />
         </View>
       ) : (
@@ -104,31 +97,13 @@ export default function OnbRules() {
       )}
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {!isNew && <Text style={styles.eyebrow}>step three of three · the rules</Text>}
-        <Text style={[styles.heading, isNew && styles.headingNew]}>What kind of love,{'\n'}and who's invited?</Text>
+        {!isNew && <Text style={styles.eyebrow}>step three · style</Text>}
+        <Text style={[styles.heading, isNew && styles.headingNew]}>
+          A style that feels{"\n"}like your world.
+        </Text>
 
         <View style={styles.section}>
-          <Field label="Relationship type">
-            <View style={styles.pickerRow}>
-              <PickerOption ja="恋" name="romantic" tint={Colors.sakuraDeep} tintBg={Colors.sakuraSoft} active={relType === 'romantic'} onPress={() => handleRelType('romantic')} />
-              <PickerOption ja="友" name="platonic" tint={Colors.sageDeep} tintBg={Colors.sageSoft} active={relType === 'platonic'} onPress={() => handleRelType('platonic')} />
-              <PickerOption ja="家" name="familial" tint={Colors.peachDeep} tintBg={Colors.peachSoft} active={relType === 'familial'} onPress={() => handleRelType('familial')} />
-            </View>
-          </Field>
-        </View>
-
-        <View style={styles.section}>
-          <Field label="Sharing — about doubles">
-            <View style={styles.pickerRow}>
-              <PickerOption ja="禁" name="sharing NG" tint={Colors.ember} tintBg="#fde0d4" active={shareType === 'ng'} onPress={() => handleShareType('ng')} />
-              <PickerOption ja="可" name="welcome" tint={Colors.sageDeep} tintBg={Colors.sageSoft} active={shareType === 'welcome'} onPress={() => handleShareType('welcome')} />
-              <PickerOption ja="鏡" name="mirror" tint={Colors.lavenderDeep} tintBg={Colors.lavenderSoft} active={shareType === 'mirror'} onPress={() => handleShareType('mirror')} />
-            </View>
-          </Field>
-        </View>
-
-        <View style={styles.section}>
-          <Field label="A style that feels like them">
+          <Field label="VISUAL THEME">
             <View style={styles.templateGrid}>
               {VISUAL_TEMPLATES.map((t) => (
                 <Pressable
@@ -171,10 +146,10 @@ export default function OnbRules() {
           size="lg"
           full
           onPress={finish}
-          icon={<Heart size={14} color={Colors.vellum} />}
+          icon={<Bullets.Heart size={14} color={Colors.vellum} />}
           iconPosition="right"
         >
-          keep them close
+          launch the ship
         </Button>
       </View>
     </View>
@@ -189,57 +164,46 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.s5, paddingVertical: Spacing.s2,
   },
   backBtn: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
-  backBtnText: { fontSize: 22, color: Colors.ink2, fontFamily: FontFamily.ui },
+  backBtnText: { fontSize: 24, color: Colors.ink2 },
   headerTitle: { fontFamily: FontFamily.displayItalic, fontSize: FontSize.h6, color: Colors.ink },
   scroll: { flex: 1 },
   scrollContent: { paddingHorizontal: Spacing.s6, paddingTop: Spacing.s5, paddingBottom: Spacing.s4 },
   eyebrow: {
-    fontFamily: FontFamily.marker, fontSize: 10, color: Colors.sageDeep,
+    fontFamily: FontFamily.marker, fontSize: 10, color: Colors.plum,
     letterSpacing: 1.6, textTransform: 'uppercase', fontWeight: '600',
   },
   heading: {
-    fontFamily: FontFamily.displayItalic, fontSize: 28, lineHeight: 30,
+    fontFamily: FontFamily.displayItalic, fontSize: 26, lineHeight: 28,
     letterSpacing: -0.3, color: Colors.ink, marginTop: Spacing.s2,
   },
   headingNew: { marginTop: 0 },
   section: { marginTop: Spacing.s4 },
-  pickerRow: { flexDirection: 'row', gap: 6, marginTop: 6 },
+  templateGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: Spacing.s2 },
+  templateCard: {
+    width: '48%', minHeight: 90, borderRadius: Radius.r3, padding: Spacing.s3,
+    borderWidth: 1.4, borderColor: Colors.line, position: 'relative', overflow: 'hidden',
+  },
+  templateTape: { position: 'absolute', top: -3, left: 10 },
+  templateLabel: { fontFamily: FontFamily.uiSemiBold, fontSize: 13, marginTop: 4 },
+  templateDesc: { fontFamily: FontFamily.ui, fontSize: 10, color: Colors.ink3, marginTop: 2, lineHeight: 12 },
+  templateCheck: {
+    position: 'absolute', bottom: 6, right: 6, width: 14, height: 14,
+    borderRadius: Radius.pill, alignItems: 'center', justifyContent: 'center',
+  },
+  templateCheckText: { color: Colors.vellum, fontSize: 8, fontWeight: 'bold' },
   privacyNote: {
-    marginTop: Spacing.s5, padding: Spacing.s3, paddingHorizontal: Spacing.s4,
-    backgroundColor: Colors.vellum, borderWidth: 1, borderColor: Colors.line,
-    borderRadius: Radius.r3, flexDirection: 'row', gap: 12, alignItems: 'flex-start',
+    flexDirection: 'row', gap: Spacing.s3, padding: Spacing.s4,
+    backgroundColor: Colors.vellum, borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.r3,
+    marginTop: 20,
   },
   privacyIcon: {
-    width: 28, height: 28, borderRadius: Radius.r2,
-    backgroundColor: Colors.lavenderSoft, alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+    width: 28, height: 28, borderRadius: Radius.pill,
+    backgroundColor: Colors.lavenderSoft, alignItems: 'center', justifyContent: 'center',
   },
-  privacyText: { flex: 1 },
-  privacyTitle: { fontFamily: FontFamily.uiSemiBold, fontSize: FontSize.caption, color: Colors.ink, marginBottom: 2 },
-  privacyBody: { fontSize: 11, fontFamily: FontFamily.ui, color: Colors.ink2, lineHeight: 16 },
-  actions: { paddingHorizontal: Spacing.s6, paddingBottom: Spacing.s3, gap: Spacing.s2 },
-  templateGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 6 },
-  templateCard: {
-    width: '47%', padding: Spacing.s3, borderRadius: Radius.r3,
-    borderWidth: 1, borderColor: Colors.line, minHeight: 80,
-    justifyContent: 'flex-end', overflow: 'hidden', ...Shadow.s1,
-  },
-  templateTape: { position: 'absolute', top: -2, left: 6 },
-  templateLabel: { fontFamily: FontFamily.uiSemiBold, fontSize: 12, marginBottom: 2 },
-  templateDesc: { fontFamily: FontFamily.ui, fontSize: 10, color: Colors.ink3, lineHeight: 14 },
-  templateCheck: {
-    position: 'absolute', top: 8, right: 8,
-    width: 18, height: 18, borderRadius: Radius.pill,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  templateCheckText: { fontSize: 10, color: Colors.vellum, fontFamily: FontFamily.uiSemiBold },
-  decoTR: {
-    position: 'absolute',
-    top: 100,
-    right: 24,
-  },
-  decoBL: {
-    position: 'absolute',
-    bottom: 140,
-    left: 24,
-  },
+  privacyText: { flex: 1, gap: 2 },
+  privacyTitle: { fontFamily: FontFamily.uiSemiBold, fontSize: 13, color: Colors.ink },
+  privacyBody: { fontFamily: FontFamily.ui, fontSize: 11, color: Colors.ink3, lineHeight: 15 },
+  actions: { paddingHorizontal: Spacing.s6, paddingBottom: Spacing.s3 },
+  decoTR: { position: 'absolute', top: 130, right: 20 },
+  decoBL: { position: 'absolute', bottom: 120, right: 30 },
 });
