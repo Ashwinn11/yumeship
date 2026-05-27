@@ -53,8 +53,18 @@ export function addHeadcanon(shipId: string, category: string, body: string): st
   return id;
 }
 
+export function updateHeadcanon(id: string, body: string) {
+  getDb().runSync('UPDATE headcanons SET body = ? WHERE id = ?', body, id);
+  notify();
+}
+
 export function deleteHeadcanon(id: string) {
   getDb().runSync('DELETE FROM headcanons WHERE id = ?', id);
+  notify();
+}
+
+export function clearCategoryHeadcanons(shipId: string, category: string) {
+  getDb().runSync('DELETE FROM headcanons WHERE ship_id = ? AND category = ?', shipId, category);
   notify();
 }
 

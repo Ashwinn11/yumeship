@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
-  Alert, Image, KeyboardAvoidingView, Platform, Pressable,
+  Image, KeyboardAvoidingView, Platform, Pressable,
   ScrollView, StyleSheet, Text, TextInput, View,
 } from 'react-native';
+import { useNavigation } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
@@ -17,13 +18,15 @@ import { DatesTab } from '@/components/tabs/DatesTab';
 import { MessagesTab } from '@/components/tabs/MessagesTab';
 import { StorylineTab } from '@/components/tabs/StorylineTab';
 import { INK, SquareCheck } from '@/components/templates/primitives';
-import { IconPlus, IconChevronLeft } from '@/components/ui/Icon';
+import { CozyModal } from '@/components/ui/CozyModal';
+import { IconPlus, IconChevronLeft, IconTrashSolid } from '@/components/ui/Icon';
 import { Mark } from '@/components/ui/Mark';
 import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing } from '@/constants/theme';
 import { addFoMessage, deleteFoMessage, toggleFoMessage, updateFoMessage, useFoMessages } from '@/store/foNotifications';
-import { addHeadcanon, deleteHeadcanon, useHeadcanonCounts, useHeadcanons } from '@/store/headcanons';
+import { addHeadcanon, clearCategoryHeadcanons, deleteHeadcanon, updateHeadcanon, useHeadcanonCounts, useHeadcanons } from '@/store/headcanons';
+import { getGlobalSetting, saveGlobalSetting } from '@/store/onboarding';
 import { requestPermission } from '@/store/notifications';
-import { addScenario, deleteScenario, useScenarios } from '@/store/scenarios';
+import { addScenario, deleteScenario, updateScenario, useScenarios } from '@/store/scenarios';
 import { useShips } from '@/store/ships';
 import { loadTemplateData, saveTemplateData } from '@/store/templateData';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -51,24 +54,42 @@ const FEATURES: { id: Feature; ja: string; label: string; desc: string; color: s
 
 export default function VaultScreen() {
   const insets = useSafeAreaInsets();
+  const navigation = useNavigation();
   const ships = useShips();
   const [selectedShipIdx, setSelectedShipIdx] = useState(0);
   const [activeFeature, setActiveFeature] = useState<Feature | null>(null);
   const [showShipPicker, setShowShipPicker] = useState(false);
+  const [customBack, setCustomBack] = useState<(() => void) | null>(null);
+  const [msgSender, setMsgSender] = useState<'me' | 'them'>('me');
+
+  useEffect(() => {
+    navigation.setOptions({
+      tabBarStyle: activeFeature ? { display: 'none' } : undefined,
+    });
+  }, [activeFeature, navigation]);
 
   const ship = ships[selectedShipIdx] ?? null;
+
+  function handleBack() {
+    if (customBack) {
+      customBack();
+      setCustomBack(null);
+    } else {
+      setActiveFeature(null);
+    }
+  }
 
   function renderFeature() {
     if (!ship || !activeFeature) return null;
     switch (activeFeature) {
-      case 'headcanons': return <HeadcanonsFeature shipId={ship.id} shipName={ship.name} />;
-      case 'scenarios': return <ScenariosFeature shipId={ship.id} shipName={ship.name} />;
-      case 'messages': return <MessagesTab shipId={ship.id} shipName={ship.name} />;
-      case 'albums': return <AlbumsTab shipId={ship.id} />;
+      case 'headcanons': return <HeadcanonsFeature shipId={ship.id} shipName={ship.name} setCustomBack={setCustomBack} />;
+      case 'scenarios': return <ScenariosFeature shipId={ship.id} shipName={ship.name} setCustomBack={setCustomBack} />;
+      case 'messages': return <MessagesTab shipId={ship.id} shipName={ship.name} sender={msgSender} onSenderChange={setMsgSender} />;
+      case 'albums': return <AlbumsTab shipId={ship.id} setCustomBack={setCustomBack} />;
       case 'boundaries': return <BoundariesFeature shipId={ship.id} />;
       case 'storyline': return <StorylineTab shipId={ship.id} shipName={ship.name} />;
-      case 'dates': return <DatesTab shipId={ship.id} />;
-      case 'fo-messages': return <FoMessagesFeature shipId={ship.id} shipName={ship.name} />;
+      case 'dates': return <DatesTab shipId={ship.id} shipName={ship.name} />;
+      case 'fo-messages': return <FoMessagesFeature shipId={ship.id} shipName={ship.name} setCustomBack={setCustomBack} />;
     }
   }
 
@@ -87,7 +108,7 @@ export default function VaultScreen() {
       {/* Header */}
       {activeFeature ? (
         <View style={styles.subHeader}>
-          <Pressable style={styles.backBtn} onPress={() => setActiveFeature(null)}>
+          <Pressable style={styles.backBtn} onPress={handleBack}>
             <IconChevronLeft size={14} color={Colors.ink2} />
           </Pressable>
           <View style={styles.subHeaderCenter}>
@@ -103,7 +124,18 @@ export default function VaultScreen() {
               <Text style={styles.subHeaderShipName}>no ship</Text>
             )}
           </View>
-          <View style={{ width: 32 }} />
+          {activeFeature === 'messages' ? (
+            <View style={styles.msgSenderToggle}>
+              <Pressable style={[styles.msgSenderBtn, msgSender === 'me' && styles.msgSenderBtnActive]} onPress={() => setMsgSender('me')}>
+                <Text style={[styles.msgSenderBtnText, msgSender === 'me' && styles.msgSenderBtnTextActive]}>me</Text>
+              </Pressable>
+              <Pressable style={[styles.msgSenderBtn, msgSender === 'them' && styles.msgSenderBtnActive]} onPress={() => setMsgSender('them')}>
+                <Text style={[styles.msgSenderBtnText, msgSender === 'them' && styles.msgSenderBtnTextActive]}>{ship?.name || 'them'} ♡</Text>
+              </Pressable>
+            </View>
+          ) : (
+            <View style={{ width: 32 }} />
+          )}
         </View>
 
       ) : (
@@ -138,9 +170,11 @@ export default function VaultScreen() {
         </View>
       ) : activeFeature ? (
         <View style={styles.featureWrap}>
-          <ScrollView showsVerticalScrollIndicator={false}>
-            {renderFeature()}
-          </ScrollView>
+          {activeFeature === 'messages' ? renderFeature() : (
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {renderFeature()}
+            </ScrollView>
+          )}
         </View>
       ) : (
         <ScrollView contentContainerStyle={styles.grid} showsVerticalScrollIndicator={false}>
@@ -193,13 +227,13 @@ const HC_CATS: { id: string; ja: string; label: string; color: string }[] = [
   { id: 'howmet', ja: '逢', label: 'How We Met', color: Colors.sageDeep },
 ];
 
-function HeadcanonsFeature({ shipId, shipName }: { shipId: string; shipName: string }) {
+function HeadcanonsFeature({ shipId, shipName, setCustomBack }: { shipId: string; shipName: string; setCustomBack: (fn: (() => void) | null) => void }) {
   const counts = useHeadcanonCounts(shipId);
   const [openCat, setOpenCat] = useState<string | null>(null);
 
   if (openCat) {
     const cat = HC_CATS.find((c) => c.id === openCat)!;
-    return <HCList shipId={shipId} shipName={shipName} catId={openCat} catLabel={cat.label} catColor={cat.color} onBack={() => setOpenCat(null)} />;
+    return <HCList shipId={shipId} shipName={shipName} catId={openCat} catLabel={cat.label} catColor={cat.color} onBack={() => { setOpenCat(null); setCustomBack(null); }} />;
   }
 
   return (
@@ -213,7 +247,10 @@ function HeadcanonsFeature({ shipId, shipName }: { shipId: string; shipName: str
             shipId={shipId}
             cat={c}
             count={counts[c.id] ?? 0}
-            onPress={() => setOpenCat(c.id)}
+            onPress={() => {
+              setOpenCat(c.id);
+              setCustomBack(() => () => { setOpenCat(null); setCustomBack(null); });
+            }}
           />
         ))}
       </View>
@@ -233,13 +270,14 @@ function CategoryBlock({
   onPress: () => void;
 }) {
   const hcs = useHeadcanons(shipId, cat.id);
-  const previewHcs = hcs.slice(0, 2); // show first 2 headcanons in the main view
+  const previewHcs = hcs.slice(0, 2);
+  const customLabel = getGlobalSetting(`hc_label_${shipId}_${cat.id}`, cat.label);
 
   return (
     <Pressable style={hc.catCard} onPress={onPress}>
       <View style={hc.catHeader}>
         <Text style={hc.catJa}>{cat.ja}</Text>
-        <Text style={hc.catLabelText}>{cat.label.toUpperCase()}</Text>
+        <Text style={hc.catLabelText}>{customLabel.toUpperCase()}</Text>
         <View style={hc.catCountBadge}>
           <Text style={hc.catCountText}>{count}</Text>
         </View>
@@ -282,6 +320,20 @@ function HCList({ shipId, shipName, catId, catLabel, catColor, onBack }: {
 }) {
   const hcs = useHeadcanons(shipId, catId);
   const [draft, setDraft] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const labelKey = `hc_label_${shipId}_${catId}`;
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [titleDraft, setTitleDraft] = useState(() => getGlobalSetting(labelKey, catLabel));
+  const [confirmClear, setConfirmClear] = useState(false);
+
+  function saveTitle() {
+    const trimmed = titleDraft.trim() || catLabel;
+    saveGlobalSetting(labelKey, trimmed);
+    setTitleDraft(trimmed);
+    setEditingTitle(false);
+  }
 
   function add() {
     if (!draft.trim()) return;
@@ -308,20 +360,50 @@ function HCList({ shipId, shipName, catId, catLabel, catColor, onBack }: {
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={160}>
-      <View style={hc.listHeader}>
-        <Pressable onPress={onBack} hitSlop={8}>
-          <Text style={hc.back}>‹ BACK TO INDEX</Text>
-        </Pressable>
-      </View>
-
+      <CozyModal
+        visible={!!deleteTarget}
+        title="remove this?"
+        message={hcs.find((h) => h.id === deleteTarget)?.body.slice(0, 80)}
+        confirmText="Delete"
+        cancelText="keep it"
+        isDestructive
+        onConfirm={() => { if (deleteTarget) deleteHeadcanon(deleteTarget); setDeleteTarget(null); }}
+        onClose={() => setDeleteTarget(null)}
+      />
+      <CozyModal
+        visible={confirmClear}
+        title={`clear ${titleDraft}?`}
+        message="All headcanons in this category will be removed."
+        confirmText="Clear"
+        cancelText="keep them"
+        isDestructive
+        onConfirm={() => { clearCategoryHeadcanons(shipId, catId); setConfirmClear(false); }}
+        onClose={() => setConfirmClear(false)}
+      />
       <View style={hc.listWrap}>
         <View style={hc.catCardActive}>
           <View style={hc.catHeader}>
             <Text style={hc.catJa}>{cat.ja}</Text>
-            <Text style={hc.catLabelText}>{catLabel.toUpperCase()}</Text>
+            {editingTitle ? (
+              <TextInput
+                value={titleDraft}
+                onChangeText={setTitleDraft}
+                onBlur={saveTitle}
+                onSubmitEditing={saveTitle}
+                autoFocus
+                style={[hc.catLabelText, { flex: 1, borderBottomWidth: 1, borderBottomColor: catColor, paddingVertical: 2 }]}
+              />
+            ) : (
+              <Pressable style={{ flex: 1 }} onPress={() => setEditingTitle(true)}>
+                <Text style={hc.catLabelText}>{titleDraft.toUpperCase()}</Text>
+              </Pressable>
+            )}
             <View style={hc.catCountBadge}>
               <Text style={hc.catCountText}>{hcs.length}</Text>
             </View>
+            <Pressable hitSlop={8} onPress={() => setConfirmClear(true)}>
+              <IconTrashSolid size={11} color={Colors.ink3} />
+            </Pressable>
           </View>
 
           <View style={hc.catContent}>
@@ -332,23 +414,38 @@ function HCList({ shipId, shipName, catId, catLabel, catColor, onBack }: {
               </View>
             ) : (
               hcs.map((h, j) => (
-                <Pressable
+                <View
                   key={h.id}
-                  style={[
-                    hc.catItemRow,
-                    { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
-                    j < hcs.length - 1 && hc.catItemRowBorder,
-                  ]}
-                  onLongPress={() => Alert.alert('Delete headcanon?', h.body.slice(0, 60), [
-                    { text: 'Delete', style: 'destructive', onPress: () => deleteHeadcanon(h.id) },
-                    { text: 'Cancel', style: 'cancel' },
-                  ])}
+                  style={[hc.catItemRow, { flexDirection: 'row', alignItems: 'flex-start', gap: 8 }, j < hcs.length - 1 && hc.catItemRowBorder]}
                 >
-                  <View style={{ marginTop: 4 }}>
-                    <Heart size={10} color={INK} outline />
-                  </View>
-                  <Text style={[hc.itemBody, { flex: 1 }]}>{h.body}</Text>
-                </Pressable>
+                  {editingId === h.id ? (
+                    <>
+                      <TextInput
+                        value={editDraft}
+                        onChangeText={setEditDraft}
+                        onSubmitEditing={() => { if (editDraft.trim()) { updateHeadcanon(h.id, editDraft.trim()); } setEditingId(null); }}
+                        autoFocus
+                        style={[hc.itemBody, { flex: 1, borderBottomWidth: 1, borderBottomColor: catColor, paddingVertical: 2 }]}
+                        multiline
+                      />
+                      <Pressable hitSlop={8} onPress={() => { setDeleteTarget(h.id); setEditingId(null); }}>
+                        <IconTrashSolid size={12} color={Colors.ink3} />
+                      </Pressable>
+                      <Pressable hitSlop={8} onPress={() => { if (editDraft.trim()) { updateHeadcanon(h.id, editDraft.trim()); } setEditingId(null); }}>
+                        <Text style={{ fontSize: 12, color: catColor, fontFamily: FontFamily.uiMedium }}>done</Text>
+                      </Pressable>
+                    </>
+                  ) : (
+                    <>
+                      <View style={{ marginTop: 4 }}>
+                        <Heart size={10} color={INK} outline />
+                      </View>
+                      <Pressable style={{ flex: 1 }} onPress={() => { setEditingId(h.id); setEditDraft(h.body); }}>
+                        <Text style={[hc.itemBody, { flex: 1 }]}>{h.body}</Text>
+                      </Pressable>
+                    </>
+                  )}
+                </View>
               ))
             )}
           </View>
@@ -620,9 +717,10 @@ const SC_PROMPTS: { ja: string; label: string }[] = [
   { ja: '初', label: 'first meeting' },
 ];
 
-function ScenariosFeature({ shipId, shipName }: { shipId: string; shipName: string }) {
+function ScenariosFeature({ shipId, shipName, setCustomBack }: { shipId: string; shipName: string; setCustomBack: (fn: (() => void) | null) => void }) {
   const scenarios = useScenarios(shipId);
   const [editing, setEditing] = useState<{ id: string | null; title: string; body: string } | null>(null);
+  const [scDeleteTarget, setScDeleteTarget] = useState<string | null>(null);
 
   if (editing) {
     return (
@@ -631,10 +729,11 @@ function ScenariosFeature({ shipId, shipName }: { shipId: string; shipName: stri
         shipName={shipName}
         onSave={(title, body) => {
           if (!editing.id) addScenario(shipId, title, body);
+          else updateScenario(editing.id, { title, body });
           setEditing(null);
+          setCustomBack(null);
         }}
-        onDelete={editing.id ? () => { deleteScenario(editing.id!); setEditing(null); } : undefined}
-        onBack={() => setEditing(null)}
+        onDelete={editing.id ? () => { deleteScenario(editing.id!); setEditing(null); setCustomBack(null); } : undefined}
       />
     );
   }
@@ -645,7 +744,10 @@ function ScenariosFeature({ shipId, shipName }: { shipId: string; shipName: stri
         <Text style={sc.eyebrow}>SCENARIOS · {scenarios.length}</Text>
         <Pressable
           style={sc.newBtn}
-          onPress={() => setEditing({ id: null, title: '', body: '' })}
+          onPress={() => {
+            setEditing({ id: null, title: '', body: '' });
+            setCustomBack(() => () => { setEditing(null); setCustomBack(null); });
+          }}
         >
           <IconPlus size={12} color={Colors.vellum} />
           <Text style={sc.newBtnText}>new</Text>
@@ -672,19 +774,33 @@ function ScenariosFeature({ shipId, shipName }: { shipId: string; shipName: stri
         </View>
       ) : (
         <View style={sc.list}>
+          <CozyModal
+            visible={!!scDeleteTarget}
+            title="delete this scene?"
+            message={scenarios.find((s) => s.id === scDeleteTarget)?.title || 'this scenario'}
+            confirmText="Delete"
+            cancelText="keep it"
+            isDestructive
+            onConfirm={() => { if (scDeleteTarget) deleteScenario(scDeleteTarget); setScDeleteTarget(null); }}
+            onClose={() => setScDeleteTarget(null)}
+          />
           {scenarios.map((s) => (
             <Pressable
               key={s.id}
               style={sc.card}
-              onPress={() => setEditing({ id: s.id, title: s.title, body: s.body })}
-              onLongPress={() => Alert.alert('Delete?', s.title || 'this scenario', [
-                { text: 'Delete', style: 'destructive', onPress: () => deleteScenario(s.id) },
-                { text: 'Cancel', style: 'cancel' },
-              ])}
+              onPress={() => {
+                setEditing({ id: s.id, title: s.title, body: s.body });
+                setCustomBack(() => () => { setEditing(null); setCustomBack(null); });
+              }}
             >
               <View style={sc.cardStripe} />
               <View style={sc.cardBody}>
-                <Text style={sc.cardTitle}>{s.title || 'untitled'}</Text>
+                <View style={sc.cardTitleRow}>
+                  <Text style={sc.cardTitle} numberOfLines={1}>{s.title || 'untitled'}</Text>
+                  <Pressable hitSlop={8} onPress={() => setScDeleteTarget(s.id)}>
+                    <IconTrashSolid size={12} color={Colors.ink3} />
+                  </Pressable>
+                </View>
                 {s.body ? (
                   <Text style={sc.cardPreview} numberOfLines={2}>{s.body}</Text>
                 ) : (
@@ -701,30 +817,33 @@ function ScenariosFeature({ shipId, shipName }: { shipId: string; shipName: stri
   );
 }
 
-function ScenarioEditor({ initial, shipName, onSave, onDelete, onBack }: {
+function ScenarioEditor({ initial, shipName, onSave, onDelete }: {
   initial: { id: string | null; title: string; body: string };
   shipName: string;
   onSave: (title: string, body: string) => void;
   onDelete?: () => void;
-  onBack: () => void;
 }) {
   const [title, setTitle] = useState(initial.title);
   const [body, setBody] = useState(initial.body);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const wordCount = body.trim() ? body.trim().split(/\s+/).length : 0;
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={sc.editor} keyboardVerticalOffset={120}>
+      <CozyModal
+        visible={confirmDelete}
+        title="delete this scene?"
+        confirmText="Delete"
+        cancelText="keep it"
+        isDestructive
+        onConfirm={() => { setConfirmDelete(false); onDelete?.(); }}
+        onClose={() => setConfirmDelete(false)}
+      />
       <View style={sc.editorBar}>
-        <Pressable onPress={onBack} hitSlop={8}>
-          <Text style={sc.barBack}>‹ back</Text>
-        </Pressable>
-        <Text style={sc.barWords}>{wordCount} words</Text>
+        <Text style={sc.barWords}>{wordCount} {wordCount === 1 ? 'word' : 'words'}</Text>
         <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
           {onDelete && (
-            <Pressable hitSlop={8} onPress={() => Alert.alert('Delete scenario?', '', [
-              { text: 'Delete', style: 'destructive', onPress: onDelete },
-              { text: 'Cancel', style: 'cancel' },
-            ])}>
+            <Pressable hitSlop={8} onPress={() => setConfirmDelete(true)}>
               <Text style={sc.barDelete}>delete</Text>
             </Pressable>
           )}
@@ -740,16 +859,18 @@ function ScenarioEditor({ initial, shipName, onSave, onDelete, onBack }: {
         placeholderTextColor={Colors.ink3}
         style={sc.titleInput}
       />
-      <TextInput
-        value={body}
-        onChangeText={setBody}
-        placeholder={`what happens with ${shipName}...`}
-        placeholderTextColor={Colors.ink3}
-        style={sc.bodyInput}
-        multiline
-        textAlignVertical="top"
-        autoFocus={!initial.body}
-      />
+      <View style={sc.bodyWrap}>
+        <TextInput
+          value={body}
+          onChangeText={setBody}
+          placeholder={`what happens with ${shipName}...`}
+          placeholderTextColor={Colors.ink3}
+          style={sc.bodyInput}
+          multiline
+          textAlignVertical="top"
+          autoFocus={!initial.body}
+        />
+      </View>
     </KeyboardAvoidingView>
   );
 }
@@ -792,9 +913,10 @@ const STARTERS = [
 
 
 
-function FoMessagesFeature({ shipId, shipName }: { shipId: string; shipName: string }) {
+function FoMessagesFeature({ shipId, shipName, setCustomBack }: { shipId: string; shipName: string; setCustomBack: (fn: (() => void) | null) => void }) {
   const messages = useFoMessages(shipId);
   const [composingMsg, setComposingMsg] = useState<FoMessage | 'new' | null>(null);
+  const [msgDeleteTarget, setMsgDeleteTarget] = useState<string | null>(null);
   const activeCount = messages.filter((m) => m.active).length;
 
   if (composingMsg !== null) {
@@ -809,21 +931,34 @@ function FoMessagesFeature({ shipId, shipName }: { shipId: string; shipName: str
             await updateFoMessage(composingMsg.id, body, hour, senderName, shipName);
           }
           setComposingMsg(null);
+          setCustomBack(null);
         }}
-        onBack={() => setComposingMsg(null)}
       />
     );
   }
 
   return (
     <View style={fo.wrap}>
+      <CozyModal
+        visible={!!msgDeleteTarget}
+        title="delete this message?"
+        message="They won't send this anymore."
+        confirmText="Delete"
+        cancelText="keep it"
+        isDestructive
+        onConfirm={() => { if (msgDeleteTarget) deleteFoMessage(msgDeleteTarget); setMsgDeleteTarget(null); }}
+        onClose={() => setMsgDeleteTarget(null)}
+      />
       <View style={fo.hubHeader}>
         <View style={fo.hubLeft}>
           <Text style={fo.eyebrow}>TRACKING</Text>
           <Text style={fo.activeCount}>{activeCount} active</Text>
           {messages.length === 0 && <Text style={fo.noSaved}>nothing from them yet.</Text>}
         </View>
-        <Pressable style={fo.newBtn} onPress={() => setComposingMsg('new')}>
+        <Pressable style={fo.newBtn} onPress={() => {
+          setComposingMsg('new');
+          setCustomBack(() => () => { setComposingMsg(null); setCustomBack(null); });
+        }}>
           <IconPlus size={12} color={Colors.sakuraDeep} />
           <Text style={fo.newBtnText}>new</Text>
         </Pressable>
@@ -832,7 +967,10 @@ function FoMessagesFeature({ shipId, shipName }: { shipId: string; shipName: str
       {messages.length === 0 ? (
         <View style={fo.emptyCard}>
           <Text style={fo.emptyCardText}>nothing from them yet.</Text>
-          <Pressable style={fo.createBtn} onPress={() => setComposingMsg('new')}>
+          <Pressable style={fo.createBtn} onPress={() => {
+            setComposingMsg('new');
+            setCustomBack(() => () => { setComposingMsg(null); setCustomBack(null); });
+          }}>
             <IconPlus size={13} color={Colors.sakuraDeep} />
             <Text style={fo.createBtnText}>write their first message</Text>
           </Pressable>
@@ -896,17 +1034,17 @@ function FoMessagesFeature({ shipId, shipName }: { shipId: string; shipName: str
                     </Pressable>
 
                     <Pressable
-                      onPress={() => setComposingMsg(m)}
+                      onPress={() => {
+                        setComposingMsg(m);
+                        setCustomBack(() => () => { setComposingMsg(null); setCustomBack(null); });
+                      }}
                       style={fo.actionBtn}
                     >
                       <Text style={fo.actionBtnText}>Edit</Text>
                     </Pressable>
 
                     <Pressable
-                      onPress={() => Alert.alert('Delete?', displayBody.slice(0, 60), [
-                        { text: 'Delete', style: 'destructive', onPress: () => { deleteFoMessage(m.id); } },
-                        { text: 'Cancel', style: 'cancel' },
-                      ])}
+                      onPress={() => setMsgDeleteTarget(m.id)}
                       style={[fo.actionBtn, { borderColor: Colors.ember }]}
                     >
                       <Text style={[fo.actionBtnText, { color: Colors.ember }]}>Delete</Text>
@@ -1000,12 +1138,13 @@ const OpenLockIcon = ({ size = 13, color = '#ffffff' }: { size?: number; color?:
 
 import { FoMessage } from '@/store/foNotifications';
 
-function FoCompose({ shipName, initialMessage, onQueue, onBack }: {
+function FoCompose({ shipName, initialMessage, onQueue }: {
   shipName: string;
   initialMessage?: FoMessage;
   onQueue: (body: string, hour: number, senderName: string) => void;
-  onBack: () => void;
 }) {
+  const [notifDenied, setNotifDenied] = useState(false);
+  const [pendingQueue, setPendingQueue] = useState<string[] | null>(null);
   const [options, setOptions] = useState<string[]>(() => {
     if (initialMessage) {
       try {
@@ -1049,14 +1188,8 @@ function FoCompose({ shipName, initialMessage, onQueue, onBack }: {
 
     const granted = await requestPermission();
     if (!granted) {
-      Alert.alert(
-        'Notifications Disabled',
-        'Enable notifications in your device settings to receive messages from your F/O! Would you like to save it in the vault anyway?',
-        [
-          { text: 'Save Anyway', onPress: () => proceedWithQueue(filtered) },
-          { text: 'Cancel', style: 'cancel' }
-        ]
-      );
+      setPendingQueue(filtered);
+      setNotifDenied(true);
       return;
     }
 
@@ -1125,11 +1258,16 @@ function FoCompose({ shipName, initialMessage, onQueue, onBack }: {
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={fo.compose} keyboardVerticalOffset={120}>
+      <CozyModal
+        visible={notifDenied}
+        title="notifications off"
+        message="Enable notifications in Settings to receive their messages. Save to vault anyway?"
+        confirmText="save anyway"
+        cancelText="cancel"
+        onConfirm={() => { setNotifDenied(false); if (pendingQueue) { proceedWithQueue(pendingQueue); setPendingQueue(null); } }}
+        onClose={() => { setNotifDenied(false); setPendingQueue(null); }}
+      />
       <ScrollView contentContainerStyle={fo.composeContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-        <Pressable onPress={onBack} hitSlop={8} style={fo.composeBack}>
-          <Text style={fo.composeBackText}>‹ back</Text>
-        </Pressable>
-
         <Text style={fo.sectionLabel}>START WITH</Text>
         <View style={fo.starterRow}>
           {STARTERS.map((s) => (
@@ -1412,6 +1550,11 @@ const styles = StyleSheet.create({
   pickerFandom: { fontFamily: FontFamily.ui, fontSize: 12, color: Colors.ink3 },
   pickerCheck: { fontSize: 14, color: Colors.sakuraDeep, fontFamily: FontFamily.uiSemiBold },
 
+  msgSenderToggle: { flexDirection: 'row', backgroundColor: Colors.paperDeep, borderRadius: Radius.pill, padding: 2, borderWidth: 1, borderColor: Colors.line },
+  msgSenderBtn: { paddingVertical: 3, paddingHorizontal: 8, borderRadius: Radius.pill },
+  msgSenderBtnActive: { backgroundColor: Colors.sakuraDeep },
+  msgSenderBtnText: { fontFamily: FontFamily.ui, fontSize: 10, color: Colors.ink2 },
+  msgSenderBtnTextActive: { color: Colors.vellum },
   emptyShips: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: Spacing.s3, paddingBottom: Spacing.s9 },
   emptyTitle: { fontFamily: FontFamily.displayItalic, fontSize: FontSize.h5, color: Colors.ink },
   emptySub: { fontFamily: FontFamily.displayItalic, fontSize: FontSize.meta, color: Colors.ink3, textAlign: 'center', paddingHorizontal: Spacing.s7 },
@@ -1475,7 +1618,7 @@ const hc = StyleSheet.create({
   catContent: { padding: 10 },
   catEmptyText: { fontFamily: FontFamily.ui, fontSize: 12, color: Colors.ink3, fontStyle: 'italic', paddingVertical: 4 },
   catItemRow: { paddingVertical: 6 },
-  catItemRowBorder: { borderWidth: 1, borderColor: 'transparent', borderBottomColor: INK + '22', borderStyle: 'dashed' },
+  catItemRowBorder: { borderBottomWidth: 1, borderBottomColor: INK + '22' },
   moreText: { fontFamily: FontFamily.uiMedium, fontSize: 11, color: Colors.sakuraDeep, marginTop: 4 },
   emptyHint: { fontFamily: FontFamily.ui, fontSize: 12, color: INK, fontStyle: 'italic', opacity: 0.45 },
 
@@ -1525,32 +1668,50 @@ const sc = StyleSheet.create({
   },
   cardStripe: { width: 4, backgroundColor: Colors.sakura },
   cardBody: { flex: 1, padding: Spacing.s4, gap: 3 },
-  cardTitle: { fontFamily: FontFamily.displayItalic, fontSize: 16, color: Colors.ink },
+  cardTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6 },
+  cardTitle: { fontFamily: FontFamily.displayItalic, fontSize: 16, color: Colors.ink, flex: 1 },
   cardPreview: { fontFamily: FontFamily.script, fontSize: 14, color: Colors.ink2, lineHeight: 20 },
   cardEmpty: { fontFamily: FontFamily.displayItalic, fontSize: 13, color: Colors.ink3, fontStyle: 'italic' },
   cardDate: { fontFamily: FontFamily.marker, fontSize: 9, color: Colors.ink3, letterSpacing: 0.5, marginTop: 4 },
 
-  editor: { flex: 1, backgroundColor: Colors.vellum },
+  editor: { flex: 1, backgroundColor: Colors.paper },
   editorBar: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: Spacing.s5, paddingVertical: Spacing.s3,
+    paddingHorizontal: Spacing.s4, paddingVertical: Spacing.s3,
     borderBottomWidth: 1, borderBottomColor: Colors.line,
     backgroundColor: Colors.paper,
   },
+  barBackBtn: {
+    width: 32, height: 32,
+    borderRadius: Radius.pill,
+    backgroundColor: Colors.vellum,
+    borderWidth: 1, borderColor: Colors.line,
+    alignItems: 'center', justifyContent: 'center',
+  },
   barBack: { fontFamily: FontFamily.ui, fontSize: 14, color: Colors.ink2 },
-  barWords: { fontFamily: FontFamily.marker, fontSize: 9, color: Colors.ink3, letterSpacing: 0.8 },
+  barWords: { fontFamily: FontFamily.ja, fontSize: 11, color: Colors.ink3, letterSpacing: 0.5 },
   barDelete: { fontFamily: FontFamily.ui, fontSize: 13, color: Colors.ember },
   barSave: { paddingVertical: 5, paddingHorizontal: 16, backgroundColor: Colors.sakuraDeep, borderRadius: Radius.pill },
   barSaveText: { fontFamily: FontFamily.uiMedium, fontSize: 13, color: Colors.vellum },
   titleInput: {
-    paddingHorizontal: Spacing.s5, paddingTop: Spacing.s5, paddingBottom: Spacing.s3,
-    fontFamily: FontFamily.ui, fontSize: 18, color: Colors.ink,
-    borderBottomWidth: 1, borderBottomColor: Colors.line, backgroundColor: Colors.vellum,
+    paddingHorizontal: Spacing.s5, paddingTop: Spacing.s5, paddingBottom: Spacing.s4,
+    fontFamily: FontFamily.displayItalic, fontSize: 22, color: Colors.ink,
+    borderBottomWidth: 1.5, borderBottomColor: Colors.line,
+    backgroundColor: Colors.paper,
+  },
+  bodyWrap: {
+    flex: 1,
+    backgroundColor: Colors.vellum,
+    margin: Spacing.s4,
+    borderRadius: Radius.r3,
+    borderWidth: 1,
+    borderColor: Colors.line,
+    ...Shadow.s1,
   },
   bodyInput: {
-    flex: 1, paddingHorizontal: Spacing.s5, paddingTop: Spacing.s4,
-    fontFamily: FontFamily.ui, fontSize: 15, color: Colors.ink, lineHeight: 24,
-    minHeight: 300, backgroundColor: Colors.vellum,
+    flex: 1, padding: Spacing.s4,
+    fontFamily: FontFamily.script, fontSize: 15, color: Colors.ink, lineHeight: 26,
+    minHeight: 260,
   },
 });
 

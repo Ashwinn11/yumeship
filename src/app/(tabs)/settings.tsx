@@ -9,14 +9,14 @@ import { Pin } from '@/components/deco/Pin';
 import { Sparkle } from '@/components/deco/Sparkle';
 import { SparkleCluster } from '@/components/deco/SparkleCluster';
 import {
+  CozyModal,
   IconBellSolid,
-  IconTicketSolid,
-  IconRestoreSolid,
-  IconStorageSolid,
-  IconTrashSolid,
   IconDocumentSolid,
   IconLockSolid,
-  CozyModal,
+  IconRestoreSolid,
+  IconStorageSolid,
+  IconTicketSolid,
+  IconTrashSolid,
 } from '@/components/ui';
 import { Mark } from '@/components/ui/Mark';
 import { Toggle } from '@/components/ui/Toggle';
@@ -201,7 +201,6 @@ export default function SettingsScreen() {
       <View style={styles.header}>
         <View style={styles.headerRow}>
           <Mark size={26} />
-          <Text style={styles.version}>v0.1.0</Text>
         </View>
         <View style={styles.titleRow}>
           <Text style={styles.title}>settings</Text>
@@ -386,7 +385,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   proText: {
-    fontFamily: FontFamily.displayItalic,
+    fontFamily: FontFamily.uiMedium,
     fontSize: FontSize.h6,
     lineHeight: 24,
     color: Colors.ink,

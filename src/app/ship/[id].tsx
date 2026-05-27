@@ -1,7 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
-  Alert, KeyboardAvoidingView, Modal, Platform, Pressable,
+  KeyboardAvoidingView, Modal, Platform, Pressable,
   ScrollView, StyleSheet, Text, TextInput, TouchableWithoutFeedback, View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -19,13 +19,15 @@ import { DatesTab } from '@/components/tabs/DatesTab';
 import { MessagesTab } from '@/components/tabs/MessagesTab';
 import { StorylineTab } from '@/components/tabs/StorylineTab';
 import { Chip } from '@/components/ui/Chip';
+import { CozyModal } from '@/components/ui/CozyModal';
 import { GradientCover } from '@/components/ui/GradientCover';
-import { IconEdit, IconPlus } from '@/components/ui/Icon';
+import { IconEdit, IconPlus, IconTrashSolid } from '@/components/ui/Icon';
 import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing } from '@/constants/theme';
 import {
-  addHeadcanon, deleteHeadcanon, useHeadcanonCounts, useHeadcanons,
+  addHeadcanon, deleteHeadcanon, updateHeadcanon, useHeadcanonCounts, useHeadcanons,
 } from '@/store/headcanons';
 import { addScenario, deleteScenario, useScenarios } from '@/store/scenarios';
+import { getGlobalSetting, saveGlobalSetting } from '@/store/onboarding';
 import { deleteShip, daysTogetherLabel, updateShip, useShip } from '@/store/ships';
 
 const REL_CHIP_COLOR: Record<string, string> = {
@@ -75,6 +77,7 @@ export default function ShipDetail() {
 
   const relChipColor = REL_CHIP_COLOR[ship.relType] ?? Colors.sakuraDeep;
   const shareChip = SHARE_CHIP[ship.shareType];
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]}>
@@ -86,22 +89,23 @@ export default function ShipDetail() {
         <Sakura size={22} color={Colors.sakura} />
       </View>
 
+      <CozyModal
+        visible={confirmDelete}
+        title="let them go?"
+        message={`Remove ${ship.name} and all their memories. This can't be undone.`}
+        confirmText="Delete"
+        cancelText="keep them"
+        isDestructive
+        onConfirm={() => { setConfirmDelete(false); deleteShip(ship.id); router.back(); }}
+        onClose={() => setConfirmDelete(false)}
+      />
+
       <View style={styles.appBar}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <Text style={styles.back}>‹</Text>
         </Pressable>
         <Text style={styles.appBarTitle}>{ship.fandom?.toUpperCase() || 'F/O'}</Text>
-        <Pressable
-          hitSlop={8}
-          onPress={() => Alert.alert(
-            ship.name,
-            'What would you like to do?',
-            [
-              { text: 'Delete ship', style: 'destructive', onPress: () => { deleteShip(ship.id); router.back(); } },
-              { text: 'Cancel', style: 'cancel' },
-            ],
-          )}
-        >
+        <Pressable hitSlop={8} onPress={() => setConfirmDelete(true)}>
           <IconEdit size={14} color={Colors.ink2} />
         </Pressable>
       </View>
@@ -138,7 +142,7 @@ export default function ShipDetail() {
         {activeTab === 'albums'    && <AlbumsTab shipId={id!} />}
         {activeTab === 'storyline' && <StorylineTab shipId={id!} shipName={ship.name} />}
         {activeTab === 'messages'  && <MessagesTab shipId={id!} shipName={ship.name} />}
-        {activeTab === 'dates'     && <DatesTab shipId={id!} />}
+        {activeTab === 'dates'     && <DatesTab shipId={id!} shipName={ship.name} />}
       </ScrollView>
     </View>
   );
@@ -152,6 +156,8 @@ function ProfileTab({ ship, id }: { ship: NonNullable<ReturnType<typeof useShip>
   const [editingAbout, setEditingAbout] = useState(false);
   const [aboutDraft, setAboutDraft] = useState(ship!.aboutText);
   const [hcSheet, setHcSheet] = useState<string | null>(null);
+  const [editingDate, setEditingDate] = useState(false);
+  const [dateDraft, setDateDraft] = useState(ship!.startDate);
   const daysLabel = daysTogetherLabel(ship!.startDate);
 
   function saveAbout() {
@@ -161,19 +167,26 @@ function ProfileTab({ ship, id }: { ship: NonNullable<ReturnType<typeof useShip>
 
   return (
     <View style={styles.profileContent}>
-      {/* Anniversary */}
-      <Pressable
-        style={styles.anniversary}
-        onPress={() => {
-          Alert.prompt(
-            'Start date',
-            'Enter the date you first met (YYYY-MM-DD)',
-            (text) => { if (text) updateShip(id, { startDate: text }); },
-            'plain-text',
-            ship!.startDate,
-          );
-        }}
+      <CozyModal
+        visible={editingDate}
+        title="when did you meet?"
+        confirmText="save"
+        cancelText="cancel"
+        onConfirm={() => { updateShip(id, { startDate: dateDraft }); setEditingDate(false); }}
+        onClose={() => { setDateDraft(ship!.startDate); setEditingDate(false); }}
       >
+        <TextInput
+          value={dateDraft}
+          onChangeText={setDateDraft}
+          placeholder="YYYY-MM-DD"
+          placeholderTextColor={Colors.ink3}
+          style={styles.dateInput}
+          autoFocus
+        />
+      </CozyModal>
+
+      {/* Anniversary */}
+      <Pressable style={styles.anniversary} onPress={() => { setDateDraft(ship!.startDate); setEditingDate(true); }}>
         <View style={styles.anniversaryLeft}>
           <Heart size={11} color={Colors.sakuraDeep} />
           <Text style={styles.anniversaryText}>
@@ -250,6 +263,8 @@ function ProfileTab({ ship, id }: { ship: NonNullable<ReturnType<typeof useShip>
 
 // ── Headcanon Sheet ─────────────────────────────────────────────────────────
 
+const HC_COLLAPSE_LIMIT = 5;
+
 function HCSheet({
   shipId, categoryId, cat, onClose,
 }: {
@@ -258,9 +273,19 @@ function HCSheet({
   cat: { ja: string; label: string; color: string };
   onClose: () => void;
 }) {
+  const labelKey = `hc_label_${shipId}_${categoryId}`;
   const hcs = useHeadcanons(shipId, categoryId);
   const [draft, setDraft] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [showAll, setShowAll] = useState(false);
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [titleDraft, setTitleDraft] = useState(() => getGlobalSetting(labelKey, cat.label));
   const inputRef = useRef<TextInput>(null);
+
+  const visible = showAll ? hcs : hcs.slice(0, HC_COLLAPSE_LIMIT);
+  const hiddenCount = hcs.length - HC_COLLAPSE_LIMIT;
 
   function submit() {
     if (!draft.trim()) return;
@@ -268,8 +293,28 @@ function HCSheet({
     setDraft('');
   }
 
+  function saveEdit() {
+    if (editingId && editDraft.trim()) updateHeadcanon(editingId, editDraft.trim());
+    setEditingId(null);
+  }
+
+  function saveTitle() {
+    saveGlobalSetting(labelKey, titleDraft.trim() || cat.label);
+    setEditingTitle(false);
+  }
+
   return (
     <Modal transparent animationType="slide" onRequestClose={onClose}>
+      <CozyModal
+        visible={!!deleteTarget}
+        title="remove this?"
+        message={hcs.find((h) => h.id === deleteTarget)?.body.slice(0, 80)}
+        confirmText="Delete"
+        cancelText="keep it"
+        isDestructive
+        onConfirm={() => { if (deleteTarget) deleteHeadcanon(deleteTarget); setDeleteTarget(null); }}
+        onClose={() => setDeleteTarget(null)}
+      />
       <TouchableWithoutFeedback onPress={onClose}>
         <View style={styles.sheetOverlay} />
       </TouchableWithoutFeedback>
@@ -278,27 +323,61 @@ function HCSheet({
           <View style={styles.sheetHandle} />
           <View style={styles.sheetHeader}>
             <Text style={[styles.sheetJa, { color: cat.color }]}>{cat.ja}</Text>
-            <Text style={styles.sheetTitle}>{cat.label}</Text>
+            {editingTitle ? (
+              <TextInput
+                value={titleDraft}
+                onChangeText={setTitleDraft}
+                onBlur={saveTitle}
+                onSubmitEditing={saveTitle}
+                autoFocus
+                style={[styles.sheetTitle, { borderBottomWidth: 1, borderBottomColor: cat.color, flex: 1 }]}
+              />
+            ) : (
+              <Pressable style={{ flex: 1 }} onPress={() => setEditingTitle(true)}>
+                <Text style={styles.sheetTitle}>{titleDraft}</Text>
+              </Pressable>
+            )}
             <Pressable onPress={onClose} hitSlop={8}>
               <Text style={styles.sheetClose}>✕</Text>
             </Pressable>
           </View>
           <ScrollView style={styles.sheetList} keyboardShouldPersistTaps="handled">
             {hcs.length === 0 && (
-              <Text style={styles.sheetEmpty}>no headcanons yet · add one below</Text>
+              <Text style={styles.sheetEmpty}>nothing yet · add one below</Text>
             )}
-            {hcs.map((hc) => (
-              <Pressable
-                key={hc.id}
-                style={styles.hcItem}
-                onLongPress={() => Alert.alert('Delete?', hc.body, [
-                  { text: 'Delete', style: 'destructive', onPress: () => deleteHeadcanon(hc.id) },
-                  { text: 'Cancel', style: 'cancel' },
-                ])}
-              >
-                <Text style={styles.hcBody}>{hc.body}</Text>
-              </Pressable>
+            {visible.map((hc) => (
+              <View key={hc.id} style={styles.hcItem}>
+                {editingId === hc.id ? (
+                  <View style={styles.hcEditRow}>
+                    <TextInput
+                      value={editDraft}
+                      onChangeText={setEditDraft}
+                      onSubmitEditing={saveEdit}
+                      autoFocus
+                      style={[styles.hcEditInput, { flex: 1 }]}
+                      multiline
+                    />
+                    <Pressable hitSlop={8} onPress={saveEdit} style={styles.hcSaveBtn}>
+                      <Text style={[styles.hcSaveBtnText, { color: cat.color }]}>done</Text>
+                    </Pressable>
+                  </View>
+                ) : (
+                  <View style={styles.hcEditRow}>
+                    <Pressable onPress={() => { setEditingId(hc.id); setEditDraft(hc.body); }} style={styles.hcBodyWrap}>
+                      <Text style={styles.hcBody}>{hc.body}</Text>
+                    </Pressable>
+                    <Pressable hitSlop={10} onPress={() => setDeleteTarget(hc.id)} style={styles.hcDeleteBtn}>
+                      <Text style={styles.hcDeleteText}>✕</Text>
+                    </Pressable>
+                  </View>
+                )}
+              </View>
             ))}
+            {!showAll && hiddenCount > 0 && (
+              <Pressable style={styles.hcShowMore} onPress={() => setShowAll(true)}>
+                <Text style={[styles.hcShowMoreText, { color: cat.color }]}>+{hiddenCount} more</Text>
+              </Pressable>
+            )}
           </ScrollView>
           <View style={styles.sheetInputRow}>
             <TextInput
@@ -328,6 +407,7 @@ function ScenariosTab({ shipId, shipName }: { shipId: string; shipName: string }
   const [composing, setComposing] = useState(false);
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
+  const [scDeleteTarget, setScDeleteTarget] = useState<string | null>(null);
 
   function save() {
     if (!body.trim()) return;
@@ -382,6 +462,16 @@ function ScenariosTab({ shipId, shipName }: { shipId: string; shipName: string }
 
   return (
     <View style={styles.scenarioTab}>
+      <CozyModal
+        visible={!!scDeleteTarget}
+        title="delete this scene?"
+        message={scenarios.find((s) => s.id === scDeleteTarget)?.title || 'this scenario'}
+        confirmText="Delete"
+        cancelText="keep it"
+        isDestructive
+        onConfirm={() => { if (scDeleteTarget) deleteScenario(scDeleteTarget); setScDeleteTarget(null); }}
+        onClose={() => setScDeleteTarget(null)}
+      />
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionLabel}>scenarios · {scenarios.length}</Text>
         <Pressable onPress={() => setComposing(true)} hitSlop={8}>
@@ -414,18 +504,18 @@ function ScenariosTab({ shipId, shipName }: { shipId: string; shipName: string }
         </View>
       ) : (
         scenarios.map((sc) => (
-          <Pressable
-            key={sc.id}
-            style={styles.scenarioCard}
-            onLongPress={() => Alert.alert('Delete scenario?', sc.title || sc.body.slice(0, 60), [
-              { text: 'Delete', style: 'destructive', onPress: () => deleteScenario(sc.id) },
-              { text: 'Cancel', style: 'cancel' },
-            ])}
-          >
-            {sc.title ? <Text style={styles.scCardTitle}>{sc.title}</Text> : null}
-            <Text style={styles.scCardPreview} numberOfLines={2}>{sc.body}</Text>
-            <Text style={styles.scCardDate}>{new Date(sc.createdAt).toLocaleDateString()}</Text>
-          </Pressable>
+          <View key={sc.id} style={styles.scenarioCard}>
+            <View style={{ flex: 1 }}>
+              <View style={styles.scCardTitleRow}>
+                <Text style={styles.scCardTitle} numberOfLines={1}>{sc.title || 'untitled'}</Text>
+                <Pressable hitSlop={8} onPress={() => setScDeleteTarget(sc.id)}>
+                  <IconTrashSolid size={12} color={Colors.ink3} />
+                </Pressable>
+              </View>
+              <Text style={styles.scCardPreview} numberOfLines={2}>{sc.body}</Text>
+              <Text style={styles.scCardDate}>{new Date(sc.createdAt).toLocaleDateString()}</Text>
+            </View>
+          </View>
         ))
       )}
     </View>
@@ -517,6 +607,27 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: Colors.paperDeep,
   },
   hcBody: { fontFamily: FontFamily.displayItalic, fontSize: 14, color: Colors.ink, lineHeight: 20 },
+  hcEditRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  hcBodyWrap: { flex: 1 },
+  hcEditInput: {
+    fontFamily: FontFamily.displayItalic, fontSize: 14, color: Colors.ink, lineHeight: 20,
+    borderBottomWidth: 1, borderBottomColor: Colors.sakura, paddingVertical: 2,
+  },
+  hcDeleteBtn: { padding: 4 },
+  hcDeleteText: { fontSize: 12, color: Colors.ink3, fontFamily: FontFamily.ui },
+  hcSaveBtn: { padding: 4 },
+  hcSaveBtnText: { fontSize: 12, fontFamily: FontFamily.uiMedium },
+  hcShowMore: {
+    alignSelf: 'flex-start', paddingVertical: 6, paddingHorizontal: 10,
+    marginVertical: 4, borderRadius: Radius.pill,
+    backgroundColor: Colors.paperDeep,
+  },
+  hcShowMoreText: { fontFamily: FontFamily.uiMedium, fontSize: 12 },
+  dateInput: {
+    fontFamily: FontFamily.ui, fontSize: 15, color: Colors.ink,
+    borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.r2,
+    paddingVertical: 8, paddingHorizontal: 12, backgroundColor: Colors.vellum,
+  },
   sheetInputRow: {
     flexDirection: 'row', gap: 8, alignItems: 'center',
     padding: Spacing.s4, borderTopWidth: 1, borderTopColor: Colors.line,
@@ -552,9 +663,10 @@ const styles = StyleSheet.create({
   sceneAddText: { fontFamily: FontFamily.uiMedium, fontSize: FontSize.body, color: Colors.vellum },
   scenarioCard: {
     padding: Spacing.s4, backgroundColor: Colors.vellum,
-    borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.r3, gap: 4,
+    borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.r3,
   },
-  scCardTitle: { fontFamily: FontFamily.displayItalic, fontSize: 17, color: Colors.ink },
+  scCardTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6, marginBottom: 2 },
+  scCardTitle: { fontFamily: FontFamily.displayItalic, fontSize: 17, color: Colors.ink, flex: 1 },
   scCardPreview: { fontFamily: FontFamily.displayItalic, fontSize: 13, color: Colors.ink2, lineHeight: 19 },
   scCardDate: { fontFamily: FontFamily.marker, fontSize: 9, color: Colors.ink3, letterSpacing: 0.6, marginTop: 2 },
 

@@ -1,12 +1,13 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View, TextInput } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ShipCard } from '@/components/cards/ShipCard';
 import { Heart } from '@/components/deco/Heart';
 import { Sparkle } from '@/components/deco/Sparkle';
 import { SparkleCluster } from '@/components/deco/SparkleCluster';
+import { CozyModal } from '@/components/ui/CozyModal';
 import { IconPlus, IconSearch } from '@/components/ui/Icon';
 import { Mark } from '@/components/ui/Mark';
 import { Colors, FontFamily, FontSize, Radius, Spacing } from '@/constants/theme';
@@ -18,6 +19,7 @@ export default function HomeScreen() {
   const ships = useShips();
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
+  const [shipToDelete, setShipToDelete] = useState<string | null>(null);
 
   const filteredShips = ships.filter((ship) => {
     const q = searchQuery.toLowerCase().trim();
@@ -30,8 +32,20 @@ export default function HomeScreen() {
     );
   });
 
+  const shipToDeleteData = ships.find((s) => s.id === shipToDelete);
+
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]}>
+      <CozyModal
+        visible={!!shipToDelete}
+        title="let them go?"
+        message={shipToDeleteData ? `Remove ${shipToDeleteData.shipName || shipToDeleteData.name} and all their memories.` : undefined}
+        confirmText="Delete"
+        cancelText="keep them"
+        isDestructive
+        onConfirm={() => { if (shipToDelete) deleteShip(shipToDelete); setShipToDelete(null); }}
+        onClose={() => setShipToDelete(null)}
+      />
       {/* Background accents */}
       <View style={styles.decoTR} pointerEvents="none">
         <SparkleCluster color={Colors.sakura} />
@@ -156,14 +170,7 @@ export default function HomeScreen() {
                 tapeColor={ship.tapeColor}
                 pinned={ship.pinned}
                 onPress={() => router.push(`/template/${ship.templateKey ?? 'get-to-know'}?shipId=${ship.id}` as any)}
-                onLongPress={() => Alert.alert(
-                  `Remove ${ship.shipName || ship.name}?`,
-                  'This will delete the ship and all its data.',
-                  [
-                    { text: 'Delete', style: 'destructive', onPress: () => deleteShip(ship.id) },
-                    { text: 'Cancel', style: 'cancel' },
-                  ],
-                )}
+                onLongPress={() => setShipToDelete(ship.id)}
               />
             ))}
             {/* Add new card */}
@@ -244,7 +251,6 @@ const styles = StyleSheet.create({
     width: '47%',
     aspectRatio: 3 / 4,
     borderWidth: 1,
-    borderStyle: 'dashed',
     borderColor: Colors.lineStrong,
     borderRadius: Radius.r4,
     alignItems: 'center',

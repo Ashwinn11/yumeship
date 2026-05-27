@@ -1,21 +1,28 @@
 import { useState } from 'react';
 import {
-  Alert, Modal, Pressable, ScrollView,
+  Modal, Pressable, ScrollView,
   StyleSheet, Switch, Text, TextInput, TouchableWithoutFeedback, View,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { Heart } from '@/components/deco/Heart';
+import { Sparkle } from '@/components/deco/Sparkle';
+import { CozyModal } from '@/components/ui/CozyModal';
 import { IconPlus } from '@/components/ui/Icon';
 import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing } from '@/constants/theme';
 import { addDate, deleteDate, daysUntil, useDates } from '@/store/dates';
 import { DateField } from '@/components/ui/DateField';
 
-export function DatesTab({ shipId }: { shipId: string }) {
+const DATE_COLORS = [Colors.sakuraDeep, Colors.peachDeep, Colors.lavenderDeep, Colors.sageDeep];
+
+export function DatesTab({ shipId, shipName }: { shipId: string; shipName?: string }) {
   const dates = useDates(shipId);
   const [composing, setComposing] = useState(false);
   const [title, setTitle] = useState('');
   const [date, setDate] = useState('');
   const [yearly, setYearly] = useState(true);
+  const [dateToDelete, setDateToDelete] = useState<string | null>(null);
+  const [annivInfo, setAnnivInfo] = useState(false);
 
   function save() {
     if (!title.trim() || !date.trim()) return;
@@ -24,8 +31,27 @@ export function DatesTab({ shipId }: { shipId: string }) {
     setComposing(false);
   }
 
+  const dateToDeleteData = dates.find((d) => d.id === dateToDelete);
+
   return (
     <View style={s.tab}>
+      <CozyModal
+        visible={!!dateToDelete}
+        title="remove this date?"
+        message={dateToDeleteData?.title}
+        confirmText="Delete"
+        cancelText="keep it"
+        isDestructive
+        onConfirm={() => { if (dateToDelete) deleteDate(dateToDelete); setDateToDelete(null); }}
+        onClose={() => setDateToDelete(null)}
+      />
+      <CozyModal
+        visible={annivInfo}
+        title="anniversary"
+        message="You can change or remove your main anniversary from the ship profile."
+        confirmText="got it"
+        onClose={() => setAnnivInfo(false)}
+      />
       <View style={s.header}>
         <Text style={s.label}>dates · {dates.length}</Text>
         <Pressable hitSlop={8} onPress={() => setComposing(true)}>
@@ -44,39 +70,46 @@ export function DatesTab({ shipId }: { shipId: string }) {
           </Pressable>
         </View>
       ) : (
-        dates.map((d) => {
+        dates.map((d, idx) => {
           const days = daysUntil(d.date, d.yearly);
+          const isAnn = d.id.startsWith('ship-ann-');
+          const tint = DATE_COLORS[idx % DATE_COLORS.length];
+
+          const numDisplay = days === 0 ? '♡' : days !== null && days > 0 ? String(days) : null;
+          const unitDisplay = days === 0 ? null : days !== null && days > 0 ? 'DAYS' : 'PAST';
+
           return (
             <Pressable
               key={d.id}
-              style={s.dateCard}
-              onLongPress={() => {
-                if (d.id.startsWith('ship-ann-')) {
-                  Alert.alert('Anniversary', 'You can change or remove your main anniversary from the ship profile or templates.');
-                  return;
-                }
-                Alert.alert('Delete?', d.title, [
-                  { text: 'Delete', style: 'destructive', onPress: () => deleteDate(d.id) },
-                  { text: 'Cancel', style: 'cancel' },
-                ]);
-              }}
+              onLongPress={() => isAnn ? setAnnivInfo(true) : setDateToDelete(d.id)}
             >
-              <View style={s.datePill}>
-                {days === 0 ? (
-                  <Text style={s.datePillToday}>today ♡</Text>
-                ) : days !== null && days > 0 ? (
-                  <>
-                    <Text style={s.datePillNum}>{days}</Text>
-                    <Text style={s.datePillUnit}>days</Text>
-                  </>
-                ) : (
-                  <Text style={s.datePillPast}>passed</Text>
+              <LinearGradient
+                colors={[tint + '18', tint + '50']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={[s.dateCard, { borderColor: tint + '60' }]}
+              >
+                {isAnn && (
+                  <View style={s.annHeart}>
+                    <Heart size={12} color={tint} />
+                  </View>
                 )}
-              </View>
-              <View style={s.dateInfo}>
-                <Text style={s.dateTitle}>{d.title}</Text>
-                <Text style={s.dateStr}>{d.date}{d.yearly ? ' · yearly' : ''}</Text>
-              </View>
+                <View style={s.cardLeft}>
+                  {numDisplay !== null && (
+                    <Text style={[s.cardNum, { color: tint }]}>{numDisplay}</Text>
+                  )}
+                  {unitDisplay !== null && (
+                    <Text style={[s.cardUnit, { color: tint }]}>{unitDisplay}</Text>
+                  )}
+                </View>
+                <View style={s.cardInfo}>
+                  <Text style={s.cardTitle} numberOfLines={1}>{d.title}</Text>
+                  {shipName ? (
+                    <Text style={s.cardSub} numberOfLines={1}>{shipName}</Text>
+                  ) : null}
+                </View>
+                <Sparkle size={11} color={tint} />
+              </LinearGradient>
             </Pressable>
           );
         })
@@ -170,21 +203,18 @@ const s = StyleSheet.create({
   emptyBtnText: { fontFamily: FontFamily.uiMedium, fontSize: FontSize.body, color: Colors.vellum },
   dateCard: {
     flexDirection: 'row', alignItems: 'center', gap: 14,
-    padding: Spacing.s4, backgroundColor: Colors.vellum,
-    borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.r3,
+    paddingVertical: Spacing.s4, paddingHorizontal: Spacing.s5,
+    borderWidth: 1, borderRadius: Radius.r3,
+    overflow: 'hidden',
+    position: 'relative',
   },
-  datePill: {
-    width: 56, height: 56, borderRadius: Radius.r3,
-    backgroundColor: Colors.sakuraSoft, borderWidth: 1, borderColor: Colors.sakura,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  datePillNum: { fontFamily: FontFamily.ja, fontSize: 18, color: Colors.sakuraDeep, lineHeight: 22 },
-  datePillUnit: { fontFamily: FontFamily.ja, fontSize: 8, color: Colors.sakuraDeep, letterSpacing: 0.6 },
-  datePillToday: { fontFamily: FontFamily.ja, fontSize: 10, color: Colors.sakuraDeep, textAlign: 'center' },
-  datePillPast: { fontFamily: FontFamily.ja, fontSize: 9, color: Colors.ink3, letterSpacing: 0.4 },
-  dateInfo: { flex: 1, gap: 3 },
-  dateTitle: { fontFamily: FontFamily.ja, fontSize: 13, color: Colors.ink },
-  dateStr: { fontFamily: FontFamily.ja, fontSize: 11, color: Colors.ink3, letterSpacing: 0.6 },
+  annHeart: { position: 'absolute', top: 10, left: 12 },
+  cardLeft: { width: 52, alignItems: 'flex-start', justifyContent: 'center' },
+  cardNum: { fontFamily: FontFamily.displayItalic, fontSize: 36, lineHeight: 38, letterSpacing: -1 },
+  cardUnit: { fontFamily: FontFamily.marker, fontSize: 9, letterSpacing: 1.4, textTransform: 'uppercase', marginTop: -4 },
+  cardInfo: { flex: 1, gap: 2 },
+  cardTitle: { fontFamily: FontFamily.displayItalic, fontSize: 17, color: Colors.ink, lineHeight: 20 },
+  cardSub: { fontFamily: FontFamily.ui, fontSize: 11, color: Colors.ink3 },
 
   // Sheet
   overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.3)' },

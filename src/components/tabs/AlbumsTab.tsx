@@ -1,28 +1,38 @@
 import * as ImagePicker from 'expo-image-picker';
 import { useState } from 'react';
 import {
-  Alert, Dimensions, Image, Pressable,
+  Dimensions, Image, Pressable,
   ScrollView, StyleSheet, Text, TextInput, View,
 } from 'react-native';
 
-import { IconPlus } from '@/components/ui/Icon';
+import { CozyModal } from '@/components/ui/CozyModal';
+import { IconPlus, IconTrashSolid } from '@/components/ui/Icon';
 import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing } from '@/constants/theme';
 import { addAlbum, addAlbumPhoto, deleteAlbum, deleteAlbumPhoto, useAlbumPhotos, useAlbums } from '@/store/albums';
 
-const COL_WIDTH = (Dimensions.get('window').width - Spacing.s5 * 2 - 12) / 3;
+const SCREEN_W = Dimensions.get('window').width;
+const GRID_PAD = 2;
+const GRID_GAP = 2;
+const COL_WIDTH = Math.floor((SCREEN_W - GRID_PAD * 2 - GRID_GAP * 2) / 3);
 
-export function AlbumsTab({ shipId }: { shipId: string }) {
+export function AlbumsTab({ shipId, setCustomBack }: { shipId: string; setCustomBack?: (fn: (() => void) | null) => void }) {
   const albums = useAlbums(shipId);
   const [openAlbumId, setOpenAlbumId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [newTitle, setNewTitle] = useState('');
+  const [albumToDelete, setAlbumToDelete] = useState<string | null>(null);
+
+  function openAlbum(id: string) {
+    setOpenAlbumId(id);
+    setCustomBack?.(() => () => { setOpenAlbumId(null); setCustomBack?.(null); });
+  }
 
   function confirmCreate() {
     if (!newTitle.trim()) return;
     const id = addAlbum(shipId, newTitle.trim());
     setNewTitle('');
     setCreating(false);
-    setOpenAlbumId(id);
+    openAlbum(id);
   }
 
   if (openAlbumId) {
@@ -31,13 +41,25 @@ export function AlbumsTab({ shipId }: { shipId: string }) {
       <AlbumView
         albumId={openAlbumId}
         albumTitle={album?.title ?? ''}
-        onBack={() => setOpenAlbumId(null)}
+        onBack={() => { setOpenAlbumId(null); setCustomBack?.(null); }}
       />
     );
   }
 
+  const albumToDeleteData = albums.find((a) => a.id === albumToDelete);
+
   return (
     <View style={s.tab}>
+      <CozyModal
+        visible={!!albumToDelete}
+        title="delete this album?"
+        message={albumToDeleteData ? `"${albumToDeleteData.title}" and all its photos will be removed.` : undefined}
+        confirmText="Delete"
+        cancelText="keep it"
+        isDestructive
+        onConfirm={() => { if (albumToDelete) deleteAlbum(albumToDelete); setAlbumToDelete(null); }}
+        onClose={() => setAlbumToDelete(null)}
+      />
       <View style={s.header}>
         <Text style={s.label}>albums · {albums.length}</Text>
         <Pressable hitSlop={8} onPress={() => setCreating(true)}>
@@ -83,11 +105,7 @@ export function AlbumsTab({ shipId }: { shipId: string }) {
             <Pressable
               key={album.id}
               style={s.albumCard}
-              onPress={() => setOpenAlbumId(album.id)}
-              onLongPress={() => Alert.alert('Delete album?', `"${album.title}" and all its photos`, [
-                { text: 'Delete', style: 'destructive', onPress: () => deleteAlbum(album.id) },
-                { text: 'Cancel', style: 'cancel' },
-              ])}
+              onPress={() => openAlbum(album.id)}
             >
               {album.coverUri ? (
                 <Image source={{ uri: album.coverUri }} style={s.albumCover} />
@@ -97,7 +115,12 @@ export function AlbumsTab({ shipId }: { shipId: string }) {
                 </View>
               )}
               <View style={s.albumInfo}>
-                <Text style={s.albumTitle} numberOfLines={1}>{album.title}</Text>
+                <View style={s.albumInfoRow}>
+                  <Text style={s.albumTitle} numberOfLines={1}>{album.title}</Text>
+                  <Pressable hitSlop={10} onPress={() => setAlbumToDelete(album.id)}>
+                    <IconTrashSolid size={12} color={Colors.ink3} />
+                  </Pressable>
+                </View>
                 <Text style={s.albumCount}>{album.photoCount} photos</Text>
               </View>
             </Pressable>
@@ -111,6 +134,9 @@ export function AlbumsTab({ shipId }: { shipId: string }) {
 function AlbumView({ albumId, albumTitle, onBack }: { albumId: string; albumTitle: string; onBack: () => void }) {
   const photos = useAlbumPhotos(albumId);
   const [lightboxUri, setLightboxUri] = useState<string | null>(null);
+  const [selecting, setSelecting] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [confirmPhotoDelete, setConfirmPhotoDelete] = useState(false);
 
   async function pickPhoto() {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -125,16 +151,62 @@ function AlbumView({ albumId, albumTitle, onBack }: { albumId: string; albumTitl
     }
   }
 
+  function enterSelect(photoId: string) {
+    setSelecting(true);
+    setSelected(new Set([photoId]));
+  }
+
+  function toggleSelect(photoId: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(photoId)) next.delete(photoId);
+      else next.add(photoId);
+      return next;
+    });
+  }
+
+  function cancelSelect() {
+    setSelecting(false);
+    setSelected(new Set());
+  }
+
+  function deleteSelected() {
+    setConfirmPhotoDelete(true);
+  }
+
   return (
     <View style={s.albumView}>
-      <View style={s.albumHeader}>
-        <Pressable onPress={onBack} hitSlop={8}>
-          <Text style={s.backText}>‹</Text>
-        </Pressable>
-        <Text style={s.albumViewTitle}>{albumTitle}</Text>
-        <Pressable hitSlop={8} onPress={pickPhoto}>
-          <IconPlus size={14} color={Colors.sakuraDeep} />
-        </Pressable>
+      <CozyModal
+        visible={confirmPhotoDelete}
+        title={`delete ${selected.size} photo${selected.size > 1 ? 's' : ''}?`}
+        message="This cannot be undone."
+        confirmText="Delete"
+        cancelText="keep them"
+        isDestructive
+        onConfirm={() => { selected.forEach((id) => deleteAlbumPhoto(id)); cancelSelect(); setConfirmPhotoDelete(false); }}
+        onClose={() => setConfirmPhotoDelete(false)}
+      />
+      {/* Top row: title + action buttons */}
+      <View style={s.albumTopRow}>
+        <Text style={s.albumViewTitle} numberOfLines={1}>{albumTitle}</Text>
+        <View style={s.albumTopActions}>
+          {selecting ? (
+            <Pressable onPress={cancelSelect} style={s.albumActionBtn} hitSlop={8}>
+              <Text style={s.albumActionText}>Cancel</Text>
+            </Pressable>
+          ) : (
+            <>
+              {photos.length > 0 && (
+                <Pressable onPress={() => { setSelecting(true); }} style={s.albumActionBtn} hitSlop={8}>
+                  <Text style={s.albumActionText}>Select</Text>
+                </Pressable>
+              )}
+              <Pressable hitSlop={8} onPress={pickPhoto} style={s.albumAddBtn}>
+                <IconPlus size={13} color={Colors.sakuraDeep} />
+              </Pressable>
+            </>
+          )}
+        </View>
       </View>
 
       {photos.length === 0 ? (
@@ -148,21 +220,56 @@ function AlbumView({ albumId, albumTitle, onBack }: { albumId: string; albumTitl
         </View>
       ) : (
         <ScrollView contentContainerStyle={s.photoGrid}>
-          {photos.map((p) => (
-            <Pressable
-              key={p.id}
-              onPress={() => setLightboxUri(p.uri)}
-              onLongPress={() => Alert.alert('Delete photo?', '', [
-                { text: 'Delete', style: 'destructive', onPress: () => deleteAlbumPhoto(p.id) },
-                { text: 'Cancel', style: 'cancel' },
-              ])}
-            >
-              <Image source={{ uri: p.uri }} style={s.photoThumb} />
-            </Pressable>
-          ))}
+          {photos.map((p) => {
+            const isSelected = selected.has(p.id);
+            return (
+              <Pressable
+                key={p.id}
+                onPress={() => {
+                  if (selecting) {
+                    toggleSelect(p.id);
+                  } else {
+                    setLightboxUri(p.uri);
+                  }
+                }}
+                onLongPress={() => {
+                  if (!selecting) enterSelect(p.id);
+                }}
+                style={s.photoCell}
+              >
+                <Image source={{ uri: p.uri }} style={s.photoThumb} />
+                {selecting && (
+                  <View style={[s.selectOverlay, isSelected && s.selectOverlayOn]}>
+                    {isSelected && (
+                      <View style={s.checkCircle}>
+                        <Text style={s.checkMark}>✓</Text>
+                      </View>
+                    )}
+                  </View>
+                )}
+              </Pressable>
+            );
+          })}
         </ScrollView>
       )}
 
+      {/* Select action bar */}
+      {selecting && (
+        <View style={s.selectBar}>
+          <Text style={s.selectCount}>
+            {selected.size} selected
+          </Text>
+          <Pressable
+            style={[s.deleteBtn, selected.size === 0 && s.deleteBtnDisabled]}
+            onPress={deleteSelected}
+            disabled={selected.size === 0}
+          >
+            <Text style={s.deleteBtnText}>Delete</Text>
+          </Pressable>
+        </View>
+      )}
+
+      {/* Lightbox */}
       {lightboxUri && (
         <Pressable style={s.lightbox} onPress={() => setLightboxUri(null)}>
           <Image source={{ uri: lightboxUri }} style={s.lightboxImg} resizeMode="contain" />
@@ -201,8 +308,16 @@ const s = StyleSheet.create({
   albumCard: {
     width: '47%', backgroundColor: Colors.vellum,
     borderRadius: Radius.r3, borderWidth: 1, borderColor: Colors.line,
-    overflow: 'hidden', ...Shadow.s1,
+    overflow: 'visible', ...Shadow.s1,
+    position: 'relative',
   },
+  albumDeleteBtn: {
+    position: 'absolute', top: -6, right: -6,
+    width: 22, height: 22, borderRadius: 11,
+    backgroundColor: Colors.ink, alignItems: 'center', justifyContent: 'center',
+    zIndex: 10,
+  },
+  albumDeleteText: { fontSize: 10, color: Colors.vellum, fontFamily: FontFamily.ui },
   albumCover: { width: '100%', height: 100 },
   albumCoverEmpty: {
     width: '100%', height: 100,
@@ -210,20 +325,66 @@ const s = StyleSheet.create({
   },
   albumCoverIcon: { fontFamily: FontFamily.ja, fontSize: 36, color: Colors.sakura },
   albumInfo: { padding: Spacing.s3 },
-  albumTitle: { fontFamily: FontFamily.displayItalic, fontSize: 14, color: Colors.ink },
+  albumInfoRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  albumTitle: { fontFamily: FontFamily.uiSemiBold, fontSize: 13, color: Colors.ink, flex: 1, marginRight: 4 },
   albumCount: { fontFamily: FontFamily.marker, fontSize: 9, color: Colors.ink3, letterSpacing: 0.6, marginTop: 2 },
 
   // Album view
   albumView: { flex: 1, backgroundColor: Colors.paper },
-  albumHeader: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-    paddingHorizontal: Spacing.s5, paddingVertical: 8,
-    borderBottomWidth: 1, borderBottomColor: Colors.line,
+  albumTopRow: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: Spacing.s5, paddingTop: Spacing.s2, paddingBottom: Spacing.s3,
   },
-  backText: { fontSize: 22, color: Colors.ink2, fontFamily: FontFamily.ui },
-  albumViewTitle: { fontFamily: FontFamily.displayItalic, fontSize: 15, color: Colors.ink, flex: 1 },
-  photoGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 2, padding: 2 },
+  albumViewTitle: { fontFamily: FontFamily.uiSemiBold, fontSize: 17, color: Colors.ink, flex: 1 },
+  albumTopActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  albumActionBtn: {
+    paddingVertical: 4, paddingHorizontal: 12,
+    borderRadius: Radius.pill, borderWidth: 1, borderColor: Colors.line,
+    backgroundColor: Colors.vellum,
+  },
+  albumActionText: { fontFamily: FontFamily.uiMedium, fontSize: 12, color: Colors.ink2 },
+  albumAddBtn: {
+    width: 30, height: 30, borderRadius: Radius.pill,
+    backgroundColor: Colors.vellum, borderWidth: 1, borderColor: Colors.line,
+    alignItems: 'center', justifyContent: 'center',
+  },
+
+  // Photo grid + select
+  photoGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: GRID_GAP, padding: GRID_PAD },
+  photoCell: { position: 'relative' },
   photoThumb: { width: COL_WIDTH, height: COL_WIDTH },
+  selectOverlay: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: 'transparent',
+  },
+  selectOverlayOn: {
+    backgroundColor: 'rgba(212, 105, 74, 0.25)',
+  },
+  checkCircle: {
+    position: 'absolute', bottom: 6, right: 6,
+    width: 22, height: 22, borderRadius: 11,
+    backgroundColor: Colors.ember,
+    alignItems: 'center', justifyContent: 'center',
+    ...Shadow.s1,
+  },
+  checkMark: { color: '#fff', fontSize: 12, fontFamily: FontFamily.uiSemiBold },
+
+  // Select action bar
+  selectBar: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: Spacing.s5, paddingVertical: Spacing.s3,
+    backgroundColor: Colors.paper,
+    borderTopWidth: 1, borderTopColor: Colors.line,
+  },
+  selectCount: { fontFamily: FontFamily.uiMedium, fontSize: 14, color: Colors.ink2 },
+  deleteBtn: {
+    paddingVertical: 8, paddingHorizontal: 20,
+    backgroundColor: Colors.ember, borderRadius: Radius.pill,
+  },
+  deleteBtnDisabled: { opacity: 0.35 },
+  deleteBtnText: { fontFamily: FontFamily.uiMedium, fontSize: 14, color: '#fff' },
+
+  // Lightbox
   lightbox: {
     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
     backgroundColor: 'rgba(0,0,0,0.92)', alignItems: 'center', justifyContent: 'center',

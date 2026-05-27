@@ -1,10 +1,9 @@
-import { Heart } from '@/components/deco/Heart';
-import { Sparkle } from '@/components/deco/Sparkle';
-import { Colors, FontFamily, FontSize, Radius } from '@/constants/theme';
+import { LinearGradient } from 'expo-linear-gradient';
 import { StyleSheet, Text, View } from 'react-native';
 
-// design/screens.jsx — MiniUpcoming
-// Upcoming event row: days-until badge + title + F/O name + sparkle accent.
+import { Heart } from '@/components/deco/Heart';
+import { Sparkle } from '@/components/deco/Sparkle';
+import { Colors, FontFamily, Radius, Spacing } from '@/constants/theme';
 
 type Props = {
   days: number;
@@ -17,86 +16,78 @@ type Props = {
 
 export function MiniUpcoming({ days, title, fo, tint, featured, muted }: Props) {
   return (
-    <View
-      style={[
-        styles.row,
-        {
-          backgroundColor: featured ? Colors.sakuraSoft : Colors.vellum,
-          borderColor: featured ? tint : Colors.line,
-          opacity: muted ? 0.75 : 1,
-        },
-      ]}
+    <LinearGradient
+      colors={[tint + '18', tint + '50']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={[s.card, { borderColor: tint + '60', opacity: muted ? 0.75 : 1 }]}
     >
       {featured && (
-        <View style={styles.featuredHeart}>
+        <View style={s.heartDeco}>
           <Heart size={12} color={tint} />
         </View>
       )}
-
-      <View style={[styles.daysBadge, { backgroundColor: tint + '18', borderColor: tint + '40' }]}>
-        <Text style={[styles.daysNum, { color: tint }]}>{days}</Text>
-        <Text style={[styles.daysLabel, { color: tint }]}>DAYS</Text>
+      <View style={s.cardLeft}>
+        <Text style={[s.cardNum, { color: tint }]}>{days}</Text>
+        <Text style={[s.cardUnit, { color: tint }]}>DAYS</Text>
       </View>
-
-      <View style={styles.info}>
-        <Text style={styles.title}>{title}</Text>
-        <Text style={styles.fo}>{fo}</Text>
+      <View style={s.cardInfo}>
+        <Text style={s.cardTitle} numberOfLines={1}>{title}</Text>
+        <Text style={s.cardSub} numberOfLines={1}>{fo}</Text>
       </View>
-
-      <Sparkle size={10} color={tint} />
-    </View>
+      <Sparkle size={11} color={tint} />
+    </LinearGradient>
   );
 }
 
-const styles = StyleSheet.create({
-  row: {
+const s = StyleSheet.create({
+  card: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderWidth: 1,
+    gap: 14,
+    paddingVertical: Spacing.s4,
+    paddingHorizontal: Spacing.s5,
     borderRadius: Radius.r3,
+    borderWidth: 1,
+    overflow: 'hidden',
     position: 'relative',
   },
-  featuredHeart: {
+  heartDeco: {
     position: 'absolute',
-    top: -5,
+    top: 10,
     left: 12,
   },
-  daysBadge: {
-    width: 46,
-    paddingVertical: 5,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderRadius: Radius.r2,
-    flexShrink: 0,
+  cardLeft: {
+    width: 52,
+    alignItems: 'flex-start',
+    justifyContent: 'center',
   },
-  daysNum: {
+  cardNum: {
     fontFamily: FontFamily.displayItalic,
-    fontSize: FontSize.h5 - 3,
-    lineHeight: 22,
-    fontWeight: '600',
+    fontSize: 36,
+    lineHeight: 38,
+    letterSpacing: -1,
   },
-  daysLabel: {
+  cardUnit: {
     fontFamily: FontFamily.marker,
-    fontSize: 7,
-    letterSpacing: 1,
-    marginTop: 2,
+    fontSize: 9,
+    letterSpacing: 1.4,
+    textTransform: 'uppercase',
+    marginTop: -4,
   },
-  info: {
+  cardInfo: {
     flex: 1,
     gap: 2,
   },
-  title: {
+  cardTitle: {
     fontFamily: FontFamily.displayItalic,
-    fontSize: FontSize.body,
+    fontSize: 17,
     color: Colors.ink,
-    lineHeight: 18,
+    lineHeight: 20,
   },
-  fo: {
-    fontSize: 10,
-    color: Colors.ink2,
+  cardSub: {
     fontFamily: FontFamily.ui,
+    fontSize: 11,
+    color: Colors.ink3,
   },
 });

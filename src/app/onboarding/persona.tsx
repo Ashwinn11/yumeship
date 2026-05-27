@@ -193,7 +193,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.s4,
     backgroundColor: Colors.sakuraSoft,
     borderWidth: 1,
-    borderStyle: 'dashed',
     borderColor: Colors.sakura,
     borderRadius: Radius.r3,
     position: 'relative',

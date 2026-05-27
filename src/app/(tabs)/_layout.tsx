@@ -20,14 +20,20 @@ const TAB_TO_ROUTE: Record<RootTab, string> = {
 };
 
 type TabBarProps = {
-  state: { index: number; routes: { name: string }[] };
+  state: { index: number; routes: { name: string; key: string }[] };
   navigation: { navigate: (name: string) => void };
+  descriptors: Record<string, { options: Record<string, unknown> }>;
 };
 
-function CustomTabBar({ state, navigation }: TabBarProps) {
+function CustomTabBar({ state, navigation, descriptors }: TabBarProps) {
   const insets = useSafeAreaInsets();
-  const activeRoute = state.routes[state.index]?.name ?? 'index';
-  const active = ROUTE_TO_TAB[activeRoute] ?? 'home';
+  const activeRoute = state.routes[state.index];
+  const activeOptions = descriptors[activeRoute?.key ?? '']?.options ?? {};
+  const tabBarStyle = activeOptions.tabBarStyle as { display?: string } | undefined;
+
+  if (tabBarStyle?.display === 'none') return null;
+
+  const active = ROUTE_TO_TAB[activeRoute?.name ?? 'index'] ?? 'home';
 
   return (
     <View style={{ paddingBottom: insets.bottom }}>
@@ -47,7 +53,7 @@ export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{ headerShown: false }}
-      tabBar={(props) => <CustomTabBar state={props.state} navigation={props.navigation} />}
+      tabBar={(props) => <CustomTabBar state={props.state} navigation={props.navigation} descriptors={props.descriptors} />}
     >
       <Tabs.Screen name="index" />
       <Tabs.Screen name="vault" />

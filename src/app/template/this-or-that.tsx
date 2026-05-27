@@ -134,7 +134,6 @@ const s = StyleSheet.create({
     borderColor: INK,
     borderRadius: 6,
     backgroundColor: '#fff',
-    borderStyle: 'dashed',
   },
   noteText: { fontFamily: FontFamily.ui, fontSize: 11, color: INK },
 });
