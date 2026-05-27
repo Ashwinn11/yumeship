@@ -7,6 +7,7 @@ export function initDb() {
   try { db.execSync(`ALTER TABLE ships ADD COLUMN ship_name TEXT NOT NULL DEFAULT ''`); } catch (_) {}
   try { db.execSync(`ALTER TABLE ships ADD COLUMN my_name TEXT NOT NULL DEFAULT ''`); } catch (_) {}
   try { db.execSync(`ALTER TABLE fo_messages ADD COLUMN notif_id TEXT NOT NULL DEFAULT ''`); } catch (_) {}
+  try { db.execSync(`ALTER TABLE fo_messages ADD COLUMN sender_name TEXT NOT NULL DEFAULT ''`); } catch (_) {}
   db.execSync(`
     CREATE TABLE IF NOT EXISTS ships (
       id TEXT PRIMARY KEY,
@@ -94,6 +95,7 @@ export function initDb() {
       id TEXT PRIMARY KEY,
       ship_id TEXT NOT NULL,
       body TEXT NOT NULL,
+      sender_name TEXT NOT NULL DEFAULT '',
       scheduled_hour INTEGER NOT NULL DEFAULT 9,
       active INTEGER NOT NULL DEFAULT 1,
       created_at INTEGER NOT NULL

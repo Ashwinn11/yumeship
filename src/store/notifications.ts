@@ -51,7 +51,7 @@ export async function scheduleDailyNotification(
     const discreet = getDiscreetMode();
     const identifier = await Notifications.scheduleNotificationAsync({
       content: {
-        title: discreet ? '♡' : `${foName} says~`,
+        title: discreet ? '♡' : (foName || 'F/O'),
         body: discreet ? 'a message for you~' : body,
       },
       trigger: {

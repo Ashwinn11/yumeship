@@ -50,7 +50,7 @@ export function AlbumsTab({ shipId }: { shipId: string }) {
           <TextInput
             value={newTitle}
             onChangeText={setNewTitle}
-            placeholder="album name..."
+            placeholder="what do you call this collection?"
             placeholderTextColor={Colors.ink3}
             style={s.newInput}
             autoFocus

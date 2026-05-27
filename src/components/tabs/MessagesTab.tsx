@@ -138,7 +138,7 @@ function ThreadView({
         <TextInput
           value={draft}
           onChangeText={setDraft}
-          placeholder={sender === 'me' ? 'write...' : `${shipName} says...`}
+          placeholder={sender === 'me' ? 'write to them...' : `${shipName} says...`}
           placeholderTextColor={Colors.ink3}
           style={s.input}
           multiline

@@ -15,7 +15,6 @@ import { SubTabBar, type DetailTab } from '@/components/nav/SubTabBar';
 import { AlbumsTab } from '@/components/tabs/AlbumsTab';
 import { DatesTab } from '@/components/tabs/DatesTab';
 import { MessagesTab } from '@/components/tabs/MessagesTab';
-import { OutfitsTab } from '@/components/tabs/OutfitsTab';
 import { StorylineTab } from '@/components/tabs/StorylineTab';
 import { Chip } from '@/components/ui/Chip';
 import { GradientCover } from '@/components/ui/GradientCover';
@@ -129,7 +128,6 @@ export default function ShipDetail() {
         {activeTab === 'albums'    && <AlbumsTab shipId={id!} />}
         {activeTab === 'storyline' && <StorylineTab shipId={id!} shipName={ship.name} />}
         {activeTab === 'messages'  && <MessagesTab shipId={id!} shipName={ship.name} />}
-        {activeTab === 'outfits'   && <OutfitsTab shipId={id!} shipName={ship.name} />}
         {activeTab === 'dates'     && <DatesTab shipId={id!} />}
       </ScrollView>
     </View>
@@ -297,7 +295,7 @@ function HCSheet({
               ref={inputRef}
               value={draft}
               onChangeText={setDraft}
-              placeholder="add a headcanon..."
+              placeholder="what do you know about them?"
               placeholderTextColor={Colors.ink3}
               style={styles.sheetInput}
               onSubmitEditing={submit}
@@ -343,7 +341,7 @@ function ScenariosTab({ shipId, shipName }: { shipId: string; shipName: string }
         <TextInput
           value={title}
           onChangeText={setTitle}
-          placeholder="title (optional)"
+          placeholder="give this moment a name..."
           placeholderTextColor={Colors.ink3}
           style={styles.sceneTitleInput}
         />

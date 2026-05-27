@@ -55,7 +55,7 @@ export function StorylineContent({ editing = false }: { editing?: boolean }) {
                       value={ev.d}
                       onChange={setField(i, 'd') || (() => {})}
                       editing={e}
-                      placeholder="date"
+                      placeholder="when?"
                       style={{
                         backgroundColor: 'transparent',
                         borderWidth: 0,
@@ -79,7 +79,7 @@ export function StorylineContent({ editing = false }: { editing?: boolean }) {
                     <BlankPill
                       value={ev.t}
                       onChangeText={setField(i, 't')}
-                      placeholder="title"
+                      placeholder="what happened?"
                     />
                   </View>
                   {isLast && <Heart size={14} color={INK} />}

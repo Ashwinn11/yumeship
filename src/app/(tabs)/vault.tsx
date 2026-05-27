@@ -625,7 +625,7 @@ function ScenariosFeature({ shipId, shipName }: { shipId: string; shipName: stri
       {scenarios.length === 0 ? (
         <View style={sc.empty}>
           <Heart size={28} color={Colors.sakuraSoft} outline />
-          <Text style={sc.emptyTitle}>no scenarios yet.</Text>
+          <Text style={sc.emptyTitle}>nothing written yet.</Text>
           <Text style={sc.emptySub}>what would happen if {shipName} walked in right now?</Text>
           <View style={sc.prompts}>
             {SC_PROMPTS.map((p) => (
@@ -726,29 +726,41 @@ function ScenarioEditor({ initial, shipName, onSave, onDelete, onBack }: {
 
 // ─── F/O Messages feature ─────────────────────────────────────────────────────
 
-function getFoStarters(foName: string) {
-  return [
-    { emoji: '☀️', text: `good morning from ${foName}~` },
-    { emoji: '🌙', text: 'goodnight ♡' },
-    { emoji: '💭', text: `${foName} is thinking of you` },
-    { emoji: '💧', text: 'drink some water!' },
-    { emoji: '🫂', text: 'you okay? ♡' },
-    { emoji: '✉️', text: `${foName} misses you~` },
-  ];
-}
+const STARTER_PRESETS: Record<string, string[]> = {
+  'Good morning': [
+    'good morning! did you sleep well?~',
+    'morning ♡ hope you have a wonderful day today!',
+    'good morning, sunshine! time to wake up~',
+    "wakey wakey! i'm already thinking of you~"
+  ],
+  'Goodnight': [
+    'goodnight! sweet dreams~',
+    "sleep well, i'll be dreaming of you ♡",
+    'goodnight, close your eyes and rest well~',
+    "heading to bed! can't wait to talk to you tomorrow ♡"
+  ],
+  'F/O loves you': [
+    'i love you so much, never forget that! ♡',
+    'just a reminder that you mean the world to me~',
+    'sending you a big warm hug right now!',
+    "i'm so lucky to have you in my life~"
+  ],
+  'Take care': [
+    'drink some water for me. okay?',
+    "don't forget to take a break and breathe~",
+    'make sure you eat something yummy today! ♡',
+    "please take care of yourself, you're precious to me"
+  ]
+};
 
-const FO_TIMES: { id: string; label: string; hour: number }[] = [
-  { id: '6am',       label: '6 am',      hour: 6  },
-  { id: 'morning',   label: '8 am',      hour: 8  },
-  { id: '10am',      label: '10 am',     hour: 10 },
-  { id: 'noon',      label: '12 pm',     hour: 12 },
-  { id: 'afternoon', label: '2 pm',      hour: 14 },
-  { id: '4pm',       label: '4 pm',      hour: 16 },
-  { id: 'evening',   label: '6 pm',      hour: 18 },
-  { id: '8pm',       label: '8 pm',      hour: 20 },
-  { id: '10pm',      label: '10 pm',     hour: 22 },
-  { id: 'random',    label: 'random ✦',  hour: -1 },
+const STARTERS = [
+  { emoji: '☀️', text: 'Good morning' },
+  { emoji: '🌙', text: 'Goodnight' },
+  { emoji: '✨', text: 'F/O loves you' },
+  { emoji: '💾', text: 'Take care' },
 ];
+
+
 
 function FoMessagesFeature({ shipId, shipName }: { shipId: string; shipName: string }) {
   const messages = useFoMessages(shipId);
@@ -759,8 +771,8 @@ function FoMessagesFeature({ shipId, shipName }: { shipId: string; shipName: str
     return (
       <FoCompose
         shipName={shipName}
-        onQueue={async (body, hour) => {
-          await addFoMessage(shipId, body, hour, shipName);
+        onQueue={async (body, hour, senderName) => {
+          await addFoMessage(shipId, body, hour, senderName);
           setComposing(false);
         }}
         onBack={() => setComposing(false)}
@@ -774,43 +786,71 @@ function FoMessagesFeature({ shipId, shipName }: { shipId: string; shipName: str
         <View style={fo.hubLeft}>
           <Text style={fo.eyebrow}>TRACKING</Text>
           <Text style={fo.activeCount}>{activeCount} active</Text>
-          {messages.length === 0 && <Text style={fo.noSaved}>no saved notifications yet.</Text>}
+          {messages.length === 0 && <Text style={fo.noSaved}>nothing from them yet.</Text>}
         </View>
         <Pressable style={fo.newBtn} onPress={() => setComposing(true)}>
           <IconPlus size={12} color={Colors.sakuraDeep} />
-          <Text style={fo.newBtnText}>New</Text>
+          <Text style={fo.newBtnText}>new</Text>
         </Pressable>
       </View>
 
       {messages.length === 0 ? (
         <View style={fo.emptyCard}>
-          <Text style={fo.emptyCardText}>no saved notifications yet.</Text>
+          <Text style={fo.emptyCardText}>nothing from them yet.</Text>
           <Pressable style={fo.createBtn} onPress={() => setComposing(true)}>
             <IconPlus size={13} color={Colors.sakuraDeep} />
-            <Text style={fo.createBtnText}>Create notification</Text>
+            <Text style={fo.createBtnText}>write their first message</Text>
           </Pressable>
         </View>
       ) : (
         <View style={fo.list}>
           {messages.map((m) => {
-            const timeLabel = FO_TIMES.find((t) => t.hour === m.scheduledHour)?.label
-              ?? (m.scheduledHour >= 0 ? `${m.scheduledHour}:00` : 'random');
+            const hour = m.scheduledHour;
+            let timeLabel = '';
+            if (hour === -1) {
+              timeLabel = 'random ✦';
+            } else {
+              const ampm = hour >= 12 ? 'pm' : 'am';
+              const displayHour = hour % 12 === 0 ? 12 : hour % 12;
+              timeLabel = `${displayHour} ${ampm}`;
+            }
+            const displaySender = m.senderName || shipName;
+            
+            let displayBody = m.body;
+            let variationCount = 0;
+            try {
+              if (m.body.startsWith('[')) {
+                const arr = JSON.parse(m.body);
+                if (Array.isArray(arr) && arr.length > 0) {
+                  displayBody = arr[0];
+                  variationCount = arr.length;
+                }
+              }
+            } catch (_) {}
+
             return (
               <Pressable
                 key={m.id}
                 style={[fo.msgCard, !m.active && fo.msgCardOff]}
-                onLongPress={() => Alert.alert('Delete?', m.body.slice(0, 60), [
+                onLongPress={() => Alert.alert('Delete?', displayBody.slice(0, 60), [
                   { text: 'Delete', style: 'destructive', onPress: () => { deleteFoMessage(m.id); } },
                   { text: 'Cancel', style: 'cancel' },
                 ])}
               >
-                <Text style={[fo.msgBody, !m.active && fo.msgBodyOff]}>{m.body}</Text>
+                <View style={fo.msgHeader}>
+                  <Text style={fo.msgSender}>{displaySender}</Text>
+                  <Text style={fo.msgTimeDot}>•</Text>
+                  <Text style={fo.msgTime}>{timeLabel}</Text>
+                </View>
+                <Text style={[fo.msgBody, !m.active && fo.msgBodyOff]}>{displayBody}</Text>
+                {variationCount > 1 && (
+                  <Text style={{ fontFamily: FontFamily.ui, fontSize: 11, color: Colors.sakuraDeep, marginTop: -4 }}>
+                    + {variationCount - 1} other variation{variationCount > 2 ? 's' : ''}
+                  </Text>
+                )}
                 <View style={fo.msgFooter}>
-                  <View style={fo.timePill}>
-                    <Text style={fo.timePillText}>{timeLabel}</Text>
-                  </View>
                   <Pressable
-                    onPress={() => { toggleFoMessage(m.id, !m.active, shipName); }}
+                    onPress={() => { toggleFoMessage(m.id, !m.active, m.senderName || shipName); }}
                     style={[fo.togglePill, m.active && fo.togglePillOn]}
                   >
                     <Text style={[fo.togglePillText, m.active && fo.togglePillTextOn]}>
@@ -828,28 +868,73 @@ function FoMessagesFeature({ shipId, shipName }: { shipId: string; shipName: str
   );
 }
 
+const ARRIVAL_DAYS = [
+  { id: 'now', label: 'Now' },
+  { id: 'today', label: 'Later today' },
+  { id: 'tomorrow', label: 'Tomorrow' },
+  { id: 'everyday', label: 'Every day' },
+  { id: 'random', label: 'Random daily' },
+] as const;
+
+const AROUND_TIMES = [
+  { id: 'morning', label: 'Morning', hour: 9 },
+  { id: 'afternoon', label: 'Afternoon', hour: 14 },
+  { id: 'evening', label: 'Evening', hour: 18 },
+  { id: 'night', label: 'Night', hour: 21 },
+] as const;
+
 function FoCompose({ shipName, onQueue, onBack }: {
   shipName: string;
-  onQueue: (body: string, hour: number) => void;
+  onQueue: (body: string, hour: number, senderName: string) => void;
   onBack: () => void;
 }) {
-  const [body, setBody] = useState('');
-  const [timeId, setTimeId] = useState<string>('morning');
-  const starters = getFoStarters(shipName);
+  const [options, setOptions] = useState<string[]>(['']);
+  const [senderName, setSenderName] = useState(shipName);
+  const [arrivalDay, setArrivalDay] = useState<'now' | 'today' | 'tomorrow' | 'everyday' | 'random'>('everyday');
+  const [aroundTime, setAroundTime] = useState<'morning' | 'afternoon' | 'evening' | 'night'>('morning');
 
-  function pickStarter(text: string) {
-    setBody(text);
+  function pickStarter(presetName: string) {
+    const list = STARTER_PRESETS[presetName];
+    if (list) {
+      setOptions([...list]);
+    }
   }
 
   function queue() {
-    if (!body.trim()) return;
-    const hour = FO_TIMES.find((t) => t.id === timeId)?.hour ?? 8;
-    const resolvedHour = hour === -1 ? [6, 8, 10, 12, 14, 16, 18, 20, 22][Math.floor(Math.random() * 9)] : hour;
-    onQueue(body.trim(), resolvedHour);
+    const filtered = options.map(o => o.trim()).filter(Boolean);
+    if (filtered.length === 0) return;
+
+    let resolvedHour = 9;
+    if (arrivalDay === 'now') {
+      resolvedHour = new Date().getHours();
+    } else if (arrivalDay === 'random') {
+      resolvedHour = -1;
+    } else {
+      const match = AROUND_TIMES.find(t => t.id === aroundTime);
+      resolvedHour = match ? match.hour : 9;
+    }
+
+    // Save as JSON string if multiple options, else save plain string
+    const finalBody = filtered.length > 1 ? JSON.stringify(filtered) : filtered[0];
+    onQueue(finalBody, resolvedHour, senderName.trim() || shipName);
   }
 
-  const timeChosen = FO_TIMES.find((t) => t.id === timeId);
-  const previewText = timeId === 'random' ? 'arrives at a random time' : `arrives at ${timeChosen?.label ?? ''}`;
+  const showAround = arrivalDay !== 'now' && arrivalDay !== 'random';
+
+  let previewText = '';
+  if (arrivalDay === 'now') {
+    previewText = 'arrives now';
+  } else if (arrivalDay === 'random') {
+    previewText = 'arrives daily at a random time';
+  } else {
+    const dayLabel = arrivalDay === 'today' ? 'later today' : arrivalDay === 'tomorrow' ? 'tomorrow' : 'every day';
+    const timeLabel = AROUND_TIMES.find(t => t.id === aroundTime)?.label.toLowerCase();
+    const matchHour = AROUND_TIMES.find(t => t.id === aroundTime)?.hour ?? 9;
+    const hour12 = matchHour > 12 ? `${matchHour - 12} PM` : `${matchHour} AM`;
+    previewText = `arrives ${dayLabel} in the ${timeLabel} (${hour12})`;
+  }
+
+  const hasContent = options.some(o => o.trim().length > 0);
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={fo.compose} keyboardVerticalOffset={120}>
@@ -860,10 +945,10 @@ function FoCompose({ shipName, onQueue, onBack }: {
 
         <Text style={fo.sectionLabel}>START WITH</Text>
         <View style={fo.starterRow}>
-          {starters.map((s) => (
+          {STARTERS.map((s) => (
             <Pressable
-              key={s.emoji}
-              style={[fo.starter, body === s.text && fo.starterActive]}
+              key={s.text}
+              style={fo.starter}
               onPress={() => pickStarter(s.text)}
             >
               <Text style={fo.starterEmoji}>{s.emoji}</Text>
@@ -872,31 +957,83 @@ function FoCompose({ shipName, onQueue, onBack }: {
           ))}
         </View>
 
-        <Text style={fo.sectionLabel}>WHAT THEY MIGHT SAY</Text>
-        <View style={fo.msgInputWrap}>
+        <Text style={fo.sectionLabel}>FROM</Text>
+        <View style={fo.fromInputWrap}>
           <TextInput
-            value={body}
-            onChangeText={setBody}
-            placeholder={`${shipName} says...`}
+            value={senderName}
+            onChangeText={setSenderName}
+            placeholder={shipName}
             placeholderTextColor={Colors.ink3}
-            style={fo.msgInput}
-            multiline
-            textAlignVertical="top"
+            style={fo.fromInput}
           />
         </View>
 
+        <Text style={fo.sectionLabel}>WHAT THEY MIGHT SAY</Text>
+        {options.map((opt, index) => (
+          <View key={index} style={[fo.msgInputWrap, { marginBottom: 8, flexDirection: 'row', alignItems: 'center' }]}>
+            <TextInput
+              value={opt}
+              onChangeText={(val) => {
+                const copy = [...options];
+                copy[index] = val;
+                setOptions(copy);
+              }}
+              placeholder={`${senderName || shipName} says...`}
+              placeholderTextColor={Colors.ink3}
+              style={[fo.msgInput, { flex: 1, minHeight: 40 }]}
+              multiline
+              textAlignVertical="top"
+            />
+            {options.length > 1 && (
+              <Pressable
+                onPress={() => {
+                  setOptions(options.filter((_, i) => i !== index));
+                }}
+                style={{ padding: 4, marginLeft: 8 }}
+              >
+                <Text style={{ color: Colors.ember, fontSize: 16, fontFamily: FontFamily.uiMedium }}>✕</Text>
+              </Pressable>
+            )}
+          </View>
+        ))}
+
+        <Pressable
+          onPress={() => setOptions([...options, ''])}
+          style={fo.addMsgBtn}
+        >
+          <IconPlus size={12} color={Colors.sakuraDeep} />
+          <Text style={fo.addMsgBtnText}>Add another message option</Text>
+        </Pressable>
+
         <Text style={fo.sectionLabel}>WHEN SHOULD THIS ARRIVE?</Text>
         <View style={fo.chipRow}>
-          {FO_TIMES.map((t) => (
+          {ARRIVAL_DAYS.map((d) => (
             <Pressable
-              key={t.id}
-              style={[fo.chip, timeId === t.id && fo.chipActive]}
-              onPress={() => setTimeId(t.id)}
+              key={d.id}
+              style={[fo.chip, arrivalDay === d.id && fo.chipActive]}
+              onPress={() => setArrivalDay(d.id)}
             >
-              <Text style={[fo.chipText, timeId === t.id && fo.chipTextActive]}>{t.label}</Text>
+              <Text style={[fo.chipText, arrivalDay === d.id && fo.chipTextActive]}>{d.label}</Text>
             </Pressable>
           ))}
         </View>
+
+        {showAround && (
+          <>
+            <Text style={fo.sectionLabel}>AROUND</Text>
+            <View style={fo.chipRow}>
+              {AROUND_TIMES.map((t) => (
+                <Pressable
+                  key={t.id}
+                  style={[fo.chip, aroundTime === t.id && fo.chipActive]}
+                  onPress={() => setAroundTime(t.id)}
+                >
+                  <Text style={[fo.chipText, aroundTime === t.id && fo.chipTextActive]}>{t.label}</Text>
+                </Pressable>
+              ))}
+            </View>
+          </>
+        )}
 
         <View style={fo.previewRow}>
           <Text style={fo.previewLabel}>Preview</Text>
@@ -904,9 +1041,9 @@ function FoCompose({ shipName, onQueue, onBack }: {
         </View>
 
         <Pressable
-          style={[fo.queueBtn, !body.trim() && fo.queueBtnDisabled]}
+          style={[fo.queueBtn, !hasContent && fo.queueBtnDisabled]}
           onPress={queue}
-          disabled={!body.trim()}
+          disabled={!hasContent}
         >
           <Text style={fo.queueBtnText}>Queue message ♡</Text>
         </Pressable>
@@ -1141,9 +1278,21 @@ const fo = StyleSheet.create({
     borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.r3, gap: 8,
   },
   msgCardOff: { opacity: 0.55 },
+  msgHeader: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  msgSender: { fontFamily: FontFamily.uiSemiBold, fontSize: 13, color: Colors.ink },
+  msgTimeDot: { fontSize: 12, color: Colors.ink3 },
+  msgTime: { fontFamily: FontFamily.ui, fontSize: 11, color: Colors.ink3 },
   msgBody: { fontFamily: FontFamily.ui, fontSize: 14, color: Colors.ink, lineHeight: 20 },
   msgBodyOff: { color: Colors.ink3 },
   msgFooter: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  fromInputWrap: {
+    backgroundColor: Colors.vellum, borderWidth: 1, borderColor: Colors.line,
+    borderRadius: Radius.r3, paddingHorizontal: Spacing.s3, paddingVertical: 10,
+  },
+  fromInput: {
+    fontFamily: FontFamily.ui, fontSize: 14, color: Colors.ink,
+    padding: 0,
+  },
   timePill: {
     paddingVertical: 3, paddingHorizontal: 10, borderRadius: Radius.pill,
     backgroundColor: Colors.paperDeep, borderWidth: 1, borderColor: Colors.line,
@@ -1186,6 +1335,13 @@ const fo = StyleSheet.create({
     fontFamily: FontFamily.ui, fontSize: 14, color: Colors.ink,
     minHeight: 72, textAlignVertical: 'top', lineHeight: 22,
   },
+  addMsgBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    paddingVertical: 12, paddingHorizontal: 16,
+    backgroundColor: 'rgba(243,182,196,0.15)', borderWidth: 1, borderColor: Colors.sakura,
+    borderRadius: Radius.pill, marginTop: 4, marginBottom: Spacing.s4,
+  },
+  addMsgBtnText: { fontFamily: FontFamily.uiMedium, fontSize: 13, color: Colors.sakuraDeep },
 
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {

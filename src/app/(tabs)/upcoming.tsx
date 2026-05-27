@@ -79,7 +79,7 @@ export default function UpcomingScreen() {
             <Sparkle size={7} color={Colors.lavender} />
           </View>
           <Text style={styles.emptyTitle}>nothing coming up</Text>
-          <Text style={styles.emptySub}>add dates to your ships to see them here</Text>
+          <Text style={styles.emptySub}>set a date in their profile and it'll appear here</Text>
         </View>
       ) : (
         <ScrollView contentContainerStyle={styles.listContainer} showsVerticalScrollIndicator={false}>

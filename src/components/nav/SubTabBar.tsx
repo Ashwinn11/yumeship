@@ -5,7 +5,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 // design/spec.jsx — SubTabBar + TABS
 // 7-tab horizontal scroller for F/O detail. Same pill treatment as RootTabBar.
 
-export type DetailTab = 'profile' | 'albums' | 'scenarios' | 'storyline' | 'messages' | 'outfits' | 'dates';
+export type DetailTab = 'profile' | 'albums' | 'scenarios' | 'storyline' | 'messages' | 'dates';
 
 const TABS: { id: DetailTab; ja: string; label: string }[] = [
   { id: 'profile',   ja: '本人', label: 'Profile' },
@@ -13,7 +13,6 @@ const TABS: { id: DetailTab; ja: string; label: string }[] = [
   { id: 'scenarios', ja: '話',   label: 'Scenarios' },
   { id: 'storyline', ja: '年表', label: 'Storyline' },
   { id: 'messages',  ja: '便り', label: 'Messages' },
-  { id: 'outfits',   ja: '服',   label: 'Outfits' },
   { id: 'dates',     ja: '日',   label: 'Dates' },
 ];
 

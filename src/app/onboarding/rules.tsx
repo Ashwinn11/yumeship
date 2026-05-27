@@ -119,7 +119,7 @@ export default function OnbRules() {
         </View>
 
         <View style={styles.section}>
-          <Field label="Pick a card style">
+          <Field label="A style that feels like them">
             <View style={styles.templateGrid}>
               {VISUAL_TEMPLATES.map((t) => (
                 <Pressable

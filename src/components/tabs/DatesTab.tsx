@@ -105,7 +105,7 @@ export function DatesTab({ shipId }: { shipId: string }) {
               style={s.input}
             />
 
-            <Text style={s.fieldLabel}>date</Text>
+            <Text style={s.fieldLabel}>when is it?</Text>
             <DateField
               value={date}
               onChange={setDate}

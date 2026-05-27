@@ -82,19 +82,19 @@ export default function OnbFO() {
 
           <View style={styles.fieldSpacer} />
 
-          <Field label="Ship name (what you call this pairing)">
+          <Field label="What do you call this pairing?">
             <UnderInput value={shipName} onChangeText={handleShipName} placeholder="e.g. Starlight" />
           </Field>
 
           <View style={styles.fieldSpacer} />
 
-          <Field label="From (fandom / source)">
+          <Field label="From">
             <UnderInput value={fandom} onChangeText={handleFandom} />
           </Field>
 
           <View style={styles.fieldSpacer} />
 
-          <Field label="Card color">
+          <Field label="A color that feels like them">
             <View style={styles.paletteRow}>
               {COVER_PALETTES.map((p) => (
                 <Pressable

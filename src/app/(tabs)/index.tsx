@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
   addCard: {
     width: '47%',
     aspectRatio: 3 / 4,
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderStyle: 'dashed',
     borderColor: Colors.lineStrong,
     borderRadius: Radius.r4,

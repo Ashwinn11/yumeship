@@ -96,7 +96,7 @@ export function HeadcanonsContent({ editing = false }: { editing?: boolean }) {
                       <TextInput
                         value={item}
                         onChangeText={setItem(ci, idx)}
-                        placeholder="headcanon..."
+                        placeholder="something you know..."
                         placeholderTextColor={INK + '88'}
                         underlineColorAndroid="transparent"
                         style={{ fontFamily: FontFamily.ja, fontSize: 11, color: INK, padding: 0, minHeight: 18, fontWeight: '600' }}
