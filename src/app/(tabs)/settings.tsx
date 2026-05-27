@@ -8,7 +8,16 @@ import { Heart } from '@/components/deco/Heart';
 import { Pin } from '@/components/deco/Pin';
 import { Sparkle } from '@/components/deco/Sparkle';
 import { SparkleCluster } from '@/components/deco/SparkleCluster';
-import { IconBell } from '@/components/ui/Icon';
+import {
+  IconBellSolid,
+  IconTicketSolid,
+  IconRestoreSolid,
+  IconStorageSolid,
+  IconTrashSolid,
+  IconDocumentSolid,
+  IconLockSolid,
+  CozyModal,
+} from '@/components/ui';
 import { Mark } from '@/components/ui/Mark';
 import { Toggle } from '@/components/ui/Toggle';
 import { Colors, FontFamily, FontSize, Radius, Spacing } from '@/constants/theme';
@@ -81,7 +90,7 @@ function SettingRow({
       disabled={!onPress}
     >
       {icon && (
-        <View style={row.iconBox}>
+        <View style={row.iconWrap}>
           {icon}
         </View>
       )}
@@ -100,13 +109,12 @@ const row = StyleSheet.create({
     paddingHorizontal: 12,
     borderBottomWidth: 1,
   },
-  iconBox: {
-    width: 22,
-    height: 22,
-    borderRadius: 5,
-    backgroundColor: Colors.paperDeep,
+  iconWrap: {
+    marginRight: 4,
     alignItems: 'center',
     justifyContent: 'center',
+    width: 16,
+    height: 16,
     flexShrink: 0,
   },
   label: {
@@ -133,6 +141,7 @@ export default function SettingsScreen() {
   const [storageLabel, setStorageLabel] = useState('—');
   const [premium, setPremium] = useState(false);
   const [checkingPremium, setCheckingPremium] = useState(true);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useEffect(() => {
     const path = (FileSystem.documentDirectory ?? '') + 'SQLite/yumeship.db';
@@ -185,7 +194,7 @@ export default function SettingsScreen() {
         <Pin size={18} color={Colors.sakuraDeep} />
       </View>
       <View style={styles.decoBR} pointerEvents="none">
-        <Sparkle size={18} color={Colors.lavenderSoft} />
+        <Sparkle size={18} color={Colors.lavenderDeep} />
       </View>
 
       {/* Header */}
@@ -239,7 +248,7 @@ export default function SettingsScreen() {
         <SettingGroup ja="便" name="Notifications">
           <SettingRow
             label="Allow notifications"
-            icon={<IconBell size={12} color={Colors.ink2} />}
+            icon={<IconBellSolid size={14} />}
             trailing={<Toggle value={notifEnabled} onValueChange={handleToggleNotif} />}
           />
         </SettingGroup>
@@ -247,48 +256,60 @@ export default function SettingsScreen() {
         <SettingGroup ja="課" name="Subscription">
           <SettingRow
             label="Manage subscription"
+            icon={<IconTicketSolid size={14} />}
             onPress={handleManageSubscription}
             trailing={<MetaText>›</MetaText>}
           />
           <SettingRow
             label="Restore purchases"
+            icon={<IconRestoreSolid size={14} />}
             onPress={handleRestorePurchases}
           />
         </SettingGroup>
 
         <SettingGroup ja="蔵" name="Data">
-          <SettingRow label="Storage" trailing={<MetaText>{storageLabel}</MetaText>} />
+          <SettingRow
+            label="Storage"
+            icon={<IconStorageSolid size={14} />}
+            trailing={<MetaText>{storageLabel}</MetaText>}
+          />
           <SettingRow
             label="Delete all data"
+            icon={<IconTrashSolid size={14} />}
             destructive
-            onPress={() => Alert.alert(
-              'Delete everything?',
-              'This removes all ships, headcanons, scenarios, messages, albums, and more. Cannot be undone.',
-              [
-                {
-                  text: 'Delete everything',
-                  style: 'destructive',
-                  onPress: () => { deleteAllData(); router.replace('/onboarding'); },
-                },
-                { text: 'Cancel', style: 'cancel' },
-              ],
-            )}
+            onPress={() => setShowDeleteModal(true)}
           />
         </SettingGroup>
 
         <SettingGroup ja="法" name="Legal">
           <SettingRow
             label="Terms of Service"
+            icon={<IconDocumentSolid size={14} />}
             onPress={() => router.push('/terms' as any)}
             trailing={<MetaText>›</MetaText>}
           />
           <SettingRow
             label="Privacy Policy"
+            icon={<IconLockSolid size={14} />}
             onPress={() => router.push('/privacy' as any)}
             trailing={<MetaText>›</MetaText>}
           />
         </SettingGroup>
       </ScrollView>
+      <CozyModal
+        visible={showDeleteModal}
+        title="Delete everything?"
+        message="This removes all ships, headcanons, scenarios, messages, albums, and more. Cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={() => {
+          setShowDeleteModal(false);
+          deleteAllData();
+          router.replace('/onboarding');
+        }}
+        onClose={() => setShowDeleteModal(false)}
+        isDestructive={true}
+      />
     </View>
   );
 }
@@ -373,14 +394,12 @@ const styles = StyleSheet.create({
   },
   decoTL: {
     position: 'absolute',
-    top: 80,
+    top: 130,
     left: 20,
-    opacity: 0.55,
   },
   decoBR: {
     position: 'absolute',
     bottom: 120,
     right: 30,
-    opacity: 0.45,
   },
 });

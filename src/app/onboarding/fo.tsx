@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Ribbon } from '@/components/deco/Ribbon';
 import { Sparkle } from '@/components/deco/Sparkle';
+import { Heart } from '@/components/deco/Heart';
 import { Button } from '@/components/ui/Button';
 import { Field } from '@/components/ui/Field';
 import { Mark } from '@/components/ui/Mark';
@@ -51,11 +52,11 @@ export default function OnbFO() {
   return (
     <View style={[styles.screen, { paddingTop: insets.top + Spacing.s1, paddingBottom: insets.bottom + Spacing.s1 }]}>
       {/* Background accents */}
-      <View style={styles.decoTL} pointerEvents="none">
-        <Ribbon size={24} color={Colors.sakuraSoft} />
+      <View style={styles.decoTR} pointerEvents="none">
+        <Ribbon size={24} color={Colors.sakura} />
       </View>
       <View style={styles.decoBR} pointerEvents="none">
-        <Sparkle size={18} color={Colors.lavenderSoft} />
+        <Sparkle size={18} color={Colors.lavenderDeep} />
       </View>
 
       {isNew ? (
@@ -78,11 +79,6 @@ export default function OnbFO() {
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {!isNew && <Text style={styles.eyebrow}>step two · them</Text>}
         <Text style={[styles.heading, isNew && styles.headingNew]}>Who's the one?</Text>
-        <Text style={styles.sub}>
-          {isNew
-            ? 'You can add more any time.'
-            : 'The first F/O. You can add more later — even a whole polycule if you want.'}
-        </Text>
 
         <View style={styles.card}>
           <Field label="Their name">
@@ -127,6 +123,18 @@ export default function OnbFO() {
               ))}
             </View>
           </Field>
+        </View>
+
+        {/* Reassurance note */}
+        <View style={styles.note}>
+          <View style={styles.noteHeart}>
+            <Heart size={10} color={Colors.sakuraDeep} />
+          </View>
+          <Text style={styles.noteText}>
+            {isNew
+              ? '"You can add more any time."'
+              : '"The first F/O. You can add more later — even a whole polycule if you want."'}
+          </Text>
         </View>
       </ScrollView>
 
@@ -179,9 +187,27 @@ const styles = StyleSheet.create({
     letterSpacing: -0.3, color: Colors.ink, marginTop: Spacing.s2,
   },
   headingNew: { marginTop: 0 },
-  sub: {
-    fontFamily: FontFamily.script, fontSize: FontSize.h6,
-    color: Colors.ink2, lineHeight: 20, marginTop: Spacing.s2,
+  note: {
+    marginTop: Spacing.s4,
+    padding: Spacing.s3,
+    paddingHorizontal: Spacing.s4,
+    backgroundColor: Colors.sakuraSoft,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: Colors.sakura,
+    borderRadius: Radius.r3,
+    position: 'relative',
+  },
+  noteHeart: {
+    position: 'absolute',
+    top: -6,
+    left: 12,
+  },
+  noteText: {
+    fontFamily: FontFamily.script,
+    fontSize: FontSize.h6,
+    color: Colors.sakuraInk,
+    lineHeight: 18,
   },
   card: {
     marginTop: Spacing.s4, padding: Spacing.s4,
@@ -197,16 +223,14 @@ const styles = StyleSheet.create({
   actions: { paddingHorizontal: Spacing.s6, paddingBottom: Spacing.s3, gap: Spacing.s2 },
   skipPressable: { alignItems: 'center' },
   skip: { fontFamily: FontFamily.ui, fontSize: FontSize.meta, color: Colors.ink3, textDecorationLine: 'underline' },
-  decoTL: {
+  decoTR: {
     position: 'absolute',
-    top: 80,
-    left: 20,
-    opacity: 0.55,
+    top: 130,
+    right: 20,
   },
   decoBR: {
     position: 'absolute',
     bottom: 120,
     right: 30,
-    opacity: 0.45,
   },
 });

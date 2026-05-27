@@ -80,10 +80,10 @@ export default function ShipDetail() {
     <View style={[styles.screen, { paddingTop: insets.top }]}>
       {/* Background accents */}
       <View style={styles.decoTR} pointerEvents="none">
-        <Ribbon size={24} color={Colors.sakuraSoft} />
+        <Ribbon size={24} color={Colors.sakura} />
       </View>
       <View style={styles.decoBL} pointerEvents="none">
-        <Sakura size={22} color={Colors.lavenderSoft} />
+        <Sakura size={22} color={Colors.sakura} />
       </View>
 
       <View style={styles.appBar}>
@@ -574,14 +574,12 @@ const styles = StyleSheet.create({
   },
   decoTR: {
     position: 'absolute',
-    top: 100,
+    top: 150,
     right: 24,
-    opacity: 0.6,
   },
   decoBL: {
     position: 'absolute',
     bottom: 140,
     left: 24,
-    opacity: 0.45,
   },
 });

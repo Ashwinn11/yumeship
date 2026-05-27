@@ -4,7 +4,7 @@ import Svg, { Line } from 'react-native-svg';
 import { useLocalSearchParams } from 'expo-router';
 import { TemplateScreenWrapper } from '@/components/templates/TemplateScreenWrapper';
 import {
-  MarkerCard, TitleHeader, Polaroid, BlankPill, INK,
+  MarkerCard, TitleHeader, Polaroid, INK,
 } from '@/components/templates/primitives';
 import { Heart } from '@/components/deco/Heart';
 import { FontFamily } from '@/constants/theme';
@@ -76,11 +76,19 @@ export function StorylineContent({ editing = false }: { editing?: boolean }) {
                     />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <BlankPill
-                      value={ev.t}
-                      onChangeText={setField(i, 't')}
-                      placeholder="what happened?"
-                    />
+                    {e ? (
+                      <TextInput
+                        value={ev.t}
+                        onChangeText={setField(i, 't') || (() => {})}
+                        placeholder="WHAT HAPPENED?"
+                        placeholderTextColor={INK + '55'}
+                        autoCapitalize="characters"
+                        underlineColorAndroid="transparent"
+                        style={s.eventTitle}
+                      />
+                    ) : (
+                      <Text style={s.eventTitle}>{ev.t || '———'}</Text>
+                    )}
                   </View>
                   {isLast && <Heart size={14} color={INK} />}
                 </View>
@@ -145,6 +153,15 @@ const s = StyleSheet.create({
     borderWidth: 1.2,
     borderColor: INK,
   },
+  eventTitle: {
+    fontFamily: FontFamily.markerBold,
+    fontWeight: '800',
+    fontSize: 14,
+    color: INK,
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+    flex: 1,
+  },
   eventBody: {
     fontFamily: FontFamily.ja,
     fontSize: 12,
@@ -152,7 +169,6 @@ const s = StyleSheet.create({
     lineHeight: 18,
     minHeight: 18,
     textAlignVertical: 'top',
-    fontWeight: '600',
   },
   polaroidRow: { alignItems: 'flex-end', marginTop: 16 },
 });

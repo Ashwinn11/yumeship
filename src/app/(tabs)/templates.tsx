@@ -23,10 +23,10 @@ export default function TemplatesScreen() {
     <View style={[styles.screen, { paddingTop: insets.top }]}>
       {/* Background accents */}
       <View style={styles.decoTR} pointerEvents="none">
-        <Ribbon size={24} color={Colors.sakuraSoft} />
+        <Ribbon size={24} color={Colors.sakura} />
       </View>
       <View style={styles.decoBL} pointerEvents="none">
-        <Sparkle size={18} color={Colors.lavenderSoft} />
+        <Sparkle size={18} color={Colors.lavenderDeep} />
       </View>
 
       <View style={styles.header}>
@@ -133,14 +133,12 @@ const styles = StyleSheet.create({
   },
   decoTR: {
     position: 'absolute',
-    top: 100,
+    top: 150,
     right: 24,
-    opacity: 0.6,
   },
   decoBL: {
     position: 'absolute',
     bottom: 140,
     left: 24,
-    opacity: 0.45,
   },
 });

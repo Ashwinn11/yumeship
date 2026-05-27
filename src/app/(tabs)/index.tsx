@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ShipCard } from '@/components/cards/ShipCard';
@@ -15,28 +16,72 @@ import { daysTogetherLabel, daysAgo, deleteShip, useShips } from '@/store/ships'
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const ships = useShips();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showSearch, setShowSearch] = useState(false);
+
+  const filteredShips = ships.filter((ship) => {
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return true;
+    return (
+      (ship.name && ship.name.toLowerCase().includes(q)) ||
+      (ship.shipName && ship.shipName.toLowerCase().includes(q)) ||
+      (ship.myName && ship.myName.toLowerCase().includes(q)) ||
+      (ship.fandom && ship.fandom.toLowerCase().includes(q))
+    );
+  });
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]}>
       {/* Background accents */}
       <View style={styles.decoTR} pointerEvents="none">
-        <SparkleCluster color={Colors.sakuraSoft} />
+        <SparkleCluster color={Colors.sakura} />
       </View>
       <View style={styles.decoBL} pointerEvents="none">
-        <Heart size={24} color={Colors.lavenderSoft} outline />
+        <Heart size={24} color={Colors.lavenderDeep} outline />
       </View>
 
       <View style={styles.header}>
         <View style={styles.headerRow}>
-          <Mark size={26} />
-          <View style={styles.iconRow}>
-            <Pressable style={styles.iconBtn}>
-              <IconSearch size={14} color={Colors.ink2} />
-            </Pressable>
-            <Pressable style={styles.iconBtn} onPress={() => { resetOnb(); router.push({ pathname: '/onboarding/fo', params: { mode: 'new' } }); }}>
-              <IconPlus size={14} color={Colors.ink2} />
-            </Pressable>
-          </View>
+          {showSearch ? (
+            <View style={styles.searchContainer}>
+              <IconSearch size={14} color={Colors.ink3} />
+              <TextInput
+                style={styles.searchInput}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                placeholder="search ship..."
+                placeholderTextColor={Colors.ink3}
+                autoCapitalize="none"
+                autoCorrect={false}
+                autoFocus={true}
+              />
+              <Pressable
+                style={styles.clearBtn}
+                onPress={() => {
+                  setSearchQuery('');
+                  setShowSearch(false);
+                }}
+                id="search-close-btn"
+              >
+                <Text style={styles.clearBtnText}>✕</Text>
+              </Pressable>
+            </View>
+          ) : (
+            <>
+              <Mark size={26} />
+              {ships.length > 0 && (
+                <View style={styles.iconRow}>
+                  <Pressable
+                    style={styles.iconBtn}
+                    onPress={() => setShowSearch(true)}
+                    id="search-toggle-btn"
+                  >
+                    <IconSearch size={14} color={Colors.ink2} />
+                  </Pressable>
+                </View>
+              )}
+            </>
+          )}
         </View>
 
         <View style={styles.titleRow}>
@@ -44,7 +89,9 @@ export default function HomeScreen() {
           <Sparkle size={16} color={Colors.sakuraDeep} />
         </View>
 
-        <Text style={styles.meta}>{ships.length} F/Os · {ships.length * 0} ENTRIES</Text>
+        <Text style={styles.meta}>
+          {filteredShips.length} F/Os · {filteredShips.length * 0} ENTRIES
+        </Text>
       </View>
 
       {ships.length === 0 ? (
@@ -61,41 +108,71 @@ export default function HomeScreen() {
             <Text style={styles.emptyBtnText}>start a new ship</Text>
           </Pressable>
         </View>
+      ) : filteredShips.length === 0 ? (
+        <Pressable
+          style={styles.pressableBg}
+          onPress={() => {
+            if (showSearch) {
+              setSearchQuery('');
+              setShowSearch(false);
+            }
+          }}
+        >
+          <View style={styles.emptyState}>
+            <View style={styles.emptyDeco}>
+              <Sparkle size={12} color={Colors.sakura} />
+              <Heart size={32} color={Colors.sakuraSoft} outline />
+              <Sparkle size={8} color={Colors.lavender} />
+            </View>
+            <Text style={styles.emptyTitle}>no ships found</Text>
+            <Text style={styles.emptySub}>try adjusting your search term</Text>
+          </View>
+        </Pressable>
       ) : (
         <ScrollView contentContainerStyle={styles.grid} showsVerticalScrollIndicator={false}>
-          {ships.map((ship) => (
-            <ShipCard
-              key={ship.id}
-              style={styles.card}
-              name={ship.name}
-              shipName={ship.shipName}
-              myName={ship.myName}
-              src={ship.fandom || '—'}
-              initial={(ship.shipName || ship.name).charAt(0).toUpperCase() || '♡'}
-              gradStart={ship.gradStart}
-              gradEnd={ship.gradEnd}
-              type={ship.relType}
-              days={daysTogetherLabel(ship.startDate) || daysAgo(ship.createdAt)}
-              tapePattern={ship.tapePattern as any}
-              tapeColor={ship.tapeColor}
-              pinned={ship.pinned}
-              onPress={() => router.push(`/template/${ship.templateKey ?? 'get-to-know'}?shipId=${ship.id}` as any)}
-              onLongPress={() => Alert.alert(
-                `Remove ${ship.shipName || ship.name}?`,
-                'This will delete the ship and all its data.',
-                [
-                  { text: 'Delete', style: 'destructive', onPress: () => deleteShip(ship.id) },
-                  { text: 'Cancel', style: 'cancel' },
-                ],
-              )}
-            />
-          ))}
-          {/* Add new card */}
-          <Pressable style={styles.addCard} onPress={() => { resetOnb(); router.push({ pathname: '/onboarding/fo', params: { mode: 'new' } }); }}>
-            <View style={styles.addIcon}>
-              <IconPlus size={18} color={Colors.sakuraDeep} />
-            </View>
-            <Text style={styles.addText}>start a new ship</Text>
+          <Pressable
+            style={styles.gridPressable}
+            onPress={() => {
+              if (showSearch) {
+                setSearchQuery('');
+                setShowSearch(false);
+              }
+            }}
+          >
+            {filteredShips.map((ship) => (
+              <ShipCard
+                key={ship.id}
+                style={styles.card}
+                name={ship.name}
+                shipName={ship.shipName}
+                myName={ship.myName}
+                src={ship.fandom || '—'}
+                initial={(ship.shipName || ship.name).charAt(0).toUpperCase() || '♡'}
+                gradStart={ship.gradStart}
+                gradEnd={ship.gradEnd}
+                type={ship.relType}
+                days={daysTogetherLabel(ship.startDate) || daysAgo(ship.createdAt)}
+                tapePattern={ship.tapePattern as any}
+                tapeColor={ship.tapeColor}
+                pinned={ship.pinned}
+                onPress={() => router.push(`/template/${ship.templateKey ?? 'get-to-know'}?shipId=${ship.id}` as any)}
+                onLongPress={() => Alert.alert(
+                  `Remove ${ship.shipName || ship.name}?`,
+                  'This will delete the ship and all its data.',
+                  [
+                    { text: 'Delete', style: 'destructive', onPress: () => deleteShip(ship.id) },
+                    { text: 'Cancel', style: 'cancel' },
+                  ],
+                )}
+              />
+            ))}
+            {/* Add new card */}
+            <Pressable style={styles.addCard} onPress={() => { resetOnb(); router.push({ pathname: '/onboarding/fo', params: { mode: 'new' } }); }}>
+              <View style={styles.addIcon}>
+                <IconPlus size={18} color={Colors.sakuraDeep} />
+              </View>
+              <Text style={styles.addText}>start a new ship</Text>
+            </Pressable>
           </Pressable>
         </ScrollView>
       )}
@@ -115,12 +192,52 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.vellum, borderWidth: 1, borderColor: Colors.line,
     alignItems: 'center', justifyContent: 'center',
   },
+  iconBtnActive: {
+    borderColor: Colors.sakuraDeep,
+    backgroundColor: Colors.sakuraSoft,
+  },
   titleRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 10, marginTop: Spacing.s4 },
   title: { fontFamily: FontFamily.displayItalic, fontSize: 38, lineHeight: 38, letterSpacing: -0.4, color: Colors.ink },
   meta: { fontFamily: FontFamily.marker, fontSize: 10, color: Colors.ink3, letterSpacing: 1.2, marginTop: Spacing.s2 },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.vellum,
+    borderWidth: 1.5,
+    borderColor: Colors.line,
+    borderRadius: Radius.pill,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    flex: 1,
+    gap: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontFamily: FontFamily.ui,
+    fontSize: FontSize.caption,
+    color: Colors.ink,
+    padding: 0,
+  },
+  clearBtn: {
+    padding: 4,
+  },
+  clearBtnText: {
+    fontFamily: FontFamily.uiMedium,
+    fontSize: 10,
+    color: Colors.ink3,
+  },
+  pressableBg: {
+    flex: 1,
+  },
   grid: {
-    flexDirection: 'row', flexWrap: 'wrap', gap: 10,
     padding: Spacing.s5, paddingBottom: Spacing.s9,
+  },
+  gridPressable: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    width: '100%',
+    alignItems: 'flex-start',
   },
   card: { width: '47%' },
   addCard: {
@@ -154,14 +271,12 @@ const styles = StyleSheet.create({
   emptyBtnText: { fontFamily: FontFamily.uiMedium, fontSize: FontSize.body, color: Colors.vellum },
   decoTR: {
     position: 'absolute',
-    top: 100,
+    top: 150,
     right: 24,
-    opacity: 0.6,
   },
   decoBL: {
     position: 'absolute',
     bottom: 140,
     left: 24,
-    opacity: 0.45,
   },
 });

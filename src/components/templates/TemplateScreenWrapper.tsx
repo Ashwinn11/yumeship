@@ -52,42 +52,42 @@ export function TemplateScreenWrapper({ templateKey, shipId, children }: Props) 
         return (
           <>
             <View style={s.decoTL} pointerEvents="none"><Sakura size={24} color={Colors.sakura} /></View>
-            <View style={s.decoBR} pointerEvents="none"><Sparkle size={18} color={Colors.lavenderSoft} /></View>
+            <View style={s.decoBR} pointerEvents="none"><Sparkle size={18} color={Colors.lavenderDeep} /></View>
           </>
         );
       case 'kawaii-ui':
         return (
           <>
-            <View style={s.decoTL} pointerEvents="none"><Cloud size={28} color={Colors.sakuraSoft} /></View>
-            <View style={s.decoBR} pointerEvents="none"><Ribbon size={24} color={Colors.lavenderSoft} /></View>
+            <View style={s.decoTL} pointerEvents="none"><Cloud size={28} color={Colors.sakura} /></View>
+            <View style={s.decoBR} pointerEvents="none"><Ribbon size={24} color={Colors.lavenderDeep} /></View>
           </>
         );
       case 'heart-frame':
         return (
           <>
-            <View style={s.decoTL} pointerEvents="none"><Heart size={20} color={Colors.sakuraSoft} /></View>
-            <View style={s.decoBR} pointerEvents="none"><Heart size={18} color={Colors.lavenderSoft} outline /></View>
+            <View style={s.decoTL} pointerEvents="none"><Heart size={20} color={Colors.sakura} /></View>
+            <View style={s.decoBR} pointerEvents="none"><Heart size={18} color={Colors.lavenderDeep} outline /></View>
           </>
         );
       case 'love-letter':
         return (
           <>
-            <View style={s.decoTL} pointerEvents="none"><Ribbon size={24} color={Colors.sakuraSoft} /></View>
-            <View style={s.decoBR} pointerEvents="none"><Sparkle size={18} color={Colors.butterSoft} /></View>
+            <View style={s.decoTL} pointerEvents="none"><Ribbon size={24} color={Colors.sakura} /></View>
+            <View style={s.decoBR} pointerEvents="none"><Sparkle size={18} color={Colors.butter} /></View>
           </>
         );
       case 'aesthetic':
         return (
           <>
-            <View style={s.decoTL} pointerEvents="none"><Star size={20} color={Colors.butterSoft} /></View>
-            <View style={s.decoBR} pointerEvents="none"><Cloud size={28} color={Colors.sakuraSoft} /></View>
+            <View style={s.decoTL} pointerEvents="none"><Star size={20} color={Colors.butter} /></View>
+            <View style={s.decoBR} pointerEvents="none"><Cloud size={28} color={Colors.sakura} /></View>
           </>
         );
       default:
         return (
           <>
-            <View style={s.decoTL} pointerEvents="none"><Star size={18} color={Colors.lavenderSoft} /></View>
-            <View style={s.decoBR} pointerEvents="none"><Heart size={16} color={Colors.sakuraSoft} outline /></View>
+            <View style={s.decoTL} pointerEvents="none"><Star size={18} color={Colors.lavenderDeep} /></View>
+            <View style={s.decoBR} pointerEvents="none"><Heart size={16} color={Colors.sakura} outline /></View>
           </>
         );
     }
@@ -147,14 +147,12 @@ const s = StyleSheet.create({
   scroll: { padding: Spacing.s5, paddingBottom: Spacing.s8 },
   decoTL: {
     position: 'absolute',
-    top: 80,
+    top: 130,
     left: 20,
-    opacity: 0.55,
   },
   decoBR: {
     position: 'absolute',
     bottom: 120,
     right: 30,
-    opacity: 0.45,
   },
 });

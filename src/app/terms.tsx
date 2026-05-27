@@ -2,17 +2,18 @@ import { router } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Sakura } from '@/components/deco/Sakura';
+import { IconChevronLeft } from '@/components/ui/Icon';
 import { Colors, FontFamily, FontSize, Radius, Spacing } from '@/constants/theme';
 
 export default function TermsScreen() {
   const insets = useSafeAreaInsets();
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]}>
-      <View style={styles.decoTL} pointerEvents="none"><Sakura size={26} color={Colors.sakura} /></View>
-      <View style={styles.decoBR} pointerEvents="none"><Sakura size={18} color={Colors.lavenderSoft} /></View>
+      <View style={styles.decoTR} pointerEvents="none"><Sakura size={26} color={Colors.sakura} /></View>
+      <View style={styles.decoBR} pointerEvents="none"><Sakura size={18} color={Colors.sakura} /></View>
       <View style={styles.header}>
         <Pressable style={styles.backBtn} onPress={() => router.back()} id="terms-back">
-          <Text style={styles.backTxt}>← Back</Text>
+          <IconChevronLeft size={14} color={Colors.ink2} />
         </Pressable>
         <Text style={styles.title}>Terms of Service</Text>
       </View>
@@ -107,16 +108,28 @@ const s = StyleSheet.create({
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: Colors.paper },
-  decoTL: { position: 'absolute', top: 72, left: 16, opacity: 0.45 },
-  decoBR: { position: 'absolute', bottom: 100, right: 20, opacity: 0.35 },
+  decoTR: { position: 'absolute', top: 130, right: 16 },
+  decoBR: { position: 'absolute', bottom: 100, right: 20 },
   header: {
-    paddingHorizontal: Spacing.s5, paddingTop: Spacing.s2, paddingBottom: Spacing.s3,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.s3,
+    paddingHorizontal: Spacing.s5, paddingTop: Spacing.s3, paddingBottom: Spacing.s3,
     borderBottomWidth: 1, borderBottomColor: Colors.line,
   },
-  backBtn: { marginBottom: Spacing.s2 },
-  backTxt: { fontFamily: FontFamily.ui, fontSize: 13, color: Colors.ink2 },
+  backBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: Radius.pill,
+    backgroundColor: Colors.vellum,
+    borderWidth: 1,
+    borderColor: Colors.line,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
   title: {
-    fontFamily: FontFamily.displayItalic, fontSize: 28, color: Colors.ink, lineHeight: 32,
+    fontFamily: FontFamily.displayItalic, fontSize: 22, color: Colors.ink, flex: 1,
   },
   scroll: { flex: 1 },
   content: {

@@ -122,8 +122,8 @@ export function DatesTab({ shipId }: { shipId: string }) {
                 justifyContent: 'center',
               }}
               textStyle={{
-                fontFamily: FontFamily.ui,
-                fontSize: 14,
+                fontFamily: FontFamily.ja,
+                fontSize: 13,
                 color: date ? Colors.ink : Colors.ink3,
               }}
             />
@@ -178,13 +178,13 @@ const s = StyleSheet.create({
     backgroundColor: Colors.sakuraSoft, borderWidth: 1, borderColor: Colors.sakura,
     alignItems: 'center', justifyContent: 'center',
   },
-  datePillNum: { fontFamily: FontFamily.displayItalic, fontSize: 22, color: Colors.sakuraDeep, lineHeight: 24 },
-  datePillUnit: { fontFamily: FontFamily.marker, fontSize: 8, color: Colors.sakuraDeep, letterSpacing: 0.6 },
-  datePillToday: { fontFamily: FontFamily.displayItalic, fontSize: 11, color: Colors.sakuraDeep, textAlign: 'center' },
-  datePillPast: { fontFamily: FontFamily.marker, fontSize: 8, color: Colors.ink3, letterSpacing: 0.4 },
+  datePillNum: { fontFamily: FontFamily.ja, fontSize: 18, color: Colors.sakuraDeep, lineHeight: 22 },
+  datePillUnit: { fontFamily: FontFamily.ja, fontSize: 8, color: Colors.sakuraDeep, letterSpacing: 0.6 },
+  datePillToday: { fontFamily: FontFamily.ja, fontSize: 10, color: Colors.sakuraDeep, textAlign: 'center' },
+  datePillPast: { fontFamily: FontFamily.ja, fontSize: 9, color: Colors.ink3, letterSpacing: 0.4 },
   dateInfo: { flex: 1, gap: 3 },
-  dateTitle: { fontFamily: FontFamily.displayItalic, fontSize: 15, color: Colors.ink },
-  dateStr: { fontFamily: FontFamily.marker, fontSize: 9, color: Colors.ink3, letterSpacing: 0.6 },
+  dateTitle: { fontFamily: FontFamily.ja, fontSize: 13, color: Colors.ink },
+  dateStr: { fontFamily: FontFamily.ja, fontSize: 11, color: Colors.ink3, letterSpacing: 0.6 },
 
   // Sheet
   overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.3)' },
@@ -195,7 +195,7 @@ const s = StyleSheet.create({
   sheetClose: { fontSize: 13, color: Colors.ink3, fontFamily: FontFamily.ui },
   sheetContent: { padding: Spacing.s5, gap: 6 },
   fieldLabel: { fontFamily: FontFamily.marker, fontSize: 9, color: Colors.ink3, letterSpacing: 1.2, marginTop: 10, marginBottom: 4 },
-  input: { fontFamily: FontFamily.ui, fontSize: 14, color: Colors.ink, borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.r2, paddingVertical: 9, paddingHorizontal: 12, backgroundColor: Colors.vellum },
+  input: { fontFamily: FontFamily.ja, fontSize: 13, color: Colors.ink, borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.r2, paddingVertical: 9, paddingHorizontal: 12, backgroundColor: Colors.vellum },
   toggleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 14, padding: Spacing.s4, backgroundColor: Colors.vellum, borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.r3 },
   toggleLabel: { flex: 1, gap: 2 },
   toggleTitle: { fontFamily: FontFamily.uiMedium, fontSize: 14, color: Colors.ink },

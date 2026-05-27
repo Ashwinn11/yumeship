@@ -42,10 +42,10 @@ export default function UpcomingScreen() {
     <View style={[styles.screen, { paddingTop: insets.top }]}>
       {/* Background accents */}
       <View style={styles.decoTL} pointerEvents="none">
-        <Star size={18} color={Colors.butterSoft} />
+        <Star size={18} color={Colors.butter} />
       </View>
       <View style={styles.decoBR} pointerEvents="none">
-        <Cloud size={28} color={Colors.sakuraSoft} />
+        <Cloud size={28} color={Colors.sakura} />
       </View>
 
       {/* Header */}
@@ -85,7 +85,7 @@ export default function UpcomingScreen() {
         <View style={styles.emptyState}>
           <View style={styles.emptyDeco}>
             <Sparkle size={10} color={Colors.sakura} />
-            <Sakura size={28} color={Colors.sakuraSoft} />
+            <Sakura size={28} color={Colors.sakura} />
             <Sparkle size={7} color={Colors.lavender} />
           </View>
           <Text style={styles.emptyTitle}>nothing coming up</Text>
@@ -219,14 +219,12 @@ const styles = StyleSheet.create({
   },
   decoTL: {
     position: 'absolute',
-    top: 80,
+    top: 130,
     left: 20,
-    opacity: 0.55,
   },
   decoBR: {
     position: 'absolute',
     bottom: 120,
     right: 30,
-    opacity: 0.45,
   },
 });

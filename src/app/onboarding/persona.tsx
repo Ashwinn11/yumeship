@@ -38,10 +38,10 @@ export default function OnbPersona() {
     <View style={[styles.screen, { paddingTop: insets.top + Spacing.s1, paddingBottom: insets.bottom + Spacing.s1 }]}>
       {/* Background accents */}
       <View style={styles.decoTR} pointerEvents="none">
-        <Cloud size={32} color={Colors.sakuraSoft} />
+        <Cloud size={32} color={Colors.sakura} />
       </View>
       <View style={styles.decoBL} pointerEvents="none">
-        <Sparkle size={18} color={Colors.lavenderSoft} />
+        <Sparkle size={18} color={Colors.lavenderDeep} />
       </View>
 
       <View style={styles.dotsRow}>
@@ -51,9 +51,6 @@ export default function OnbPersona() {
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <Text style={styles.eyebrow}>step one · you</Text>
         <Text style={styles.heading}>Who are you,{'\n'}in their world?</Text>
-        <Text style={styles.sub}>
-          A self-insert is you in their story. Or someone you've imagined for it. There's no wrong way.
-        </Text>
 
         {/* Persona card */}
         <View style={styles.card}>
@@ -113,7 +110,7 @@ export default function OnbPersona() {
             <Heart size={10} color={Colors.sakuraDeep} />
           </View>
           <Text style={styles.noteText}>
-            "Even if you change your mind, you can change all of this later. Nothing is fixed."
+            "A self-insert is you in their story. Or someone you've imagined for it. There's no wrong way."
           </Text>
         </View>
       </ScrollView>
@@ -167,13 +164,6 @@ const styles = StyleSheet.create({
     color: Colors.ink,
     marginTop: Spacing.s2,
   },
-  sub: {
-    fontFamily: FontFamily.script,
-    fontSize: FontSize.h6,
-    color: Colors.ink2,
-    lineHeight: 20,
-    marginTop: Spacing.s2,
-  },
   card: {
     marginTop: Spacing.s5,
     padding: Spacing.s5,
@@ -214,8 +204,8 @@ const styles = StyleSheet.create({
     left: 12,
   },
   noteText: {
-    fontFamily: FontFamily.displayItalic,
-    fontSize: FontSize.caption,
+    fontFamily: FontFamily.script,
+    fontSize: FontSize.h6,
     color: Colors.sakuraInk,
     lineHeight: 18,
   },
@@ -237,12 +227,10 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 100,
     right: 24,
-    opacity: 0.6,
   },
   decoBL: {
     position: 'absolute',
     bottom: 140,
     left: 24,
-    opacity: 0.45,
   },
 });

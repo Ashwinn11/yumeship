@@ -19,10 +19,10 @@ export default function OnbWelcome() {
         <Sakura size={28} color={Colors.sakura} />
       </View>
       <View style={styles.decoBR} pointerEvents="none">
-        <Sakura size={22} color={Colors.lavenderSoft} />
+        <Sakura size={22} color={Colors.sakura} />
       </View>
       <View style={styles.decoTR} pointerEvents="none">
-        <Sparkle size={16} color={Colors.butterSoft} />
+        <Sparkle size={16} color={Colors.butter} />
       </View>
 
       {/* Main content */}
@@ -76,19 +76,16 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 80,
     left: 20,
-    opacity: 0.55,
   },
   decoTR: {
     position: 'absolute',
     top: 100,
     right: 24,
-    opacity: 0.6,
   },
   decoBR: {
     position: 'absolute',
     bottom: 120,
     right: 30,
-    opacity: 0.45,
   },
   content: {
     flex: 1,

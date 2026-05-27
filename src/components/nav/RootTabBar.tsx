@@ -1,41 +1,69 @@
-import { Sparkle } from '@/components/deco/Sparkle';
-import { Colors, FontFamily, FontSize, Radius, Shadow } from '@/constants/theme';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-
-// design/screens.jsx — RootTabBar + ROOT_TABS
-// 4-tab pill nav. Active tab = sakura-deep pill + sparkle badge.
+import { Colors, FontFamily, Radius, Shadow } from '@/constants/theme';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  IconHomeOutline,
+  IconJournalOutline,
+  IconMailOutline,
+  IconProfileOutline,
+  IconPlus,
+} from '@/components/ui';
 
 export type RootTab = 'home' | 'vault' | 'upcoming' | 'settings';
-
-const TABS: { id: RootTab; ja: string; label: string }[] = [
-  { id: 'home',     ja: '船', label: 'Home' },
-  { id: 'vault',    ja: '蔵', label: 'Vault' },
-  { id: 'upcoming', ja: '次', label: 'Upcoming' },
-  { id: 'settings', ja: '設', label: 'Settings' },
-];
 
 type Props = {
   active: RootTab;
   onPress: (tab: RootTab) => void;
+  onPlusPress?: () => void;
 };
 
-export function RootTabBar({ active, onPress }: Props) {
+export function RootTabBar({ active, onPress, onPlusPress }: Props) {
+  const tabsList: { id: RootTab; label: string; icon: (color: string) => React.ReactNode }[] = [
+    { id: 'home', label: 'home', icon: (color) => <IconHomeOutline color={color} /> },
+    { id: 'vault', label: 'vault', icon: (color) => <IconJournalOutline color={color} /> },
+    { id: 'upcoming', label: 'upcoming', icon: (color) => <IconMailOutline color={color} /> },
+    { id: 'settings', label: 'settings', icon: (color) => <IconProfileOutline color={color} /> },
+  ];
+
   return (
     <View style={styles.wrap}>
       <View style={styles.track}>
-        {TABS.map((t) => {
+        {/* Left two tabs: home and vault */}
+        {tabsList.slice(0, 2).map((t) => {
           const on = t.id === active;
+          const activeColor = Colors.ink;
+          const inactiveColor = Colors.ink3;
           return (
-            <Pressable key={t.id} onPress={() => onPress(t.id)} style={[styles.tab, on && styles.tabActive]}>
-              {on && (
-                <View style={styles.sparkle}>
-                  <Sparkle size={9} color={Colors.butter} />
-                </View>
-              )}
-              <Text style={[styles.ja, { opacity: on ? 1 : 0.55, color: on ? Colors.vellum : Colors.ink2 }]}>
-                {t.ja}
+            <Pressable
+              key={t.id}
+              onPress={() => onPress(t.id)}
+              style={[styles.tab, on && styles.tabActive]}
+            >
+              {t.icon(on ? activeColor : inactiveColor)}
+              <Text style={[styles.label, { color: on ? activeColor : inactiveColor, fontFamily: on ? FontFamily.uiSemiBold : FontFamily.ui }]}>
+                {t.label}
               </Text>
-              <Text style={[styles.label, { color: on ? Colors.vellum : Colors.ink2, fontWeight: on ? '600' : '500' }]}>
+            </Pressable>
+          );
+        })}
+
+        {/* Center floating add button */}
+        <Pressable style={styles.plusBtn} onPress={onPlusPress} id="tab-add-ship">
+          <IconPlus color={Colors.vellum} size={18} />
+        </Pressable>
+
+        {/* Right two tabs: upcoming and settings */}
+        {tabsList.slice(2).map((t) => {
+          const on = t.id === active;
+          const activeColor = Colors.ink;
+          const inactiveColor = Colors.ink3;
+          return (
+            <Pressable
+              key={t.id}
+              onPress={() => onPress(t.id)}
+              style={[styles.tab, on && styles.tabActive]}
+            >
+              {t.icon(on ? activeColor : inactiveColor)}
+              <Text style={[styles.label, { color: on ? activeColor : inactiveColor, fontFamily: on ? FontFamily.uiSemiBold : FontFamily.ui }]}>
                 {t.label}
               </Text>
             </Pressable>
@@ -48,7 +76,7 @@ export function RootTabBar({ active, onPress }: Props) {
 
 const styles = StyleSheet.create({
   wrap: {
-    paddingHorizontal: 14,
+    paddingHorizontal: 12,
     paddingTop: 4,
     paddingBottom: 8,
     alignItems: 'center',
@@ -56,36 +84,40 @@ const styles = StyleSheet.create({
   track: {
     flexDirection: 'row',
     backgroundColor: Colors.vellum,
-    borderRadius: Radius.pill,
-    borderWidth: 1,
+    borderRadius: Radius.r5,
+    borderWidth: 1.5,
     borderColor: Colors.line,
-    padding: 5,
-    gap: 2,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
     ...Shadow.s2,
   },
   tab: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     alignItems: 'center',
-    gap: 6,
-    paddingVertical: 7,
-    paddingHorizontal: 12,
-    borderRadius: Radius.pill,
-    position: 'relative',
+    justifyContent: 'center',
+    gap: 4,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: Radius.r3,
+    minWidth: 64,
   },
   tabActive: {
+    backgroundColor: Colors.sakuraSoft,
+  },
+  plusBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: Radius.pill,
     backgroundColor: Colors.sakuraDeep,
-  },
-  sparkle: {
-    position: 'absolute',
-    left: -3,
-    top: -3,
-  },
-  ja: {
-    fontFamily: FontFamily.ja,
-    fontSize: FontSize.hairline,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...Shadow.s2,
   },
   label: {
-    fontFamily: FontFamily.ui,
-    fontSize: FontSize.hairline,
+    fontSize: 9,
+    marginTop: 1,
   },
 });

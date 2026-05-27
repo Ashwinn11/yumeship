@@ -1,8 +1,9 @@
-import { Tabs } from 'expo-router';
+import { Tabs, router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { View } from 'react-native';
 
 import { RootTabBar, type RootTab } from '@/components/nav/RootTabBar';
+import { resetOnb } from '@/store/onboarding';
 
 const ROUTE_TO_TAB: Record<string, RootTab> = {
   index:    'home',
@@ -33,6 +34,10 @@ function CustomTabBar({ state, navigation }: TabBarProps) {
       <RootTabBar
         active={active}
         onPress={(tab) => navigation.navigate(TAB_TO_ROUTE[tab])}
+        onPlusPress={() => {
+          resetOnb();
+          router.push({ pathname: '/onboarding/fo', params: { mode: 'new' } });
+        }}
       />
     </View>
   );

@@ -17,7 +17,8 @@ import { DatesTab } from '@/components/tabs/DatesTab';
 import { MessagesTab } from '@/components/tabs/MessagesTab';
 import { StorylineTab } from '@/components/tabs/StorylineTab';
 import { INK, SquareCheck } from '@/components/templates/primitives';
-import { IconPlus } from '@/components/ui/Icon';
+import { IconPlus, IconChevronLeft } from '@/components/ui/Icon';
+import { Mark } from '@/components/ui/Mark';
 import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing } from '@/constants/theme';
 import { addFoMessage, deleteFoMessage, toggleFoMessage, updateFoMessage, useFoMessages } from '@/store/foNotifications';
 import { addHeadcanon, deleteHeadcanon, useHeadcanonCounts, useHeadcanons } from '@/store/headcanons';
@@ -45,7 +46,7 @@ const FEATURES: { id: Feature; ja: string; label: string; desc: string; color: s
   { id: 'boundaries', ja: '夢', label: 'Boundaries', desc: 'sharing rules & what\'s ok', color: Colors.plum, bg: Colors.lavenderSoft },
   { id: 'storyline', ja: '時', label: 'Storyline', desc: 'timeline of moments', color: Colors.ink2, bg: Colors.paperDeep },
   { id: 'dates', ja: '日', label: 'Dates', desc: 'anniversaries & events', color: Colors.peachDeep, bg: Colors.peachSoft },
-  { id: 'fo-messages', ja: '♡', label: 'F/O Messages', desc: 'messages from them ♡', color: Colors.sakuraInk, bg: Colors.sakuraSoft },
+  { id: 'fo-messages', ja: '信', label: 'F/O Messages', desc: 'messages from them ♡', color: Colors.sakuraInk, bg: Colors.sakuraSoft },
 ];
 
 export default function VaultScreen() {
@@ -76,40 +77,57 @@ export default function VaultScreen() {
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]}>
       {/* Background accents */}
-      <View style={styles.decoTL} pointerEvents="none">
-        <Cloud size={30} color={Colors.sakuraSoft} />
+      <View style={styles.decoTR} pointerEvents="none">
+        <Cloud size={30} color={Colors.sakura} />
       </View>
       <View style={styles.decoBR} pointerEvents="none">
-        <Star size={18} color={Colors.lavenderSoft} />
+        <Star size={18} color={Colors.lavenderDeep} />
       </View>
 
       {/* Header */}
-      <View style={styles.header}>
-        {activeFeature ? (
+      {activeFeature ? (
+        <View style={styles.subHeader}>
           <Pressable style={styles.backBtn} onPress={() => setActiveFeature(null)}>
-            <Text style={styles.backText}>‹</Text>
+            <IconChevronLeft size={14} color={Colors.ink2} />
           </Pressable>
-        ) : (
+          <View style={styles.subHeaderCenter}>
+            {ships.length > 0 ? (
+              <Pressable onPress={() => setShowShipPicker(true)} style={styles.subHeaderPickerBtn}>
+                <View style={[styles.titleShipDot, { backgroundColor: ship?.gradStart ?? Colors.sakura }]} />
+                <Text style={styles.subHeaderShipName} numberOfLines={1}>
+                  {ship ? (ship.shipName || ship.name) : 'select ship'}
+                </Text>
+                <Text style={styles.subHeaderChevron}>▾</Text>
+              </Pressable>
+            ) : (
+              <Text style={styles.subHeaderShipName}>no ship</Text>
+            )}
+          </View>
           <View style={{ width: 32 }} />
-        )}
-        <View style={styles.headerCenter}>
-          {activeFeature ? (
-            <Text style={styles.headerTitle}>{activeFeatureMeta?.label}</Text>
+        </View>
+
+      ) : (
+        <View style={styles.header}>
+          <View style={styles.headerRow}>
+            <Mark size={26} />
+          </View>
+
+          {ships.length > 0 ? (
+            <Pressable style={styles.titleRow} onPress={() => setShowShipPicker(true)}>
+              <View style={styles.titlePickerContainer}>
+                <View style={[styles.titleShipDot, { backgroundColor: ship?.gradStart ?? Colors.sakura }]} />
+                <Text style={styles.title} numberOfLines={1}>
+                  {ship ? (ship.shipName || ship.name) : 'vault'}
+                </Text>
+                <Text style={styles.titleChevron}>▾</Text>
+              </View>
+            </Pressable>
           ) : (
-            <Text style={styles.headerTitle}>vault</Text>
+            <View style={styles.titleRow}>
+              <Text style={styles.title}>vault</Text>
+            </View>
           )}
         </View>
-        <View style={{ width: 32 }} />
-      </View>
-
-      {/* Ship selector */}
-      {ships.length > 0 && (
-        <Pressable style={styles.shipSelector} onPress={() => setShowShipPicker(true)}>
-          <View style={[styles.shipDot, { backgroundColor: ship?.gradStart ?? Colors.sakura }]} />
-          <Text style={styles.shipName}>{ship ? (ship.shipName || ship.name) : '—'}</Text>
-          {ship?.myName && ship?.name ? <Text style={styles.shipFandom}>· {ship.myName} × {ship.name}</Text> : ship?.fandom ? <Text style={styles.shipFandom}>· {ship.fandom}</Text> : null}
-          <Text style={styles.shipChevron}>›</Text>
-        </Pressable>
       )}
 
       {ships.length === 0 ? (
@@ -172,7 +190,7 @@ const HC_CATS: { id: string; ja: string; label: string; color: string }[] = [
   { id: 'personality', ja: '性', label: 'Personality', color: Colors.sakuraDeep },
   { id: 'habits', ja: '癖', label: 'Habits', color: Colors.lavenderDeep },
   { id: 'favorites', ja: '好', label: 'Favorites', color: Colors.peachDeep },
-  { id: 'howmet', ja: '逢', label: 'How Met', color: Colors.sageDeep },
+  { id: 'howmet', ja: '逢', label: 'How We Met', color: Colors.sageDeep },
 ];
 
 function HeadcanonsFeature({ shipId, shipName }: { shipId: string; shipName: string }) {
@@ -230,7 +248,7 @@ function CategoryBlock({
         {previewHcs.length === 0 ? (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, opacity: 0.5, paddingVertical: 4 }}>
             <Check on={false} size={11} />
-            <BlankPill width="60%" />
+            <Text style={hc.emptyHint}>tap to add</Text>
           </View>
         ) : (
           previewHcs.map((h, j) => (
@@ -310,7 +328,7 @@ function HCList({ shipId, shipName, catId, catLabel, catColor, onBack }: {
             {hcs.length === 0 ? (
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, opacity: 0.5, paddingVertical: 4 }}>
                 <Check on={false} size={11} />
-                <BlankPill width="60%" />
+                <Text style={hc.emptyHint}>tap to add</Text>
               </View>
             ) : (
               hcs.map((h, j) => (
@@ -859,7 +877,7 @@ function FoMessagesFeature({ shipId, shipName }: { shipId: string; shipName: str
                 </View>
                 <Text style={[fo.msgBody, !m.active && fo.msgBodyOff]}>{displayBody}</Text>
                 {variationCount > 1 && (
-                  <Text style={{ fontFamily: FontFamily.ui, fontSize: 11, color: Colors.sakuraDeep, marginTop: -4 }}>
+                  <Text style={{ fontFamily: FontFamily.ja, fontSize: 11, color: Colors.sakuraDeep, marginTop: -4 }}>
                     + {variationCount - 1} other variation{variationCount > 2 ? 's' : ''}
                   </Text>
                 )}
@@ -1288,25 +1306,76 @@ function FoCompose({ shipName, initialMessage, onQueue, onBack }: {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: Colors.paper },
   header: {
+    paddingHorizontal: Spacing.s5,
+    paddingTop: Spacing.s3,
+    paddingBottom: Spacing.s4,
+  },
+  subHeader: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: Spacing.s5, paddingVertical: Spacing.s2,
   },
-  backBtn: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
-  backText: { fontSize: 22, color: Colors.ink2, fontFamily: FontFamily.ui },
-  headerCenter: { flex: 1, alignItems: 'center' },
-  headerTitle: { fontFamily: FontFamily.displayItalic, fontSize: FontSize.h6, color: Colors.ink },
-
-  shipSelector: {
-    flexDirection: 'row', alignItems: 'center', gap: 8,
-    marginHorizontal: Spacing.s5, marginBottom: Spacing.s4,
-    paddingVertical: Spacing.s2, paddingHorizontal: Spacing.s4,
-    backgroundColor: Colors.vellum, borderWidth: 1, borderColor: Colors.line,
-    borderRadius: Radius.pill, ...Shadow.s1,
+  subHeaderCenter: { flex: 1, alignItems: 'center' },
+  subHeaderTitle: { fontFamily: FontFamily.displayItalic, fontSize: FontSize.h6, color: Colors.ink },
+  subHeaderPickerBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
-  shipDot: { width: 10, height: 10, borderRadius: 5 },
-  shipName: { fontFamily: FontFamily.uiSemiBold, fontSize: 13, color: Colors.ink },
-  shipFandom: { fontFamily: FontFamily.ui, fontSize: 12, color: Colors.ink3, flex: 1 },
-  shipChevron: { fontSize: 18, color: Colors.ink3, fontFamily: FontFamily.ui },
+  subHeaderShipName: {
+    fontFamily: FontFamily.displayItalic,
+    fontSize: FontSize.h5,
+    color: Colors.ink,
+    maxWidth: 180,
+  },
+  subHeaderChevron: {
+    fontSize: 16,
+    color: Colors.ink3,
+    fontFamily: FontFamily.ui,
+    marginTop: 2,
+  },
+  backBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: Radius.pill,
+    backgroundColor: Colors.vellum,
+    borderWidth: 1,
+    borderColor: Colors.line,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing.s3,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  titlePickerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  title: {
+    fontFamily: FontFamily.displayItalic,
+    fontSize: FontSize.h3,
+    color: Colors.ink,
+  },
+  titleShipDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginRight: 6,
+  },
+  titleChevron: {
+    fontSize: 22,
+    color: Colors.ink3,
+    fontFamily: FontFamily.ui,
+    marginLeft: 4,
+    marginTop: 4,
+  },
 
   grid: {
     flexDirection: 'row', flexWrap: 'wrap', gap: 10,
@@ -1348,15 +1417,18 @@ const styles = StyleSheet.create({
   emptySub: { fontFamily: FontFamily.displayItalic, fontSize: FontSize.meta, color: Colors.ink3, textAlign: 'center', paddingHorizontal: Spacing.s7 },
   decoTL: {
     position: 'absolute',
-    top: 80,
+    top: 130,
     left: 20,
-    opacity: 0.55,
+  },
+  decoTR: {
+    position: 'absolute',
+    top: 130,
+    right: 20,
   },
   decoBR: {
     position: 'absolute',
     bottom: 120,
     right: 30,
-    opacity: 0.45,
   },
 });
 
@@ -1405,6 +1477,7 @@ const hc = StyleSheet.create({
   catItemRow: { paddingVertical: 6 },
   catItemRowBorder: { borderWidth: 1, borderColor: 'transparent', borderBottomColor: INK + '22', borderStyle: 'dashed' },
   moreText: { fontFamily: FontFamily.uiMedium, fontSize: 11, color: Colors.sakuraDeep, marginTop: 4 },
+  emptyHint: { fontFamily: FontFamily.ui, fontSize: 12, color: INK, fontStyle: 'italic', opacity: 0.45 },
 
   listHeader: { paddingHorizontal: Spacing.s5, paddingVertical: Spacing.s3 },
   back: { fontFamily: FontFamily.markerBold, fontSize: 11, color: Colors.ink2, letterSpacing: 0.8 },
@@ -1492,7 +1565,7 @@ const fo = StyleSheet.create({
   hubLeft: { gap: 2 },
   eyebrow: { fontFamily: FontFamily.marker, fontSize: 9, color: Colors.ink3, letterSpacing: 1.4 },
   activeCount: { fontFamily: FontFamily.displayItalic, fontSize: 22, color: Colors.ink },
-  noSaved: { fontFamily: FontFamily.ui, fontSize: 12, color: Colors.ink3, marginTop: 2 },
+  noSaved: { fontFamily: FontFamily.ja, fontSize: 11, color: Colors.ink3, marginTop: 2 },
   newBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
     paddingVertical: 5, paddingHorizontal: 12,
@@ -1506,7 +1579,7 @@ const fo = StyleSheet.create({
     borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.r3,
     alignItems: 'flex-start', gap: Spacing.s3,
   },
-  emptyCardText: { fontFamily: FontFamily.ui, fontSize: 13, color: Colors.ink3 },
+  emptyCardText: { fontFamily: FontFamily.ja, fontSize: 12, color: Colors.ink3 },
   createBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     paddingVertical: 8, paddingHorizontal: 16,
@@ -1522,10 +1595,10 @@ const fo = StyleSheet.create({
   },
   msgCardOff: { opacity: 0.55 },
   msgHeader: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  msgSender: { fontFamily: FontFamily.uiSemiBold, fontSize: 13, color: Colors.ink },
+  msgSender: { fontFamily: FontFamily.ja, fontSize: 12, color: Colors.ink, fontWeight: '600' },
   msgTimeDot: { fontSize: 12, color: Colors.ink3 },
-  msgTime: { fontFamily: FontFamily.ui, fontSize: 11, color: Colors.ink3 },
-  msgBody: { fontFamily: FontFamily.ui, fontSize: 14, color: Colors.ink, lineHeight: 20 },
+  msgTime: { fontFamily: FontFamily.ja, fontSize: 11, color: Colors.ink3 },
+  msgBody: { fontFamily: FontFamily.ja, fontSize: 13, color: Colors.ink, lineHeight: 20 },
   msgBodyOff: { color: Colors.ink3 },
   msgFooter: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   fromInputWrap: {
@@ -1533,14 +1606,14 @@ const fo = StyleSheet.create({
     borderRadius: Radius.r3, paddingHorizontal: Spacing.s3, paddingVertical: 10,
   },
   fromInput: {
-    fontFamily: FontFamily.ui, fontSize: 14, color: Colors.ink,
+    fontFamily: FontFamily.ja, fontSize: 13, color: Colors.ink,
     padding: 0,
   },
   timePill: {
     paddingVertical: 3, paddingHorizontal: 10, borderRadius: Radius.pill,
     backgroundColor: Colors.paperDeep, borderWidth: 1, borderColor: Colors.line,
   },
-  timePillText: { fontFamily: FontFamily.ui, fontSize: 11, color: Colors.ink3 },
+  timePillText: { fontFamily: FontFamily.ja, fontSize: 10, color: Colors.ink3 },
   actionRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1, justifyContent: 'flex-end' },
   actionBtn: {
     paddingVertical: 5, paddingHorizontal: 12, borderRadius: Radius.pill,
@@ -1548,7 +1621,7 @@ const fo = StyleSheet.create({
   },
   actionBtnActive: { backgroundColor: Colors.sageSoft, borderColor: Colors.sage },
   actionBtnPause: { backgroundColor: Colors.paperDeep, borderColor: Colors.line },
-  actionBtnText: { fontFamily: FontFamily.uiMedium, fontSize: 11, color: Colors.ink2 },
+  actionBtnText: { fontFamily: FontFamily.ja, fontSize: 11, color: Colors.ink2 },
   actionBtnTextActive: { color: Colors.sageDeep },
   actionBtnTextPause: { color: Colors.ink3 },
 
@@ -1578,7 +1651,7 @@ const fo = StyleSheet.create({
     borderRadius: Radius.r3, padding: Spacing.s3,
   },
   msgInput: {
-    fontFamily: FontFamily.ui, fontSize: 14, color: Colors.ink,
+    fontFamily: FontFamily.ja, fontSize: 13, color: Colors.ink,
     minHeight: 72, textAlignVertical: 'top', lineHeight: 22,
   },
   addMsgBtn: {

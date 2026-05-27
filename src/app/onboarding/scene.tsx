@@ -80,10 +80,10 @@ export default function OnbScene() {
     <View style={[styles.screen, { paddingTop: insets.top + Spacing.s1, paddingBottom: insets.bottom + Spacing.s1 }]}>
       {/* Background accents */}
       <View style={styles.decoTL} pointerEvents="none">
-        <WashiTape width={65} height={14} pattern="stripe" color={Colors.sakuraSoft} rotate={4} />
+        <WashiTape width={65} height={14} pattern="stripe" color={Colors.sakura} rotate={4} />
       </View>
       <View style={styles.decoBR} pointerEvents="none">
-        <Star size={20} color={Colors.butterSoft} />
+        <Star size={20} color={Colors.butter} />
       </View>
 
       <View style={styles.dotsRow}>
@@ -187,12 +187,10 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 80,
     left: 20,
-    opacity: 0.55,
   },
   decoBR: {
     position: 'absolute',
     bottom: 120,
     right: 30,
-    opacity: 0.45,
   },
 });

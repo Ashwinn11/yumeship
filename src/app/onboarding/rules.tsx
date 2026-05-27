@@ -86,7 +86,7 @@ export default function OnbRules() {
         <Pin size={18} color={Colors.sakuraDeep} />
       </View>
       <View style={styles.decoBL} pointerEvents="none">
-        <Heart size={20} color={Colors.lavenderSoft} outline />
+        <Heart size={20} color={Colors.lavenderDeep} outline />
       </View>
 
       {isNew ? (
@@ -236,12 +236,10 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 100,
     right: 24,
-    opacity: 0.6,
   },
   decoBL: {
     position: 'absolute',
     bottom: 140,
     left: 24,
-    opacity: 0.45,
   },
 });

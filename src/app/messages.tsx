@@ -16,10 +16,10 @@ export default function MessagesScreen() {
     <View style={[styles.screen, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
       {/* Background accents */}
       <View style={styles.decoTR} pointerEvents="none">
-        <Sparkle size={18} color={Colors.sakuraSoft} />
+        <Sparkle size={18} color={Colors.sakura} />
       </View>
       <View style={styles.decoBL} pointerEvents="none">
-        <Heart size={20} color={Colors.lavenderSoft} outline />
+        <Heart size={20} color={Colors.lavenderDeep} outline />
       </View>
 
       {/* App bar */}
@@ -222,14 +222,12 @@ const styles = StyleSheet.create({
   },
   decoTR: {
     position: 'absolute',
-    top: 100,
+    top: 150,
     right: 24,
-    opacity: 0.6,
   },
   decoBL: {
     position: 'absolute',
     bottom: 140,
     left: 24,
-    opacity: 0.45,
   },
 });

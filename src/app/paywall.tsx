@@ -269,7 +269,7 @@ export default function PaywallScreen() {
         <Sakura size={30} color={Colors.sakura} />
       </View>
       <View style={styles.decoBR} pointerEvents="none">
-        <Sakura size={22} color={Colors.lavenderSoft} />
+        <Sakura size={22} color={Colors.sakura} />
       </View>
 
       {/* Header */}
@@ -467,8 +467,8 @@ export default function PaywallScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: Colors.paper },
-  decoTL: { position: 'absolute', top: 80, left: 18, opacity: 0.5 },
-  decoBR: { position: 'absolute', bottom: 140, right: 24, opacity: 0.4 },
+  decoTL: { position: 'absolute', top: 130, left: 18 },
+  decoBR: { position: 'absolute', bottom: 140, right: 24 },
   header: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
