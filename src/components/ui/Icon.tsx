@@ -205,25 +205,30 @@ export function IconBellSolid({ size = 14, color = Colors.sakuraDeep }: IconProp
 }
 
 export function IconTicketSolid({ size = 14, color = Colors.sakuraDeep }: IconProps) {
+  // Filled star — premium subscription
   return (
     <Svg width={size} height={size} viewBox="0 0 16 16" fill={color}>
-      <Path d="M1.5 3.5A1.5 1.5 0 0 1 3 2h10a1.5 1.5 0 0 1 1.5 1.5v1.8a1.5 1.5 0 0 0 0 2.4v1.8a1.5 1.5 0 0 1-1.5 1.5H3a1.5 1.5 0 0 1-1.5-1.5V7.7a1.5 1.5 0 0 0 0-2.4V3.5Z" />
+      <Path d="M8 1.5l1.9 3.9 4.3.6-3.1 3 .7 4.3L8 11.1l-3.8 2.2.7-4.3-3.1-3 4.3-.6z" />
     </Svg>
   );
 }
 
 export function IconRestoreSolid({ size = 14, color = Colors.sakuraDeep }: IconProps) {
+  // Filled clock — restore/history
   return (
     <Svg width={size} height={size} viewBox="0 0 16 16" fill={color}>
-      <Path d="M7.25 1.75a.75.75 0 0 1 1.5 0v5.8l2.2-2.2a.75.75 0 1 1 1.06 1.06l-3.5 3.5a.75.75 0 0 1-1.06 0l-3.5-3.5a.75.75 0 1 1 1.06-1.06l2.2 2.2V1.75ZM1.5 11.25a.75.75 0 0 1 .75-.75h11.5a.75.75 0 0 1 0 1.5H2.25a.75.75 0 0 1-.75-.75ZM1.5 13.75a.75.75 0 0 1 .75-.75h11.5a.75.75 0 0 1 0 1.5H2.25a.75.75 0 0 1-.75-.75Z" />
+      <Path fillRule="evenodd" d="M8 2a6 6 0 1 0 0 12A6 6 0 0 0 8 2Zm.75 3a.75.75 0 0 0-1.5 0v3.25c0 .27.14.52.37.65l2.5 1.5a.75.75 0 0 0 .76-1.3L8.75 7.9V5Z" clipRule="evenodd" />
     </Svg>
   );
 }
 
 export function IconStorageSolid({ size = 14, color = Colors.sakuraDeep }: IconProps) {
+  // Three stacked layers — storage
   return (
     <Svg width={size} height={size} viewBox="0 0 16 16" fill={color}>
-      <Path d="M8 2c-3.87 0-7 1.12-7 2.5v2C1 7.88 4.13 9 8 9s7-1.12 7-2.5v-2C15 3.12 11.87 2 8 2Zm7 6.5C15 9.88 11.87 11 8 11s-7-1.12-7-2.5v2C1 11.88 4.13 13 8 13s7-1.12 7-2.5v-2Z" />
+      <Path d="M8 1.5C4.96 1.5 2 2.57 2 4s2.96 2.5 6 2.5S14 5.43 14 4 11.04 1.5 8 1.5Z" />
+      <Path d="M2 6.25v2.25C2 9.93 4.96 11 8 11s6-1.07 6-2.5V6.25C12.7 7.3 10.45 7.75 8 7.75s-4.7-.45-6-1.5Z" />
+      <Path d="M2 10.5v1.75C2 13.68 4.96 14.5 8 14.5s6-.82 6-2.25V10.5C12.7 11.55 10.45 12 8 12s-4.7-.45-6-1.5Z" />
     </Svg>
   );
 }

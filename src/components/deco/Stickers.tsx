@@ -301,7 +301,7 @@ export function StickerHeartPatch({ size = 42, style }: StickerProps) {
 export function StickerSakuraFlower({ size = 40, style }: StickerProps) {
   return (
     <StickerShadow w={size} h={size} style={style}>
-      <Svg width={size} height={size} viewBox="0 0 40 40">
+      <Svg width={size} height={size} viewBox="-4 -4 48 48">
         <G stroke="white" strokeWidth="4" fill="white">
           {[0, 72, 144, 216, 288].map((r) => (
             <Ellipse key={r} cx="20" cy="8" rx="5.5" ry="9" transform={`rotate(${r} 20 20)`} />

@@ -1,12 +1,13 @@
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { Image, View, Text, Pressable, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Mark } from '@/components/ui/Mark';
 import { Button } from '@/components/ui/Button';
 import { Sparkle } from '@/components/deco/Sparkle';
 import { Heart } from '@/components/deco/Heart';
 import { Sakura } from '@/components/deco/Sakura';
+import { WashiTape } from '@/components/deco/WashiTape';
+import { StickerSakuraFlower, StickerWaxSeal } from '@/components/deco/Stickers';
 import { Colors, FontFamily, FontSize, Spacing } from '@/constants/theme';
 
 export default function OnbWelcome() {
@@ -27,8 +28,22 @@ export default function OnbWelcome() {
 
       {/* Main content */}
       <View style={styles.content}>
-        <View style={styles.markRow}>
-          <Mark size={72} />
+        <View style={styles.iconWrap}>
+          <WashiTape
+            width={64} height={12} pattern="floral" color="#fadde5" rotate={-3}
+            style={{ alignSelf: 'center', marginBottom: -6, zIndex: 1 }}
+          />
+          <Image
+            source={require('../../../assets/images/icon.png')}
+            style={styles.icon}
+            resizeMode="cover"
+          />
+          <View style={[styles.stickerAbs, { bottom: -10, right: -22, transform: [{ rotate: '12deg' }] }]} pointerEvents="none">
+            <StickerWaxSeal size={38} />
+          </View>
+          <View style={[styles.stickerAbs, { top: 0, left: -26, transform: [{ rotate: '-14deg' }] }]} pointerEvents="none">
+            <StickerSakuraFlower size={34} />
+          </View>
         </View>
 
         <Text style={styles.title}>yumeship</Text>
@@ -94,8 +109,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 0,
   },
-  markRow: {
+  iconWrap: {
+    alignItems: 'center',
     marginBottom: Spacing.s6,
+    position: 'relative',
+    shadowColor: '#8b3a4a',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.13,
+    shadowRadius: 14,
+    elevation: 6,
+  },
+  stickerAbs: { position: 'absolute' },
+  icon: {
+    width: 120,
+    height: 120,
+    borderRadius: 24,
   },
   title: {
     fontFamily: FontFamily.displayItalic,

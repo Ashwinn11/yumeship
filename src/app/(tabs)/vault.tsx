@@ -12,7 +12,7 @@ import { Heart } from '@/components/deco/Heart';
 import { Star } from '@/components/deco/Star';
 import { Check, FILL_GRAY, TitleHeader } from '@/components/templates/primitives';
 
-import { Bullets, StickerEnvelope, StickerSakuraBranch, WashiTape } from '@/components/deco';
+import { Bullets, StickerEnvelope, StickerSakuraBranch, StickerWaxSeal, WashiTape } from '@/components/deco';
 import { Sparkle } from '@/components/deco/Sparkle';
 import { AlbumsTab } from '@/components/tabs/AlbumsTab';
 import { DatesTab } from '@/components/tabs/DatesTab';
@@ -165,10 +165,14 @@ export default function VaultScreen() {
       )}
 
       {ships.length === 0 ? (
-        <View style={styles.emptyShips}>
-          <Sparkle size={14} color={Colors.sakura} />
-          <Text style={styles.emptyTitle}>no ships yet</Text>
-          <Text style={styles.emptySub}>add a ship from the home screen first</Text>
+        <View style={[styles.emptyShips, { paddingVertical: 60, paddingHorizontal: 20, gap: 12 }]}>
+          <StickerWaxSeal size={88} />
+          <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: 26, color: Colors.ink, textAlign: 'center', marginTop: 10 }}>
+            no ships yet
+          </Text>
+          <Text style={{ fontFamily: FontFamily.script, fontSize: 18, lineHeight: 22, color: Colors.ink2, textAlign: 'center', marginVertical: 8 }}>
+            pick a ship from the home tab{"\n"}to start filling the vault.
+          </Text>
         </View>
       ) : activeFeature ? (
         <View style={styles.featureWrap}>

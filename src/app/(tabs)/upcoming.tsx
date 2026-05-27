@@ -1,10 +1,12 @@
 import { View, Text, Pressable, StyleSheet, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useState } from 'react';
+import { router } from 'expo-router';
 
 import { Mark } from '@/components/ui/Mark';
 import { IconBell } from '@/components/ui/Icon';
 import { Cloud } from '@/components/deco/Cloud';
+import { StickerEnvelope } from '@/components/deco/Stickers';
 import { Sakura } from '@/components/deco/Sakura';
 import { Sparkle } from '@/components/deco/Sparkle';
 import { Star } from '@/components/deco/Star';
@@ -83,13 +85,17 @@ export default function UpcomingScreen() {
       {/* List or Empty state */}
       {filteredDates.length === 0 ? (
         <View style={styles.emptyState}>
-          <View style={styles.emptyDeco}>
-            <Sparkle size={10} color={Colors.sakura} />
-            <Sakura size={28} color={Colors.sakura} />
-            <Sparkle size={7} color={Colors.lavender} />
-          </View>
+          <StickerEnvelope size={88} />
           <Text style={styles.emptyTitle}>nothing coming up</Text>
-          <Text style={styles.emptySub}>set a date in their profile and it'll appear here</Text>
+          <Text style={styles.emptySub}>
+            add a ship and set an anniversary{"\n"}or birthday to see it here.
+          </Text>
+          <Pressable
+            style={styles.emptyBtn}
+            onPress={() => router.push('/' as any)}
+          >
+            <Text style={styles.emptyBtnTxt}>go to my ships</Text>
+          </Pressable>
         </View>
       ) : (
         <ScrollView contentContainerStyle={styles.listContainer} showsVerticalScrollIndicator={false}>
@@ -209,16 +215,35 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontFamily: FontFamily.displayItalic,
-    fontSize: FontSize.h4,
+    fontSize: 26,
     color: Colors.ink,
-    letterSpacing: -0.3,
+    textAlign: 'center',
+    marginTop: 10,
   },
   emptySub: {
-    fontFamily: FontFamily.displayItalic,
-    fontSize: FontSize.meta,
-    color: Colors.ink3,
+    fontFamily: FontFamily.script,
+    fontSize: 18,
+    lineHeight: 22,
+    color: Colors.ink2,
     textAlign: 'center',
     paddingHorizontal: Spacing.s8,
+    marginVertical: 8,
+  },
+  emptyBtn: {
+    backgroundColor: Colors.sakuraDeep,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 99,
+    marginTop: 10,
+    shadowColor: 'rgba(110,58,90,0.12)',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 3,
+  },
+  emptyBtnTxt: {
+    fontFamily: FontFamily.uiMedium,
+    fontSize: 14,
+    color: Colors.vellum,
   },
   decoTL: {
     position: 'absolute',

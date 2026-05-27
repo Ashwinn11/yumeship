@@ -3,18 +3,21 @@ import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Image,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PACKAGE_TYPE, PurchasesPackage } from 'react-native-purchases';
 
 import { Heart } from '@/components/deco/Heart';
-import { Sakura } from '@/components/deco/Sakura';
 import { Sparkle } from '@/components/deco/Sparkle';
+import {
+  StickerSakuraBranch, StickerEnvelope, StickerWaxSeal, StickerHeartPatch,
+} from '@/components/deco/Stickers';
+import { WashiTape } from '@/components/deco/WashiTape';
 import { Colors, FontFamily, FontSize, Radius, Spacing } from '@/constants/theme';
 import {
   getAvailablePackages,
@@ -161,7 +164,6 @@ function getWeeklyEquivalentOnly(pkg: PurchasesPackage): string | null {
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
 export default function PaywallScreen() {
-  const insets = useSafeAreaInsets();
   const [packages, setPackages] = useState<PurchasesPackage[]>([]);
   const [selected, setSelected] = useState<PurchasesPackage | null>(null);
   const [loading, setLoading] = useState(true);
@@ -262,52 +264,91 @@ export default function PaywallScreen() {
   }
 
   return (
-    <View style={[styles.screen, { paddingTop: insets.top }]}>
-      {/* Sakura deco accents */}
-      <View style={styles.decoTL} pointerEvents="none">
-        <Sakura size={30} color={Colors.sakura} />
-      </View>
-      <View style={styles.decoBR} pointerEvents="none">
-        <Sakura size={22} color={Colors.sakura} />
-      </View>
-
-      {/* Header */}
-      <View style={styles.header}>
-        <Pressable style={styles.closeBtn} onPress={() => router.back()} id="paywall-close">
-          <Text style={styles.closeTxt}>✕</Text>
-        </Pressable>
-      </View>
+    <View style={styles.screen}>
+      {/* Close button */}
+      <Pressable
+        style={styles.closeBtn}
+        onPress={() => router.back()}
+        id="paywall-close"
+      >
+        <Text style={styles.closeTxt}>✕</Text>
+      </Pressable>
 
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        {/* Hero */}
-        <View style={styles.heroRow}>
-          <Sparkle size={22} color={Colors.sakuraDeep} />
+        {/* ── Hero ─────────────────────────────────────────────────── */}
+        <View style={styles.heroSection}>
+          {/* scattered sparkles */}
+          <View style={[styles.abs, { top: 8, left: 16 }]} pointerEvents="none">
+            <Sparkle size={14} color={Colors.butterDeep} />
+          </View>
+          <View style={[styles.abs, { top: 0, right: 28 }]} pointerEvents="none">
+            <Sparkle size={10} color={Colors.lavenderDeep} />
+          </View>
+          <View style={[styles.abs, { bottom: 12, right: 10 }]} pointerEvents="none">
+            <Sparkle size={12} color={Colors.sakuraDeep} />
+          </View>
+
+          {/* sakura branch — top-left */}
+          <View style={[styles.abs, { top: 26, left: 0, transform: [{ rotate: '-20deg' }] }]} pointerEvents="none">
+            <StickerSakuraBranch size={64} />
+          </View>
+
+          {/* envelope — bottom-right */}
+          <View style={[styles.abs, { bottom: 0, right: 4, transform: [{ rotate: '10deg' }] }]} pointerEvents="none">
+            <StickerEnvelope size={48} />
+          </View>
+
+          {/* heart patch — left side */}
+          <View style={[styles.abs, { bottom: 10, left: 8, transform: [{ rotate: '-8deg' }] }]} pointerEvents="none">
+            <StickerHeartPatch size={38} />
+          </View>
+
+          {/* wax seal — top-right */}
+          <View style={[styles.abs, { top: 34, right: 6, transform: [{ rotate: '12deg' }] }]} pointerEvents="none">
+            <StickerWaxSeal size={36} />
+          </View>
+
+          {/* icon card */}
+          <View style={styles.iconCard}>
+            <WashiTape
+              width={70} height={13} pattern="floral" color="#fadde5" rotate={-3}
+              style={{ alignSelf: 'center', marginBottom: -6, zIndex: 1 }}
+            />
+            <Image
+              source={require('../../assets/images/icon.png')}
+              style={styles.heroIcon}
+              resizeMode="cover"
+            />
+          </View>
         </View>
-        <View style={styles.heroEyebrow}>
-          <Heart size={12} color={Colors.sakuraDeep} />
-          <Text style={styles.eyebrowTxt}>yumeship premium</Text>
-        </View>
-        <Text style={styles.heroTitle}>unlock everything</Text>
+
+        {/* Title */}
+        <Text style={styles.heroTitle}>{'unlock everything\nfor your F/O ♡'}</Text>
         <Text style={styles.heroSub}>
-          Unlimited ships, priority support and every feature we ship — forever.
+          No caps. No limits. Every feature, forever.
         </Text>
 
-        {/* Features */}
-        {[
-          'Unlimited ships & headcanons',
-          'Priority support & updates',
-          'F/O message scheduling',
-          'All future features included',
-        ].map((f) => (
-          <View key={f} style={styles.featureRow}>
-            <Text style={styles.featureDot}>♡</Text>
-            <Text style={styles.featureTxt}>{f}</Text>
-          </View>
-        ))}
+        {/* Features card */}
+        <View style={styles.featCard}>
+          {[
+            { icon: '♡', label: 'Unlimited ships & F/Os' },
+            { icon: '♡', label: 'All templates — now & future' },
+            { icon: '♡', label: 'Export & share to camera roll' },
+            { icon: '♡', label: 'F/O message scheduling' },
+            { icon: '♡', label: 'Priority support & updates' },
+          ].map((f, i, arr) => (
+            <View key={f.label} style={[styles.featRow, i < arr.length - 1 && styles.featRowBorder]}>
+              <View style={styles.featPill}>
+                <Text style={styles.featPillTxt}>{f.icon}</Text>
+              </View>
+              <Text style={styles.featLabel}>{f.label}</Text>
+            </View>
+          ))}
+        </View>
 
         {/* Plans — 100% dynamic from RevenueCat */}
         {loading ? (
@@ -320,7 +361,7 @@ export default function PaywallScreen() {
               const isSel = selected?.identifier === pkg.identifier;
               const trial = trialLabel(pkg);
               const period = periodLabel(pkg);
-              const weeklyPkg = packages.find(p => 
+              const weeklyPkg = packages.find(p =>
                 p.packageType === PACKAGE_TYPE.WEEKLY ||
                 p.identifier === '$rc_weekly' ||
                 p.identifier.toLowerCase().includes('weekly') ||
@@ -350,16 +391,53 @@ export default function PaywallScreen() {
               return (
                 <Pressable
                   key={pkg.identifier}
-                  style={[styles.planCard, isSel && styles.planCardSel]}
+                  style={[
+                    styles.planCard,
+                    isSel && styles.planCardSel,
+                    isAnnual && styles.planCardAnnual,
+                    isMonthly && styles.planCardMonthly,
+                  ]}
                   onPress={() => setSelected(pkg)}
                   id={`plan-${pkg.identifier}`}
                 >
-                  {/* Save % badge */}
+                  {/* Floating SAVE % badge — annual & monthly */}
                   {savings && savings.savePercent > 0 && (
                     <View style={styles.savingsBadge}>
-                      <Text style={styles.savingsTxt}>
-                        SAVE {savings.savePercent}%
-                      </Text>
+                      <Text style={styles.savingsTxt}>SAVE {savings.savePercent}%</Text>
+                    </View>
+                  )}
+
+                  {/* Annual deco — sparkles in corners */}
+                  {isAnnual && (
+                    <>
+                      <View style={[styles.cardDeco, { top: 8, right: 10 }]} pointerEvents="none">
+                        <Sparkle size={11} color={isSel ? Colors.sakuraDeep : Colors.sakura} />
+                      </View>
+                      <View style={[styles.cardDeco, { bottom: 8, right: 28 }]} pointerEvents="none">
+                        <Sparkle size={7} color={isSel ? Colors.sakuraDeep : Colors.line} />
+                      </View>
+                      <View style={[styles.cardDeco, { top: 6, right: 26 }]} pointerEvents="none">
+                        <Heart size={7} color={isSel ? Colors.sakuraDeep : Colors.sakura} />
+                      </View>
+                    </>
+                  )}
+
+                  {/* Monthly deco — small hearts */}
+                  {isMonthly && (
+                    <>
+                      <View style={[styles.cardDeco, { top: 8, right: 12 }]} pointerEvents="none">
+                        <Heart size={12} color={isSel ? Colors.lavenderDeep : Colors.lavender} />
+                      </View>
+                      <View style={[styles.cardDeco, { bottom: 8, right: 30 }]} pointerEvents="none">
+                        <Sparkle size={7} color={isSel ? Colors.lavenderDeep : Colors.lavender} />
+                      </View>
+                    </>
+                  )}
+
+                  {/* Weekly deco */}
+                  {isWeekly && (
+                    <View style={[styles.cardDeco, { top: 8, right: 12 }]} pointerEvents="none">
+                      <Sparkle size={9} color={Colors.line} />
                     </View>
                   )}
 
@@ -370,25 +448,33 @@ export default function PaywallScreen() {
                         <Text style={[styles.planName, isSel && styles.planNameSel]}>
                           {displayTitle}
                         </Text>
+                        {/* Trial badge */}
                         {trial && (
                           <View style={styles.trialInlineBadge}>
                             <Text style={styles.trialInlineTxt}>{trial.toUpperCase()}</Text>
                           </View>
                         )}
+                        {/* Plan label badge */}
+                        {isAnnual && (
+                          <View style={[styles.planLabelBadge, styles.planLabelBadgeDeal]}>
+                            <Text style={styles.planLabelTxt}>BEST DEAL</Text>
+                          </View>
+                        )}
+                        {isMonthly && (
+                          <View style={[styles.planLabelBadge, styles.planLabelBadgeFlex]}>
+                            <Text style={[styles.planLabelTxt, { color: Colors.lavenderDeep }]}>MOST FLEXIBLE</Text>
+                          </View>
+                        )}
                       </View>
-                      
+
                       {isWeekly ? (
-                        <Text style={styles.planSubLabel}>billed weekly</Text>
+                        <Text style={styles.planSubLabel}>billed weekly · cancel anytime</Text>
                       ) : savings ? (
-                        <Text style={styles.planSubLabel}>
-                          {savings.weeklyEquivalent}/week
-                        </Text>
+                        <Text style={styles.planSubLabel}>{savings.weeklyEquivalent}/week</Text>
                       ) : (() => {
                         const calculatedEquiv = getWeeklyEquivalentOnly(pkg);
                         return calculatedEquiv ? (
-                          <Text style={styles.planSubLabel}>
-                            {calculatedEquiv}/week
-                          </Text>
+                          <Text style={styles.planSubLabel}>{calculatedEquiv}/week</Text>
                         ) : (
                           <Text style={styles.planSubLabel}>billed monthly</Text>
                         );
@@ -425,20 +511,20 @@ export default function PaywallScreen() {
           {purchasing ? (
             <ActivityIndicator color="#fff" />
           ) : (() => {
-            if (!selected) return <Text style={styles.ctaTxt}>Subscribe now</Text>;
+            if (!selected) return <Text style={styles.ctaTxt}>Subscribe now ♡</Text>;
             const trial = trialLabel(selected);
             const period = periodLabel(selected);
             const price = selected.product.priceString;
-            const suffix = period ? `${price}/${period}` : price;
+            const suffix = period ? `${price} / ${period}` : price;
             return (
               <Text style={styles.ctaTxt}>
-                {trial ? `Try ${trial}, then ${suffix}` : `Continue for ${suffix}`}
+                {trial ? `Try free for ${trial.replace(' free', '')} →` : `Continue · ${suffix}`}
               </Text>
             );
           })()}
         </Pressable>
 
-        {/* Sub-CTA note — "No payment due now" only for free trials */}
+        {/* Sub-CTA note */}
         <Text style={styles.subNote}>
           {hasFreeIntro(selected)
             ? 'No payment due now · Cancel anytime'
@@ -466,21 +552,47 @@ export default function PaywallScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: Colors.paper },
-  decoTL: { position: 'absolute', top: 130, left: 18 },
-  decoBR: { position: 'absolute', bottom: 140, right: 24 },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    paddingHorizontal: Spacing.s5,
-    paddingVertical: Spacing.s3,
+  closeBtn: {
+    position: 'absolute',
+    top: 14,
+    right: Spacing.s4,
+    zIndex: 10,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: Colors.vellum,
+    borderWidth: 1,
+    borderColor: Colors.line,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  closeBtn: { padding: 6 },
-  closeTxt: { fontSize: 16, color: Colors.ink3, fontFamily: FontFamily.ui },
+  closeTxt: { fontSize: 13, color: Colors.ink3, fontFamily: FontFamily.ui, lineHeight: 14 },
 
   scroll: { flex: 1 },
   content: { paddingHorizontal: Spacing.s5, paddingBottom: Spacing.s9 + 20 },
 
-  heroRow: { alignItems: 'flex-start', marginBottom: 4 },
+  heroSection: {
+    height: 220,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+    marginBottom: 20,
+    marginTop: 4,
+  },
+  abs: { position: 'absolute' },
+  iconCard: {
+    alignItems: 'center',
+    shadowColor: '#8b3a4a',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  heroIcon: {
+    width: 148,
+    height: 148,
+    borderRadius: 28,
+  },
   heroEyebrow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 6 },
   eyebrowTxt: {
     fontFamily: FontFamily.marker, fontSize: 9, color: Colors.sakuraDeep,
@@ -491,20 +603,58 @@ const styles = StyleSheet.create({
     color: Colors.ink, marginBottom: Spacing.s2,
   },
   heroSub: {
-    fontFamily: FontFamily.ui, fontSize: FontSize.body, color: Colors.ink2,
-    lineHeight: 22, marginBottom: Spacing.s4,
+    fontFamily: FontFamily.script, fontSize: 17, color: Colors.ink2,
+    lineHeight: 24, marginBottom: Spacing.s4,
   },
 
+  featCard: {
+    backgroundColor: Colors.sakuraSoft,
+    borderRadius: Radius.r3,
+    borderWidth: 1.5,
+    borderColor: Colors.sakura,
+    marginBottom: Spacing.s4,
+    overflow: 'hidden',
+  },
+  featRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 11,
+    paddingHorizontal: Spacing.s4,
+  },
+  featRowBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.sakura,
+  },
+  featPill: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: Colors.sakuraDeep,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  featPillTxt: { fontSize: 10, color: '#fff' },
+  featLabel: { fontFamily: FontFamily.uiSemiBold, fontSize: 13, color: Colors.ink, flex: 1 },
+  // kept for compat
   featureRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
   featureDot: { fontSize: 12, color: Colors.sakuraDeep },
   featureTxt: { fontFamily: FontFamily.ui, fontSize: FontSize.caption, color: Colors.ink },
 
-  plans: { gap: 10, marginTop: Spacing.s4 },
+  plans: { gap: 14, marginTop: Spacing.s4 },
   planCard: {
-    borderWidth: 1.5, borderColor: Colors.line, borderRadius: Radius.r3,
-    padding: Spacing.s4, backgroundColor: Colors.vellum, position: 'relative',
+    borderWidth: 1.5,
+    borderColor: Colors.line,
+    borderRadius: Radius.r3,
+    paddingVertical: Spacing.s4,
+    paddingHorizontal: Spacing.s4,
+    backgroundColor: Colors.vellum,
+    position: 'relative',
   },
   planCardSel: { borderColor: Colors.sakuraDeep, backgroundColor: Colors.sakuraSoft },
+  planCardAnnual: { borderColor: Colors.sakura },
+  planCardMonthly: { borderColor: Colors.lavender },
+  cardDeco: { position: 'absolute' },
   trialBadge: {
     position: 'absolute', top: -10, right: 12,
     backgroundColor: Colors.sakuraDeep, borderRadius: Radius.pill,
@@ -596,6 +746,27 @@ const styles = StyleSheet.create({
     fontSize: 9,
     color: '#fff',
     fontWeight: '900',
+  },
+  planLabelBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    borderWidth: 1,
+  },
+  planLabelBadgeDeal: {
+    backgroundColor: Colors.sakuraSoft,
+    borderColor: Colors.sakuraDeep,
+  },
+  planLabelBadgeFlex: {
+    backgroundColor: Colors.lavenderSoft,
+    borderColor: Colors.lavenderDeep,
+  },
+  planLabelTxt: {
+    fontFamily: FontFamily.uiSemiBold,
+    fontSize: 7.5,
+    color: Colors.sakuraDeep,
+    fontWeight: '800',
+    letterSpacing: 0.3,
   },
 
   ctaBtn: {
