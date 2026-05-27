@@ -56,6 +56,7 @@ const SCENARIO_PROMPTS = [
   { ja: '初', label: 'first meeting' },
 ];
 
+
 export default function ShipDetail() {
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -158,7 +159,7 @@ function ProfileTab({ ship, id }: { ship: NonNullable<ReturnType<typeof useShip>
   const [hcSheet, setHcSheet] = useState<string | null>(null);
   const [editingDate, setEditingDate] = useState(false);
   const [dateDraft, setDateDraft] = useState(ship!.startDate);
-  const daysLabel = daysTogetherLabel(ship!.startDate);
+const daysLabel = daysTogetherLabel(ship!.startDate);
 
   function saveAbout() {
     updateShip(id, { aboutText: aboutDraft });

@@ -35,11 +35,51 @@ export function saveTemplateData(shipId: string, templateKey: string, data: Reco
   );
 }
 
+// Maps logical field names to each template's actual storage key.
+// mainPhoto = primary portrait/photo of the F/O
+const FIELD_MAP: Record<string, Record<string, string>> = {
+  'get-to-know': { foName: 'themName', myName: 'meName', sharing: 'sharing', song: 'song', mainPhoto: 'themPhoto', photo1: 'photo1' },
+  'kawaii-ui':   { foName: 'name',     sharing: 'sharing', song: 'song', anniv: 'anniv',   mainPhoto: 'portrait' },
+  'heart-frame': { foName: 'themName', myName: 'meName', sharing: 'sharing', anniv: 'anniv', mainPhoto: 'themPhoto', myPhoto: 'mePhoto' },
+  'love-letter': { foName: 'dearName', myName: 'signName' },
+  'aesthetic':   { song: 'song',       mainPhoto: 'photo0', photo1: 'photo1', photo2: 'photo2' },
+  'this-or-that': { foName: 'name' },
+  'headcanons':  { foName: 'fo' },
+};
+
+// Migrate compatible fields from old template data into the new template (only fills gaps)
+export function migrateTemplateData(shipId: string, fromKey: string, toKey: string) {
+  const oldData = loadTemplateData(shipId, fromKey);
+  const newData = loadTemplateData(shipId, toKey);
+
+  const fromMap = FIELD_MAP[fromKey] ?? {};
+  const toMap = FIELD_MAP[toKey] ?? {};
+
+  // Invert fromMap: templateKey → logicalKey
+  const fromInverse: Record<string, string> = {};
+  for (const [logical, tKey] of Object.entries(fromMap)) {
+    if (tKey) fromInverse[tKey] = logical;
+  }
+
+  const merged = { ...newData };
+  for (const [logical, toFieldKey] of Object.entries(toMap)) {
+    if (!toFieldKey || merged[toFieldKey]) continue; // already has a value
+    const fromFieldKey = fromMap[logical];
+    if (fromFieldKey && oldData[fromFieldKey]) {
+      merged[toFieldKey] = oldData[fromFieldKey];
+    }
+  }
+
+  if (Object.keys(merged).length > 0) {
+    saveTemplateData(shipId, toKey, merged);
+  }
+}
+
 // Pre-fill fields from ship data when no saved data exists for this ship+template
 export function buildPreFill(ship: Ship, templateKey: string): Record<string, string> {
   const base: Record<string, string> = {};
   const shareMap: Record<string, string> = { ng: 'No', welcome: 'Yes', mirror: 'Selective' };
-  const userName = getGlobalSetting('user_name');
+  const userName = ship.myName || getGlobalSetting('user_name');
 
   switch (templateKey) {
     case 'get-to-know':

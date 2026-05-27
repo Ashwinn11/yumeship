@@ -1,16 +1,26 @@
-import { useMemo, useRef } from 'react';
-import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
+import { useMemo, useRef, useState } from 'react';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, TouchableWithoutFeedback, View } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getShip, updateShip } from '@/store/ships';
-import { TemplateDataCtx, loadTemplateData, saveTemplateData, buildPreFill } from '@/store/templateData';
-import { Colors, FontFamily, Spacing } from '@/constants/theme';
+import { TemplateDataCtx, loadTemplateData, saveTemplateData, buildPreFill, migrateTemplateData } from '@/store/templateData';
+import { CozyModal } from '@/components/ui/CozyModal';
+import { WashiTape } from '@/components/deco/WashiTape';
 import { Cloud } from '@/components/deco/Cloud';
 import { Heart } from '@/components/deco/Heart';
 import { Ribbon } from '@/components/deco/Ribbon';
 import { Sakura } from '@/components/deco/Sakura';
 import { Sparkle } from '@/components/deco/Sparkle';
 import { Star } from '@/components/deco/Star';
+import { Colors, FontFamily, Radius, Shadow, Spacing } from '@/constants/theme';
+
+const VISUAL_TEMPLATES = [
+  { key: 'get-to-know', label: 'Get to Know', desc: 'popular · fill out their info', color: Colors.sakuraDeep,    bg: Colors.sakuraSoft },
+  { key: 'kawaii-ui',   label: 'Kawaii UI',   desc: 'stats card · aesthetics',       color: Colors.lavenderDeep,  bg: Colors.lavenderSoft },
+  { key: 'heart-frame', label: 'Heart Frame', desc: 'romantic · twin portraits',     color: Colors.peachDeep,     bg: Colors.peachSoft },
+  { key: 'love-letter', label: 'Love Letter', desc: 'write them a letter',           color: Colors.sakuraInk,     bg: Colors.sakuraSoft },
+  { key: 'aesthetic',   label: 'Aesthetic',   desc: 'mood board · palette · photos', color: Colors.butterDeep,    bg: Colors.butterSoft },
+] as const;
 
 type Props = {
   templateKey: string;
@@ -21,6 +31,9 @@ type Props = {
 export function TemplateScreenWrapper({ templateKey, shipId, children }: Props) {
   const insets = useSafeAreaInsets();
   const ship = shipId ? getShip(shipId) : undefined;
+  const [showPicker, setShowPicker] = useState(false);
+  const [selected, setSelected] = useState(templateKey);
+  const [confirming, setConfirming] = useState(false);
 
   const initData = (): Record<string, string> => {
     if (!shipId) return {};
@@ -45,6 +58,13 @@ export function TemplateScreenWrapper({ templateKey, shipId, children }: Props) 
       }
     },
   }), [shipId, templateKey]);
+
+  function applyTemplate() {
+    if (!shipId || selected === templateKey) { setShowPicker(false); return; }
+    migrateTemplateData(shipId, templateKey, selected);
+    updateShip(shipId, { templateKey: selected });
+    router.replace(`/template/${selected}?shipId=${shipId}` as any);
+  }
 
   const renderTemplateDecos = () => {
     switch (templateKey) {
@@ -105,9 +125,16 @@ export function TemplateScreenWrapper({ templateKey, shipId, children }: Props) 
             <Text style={s.backText}>‹</Text>
           </Pressable>
 
-          <Text style={s.nameText} numberOfLines={1}>
-            {ship?.shipName || ship?.name || templateKey.replace(/-/g, ' ')}
-          </Text>
+          <View style={s.nameArea}>
+            <Text style={s.nameText} numberOfLines={1}>
+              {ship?.shipName || ship?.name || templateKey.replace(/-/g, ' ')}
+            </Text>
+            {shipId && (
+              <Pressable style={s.styleChip} onPress={() => setShowPicker(true)}>
+                <Text style={s.styleChipText}>{VISUAL_TEMPLATES.find(t => t.key === templateKey)?.label ?? 'style'} ↓</Text>
+              </Pressable>
+            )}
+          </View>
 
           <Pressable
             onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)' as any)}
@@ -124,6 +151,65 @@ export function TemplateScreenWrapper({ templateKey, shipId, children }: Props) 
         >
           {children}
         </ScrollView>
+
+        {/* Change template picker */}
+        <Modal visible={showPicker} transparent animationType="slide" onRequestClose={() => setShowPicker(false)}>
+          <TouchableWithoutFeedback onPress={() => setShowPicker(false)}>
+            <View style={s.overlay} />
+          </TouchableWithoutFeedback>
+          <View style={s.sheet}>
+            <View style={s.sheetHandle} />
+            <View style={s.sheetHeader}>
+              <Text style={s.sheetTitle}>change style</Text>
+              <Pressable onPress={() => setShowPicker(false)} hitSlop={8}>
+                <Text style={s.sheetClose}>✕</Text>
+              </Pressable>
+            </View>
+            <Text style={s.sheetSub}>common info and photos carry over automatically</Text>
+
+            <ScrollView contentContainerStyle={s.grid} showsVerticalScrollIndicator={false}>
+              {VISUAL_TEMPLATES.map((t) => (
+                <Pressable
+                  key={t.key}
+                  style={[s.tplCard, { backgroundColor: t.bg }, selected === t.key && { borderColor: t.color, borderWidth: 2 }]}
+                  onPress={() => setSelected(t.key)}
+                >
+                  <View style={s.tplTape}>
+                    <WashiTape width={40} height={10} pattern="heart" color={t.color} rotate={-5} />
+                  </View>
+                  <Text style={[s.tplLabel, { color: t.color }]}>{t.label}</Text>
+                  <Text style={s.tplDesc}>{t.desc}</Text>
+                  {selected === t.key && (
+                    <View style={[s.tplCheck, { backgroundColor: t.color }]}>
+                      <Text style={s.tplCheckText}>✓</Text>
+                    </View>
+                  )}
+                </Pressable>
+              ))}
+            </ScrollView>
+
+            <CozyModal
+              visible={confirming}
+              title="switch style?"
+              message="Your content in both styles is saved. Common fields carry over."
+              confirmText="switch"
+              cancelText="nevermind"
+              onConfirm={() => { setConfirming(false); applyTemplate(); }}
+              onClose={() => setConfirming(false)}
+            />
+
+            <View style={s.sheetActions}>
+              <Pressable
+                style={[s.applyBtn, selected === templateKey && s.applyBtnDisabled]}
+                onPress={() => selected !== templateKey ? setConfirming(true) : setShowPicker(false)}
+              >
+                <Text style={s.applyBtnText}>
+                  {selected === templateKey ? 'no changes' : `switch to ${VISUAL_TEMPLATES.find(t => t.key === selected)?.label}`}
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        </Modal>
       </View>
     </TemplateDataCtx.Provider>
   );
@@ -136,23 +222,49 @@ const s = StyleSheet.create({
     paddingHorizontal: Spacing.s4, paddingVertical: Spacing.s2,
     gap: Spacing.s3, borderBottomWidth: 1, borderBottomColor: Colors.line,
   },
-  back: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
-  backText: { fontSize: 24, color: Colors.ink2, fontFamily: FontFamily.ui },
-  nameText: {
-    flex: 1, fontFamily: FontFamily.displayItalic, fontSize: 18,
-    color: Colors.ink, textTransform: 'capitalize',
+  back: {
+    width: 32, height: 32, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: Colors.vellum, borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.pill,
   },
+  backText: { fontSize: 20, lineHeight: 20, color: Colors.ink2, fontFamily: FontFamily.ui, includeFontPadding: false },
+  nameArea: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 },
+  nameText: {
+    fontFamily: FontFamily.displayItalic, fontSize: 18,
+    color: Colors.ink, textTransform: 'capitalize', flexShrink: 1,
+  },
+  styleChip: {
+    paddingHorizontal: 8, paddingVertical: 3,
+    backgroundColor: Colors.paperDeep, borderWidth: 1, borderColor: Colors.line,
+    borderRadius: Radius.pill,
+  },
+  styleChipText: { fontFamily: FontFamily.marker, fontSize: 8, color: Colors.ink3, letterSpacing: 0.8 },
   saveBtn: { paddingHorizontal: 14, paddingVertical: 7, backgroundColor: Colors.sakuraDeep, borderRadius: 999 },
   saveBtnText: { fontFamily: FontFamily.markerBold, fontSize: 12, color: Colors.vellum, letterSpacing: 0.3 },
   scroll: { padding: Spacing.s5, paddingBottom: Spacing.s8 },
-  decoTL: {
-    position: 'absolute',
-    top: 130,
-    left: 20,
+  decoTL: { position: 'absolute', top: 130, left: 20 },
+  decoBR: { position: 'absolute', bottom: 120, right: 30 },
+
+  // Picker sheet
+  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.3)' },
+  sheet: { backgroundColor: Colors.paper, borderTopLeftRadius: Radius.r5, borderTopRightRadius: Radius.r5, paddingBottom: 34 },
+  sheetHandle: { width: 40, height: 4, backgroundColor: Colors.line, borderRadius: 2, alignSelf: 'center', marginTop: 10 },
+  sheetHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: Spacing.s4, borderBottomWidth: 1, borderBottomColor: Colors.line },
+  sheetTitle: { fontFamily: FontFamily.displayItalic, fontSize: 17, color: Colors.ink },
+  sheetClose: { fontSize: 13, color: Colors.ink3, fontFamily: FontFamily.ui },
+  sheetSub: { fontFamily: FontFamily.ui, fontSize: 11, color: Colors.ink3, paddingHorizontal: Spacing.s5, paddingTop: Spacing.s3, paddingBottom: Spacing.s1 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, padding: Spacing.s5 },
+  tplCard: {
+    width: '47%', padding: Spacing.s3, borderRadius: Radius.r3,
+    borderWidth: 1, borderColor: Colors.line, minHeight: 80,
+    justifyContent: 'flex-end', overflow: 'hidden', ...Shadow.s1,
   },
-  decoBR: {
-    position: 'absolute',
-    bottom: 120,
-    right: 30,
-  },
+  tplTape: { position: 'absolute', top: -2, left: 6 },
+  tplLabel: { fontFamily: FontFamily.uiSemiBold, fontSize: 12, marginBottom: 2 },
+  tplDesc: { fontFamily: FontFamily.ui, fontSize: 10, color: Colors.ink3, lineHeight: 14 },
+  tplCheck: { position: 'absolute', top: 8, right: 8, width: 18, height: 18, borderRadius: Radius.pill, alignItems: 'center', justifyContent: 'center' },
+  tplCheckText: { fontSize: 10, color: Colors.vellum, fontFamily: FontFamily.uiSemiBold },
+  sheetActions: { paddingHorizontal: Spacing.s5, paddingTop: Spacing.s2 },
+  applyBtn: { backgroundColor: Colors.sakuraDeep, borderRadius: Radius.pill, paddingVertical: 12, alignItems: 'center' },
+  applyBtnDisabled: { backgroundColor: Colors.line },
+  applyBtnText: { fontFamily: FontFamily.uiMedium, fontSize: 15, color: Colors.vellum },
 });
