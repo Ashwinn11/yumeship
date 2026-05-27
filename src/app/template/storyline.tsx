@@ -4,12 +4,13 @@ import Svg, { Line } from 'react-native-svg';
 import { useLocalSearchParams } from 'expo-router';
 import { TemplateScreenWrapper } from '@/components/templates/TemplateScreenWrapper';
 import {
-  MarkerCard, TitleHeader, Polaroid, INK,
+  MarkerCard, TitleHeader, INK,
 } from '@/components/templates/primitives';
 import { Bullets, WashiTape } from '@/components/deco';
 import { Colors, FontFamily } from '@/constants/theme';
 import { useTemplateCtx } from '@/store/templateData';
 import { DateField } from '@/components/ui/DateField';
+import { DecoBar } from '@/components/templates/DecoBar';
 
 type EventEntry = { d: string; t: string; body: string };
 const BLANK_EVENTS: EventEntry[] = Array.from({ length: 5 }, () => ({ d: '', t: '', body: '' }));
@@ -20,7 +21,7 @@ export function StorylineContent({ editing = false }: { editing?: boolean }) {
   const [events, setEvents] = useState<EventEntry[]>(() =>
     JSON.parse(ctx.get('events', 'null')) ?? BLANK_EVENTS
   );
-  const [polPhoto, setPolPhoto] = useState(() => ctx.get('polPhoto'));
+  const [decoItemsJson, setDecoItemsJson] = useState(() => ctx.get('decoItems', '[]'));
   const [timelineH, setTimelineH] = useState(0);
   const e = editing;
 
@@ -139,9 +140,11 @@ export function StorylineContent({ editing = false }: { editing?: boolean }) {
         })}
       </View>
 
-      <View style={s.polaroidRow}>
-        <Polaroid size={110} rotate={6} tapeColor="#fadde5" editing={e} uri={polPhoto} onUriChange={e ? (u) => { setPolPhoto(u); ctx.set('polPhoto', u); } : undefined} />
-      </View>
+      <DecoBar
+        editing={e}
+        itemsJson={decoItemsJson}
+        onItemsChange={(j) => { setDecoItemsJson(j); ctx.set('decoItems', j); }}
+      />
     </MarkerCard>
   );
 }
@@ -199,5 +202,4 @@ const s = StyleSheet.create({
     minHeight: 18,
     textAlignVertical: 'top',
   },
-  polaroidRow: { alignItems: 'flex-end', marginTop: 16 },
 });

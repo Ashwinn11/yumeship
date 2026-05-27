@@ -14,8 +14,10 @@ import { StickerSakuraBranch, WashiTape, Bullets, Sparkle } from '@/components/d
 import { SubTabBar, type DetailTab } from '@/components/nav/SubTabBar';
 import { AlbumsTab } from '@/components/tabs/AlbumsTab';
 import { DatesTab } from '@/components/tabs/DatesTab';
+import { LoveLetterTab } from '@/components/tabs/LoveLetterTab';
 import { MessagesTab } from '@/components/tabs/MessagesTab';
 import { StorylineTab } from '@/components/tabs/StorylineTab';
+import { ThisOrThatTab } from '@/components/tabs/ThisOrThatTab';
 import { Chip } from '@/components/ui/Chip';
 import { CozyModal } from '@/components/ui/CozyModal';
 import { GradientCover } from '@/components/ui/GradientCover';
@@ -136,12 +138,14 @@ export default function ShipDetail() {
 
         <SubTabBar active={activeTab} onPress={setActiveTab} />
 
-        {activeTab === 'profile'   && <ProfileTab ship={ship} id={id!} />}
-        {activeTab === 'scenarios' && <ScenariosTab shipId={id!} shipName={ship.name} />}
-        {activeTab === 'albums'    && <AlbumsTab shipId={id!} />}
-        {activeTab === 'storyline' && <StorylineTab shipId={id!} shipName={ship.name} />}
-        {activeTab === 'messages'  && <MessagesTab shipId={id!} shipName={ship.name} />}
-        {activeTab === 'dates'     && <DatesTab shipId={id!} shipName={ship.name} />}
+        {activeTab === 'profile'      && <ProfileTab ship={ship} id={id!} />}
+        {activeTab === 'scenarios'    && <ScenariosTab shipId={id!} shipName={ship.name} />}
+        {activeTab === 'albums'       && <AlbumsTab shipId={id!} />}
+        {activeTab === 'storyline'    && <StorylineTab shipId={id!} shipName={ship.name} />}
+        {activeTab === 'messages'     && <MessagesTab shipId={id!} shipName={ship.name} />}
+        {activeTab === 'dates'        && <DatesTab shipId={id!} shipName={ship.name} />}
+        {activeTab === 'this-or-that' && <ThisOrThatTab shipId={id!} />}
+        {activeTab === 'love-letter'  && <LoveLetterTab shipId={id!} />}
       </ScrollView>
     </View>
   );

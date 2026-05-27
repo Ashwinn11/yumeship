@@ -113,6 +113,24 @@ export function initDb() {
       body TEXT NOT NULL DEFAULT '',
       created_at INTEGER NOT NULL
     );
+    CREATE TABLE IF NOT EXISTS this_or_that_pairs (
+      id TEXT PRIMARY KEY,
+      ship_id TEXT NOT NULL,
+      left_opt TEXT NOT NULL DEFAULT '',
+      right_opt TEXT NOT NULL DEFAULT '',
+      choice TEXT NOT NULL DEFAULT '',
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at INTEGER NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS love_letters (
+      id TEXT PRIMARY KEY,
+      ship_id TEXT NOT NULL,
+      title TEXT NOT NULL DEFAULT '',
+      body TEXT NOT NULL DEFAULT '',
+      paper TEXT NOT NULL DEFAULT 'lined',
+      sticker TEXT NOT NULL DEFAULT '',
+      created_at INTEGER NOT NULL
+    );
     CREATE TABLE IF NOT EXISTS settings (
       key TEXT PRIMARY KEY,
       value TEXT NOT NULL

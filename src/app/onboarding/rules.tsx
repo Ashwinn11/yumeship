@@ -8,8 +8,8 @@ import { Ribbon } from '@/components/deco/Ribbon';
 import { WashiTape } from '@/components/deco/WashiTape';
 import { StickerHeartPatch, Bullets } from '@/components/deco';
 import { Button } from '@/components/ui/Button';
+import { CalloutBubble } from '@/components/ui';
 import { Field } from '@/components/ui/Field';
-import { IconLock } from '@/components/ui/Icon';
 import { StepDots } from '@/components/ui/StepDots';
 import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing } from '@/constants/theme';
 import { requestPermission } from '@/store/notifications';
@@ -17,11 +17,13 @@ import { getGlobalSetting, getOnbState, resetOnb, saveGlobalSetting } from '@/st
 import { addShip, REL_GRADS } from '@/store/ships';
 
 const VISUAL_TEMPLATES = [
-  { key: 'get-to-know', label: 'Get to Know', desc: 'popular · fill out their info', color: Colors.sakuraDeep, bg: Colors.sakuraSoft, tape: 'floral' },
-  { key: 'kawaii-ui', label: 'Kawaii UI', desc: 'stats card · aesthetics', color: Colors.lavenderDeep, bg: Colors.lavenderSoft, tape: 'dot' },
-  { key: 'heart-frame', label: 'Heart Frame', desc: 'romantic · twin portraits', color: Colors.peachDeep, bg: Colors.peachSoft, tape: 'heart' },
-  { key: 'love-letter', label: 'Love Letter', desc: 'write them a letter', color: Colors.sakuraInk, bg: Colors.sakuraSoft, tape: 'stripe' },
-  { key: 'aesthetic', label: 'Aesthetic', desc: 'mood board · palette · photos', color: Colors.butterDeep, bg: Colors.butterSoft, tape: 'star' },
+  { key: 'get-to-know',   label: 'Get to Know',   desc: 'popular · fill out their info',     color: Colors.sakuraDeep,   bg: Colors.sakuraSoft,   tape: 'floral' },
+  { key: 'kawaii-ui',    label: 'Kawaii UI',     desc: 'stats card · aesthetics',          color: Colors.lavenderDeep, bg: Colors.lavenderSoft, tape: 'dot' },
+  { key: 'heart-frame',  label: 'Heart Frame',   desc: 'romantic · twin portraits',        color: Colors.peachDeep,    bg: Colors.peachSoft,    tape: 'heart' },
+  { key: 'aesthetic',    label: 'Aesthetic',     desc: 'mood board · palette · photos',    color: Colors.butterDeep,   bg: Colors.butterSoft,   tape: 'star' },
+  { key: 'flip-phone',   label: 'Flip Phone',    desc: 'Y2K windows · chat · music',      color: Colors.sakuraDeep,   bg: Colors.sakura,       tape: 'floral' },
+  { key: 'talking-about', label: 'Talking About', desc: 'dual portrait · sliders · tropes', color: Colors.sageDeep,     bg: Colors.sageSoft,     tape: 'dot' },
+  { key: 'bond-banner',  label: 'Bond Banner',   desc: 'heart shield · personality bars',  color: Colors.plum,         bg: Colors.lavenderSoft, tape: 'heart' },
 ] as const;
 
 const TAPE_BY_REL: Record<string, { color: string; pattern: 'stripe' | 'dot' | 'heart' | 'check' }> = {
@@ -127,16 +129,10 @@ export default function OnbRules() {
           </Field>
         </View>
 
-        <View style={styles.privacyNote}>
-          <View style={styles.privacyIcon}>
-            <IconLock size={14} color={Colors.lavenderDeep} />
-          </View>
-          <View style={styles.privacyText}>
-            <Text style={styles.privacyTitle}>Private by default</Text>
-            <Text style={styles.privacyBody}>
-              Nothing leaves your phone. Notifications never reveal the app on your lock screen.
-            </Text>
-          </View>
+        <View style={{ marginTop: 24, alignItems: 'center' }}>
+          <CalloutBubble tone="lavender">
+            🔒 private by default — nothing leaves your phone.
+          </CalloutBubble>
         </View>
       </ScrollView>
 

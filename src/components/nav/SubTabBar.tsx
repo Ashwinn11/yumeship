@@ -5,15 +5,17 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 // design/spec.jsx — SubTabBar + TABS
 // 7-tab horizontal scroller for F/O detail. Same pill treatment as RootTabBar.
 
-export type DetailTab = 'profile' | 'albums' | 'scenarios' | 'storyline' | 'messages' | 'dates';
+export type DetailTab = 'profile' | 'albums' | 'scenarios' | 'storyline' | 'messages' | 'dates' | 'this-or-that' | 'love-letter';
 
 const TABS: { id: DetailTab; ja: string; label: string }[] = [
-  { id: 'profile',   ja: '本人', label: 'Profile' },
-  { id: 'albums',    ja: '写真', label: 'Albums' },
-  { id: 'scenarios', ja: '話',   label: 'Scenarios' },
-  { id: 'storyline', ja: '年表', label: 'Storyline' },
-  { id: 'messages',  ja: '便り', label: 'Messages' },
-  { id: 'dates',     ja: '日',   label: 'Dates' },
+  { id: 'profile',      ja: '本人', label: 'Profile' },
+  { id: 'albums',       ja: '写真', label: 'Albums' },
+  { id: 'scenarios',    ja: '話',   label: 'Scenarios' },
+  { id: 'storyline',    ja: '年表', label: 'Storyline' },
+  { id: 'messages',     ja: '便り', label: 'Messages' },
+  { id: 'dates',        ja: '日',   label: 'Dates' },
+  { id: 'this-or-that', ja: '択',   label: 'This or That' },
+  { id: 'love-letter',  ja: '文',   label: 'Letters' },
 ];
 
 type Props = {

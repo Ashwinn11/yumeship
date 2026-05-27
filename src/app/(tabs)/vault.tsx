@@ -1,32 +1,34 @@
+import { useNavigation } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
   Image, KeyboardAvoidingView, Platform, Pressable,
   ScrollView, StyleSheet, Text, TextInput, View,
 } from 'react-native';
-import { useNavigation } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
 import { Cloud } from '@/components/deco/Cloud';
 import { Heart } from '@/components/deco/Heart';
 import { Star } from '@/components/deco/Star';
-import { BlankPill, Check, FILL_GRAY, TitleHeader } from '@/components/templates/primitives';
+import { Check, FILL_GRAY, TitleHeader } from '@/components/templates/primitives';
 
+import { Bullets, StickerEnvelope, StickerSakuraBranch, WashiTape } from '@/components/deco';
 import { Sparkle } from '@/components/deco/Sparkle';
 import { AlbumsTab } from '@/components/tabs/AlbumsTab';
 import { DatesTab } from '@/components/tabs/DatesTab';
+import { LoveLetterTab } from '@/components/tabs/LoveLetterTab';
 import { MessagesTab } from '@/components/tabs/MessagesTab';
 import { StorylineTab } from '@/components/tabs/StorylineTab';
+import { ThisOrThatTab } from '@/components/tabs/ThisOrThatTab';
 import { INK, SquareCheck } from '@/components/templates/primitives';
 import { CozyModal } from '@/components/ui/CozyModal';
-import { IconPlus, IconChevronLeft, IconTrashSolid } from '@/components/ui/Icon';
+import { IconChevronLeft, IconPlus, IconTrashSolid } from '@/components/ui/Icon';
 import { Mark } from '@/components/ui/Mark';
-import { WashiTape, Bullets, StickerSakuraBranch, StickerEnvelope } from '@/components/deco';
 import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing } from '@/constants/theme';
 import { addFoMessage, deleteFoMessage, toggleFoMessage, updateFoMessage, useFoMessages } from '@/store/foNotifications';
 import { addHeadcanon, clearCategoryHeadcanons, deleteHeadcanon, updateHeadcanon, useHeadcanonCounts, useHeadcanons } from '@/store/headcanons';
-import { getGlobalSetting, saveGlobalSetting } from '@/store/onboarding';
 import { requestPermission } from '@/store/notifications';
+import { getGlobalSetting, saveGlobalSetting } from '@/store/onboarding';
 import { addScenario, deleteScenario, updateScenario, useScenarios } from '@/store/scenarios';
 import { useShips } from '@/store/ships';
 import { loadTemplateData, saveTemplateData } from '@/store/templateData';
@@ -40,7 +42,9 @@ type Feature =
   | 'boundaries'
   | 'storyline'
   | 'dates'
-  | 'fo-messages';
+  | 'fo-messages'
+  | 'this-or-that'
+  | 'love-letter';
 
 const FEATURES: { id: Feature; ja: string; label: string; desc: string; color: string; bg: string }[] = [
   { id: 'headcanons', ja: '想', label: 'Headcanons', desc: 'personality · habits · favorites', color: Colors.sakuraDeep, bg: Colors.sakuraSoft },
@@ -50,7 +54,9 @@ const FEATURES: { id: Feature; ja: string; label: string; desc: string; color: s
   { id: 'boundaries', ja: '夢', label: 'Boundaries', desc: 'sharing rules & what\'s ok', color: Colors.plum, bg: Colors.lavenderSoft },
   { id: 'storyline', ja: '時', label: 'Storyline', desc: 'timeline of moments', color: Colors.ink2, bg: Colors.paperDeep },
   { id: 'dates', ja: '日', label: 'Dates', desc: 'anniversaries & events', color: Colors.peachDeep, bg: Colors.peachSoft },
-  { id: 'fo-messages', ja: '通', label: 'F/O Notifications', desc: 'notes & nudges from them ♡', color: Colors.sakuraInk, bg: Colors.sakuraSoft },
+  { id: 'fo-messages', ja: '通', label: 'F/O Notifications', desc: 'notes & nudges from them', color: Colors.sakuraInk, bg: Colors.sakuraSoft },
+  { id: 'this-or-that', ja: '択', label: 'This or That', desc: 'how do they choose?', color: Colors.lavenderDeep, bg: Colors.lavenderSoft },
+  { id: 'love-letter', ja: '文', label: 'Love Letters', desc: 'letters to & from them', color: Colors.sakuraDeep, bg: Colors.sakuraSoft },
 ];
 
 export default function VaultScreen() {
@@ -91,6 +97,8 @@ export default function VaultScreen() {
       case 'storyline': return <StorylineTab shipId={ship.id} shipName={ship.name} />;
       case 'dates': return <DatesTab shipId={ship.id} shipName={ship.name} />;
       case 'fo-messages': return <FoMessagesFeature shipId={ship.id} shipName={ship.name} setCustomBack={setCustomBack} />;
+      case 'this-or-that': return <ThisOrThatTab shipId={ship.id} />;
+      case 'love-letter': return <LoveLetterTab shipId={ship.id} />;
     }
   }
 

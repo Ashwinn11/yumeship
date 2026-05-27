@@ -7,6 +7,7 @@ type CalloutProps = {
   children: React.ReactNode;
   tone?: 'pink' | 'lavender' | 'butter' | 'paper';
   notch?: boolean;
+  raw?: boolean;
   style?: ViewStyle;
 };
 
@@ -17,7 +18,7 @@ const TONE_MAP = {
   paper: { bg: Colors.vellum, border: Colors.lineStrong, color: Colors.ink, quote: Colors.sakuraDeep },
 };
 
-export function CalloutBubble({ children, tone = 'pink', notch = true, style }: CalloutProps) {
+export function CalloutBubble({ children, tone = 'pink', notch = true, raw = false, style }: CalloutProps) {
   const t = TONE_MAP[tone];
 
   return (
@@ -50,17 +51,19 @@ export function CalloutBubble({ children, tone = 'pink', notch = true, style }: 
           “
         </Text>
 
-        <Text
-          style={{
-            fontFamily: FontFamily.script,
-            fontSize: 16,
-            lineHeight: 18,
-            color: t.color,
-            textAlign: 'center',
-          }}
-        >
-          {children}
-        </Text>
+        {raw ? children : (
+          <Text
+            style={{
+              fontFamily: FontFamily.script,
+              fontSize: 16,
+              lineHeight: 18,
+              color: t.color,
+              textAlign: 'center',
+            }}
+          >
+            {children}
+          </Text>
+        )}
 
         {/* closing quote */}
         <Text

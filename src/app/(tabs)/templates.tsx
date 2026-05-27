@@ -13,7 +13,6 @@ const TEMPLATES = [
   { key: 'kawaii-ui',   title: 'Kawaii UI',           tapePattern: 'dot'   as const, color: Colors.lavenderDeep, bg: Colors.lavenderSoft },
   { key: 'heart-frame', title: 'Heart Frame',         tapePattern: 'stripe'as const, color: Colors.peachDeep, bg: Colors.peachSoft },
   { key: 'aesthetic',   title: 'Aesthetic Board',     tapePattern: 'check' as const, color: Colors.butterDeep, bg: Colors.butterSoft },
-  { key: 'love-letter', title: 'Love Letter',         tapePattern: 'heart' as const, color: Colors.sakuraInk, bg: Colors.sakuraSoft },
 ];
 
 export default function TemplatesScreen() {

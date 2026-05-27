@@ -216,8 +216,8 @@ export function AttrSlider({ label, value = 0, onValueChange }: { label: string;
   const trackRef = useRef<View>(null);
   const clamp = (x: number) => Math.max(0, Math.min(1, x));
   const responder = onValueChange ? {
-    onStartShouldSetResponder: () => true,
-    onMoveShouldSetResponder: () => true,
+    onStartShouldSetResponderCapture: () => true,
+    onMoveShouldSetResponderCapture: () => true,
     onResponderTerminationRequest: () => false,
     onResponderGrant: (e: any) => {
       (trackRef.current as any)?.requestDisallowInterceptTouchEvent?.(true);
@@ -411,8 +411,8 @@ export function MusicPlayer({ track }: { track?: string }) {
   const barRef = useRef<View>(null);
   const clamp = (x: number) => Math.max(0, Math.min(1, x));
   const scrubProps = {
-    onStartShouldSetResponder: () => true,
-    onMoveShouldSetResponder: () => true,
+    onStartShouldSetResponderCapture: () => true,
+    onMoveShouldSetResponderCapture: () => true,
     onResponderTerminationRequest: () => false,
     onResponderGrant: (e: any) => {
       (barRef.current as any)?.requestDisallowInterceptTouchEvent?.(true);

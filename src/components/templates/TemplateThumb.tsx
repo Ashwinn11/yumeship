@@ -10,6 +10,9 @@ import { BoundariesContent } from '@/app/template/boundaries';
 import { LoveLetterContent } from '@/app/template/love-letter';
 import { StorylineContent } from '@/app/template/storyline';
 import { HeadcanonsContent } from '@/app/template/headcanons';
+import { FlipPhoneContent } from '@/app/template/flip-phone';
+import { TalkingAboutContent } from '@/app/template/talking-about';
+import { BondBannerContent } from '@/app/template/bond-banner';
 
 // Natural render width of templates (matches scroll padding on a ~390px screen)
 const FULL_W = 360;
@@ -29,6 +32,9 @@ const CONTENT_MAP: Record<string, ContentFC> = {
   'love-letter': LoveLetterContent,
   'storyline': StorylineContent,
   'headcanons': HeadcanonsContent,
+  'flip-phone': FlipPhoneContent,
+  'talking-about': TalkingAboutContent,
+  'bond-banner': BondBannerContent,
 };
 
 type Props = { templateKey: string; width: number; height: number };

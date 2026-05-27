@@ -45,6 +45,9 @@ const FIELD_MAP: Record<string, Record<string, string>> = {
   'aesthetic':   { song: 'song',       mainPhoto: 'photo0', photo1: 'photo1', photo2: 'photo2' },
   'this-or-that': { foName: 'name' },
   'headcanons':  { foName: 'fo' },
+  'talking-about': { foName: 'foName', myName: 'meName', sharing: 'sharing', mainPhoto: 'photoL', myPhoto: 'photoR' },
+  'flip-phone':  { foName: 'name', sharing: 'sharing', song: 'song' },
+  'bond-banner': { myName: 'meName', foName: 'foName' },
 };
 
 // Migrate compatible fields from old template data into the new template (only fills gaps)
@@ -106,6 +109,19 @@ export function buildPreFill(ship: Ship, templateKey: string): Record<string, st
     case 'headcanons':
       if (ship.name)      base['fo'] = ship.name;
       if (ship.fandom)    base['source'] = ship.fandom;
+      break;
+    case 'talking-about':
+      if (ship.name)      base['foName'] = ship.name;
+      if (userName)       base['meName'] = userName;
+      if (ship.shareType) base['sharing'] = shareMap[ship.shareType] ?? '';
+      break;
+    case 'flip-phone':
+      if (ship.name)      base['name'] = ship.name;
+      if (ship.shareType) base['sharing'] = shareMap[ship.shareType] ?? '';
+      break;
+    case 'bond-banner':
+      if (ship.name)      base['foName'] = ship.name;
+      if (userName)       base['meName'] = userName;
       break;
   }
   return base;

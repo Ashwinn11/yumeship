@@ -3,8 +3,9 @@ import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { TemplateScreenWrapper } from '@/components/templates/TemplateScreenWrapper';
 import {
-  MarkerCard, TitleHeader, BlankPill, Check, INK,
+  MarkerCard, TitleHeader, Check, INK,
 } from '@/components/templates/primitives';
+import { CalloutBubble } from '@/components/ui/Callouts';
 import { FontFamily } from '@/constants/theme';
 import { useTemplateCtx } from '@/store/templateData';
 
@@ -34,7 +35,6 @@ export function ThisOrThatContent({ editing = false }: { editing?: boolean }) {
 
   const e = editing;
 
-  const setName = (v: string) => { setVals((p) => ({ ...p, name: v })); ctx.set('name', v); };
   const setNote = (v: string) => { setVals((p) => ({ ...p, note: v })); ctx.set('note', v); };
   const pick = (i: number, side: 'left' | 'right') => {
     setVals((prev) => {
@@ -52,9 +52,7 @@ export function ThisOrThatContent({ editing = false }: { editing?: boolean }) {
 
       <View style={s.nameRow}>
         <Text style={s.themLabel}>♡ THEM:</Text>
-        <View style={s.namePill}>
-          <BlankPill value={name} onChangeText={e ? setName : undefined} />
-        </View>
+        <Text style={s.themName}>{name || '——'}</Text>
       </View>
 
       <View style={s.grid}>
@@ -76,22 +74,19 @@ export function ThisOrThatContent({ editing = false }: { editing?: boolean }) {
         ))}
       </View>
 
-      <View style={s.noteBox}>
-        {e ? (
+      <View style={s.noteWrap}>
+        <CalloutBubble tone="pink" raw>
           <TextInput
             value={note}
-            onChangeText={setNote}
-            placeholder="note: she pretends to be the talker. she's not."
-            placeholderTextColor={INK}
+            onChangeText={e ? setNote : undefined}
+            editable={e}
+            placeholder="she pretends to be the talker. she's not."
+            placeholderTextColor="#d77a8d88"
             multiline
             underlineColorAndroid="transparent"
             style={s.noteText}
           />
-        ) : (
-          <Text style={s.noteText}>
-            {note || "note: she pretends to be the talker. she's not."}
-          </Text>
-        )}
+        </CalloutBubble>
       </View>
     </View>
   );
@@ -107,9 +102,9 @@ export default function TemplateThisOrThat() {
 }
 
 const s = StyleSheet.create({
-  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 12 },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
   themLabel: { fontFamily: FontFamily.markerBold, fontWeight: '700', fontSize: 12, color: INK },
-  namePill: { width: 110 },
+  themName: { fontFamily: FontFamily.ja, fontWeight: '600', fontSize: 12, color: INK },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   pairCard: {
     width: '48.5%',
@@ -127,13 +122,13 @@ const s = StyleSheet.create({
   pairText: { fontFamily: FontFamily.marker, fontWeight: '500', fontSize: 10.5, color: INK },
   pairChosen: { fontFamily: FontFamily.markerBold, fontWeight: '700', textDecorationLine: 'underline' },
   pairSlash: { fontFamily: FontFamily.marker, fontSize: 9, color: INK, opacity: 0.7, marginHorizontal: 2 },
-  noteBox: {
-    marginTop: 12,
-    padding: 10,
-    borderWidth: 1.5,
-    borderColor: INK,
-    borderRadius: 6,
-    backgroundColor: '#fff',
+  noteWrap: { marginTop: 14, alignItems: 'center' },
+  noteText: {
+    fontFamily: FontFamily.script,
+    fontSize: 16,
+    color: '#8b3a4a',
+    lineHeight: 18,
+    textAlign: 'center',
+    minWidth: 180,
   },
-  noteText: { fontFamily: FontFamily.ui, fontSize: 11, color: INK },
 });

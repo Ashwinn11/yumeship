@@ -18,11 +18,13 @@ import { Star } from '@/components/deco/Star';
 import { Colors, FontFamily, Radius, Shadow, Spacing } from '@/constants/theme';
 
 const VISUAL_TEMPLATES = [
-  { key: 'get-to-know', label: 'Get to Know', desc: 'popular · fill out their info', color: Colors.sakuraDeep,   bg: Colors.sakuraSoft,   tape: 'floral' },
-  { key: 'kawaii-ui',   label: 'Kawaii UI',   desc: 'stats card · aesthetics',      color: Colors.lavenderDeep, bg: Colors.lavenderSoft, tape: 'dot' },
-  { key: 'heart-frame', label: 'Heart Frame', desc: 'romantic · twin portraits',    color: Colors.peachDeep,    bg: Colors.peachSoft,    tape: 'heart' },
-  { key: 'love-letter', label: 'Love Letter', desc: 'write them a letter',          color: Colors.sakuraInk,    bg: Colors.sakuraSoft,   tape: 'stripe' },
-  { key: 'aesthetic',   label: 'Aesthetic',   desc: 'mood board · palette · photos', color: Colors.butterDeep,   bg: Colors.butterSoft,   tape: 'star' },
+  { key: 'get-to-know',   label: 'Get to Know',   desc: 'popular · fill out their info',     color: Colors.sakuraDeep,   bg: Colors.sakuraSoft,   tape: 'floral' },
+  { key: 'kawaii-ui',    label: 'Kawaii UI',     desc: 'stats card · aesthetics',          color: Colors.lavenderDeep, bg: Colors.lavenderSoft, tape: 'dot' },
+  { key: 'heart-frame',  label: 'Heart Frame',   desc: 'romantic · twin portraits',        color: Colors.peachDeep,    bg: Colors.peachSoft,    tape: 'heart' },
+  { key: 'aesthetic',    label: 'Aesthetic',     desc: 'mood board · palette · photos',    color: Colors.butterDeep,   bg: Colors.butterSoft,   tape: 'star' },
+  { key: 'flip-phone',   label: 'Flip Phone',    desc: 'Y2K windows · chat · music',      color: Colors.sakuraDeep,   bg: Colors.sakura,       tape: 'floral' },
+  { key: 'talking-about', label: 'Talking About', desc: 'dual portrait · sliders · tropes', color: Colors.sageDeep,     bg: Colors.sageSoft,     tape: 'dot' },
+  { key: 'bond-banner',  label: 'Bond Banner',   desc: 'heart shield · personality bars',  color: Colors.plum,         bg: Colors.lavenderSoft, tape: 'heart' },
 ] as const;
 
 type Props = {
@@ -43,8 +45,13 @@ export function TemplateScreenWrapper({ templateKey, shipId, children }: Props) 
   const initData = (): Record<string, string> => {
     if (!shipId) return {};
     const saved = loadTemplateData(shipId, templateKey);
-    if (Object.keys(saved).length > 0) return saved;
-    return ship ? buildPreFill(ship, templateKey) : {};
+    const prefill = ship ? buildPreFill(ship, templateKey) : {};
+    // Merge: prefill fills in fields that are missing or empty in saved data
+    const merged: Record<string, string> = { ...saved };
+    for (const [k, v] of Object.entries(prefill)) {
+      if (!merged[k]) merged[k] = v;
+    }
+    return merged;
   };
   const dataRef = useRef<Record<string, string>>(null as unknown as Record<string, string>);
   if (dataRef.current === null) {

@@ -8,6 +8,7 @@ import {
 import { Heart } from '@/components/deco/Heart';
 import { FontFamily } from '@/constants/theme';
 import { useTemplateCtx } from '@/store/templateData';
+import { DecoBar } from '@/components/templates/DecoBar';
 
 const BLANK_THINGS = ['', '', '', '', ''];
 
@@ -20,6 +21,7 @@ export function LoveLetterContent({ editing = false }: { editing?: boolean }) {
     signName: ctx.get('signName') || ctx.get('meName') || ctx.get('name') || '',
     things: JSON.parse(ctx.get('things', 'null')) ?? [...BLANK_THINGS],
   }));
+  const [decoItemsJson, setDecoItemsJson] = useState(() => ctx.get('decoItems', '[]'));
 
   const e = editing;
 
@@ -152,6 +154,12 @@ export function LoveLetterContent({ editing = false }: { editing?: boolean }) {
           ))}
         </View>
       </View>
+
+      <DecoBar
+        editing={e}
+        itemsJson={decoItemsJson}
+        onItemsChange={(j) => { setDecoItemsJson(j); ctx.set('decoItems', j); }}
+      />
     </MarkerCard>
   );
 }
