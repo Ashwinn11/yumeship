@@ -3,7 +3,6 @@ import { getGlobalSetting, saveGlobalSetting } from './onboarding';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true,
     shouldShowBanner: true,
     shouldShowList: true,
     shouldPlaySound: false,
@@ -50,8 +49,12 @@ export async function scheduleDailyNotification(
     if (status !== 'granted') return null;
 
     const discreet = getDiscreetMode();
-    const trigger = isImmediate
-      ? { seconds: 5 } as any
+    const trigger: Notifications.NotificationTriggerInput = isImmediate
+      ? {
+          type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+          seconds: 5,
+          repeats: false,
+        }
       : {
           type: Notifications.SchedulableTriggerInputTypes.DAILY,
           hour,
@@ -65,8 +68,10 @@ export async function scheduleDailyNotification(
       },
       trigger,
     });
+
     return identifier;
-  } catch {
+  } catch (error) {
+    console.error('Failed to schedule notification:', error);
     return null;
   }
 }
@@ -79,3 +84,8 @@ export async function cancelNotification(notifId: string): Promise<void> {
     // ignore if already cancelled
   }
 }
+
+export async function getScheduledNotifications() {
+  return await Notifications.getAllScheduledNotificationsAsync();
+}
+

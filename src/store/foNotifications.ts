@@ -10,6 +10,7 @@ export type FoMessage = {
   scheduledHour: number;
   active: boolean;
   notifId: string;
+  currentIndex: number;
   createdAt: number;
 };
 
@@ -25,6 +26,7 @@ function rowToMsg(r: Record<string, unknown>): FoMessage {
     scheduledHour: r.scheduled_hour as number,
     active: !!(r.active as number),
     notifId: (r.notif_id as string) ?? '',
+    currentIndex: (r.current_index as number) ?? 0,
     createdAt: r.created_at as number,
   };
 }
@@ -44,16 +46,18 @@ export async function addFoMessage(
 ): Promise<string> {
   const id = String(Date.now());
   getDb().runSync(
-    'INSERT INTO fo_messages (id, ship_id, body, sender_name, scheduled_hour, active, notif_id, created_at) VALUES (?, ?, ?, ?, ?, 1, ?, ?)',
+    'INSERT INTO fo_messages (id, ship_id, body, sender_name, scheduled_hour, active, notif_id, current_index, created_at) VALUES (?, ?, ?, ?, ?, 1, ?, 0, ?)',
     id, shipId, body, senderName, scheduledHour, '', Date.now(),
   );
 
   let triggerBody = body;
+  let parsedLength = 1;
   try {
     if (body.startsWith('[')) {
       const parsed = JSON.parse(body);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        triggerBody = parsed[Math.floor(Math.random() * parsed.length)];
+        triggerBody = parsed[0];
+        parsedLength = parsed.length;
       }
     }
   } catch (_) {}
@@ -65,7 +69,8 @@ export async function addFoMessage(
 
   const notifId = await scheduleDailyNotification(triggerBody, targetHour, senderName, isImmediate);
   if (notifId) {
-    getDb().runSync('UPDATE fo_messages SET notif_id = ? WHERE id = ?', notifId, id);
+    const nextIndex = parsedLength > 1 ? 1 : 0;
+    getDb().runSync('UPDATE fo_messages SET notif_id = ?, current_index = ? WHERE id = ?', notifId, nextIndex, id);
   }
 
   notify();
@@ -82,11 +87,13 @@ export async function toggleFoMessage(id: string, active: boolean, foName = ''):
     getDb().runSync('UPDATE fo_messages SET active = 0, notif_id = ? WHERE id = ?', '', id);
   } else if (active) {
     let triggerBody = msg.body;
+    let parsedLength = 1;
     try {
       if (msg.body.startsWith('[')) {
         const parsed = JSON.parse(msg.body);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          triggerBody = parsed[Math.floor(Math.random() * parsed.length)];
+          triggerBody = parsed[msg.currentIndex % parsed.length];
+          parsedLength = parsed.length;
         }
       }
     } catch (_) {}
@@ -97,9 +104,10 @@ export async function toggleFoMessage(id: string, active: boolean, foName = ''):
       : isImmediate ? 0 : msg.scheduledHour;
 
     const newId = await scheduleDailyNotification(triggerBody, targetHour, msg.senderName || foName, isImmediate);
+    const nextIndex = parsedLength > 1 ? (msg.currentIndex + 1) % parsedLength : 0;
     getDb().runSync(
-      'UPDATE fo_messages SET active = 1, notif_id = ? WHERE id = ?',
-      newId ?? '', id,
+      'UPDATE fo_messages SET active = 1, notif_id = ?, current_index = ? WHERE id = ?',
+      newId ?? '', nextIndex, id,
     );
   }
 
@@ -122,13 +130,16 @@ export async function updateFoMessage(
   }
 
   let notifId = '';
+  let newIndex = 0;
   if (msg.active) {
     let triggerBody = body;
+    let parsedLength = 1;
     try {
       if (body.startsWith('[')) {
         const parsed = JSON.parse(body);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          triggerBody = parsed[Math.floor(Math.random() * parsed.length)];
+          triggerBody = parsed[0];
+          parsedLength = parsed.length;
         }
       }
     } catch (_) {}
@@ -139,11 +150,12 @@ export async function updateFoMessage(
       : isImmediate ? 0 : scheduledHour;
 
     notifId = await scheduleDailyNotification(triggerBody, targetHour, senderName, isImmediate) ?? '';
+    newIndex = parsedLength > 1 ? 1 : 0;
   }
 
   getDb().runSync(
-    'UPDATE fo_messages SET body = ?, sender_name = ?, scheduled_hour = ?, notif_id = ? WHERE id = ?',
-    body, senderName, scheduledHour, notifId, id,
+    'UPDATE fo_messages SET body = ?, sender_name = ?, scheduled_hour = ?, notif_id = ?, current_index = ? WHERE id = ?',
+    body, senderName, scheduledHour, notifId, newIndex, id,
   );
 
   notify();

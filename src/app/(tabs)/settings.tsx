@@ -12,7 +12,7 @@ import { Mark } from '@/components/ui/Mark';
 import { Toggle } from '@/components/ui/Toggle';
 import { Colors, FontFamily, FontSize, Radius, Spacing } from '@/constants/theme';
 import {
-  getDiscreetMode, getNotifEnabled, requestPermission,
+  getDiscreetMode, getNotifEnabled, getScheduledNotifications, requestPermission,
   setDiscreetMode, setNotifEnabled,
 } from '@/store/notifications';
 import { deleteAllData } from '@/store/ships';
@@ -158,6 +158,25 @@ export default function SettingsScreen() {
     setDiscreetState(v);
   }
 
+  async function handleCheckNotifications() {
+    try {
+      const list = await getScheduledNotifications();
+      if (list.length === 0) {
+        Alert.alert('Notification Store', 'No notifications are currently scheduled in the OS store.');
+      } else {
+        const details = list.map((n, i) => {
+          return `${i + 1}. [ID: ${n.identifier}]\nTitle: ${n.content.title || '(none)'}\nBody: ${n.content.body || '(none)'}\nTrigger: ${JSON.stringify(n.trigger)}`;
+        }).join('\n\n');
+        Alert.alert(
+          'Scheduled Notifications',
+          `Active count: ${list.length}\n\n${details}`,
+        );
+      }
+    } catch (e: any) {
+      Alert.alert('Error', e?.message || 'Failed to fetch scheduled notifications');
+    }
+  }
+
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]}>
       {/* Header */}
@@ -210,6 +229,10 @@ export default function SettingsScreen() {
           <SettingRow
             label="Discreet preview"
             trailing={<Toggle value={discreet} onValueChange={handleToggleDiscreet} />}
+          />
+          <SettingRow
+            label="Check scheduled notifications"
+            onPress={handleCheckNotifications}
           />
         </SettingGroup>
 
