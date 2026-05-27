@@ -18,11 +18,11 @@ import { Star } from '@/components/deco/Star';
 import { Colors, FontFamily, Radius, Shadow, Spacing } from '@/constants/theme';
 
 const VISUAL_TEMPLATES = [
-  { key: 'get-to-know', label: 'Get to Know', desc: 'popular · fill out their info', color: Colors.sakuraDeep,    bg: Colors.sakuraSoft },
-  { key: 'kawaii-ui',   label: 'Kawaii UI',   desc: 'stats card · aesthetics',       color: Colors.lavenderDeep,  bg: Colors.lavenderSoft },
-  { key: 'heart-frame', label: 'Heart Frame', desc: 'romantic · twin portraits',     color: Colors.peachDeep,     bg: Colors.peachSoft },
-  { key: 'love-letter', label: 'Love Letter', desc: 'write them a letter',           color: Colors.sakuraInk,     bg: Colors.sakuraSoft },
-  { key: 'aesthetic',   label: 'Aesthetic',   desc: 'mood board · palette · photos', color: Colors.butterDeep,    bg: Colors.butterSoft },
+  { key: 'get-to-know', label: 'Get to Know', desc: 'popular · fill out their info', color: Colors.sakuraDeep,   bg: Colors.sakuraSoft,   tape: 'floral' },
+  { key: 'kawaii-ui',   label: 'Kawaii UI',   desc: 'stats card · aesthetics',      color: Colors.lavenderDeep, bg: Colors.lavenderSoft, tape: 'dot' },
+  { key: 'heart-frame', label: 'Heart Frame', desc: 'romantic · twin portraits',    color: Colors.peachDeep,    bg: Colors.peachSoft,    tape: 'heart' },
+  { key: 'love-letter', label: 'Love Letter', desc: 'write them a letter',          color: Colors.sakuraInk,    bg: Colors.sakuraSoft,   tape: 'stripe' },
+  { key: 'aesthetic',   label: 'Aesthetic',   desc: 'mood board · palette · photos', color: Colors.butterDeep,   bg: Colors.butterSoft,   tape: 'star' },
 ] as const;
 
 type Props = {
@@ -202,7 +202,7 @@ export function TemplateScreenWrapper({ templateKey, shipId, children }: Props) 
                   onPress={() => setSelected(t.key)}
                 >
                   <View style={s.tplTape}>
-                    <WashiTape width={40} height={10} pattern="heart" color={t.color} rotate={-5} />
+                    <WashiTape width={40} height={10} pattern={t.tape} color={t.color} rotate={-5} />
                   </View>
                   <Text style={[s.tplLabel, { color: t.color }]}>{t.label}</Text>
                   <Text style={s.tplDesc}>{t.desc}</Text>

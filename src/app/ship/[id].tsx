@@ -8,7 +8,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { MiniHC } from '@/components/cards/MiniHC';
 import { Heart } from '@/components/deco/Heart';
-import { Pin } from '@/components/deco/Pin';
 import { Ribbon } from '@/components/deco/Ribbon';
 import { Sakura } from '@/components/deco/Sakura';
 import { StickerSakuraBranch, WashiTape, Bullets, Sparkle } from '@/components/deco';
@@ -118,7 +117,7 @@ export default function ShipDetail() {
           </View>
           {ship.pinned && (
             <View style={styles.heroPin}>
-              <Pin size={13} color={Colors.sakuraDeep} />
+              <Ribbon size={13} color={Colors.sakuraDeep} />
             </View>
           )}
           <View style={styles.heroSparkle1}><Sparkle size={14} color={Colors.butter} /></View>

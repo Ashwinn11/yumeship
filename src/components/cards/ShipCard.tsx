@@ -1,4 +1,4 @@
-import { Pin } from '@/components/deco/Pin';
+import { Ribbon } from '@/components/deco/Ribbon';
 import { WashiTape } from '@/components/deco/WashiTape';
 import { GradientCover } from '@/components/ui/GradientCover';
 import { Colors, FontFamily, FontSize, Radius, Shadow } from '@/constants/theme';
@@ -67,7 +67,7 @@ export function ShipCard({
 
         {pinned && (
           <View style={styles.pinBadge}>
-            <Pin size={11} color={Colors.sakuraDeep} />
+            <Ribbon size={11} color={Colors.sakuraDeep} />
           </View>
         )}
 

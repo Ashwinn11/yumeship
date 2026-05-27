@@ -14,7 +14,7 @@ import { PACKAGE_TYPE, PurchasesPackage } from 'react-native-purchases';
 
 import { Heart } from '@/components/deco/Heart';
 import { Sakura } from '@/components/deco/Sakura';
-import { SparkleCluster } from '@/components/deco/SparkleCluster';
+import { Sparkle } from '@/components/deco/Sparkle';
 import { Colors, FontFamily, FontSize, Radius, Spacing } from '@/constants/theme';
 import {
   getAvailablePackages,
@@ -285,7 +285,7 @@ export default function PaywallScreen() {
       >
         {/* Hero */}
         <View style={styles.heroRow}>
-          <SparkleCluster color={Colors.sakuraDeep} />
+          <Sparkle size={22} color={Colors.sakuraDeep} />
         </View>
         <View style={styles.heroEyebrow}>
           <Heart size={12} color={Colors.sakuraDeep} />

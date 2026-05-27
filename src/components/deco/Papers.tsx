@@ -1,7 +1,7 @@
 import { Colors, FontFamily } from '@/constants/theme';
 import React from 'react';
 import { StyleSheet, Text, View, ViewStyle } from 'react-native';
-import Svg, { Circle, Line, Path, Rect } from 'react-native-svg';
+import Svg, { Circle, Line, Path } from 'react-native-svg';
 
 type PaperProps = {
   width?: number;
@@ -75,7 +75,6 @@ export function PaperScalloped({ width = 100, height = 130, children, color = '#
   const scallop = 5;
   const r = width / (scallop * 2);
 
-  // We can draw a beautiful scalloped shape using a Path:
   const pathD = `
     M 0 ${r}
     ${Array.from({ length: scallop })
@@ -175,7 +174,6 @@ export function PaperPolaroid({ width = 92, height = 120, rotate = 4, children, 
 }
 
 export function PaperGrid({ width = 100, height = 130, children, style }: PaperProps) {
-  // Rather than simple CSS background, we can draw a grid of lines using SVG for absolute layout fidelity.
   const gridSpacing = 10;
   const cols = Math.floor(width / gridSpacing);
   const rows = Math.floor(height / gridSpacing);
@@ -186,7 +184,7 @@ export function PaperGrid({ width = 100, height = 130, children, style }: PaperP
         {
           width,
           height,
-          backgroundColor: '#fbecc4', // butter-soft
+          backgroundColor: '#fbecc4',
           borderRadius: 4,
           shadowColor: 'rgba(110, 58, 90, 0.08)',
           shadowOffset: { width: 0, height: 2 },
@@ -206,7 +204,7 @@ export function PaperGrid({ width = 100, height = 130, children, style }: PaperP
             y1="0"
             x2={i * gridSpacing}
             y2={height}
-            stroke="#f0d189" // butter
+            stroke="#f0d189"
             strokeWidth="0.5"
           />
         ))}
@@ -217,7 +215,7 @@ export function PaperGrid({ width = 100, height = 130, children, style }: PaperP
             y1={i * gridSpacing}
             x2={width}
             y2={i * gridSpacing}
-            stroke="#f0d189" // butter
+            stroke="#f0d189"
             strokeWidth="0.5"
           />
         ))}

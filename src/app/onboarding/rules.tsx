@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Pin } from '@/components/deco/Pin';
+import { Ribbon } from '@/components/deco/Ribbon';
 import { WashiTape } from '@/components/deco/WashiTape';
 import { StickerHeartPatch, Bullets } from '@/components/deco';
 import { Button } from '@/components/ui/Button';
@@ -17,11 +17,11 @@ import { getGlobalSetting, getOnbState, resetOnb, saveGlobalSetting } from '@/st
 import { addShip, REL_GRADS } from '@/store/ships';
 
 const VISUAL_TEMPLATES = [
-  { key: 'get-to-know', label: 'Get to Know', desc: 'popular · fill out their info', color: Colors.sakuraDeep, bg: Colors.sakuraSoft },
-  { key: 'kawaii-ui', label: 'Kawaii UI', desc: 'stats card · aesthetics', color: Colors.lavenderDeep, bg: Colors.lavenderSoft },
-  { key: 'heart-frame', label: 'Heart Frame', desc: 'romantic · twin portraits', color: Colors.peachDeep, bg: Colors.peachSoft },
-  { key: 'love-letter', label: 'Love Letter', desc: 'write them a letter', color: Colors.sakuraInk, bg: Colors.sakuraSoft },
-  { key: 'aesthetic', label: 'Aesthetic', desc: 'mood board · palette · photos', color: Colors.butterDeep, bg: Colors.butterSoft },
+  { key: 'get-to-know', label: 'Get to Know', desc: 'popular · fill out their info', color: Colors.sakuraDeep, bg: Colors.sakuraSoft, tape: 'floral' },
+  { key: 'kawaii-ui', label: 'Kawaii UI', desc: 'stats card · aesthetics', color: Colors.lavenderDeep, bg: Colors.lavenderSoft, tape: 'dot' },
+  { key: 'heart-frame', label: 'Heart Frame', desc: 'romantic · twin portraits', color: Colors.peachDeep, bg: Colors.peachSoft, tape: 'heart' },
+  { key: 'love-letter', label: 'Love Letter', desc: 'write them a letter', color: Colors.sakuraInk, bg: Colors.sakuraSoft, tape: 'stripe' },
+  { key: 'aesthetic', label: 'Aesthetic', desc: 'mood board · palette · photos', color: Colors.butterDeep, bg: Colors.butterSoft, tape: 'star' },
 ] as const;
 
 const TAPE_BY_REL: Record<string, { color: string; pattern: 'stripe' | 'dot' | 'heart' | 'check' }> = {
@@ -76,7 +76,7 @@ export default function OnbRules() {
     <View style={[styles.screen, { paddingTop: insets.top + Spacing.s1, paddingBottom: insets.bottom + Spacing.s1 }]}>
       {/* Background accents */}
       <View style={styles.decoTR} pointerEvents="none">
-        <Pin size={18} color={Colors.sakuraDeep} />
+        <Ribbon size={18} color={Colors.sakuraDeep} />
       </View>
       <View style={styles.decoBL} pointerEvents="none">
         <StickerHeartPatch size={48} />
@@ -112,7 +112,7 @@ export default function OnbRules() {
                   onPress={() => setTemplateKey(t.key)}
                 >
                   <View style={styles.templateTape}>
-                    <WashiTape width={40} height={10} pattern="heart" color={t.color} rotate={-5} />
+                    <WashiTape width={40} height={10} pattern={t.tape} color={t.color} rotate={-5} />
                   </View>
                   <Text style={[styles.templateLabel, { color: t.color }]}>{t.label}</Text>
                   <Text style={styles.templateDesc}>{t.desc}</Text>

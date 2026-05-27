@@ -5,9 +5,8 @@ import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Heart } from '@/components/deco/Heart';
-import { Pin } from '@/components/deco/Pin';
+import { Ribbon } from '@/components/deco/Ribbon';
 import { Sparkle } from '@/components/deco/Sparkle';
-import { SparkleCluster } from '@/components/deco/SparkleCluster';
 import {
   CozyModal,
   IconBellSolid,
@@ -191,7 +190,7 @@ export default function SettingsScreen() {
     <View style={[styles.screen, { paddingTop: insets.top }]}>
       {/* Background accents */}
       <View style={styles.decoTL} pointerEvents="none">
-        <Pin size={18} color={Colors.sakuraDeep} />
+        <Ribbon size={18} color={Colors.sakuraDeep} />
       </View>
       <View style={styles.decoBR} pointerEvents="none">
         <Sparkle size={18} color={Colors.lavenderDeep} />
@@ -218,7 +217,7 @@ export default function SettingsScreen() {
           premium ? (
             <View style={[styles.proCard, styles.proCardActive]}>
               <View style={styles.proSparkle}>
-                <SparkleCluster color={Colors.sakuraDeep} />
+                <Sparkle size={22} color={Colors.sakuraDeep} />
               </View>
               <View style={styles.proEyebrow}>
                 <Heart size={12} color={Colors.sakuraDeep} />
@@ -233,7 +232,7 @@ export default function SettingsScreen() {
               id="settings-upgrade"
             >
               <View style={styles.proSparkle}>
-                <SparkleCluster color={Colors.sakuraDeep} />
+                <Sparkle size={22} color={Colors.sakuraDeep} />
               </View>
               <View style={styles.proEyebrow}>
                 <Heart size={12} color={Colors.sakuraDeep} />

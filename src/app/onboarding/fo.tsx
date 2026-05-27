@@ -1,16 +1,14 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 
-import { Sparkle, WashiTape, Bullets, StickerWaxSeal } from '@/components/deco';
+import { Bullets, Sparkle, StickerWaxSeal, WashiTape } from '@/components/deco';
+import { ThoughtCloud } from '@/components/ui';
 import { Button } from '@/components/ui/Button';
-import { Field } from '@/components/ui/Field';
 import { Mark } from '@/components/ui/Mark';
 import { StepDots } from '@/components/ui/StepDots';
-import { UnderInput } from '@/components/ui/UnderInput';
-import { ThoughtCloud } from '@/components/ui';
 import { Colors, FontFamily, FontSize, Radius, Spacing } from '@/constants/theme';
 import { resetOnb, setOnbField } from '@/store/onboarding';
 
@@ -108,9 +106,6 @@ export default function OnbFO() {
               />
               <Bullets.Heart size={12} color={Colors.sakuraDeep} />
             </View>
-            <Text style={{ fontFamily: FontFamily.script, fontSize: 13, color: Colors.ink3, marginTop: 4 }}>
-              the headline that appears on cards & letters
-            </Text>
           </View>
 
           {/* Avatar Preview Tile & inputs */}

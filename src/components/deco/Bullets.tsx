@@ -1,5 +1,5 @@
 import React from 'react';
-import Svg, { Circle, Ellipse, Path, Rect } from 'react-native-svg';
+import Svg, { Circle, Ellipse, Path } from 'react-native-svg';
 import { Colors } from '@/constants/theme';
 
 type BulletProps = {
@@ -40,32 +40,6 @@ export const Bullets = {
   Dot: ({ size = 12, color = Colors.sakuraDeep }: BulletProps) => (
     <Svg width={size} height={size} viewBox="0 0 16 16">
       <Circle cx="8" cy="8" r="5" fill={color} />
-    </Svg>
-  ),
-  Crescent: ({ size = 12, color = Colors.lavenderDeep }: BulletProps) => (
-    <Svg width={size} height={size} viewBox="0 0 16 16">
-      <Path d="M11 2 A6 6 0 1 0 11 14 A4.5 4.5 0 0 1 11 2Z" fill={color} />
-    </Svg>
-  ),
-  Square: ({ size = 11, color = Colors.sakuraDeep }: BulletProps) => (
-    <Svg width={size} height={size} viewBox="0 0 16 16">
-      <Rect x="2" y="2" width="12" height="12" rx="2" fill={color} />
-    </Svg>
-  ),
-  Tape: ({ size = 16, color = Colors.sakura }: BulletProps) => (
-    <Svg width={size + 4} height={size - 4} viewBox="0 0 20 12">
-      <Rect width="20" height="12" fill={color} opacity="0.6" />
-      <Path
-        d="M2 2h2M6 2h2M10 2h2M14 2h2M2 8h2M6 8h2M10 8h2M14 8h2"
-        stroke={color}
-        strokeWidth="1"
-      />
-    </Svg>
-  ),
-  Ribbon: ({ size = 14, color = Colors.sakuraDeep }: BulletProps) => (
-    <Svg width={size + 4} height={size} viewBox="0 0 18 14">
-      <Path d="M0 2 L6 7 L0 12 L4 7 Z M18 2 L12 7 L18 12 L14 7 Z" fill={color} opacity="0.7" />
-      <Circle cx="9" cy="7" r="2" fill={color} />
     </Svg>
   ),
 };

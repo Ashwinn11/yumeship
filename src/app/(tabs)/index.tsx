@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ShipCard } from '@/components/cards/ShipCard';
 import { Heart } from '@/components/deco/Heart';
 import { Sparkle } from '@/components/deco/Sparkle';
-import { SparkleCluster } from '@/components/deco/SparkleCluster';
+
 import { StickerSakuraFlower, StickerSparkle, WashiTape } from '@/components/deco';
 import { CozyModal } from '@/components/ui/CozyModal';
 import { IconPlus, IconSearch } from '@/components/ui/Icon';
@@ -49,7 +49,7 @@ export default function HomeScreen() {
       />
       {/* Background accents */}
       <View style={styles.decoTR} pointerEvents="none">
-        <SparkleCluster color={Colors.sakura} />
+        <Sparkle size={20} color={Colors.sakura} />
       </View>
       <View style={styles.decoBL} pointerEvents="none">
         <Heart size={24} color={Colors.lavenderDeep} outline />
