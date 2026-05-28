@@ -1,9 +1,9 @@
-import { router } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Sakura } from '@/components/deco/Sakura';
 import { IconChevronLeft } from '@/components/ui/Icon';
 import { Colors, FontFamily, FontSize, Radius, Spacing } from '@/constants/theme';
+import { router } from 'expo-router';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function PrivacyScreen() {
   const insets = useSafeAreaInsets();
@@ -53,7 +53,7 @@ export default function PrivacyScreen() {
         </Section>
 
         <Section title="6. Contact">
-          Questions? Reach us at: support@yumeship.app
+          Questions? Reach us at: ashwinnanbazhagan@gmail.com
         </Section>
       </ScrollView>
     </View>
