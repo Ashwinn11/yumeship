@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Heart } from '@/components/deco/Heart';
@@ -73,10 +73,6 @@ export default function OnbWelcome() {
         >
           begin · let's meet them
         </Button>
-
-        <Pressable onPress={() => router.replace('/(tabs)')} style={styles.skipPressable}>
-          <Text style={styles.skip}>I have an account</Text>
-        </Pressable>
       </View>
     </View>
   );
