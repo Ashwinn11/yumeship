@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: Spacing.s5, paddingVertical: Spacing.s2,
   },
-  backBtn: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
+  backBtn: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.paperDeep, borderRadius: Radius.pill, borderWidth: 1, borderColor: Colors.line },
   backBtnText: { fontSize: 24, color: Colors.ink2 },
   headerTitle: { fontFamily: FontFamily.displayItalic, fontSize: FontSize.h6, color: Colors.ink },
   scroll: { flex: 1 },

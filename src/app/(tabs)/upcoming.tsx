@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { router } from 'expo-router';
 
 import { Mark } from '@/components/ui/Mark';
-import { IconBell } from '@/components/ui/Icon';
 import { Cloud } from '@/components/deco/Cloud';
 import { StickerEnvelope } from '@/components/deco/Stickers';
 import { Sakura } from '@/components/deco/Sakura';
@@ -54,9 +53,6 @@ export default function UpcomingScreen() {
       <View style={styles.header}>
         <View style={styles.headerRow}>
           <Mark size={26} />
-          <Pressable style={styles.iconBtn}>
-            <IconBell size={14} color={Colors.ink2} />
-          </Pressable>
         </View>
 
         <View style={styles.titleRow}>

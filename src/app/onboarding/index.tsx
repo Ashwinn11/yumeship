@@ -1,13 +1,13 @@
-import { Image, View, Text, Pressable, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Button } from '@/components/ui/Button';
-import { Sparkle } from '@/components/deco/Sparkle';
 import { Heart } from '@/components/deco/Heart';
 import { Sakura } from '@/components/deco/Sakura';
-import { WashiTape } from '@/components/deco/WashiTape';
+import { Sparkle } from '@/components/deco/Sparkle';
 import { StickerSakuraFlower, StickerWaxSeal } from '@/components/deco/Stickers';
+import { WashiTape } from '@/components/deco/WashiTape';
+import { Button } from '@/components/ui/Button';
 import { Colors, FontFamily, FontSize, Spacing } from '@/constants/theme';
 
 export default function OnbWelcome() {
@@ -51,7 +51,7 @@ export default function OnbWelcome() {
         <Text style={styles.ja}>夢 ・ ゆめしっぷ</Text>
 
         <Text style={styles.quote}>
-          "A quiet place to keep them. Held close, like a letter you never sent."
+          "A quiet place to keep them. Held close, like a letter you never sent!!"
         </Text>
 
         <View style={styles.decoRow}>

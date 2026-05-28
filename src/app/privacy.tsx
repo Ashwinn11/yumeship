@@ -25,52 +25,35 @@ export default function PrivacyScreen() {
       >
         <Text style={styles.updated}>Last updated: May 27, 2025</Text>
 
-        <Section title="1. Information We Collect">
-          Yumeship is designed to keep your data on your device. We do not collect personal
-          information beyond what is strictly necessary. When you make a purchase, our payment
-          processor (RevenueCat) receives a pseudonymous App User ID and purchase receipt — no
-          name or email is shared with us.
+        <Section title="1. Your data stays on your device">
+          Everything you create in Yumeship — ships, headcanons, letters, scenes — is stored
+          locally on your device in an on-device database. We cannot see it, access it, or
+          back it up. Deleting the App removes all of it permanently.
         </Section>
 
-        <Section title="2. Data Stored on Device">
-          All creative content you generate in the App (ships, headcanons, messages, etc.) is
-          stored locally in an on-device SQLite database. We do not have access to this content.
+        <Section title="2. What we don't collect">
+          We do not collect your name, email, or any creative content. We do not use advertising
+          SDKs or sell data to third parties. There is no account system.
         </Section>
 
-        <Section title="3. Notifications">
-          If you grant notification permission, scheduled messages are stored locally in the iOS
-          notification system. No notification content is transmitted to our servers.
+        <Section title="3. Subscriptions">
+          When you subscribe, our payment processor (RevenueCat) receives a pseudonymous ID and
+          your purchase receipt to verify your subscription status. No personal details are shared
+          with us. RevenueCat's privacy policy: revenuecat.com/privacy.
         </Section>
 
-        <Section title="4. Third-Party Services">
-          We use RevenueCat to manage in-app subscriptions. RevenueCat processes purchase data
-          and subscription status. Their privacy policy can be found at revenuecat.com/privacy.
-          We do not use advertising SDKs or sell your data to third parties.
+        <Section title="4. Notifications">
+          If you allow notifications, scheduled reminders are handled entirely on-device through
+          iOS. Nothing is sent to our servers.
         </Section>
 
-        <Section title="5. Analytics">
-          We do not currently use analytics SDKs. If this changes, we will update this policy
-          and notify users.
+        <Section title="5. Deleting your data">
+          Go to Settings → Delete all data to wipe everything from your device. Since we hold
+          no data on our end, there is nothing further to request from us.
         </Section>
 
-        <Section title="6. Children's Privacy">
-          The App is not directed at children under 13. We do not knowingly collect data from
-          children under 13. If you believe a child has provided us with information, please
-          contact us.
-        </Section>
-
-        <Section title="7. Your Rights">
-          You may delete all your data at any time via Settings → Delete all data. Since we do
-          not collect personal data, there is no data to request from us.
-        </Section>
-
-        <Section title="8. Changes to This Policy">
-          We may update this Privacy Policy from time to time. We will notify you of significant
-          changes via an in-app notice.
-        </Section>
-
-        <Section title="9. Contact">
-          Questions or concerns? Reach us at: support@yumeship.app
+        <Section title="6. Contact">
+          Questions? Reach us at: support@yumeship.app
         </Section>
       </ScrollView>
     </View>

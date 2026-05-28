@@ -211,17 +211,11 @@ export default function SettingsScreen() {
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
       >
-        {/* Pro card — dynamic based on subscription status */}
+        {/* Pro area */}
         {premium ? (
-          <View style={[styles.proCard, styles.proCardActive]}>
-            <View style={styles.proSparkle}>
-              <Sparkle size={22} color={Colors.sakuraDeep} />
-            </View>
-            <View style={styles.proEyebrow}>
-              <Heart size={12} color={Colors.sakuraDeep} />
-              <Text style={styles.proLabel}>yumeship premium</Text>
-            </View>
-            <Text style={styles.proText}>your vault is yours, fully.{'\n'}every ship, every secret. ♡</Text>
+          <View style={styles.premiumBadge}>
+            <Heart size={14} color={Colors.vellum} />
+            <Text style={styles.premiumBadgeText}>you're a premium member</Text>
           </View>
         ) : (
           <Pressable
@@ -229,14 +223,8 @@ export default function SettingsScreen() {
             onPress={() => router.push('/paywall' as any)}
             id="settings-upgrade"
           >
-            <View style={styles.proSparkle}>
-              <Sparkle size={22} color={Colors.sakuraDeep} />
-            </View>
-            <View style={styles.proEyebrow}>
-              <Heart size={12} color={Colors.sakuraDeep} />
-              <Text style={styles.proLabel}>yumeship premium</Text>
-            </View>
-            <Text style={styles.proText}>Unlimited ships.{'\n'}Unlock everything →</Text>
+            <Text style={styles.proTitle}>Go Premium</Text>
+            <Text style={styles.proSub}>unlock unlimited ships, templates & more</Text>
           </Pressable>
         )}
 
@@ -357,42 +345,32 @@ const styles = StyleSheet.create({
     padding: Spacing.s4,
     gap: 12,
   },
+  premiumBadge: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    paddingHorizontal: Spacing.s5, paddingVertical: Spacing.s3,
+    backgroundColor: Colors.sakuraDeep,
+    borderRadius: Radius.pill,
+    alignSelf: 'center',
+  },
+  premiumBadgeText: {
+    fontFamily: FontFamily.uiMedium, fontSize: FontSize.body, color: Colors.vellum,
+  },
   proCard: {
     padding: Spacing.s4,
-    backgroundColor: Colors.sakuraSoft,
-    borderWidth: 1,
-    borderColor: Colors.sakura,
+    backgroundColor: Colors.sakuraDeep,
     borderRadius: Radius.r4,
-    position: 'relative',
-    overflow: 'hidden',
   },
-  proCardActive: {
-    borderColor: Colors.sakuraDeep,
+  proTitle: {
+    fontFamily: FontFamily.uiSemiBold,
+    fontSize: FontSize.h5,
+    color: Colors.vellum,
   },
-  proSparkle: {
-    position: 'absolute',
-    top: 8,
-    right: 10,
-  },
-  proEyebrow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  proLabel: {
-    fontFamily: FontFamily.marker,
-    fontSize: 9,
-    color: Colors.sakuraDeep,
-    letterSpacing: 1.4,
-    textTransform: 'uppercase',
-    fontWeight: '600',
-  },
-  proText: {
-    fontFamily: FontFamily.uiMedium,
-    fontSize: FontSize.h6,
-    lineHeight: 24,
-    color: Colors.ink,
-    marginTop: Spacing.s1,
+  proSub: {
+    fontFamily: FontFamily.ui,
+    fontSize: FontSize.caption,
+    color: Colors.vellum,
+    opacity: 0.8,
+    marginTop: 4,
   },
   decoTL: {
     position: 'absolute',

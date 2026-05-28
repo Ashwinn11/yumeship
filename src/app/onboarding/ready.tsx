@@ -21,13 +21,6 @@ const CREATION_LABEL: Record<string, string> = {
   vault: 'your private vault',
 };
 
-const TEMPLATE_BY_CREATION: Record<string, string> = {
-  letter: 'love-letter',
-  scene: 'storyline',
-  messages: 'talking-about',
-  profile: 'get-to-know',
-  vault: 'get-to-know',
-};
 
 export default function OnbReady() {
   const insets = useSafeAreaInsets();
@@ -67,7 +60,7 @@ export default function OnbReady() {
       return;
     }
 
-    const template = TEMPLATE_BY_CREATION[state.firstCreation] ?? ship.templateKey ?? 'get-to-know';
+    const template = ship.templateKey ?? 'get-to-know';
     resetOnb();
     router.replace(`/template/${template}?shipId=${ship.id}` as any);
   }

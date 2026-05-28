@@ -1,31 +1,31 @@
-import { useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, TouchableWithoutFeedback, View } from 'react-native';
-import { router } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { captureRef } from 'react-native-view-shot';
-import * as Sharing from 'expo-sharing';
-import { usePremium } from '@/store/premium';
-import { getShip, updateShip } from '@/store/ships';
-import { TemplateDataCtx, loadTemplateData, saveTemplateData, buildPreFill, migrateTemplateData } from '@/store/templateData';
-import { CozyModal } from '@/components/ui/CozyModal';
-import { IconExport } from '@/components/ui/Icon';
-import { WashiTape } from '@/components/deco/WashiTape';
 import { Cloud } from '@/components/deco/Cloud';
 import { Heart } from '@/components/deco/Heart';
 import { Ribbon } from '@/components/deco/Ribbon';
 import { Sakura } from '@/components/deco/Sakura';
 import { Sparkle } from '@/components/deco/Sparkle';
 import { Star } from '@/components/deco/Star';
+import { WashiTape } from '@/components/deco/WashiTape';
+import { CozyModal } from '@/components/ui/CozyModal';
+import { IconExport } from '@/components/ui/Icon';
 import { Colors, FontFamily, Radius, Shadow, Spacing } from '@/constants/theme';
+import { usePremium } from '@/store/premium';
+import { getShip, updateShip } from '@/store/ships';
+import { TemplateDataCtx, buildPreFill, loadTemplateData, migrateTemplateData, saveTemplateData } from '@/store/templateData';
+import { router } from 'expo-router';
+import * as Sharing from 'expo-sharing';
+import { useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, TouchableWithoutFeedback, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { captureRef } from 'react-native-view-shot';
 
 const VISUAL_TEMPLATES = [
-  { key: 'get-to-know',   label: 'Get to Know',   desc: 'popular · fill out their info',     color: Colors.sakuraDeep,   bg: Colors.sakuraSoft,   tape: 'floral' },
-  { key: 'kawaii-ui',    label: 'Kawaii UI',     desc: 'stats card · aesthetics',          color: Colors.lavenderDeep, bg: Colors.lavenderSoft, tape: 'dot' },
-  { key: 'heart-frame',  label: 'Heart Frame',   desc: 'romantic · twin portraits',        color: Colors.peachDeep,    bg: Colors.peachSoft,    tape: 'heart' },
-  { key: 'aesthetic',    label: 'Aesthetic',     desc: 'mood board · palette · photos',    color: Colors.butterDeep,   bg: Colors.butterSoft,   tape: 'star' },
-  { key: 'flip-phone',   label: 'Flip Phone',    desc: 'Y2K windows · chat · music',      color: Colors.sakuraDeep,   bg: Colors.sakura,       tape: 'floral' },
-  { key: 'talking-about', label: 'Talking About', desc: 'dual portrait · sliders · tropes', color: Colors.sageDeep,     bg: Colors.sageSoft,     tape: 'dot' },
-  { key: 'bond-banner',  label: 'Bond Banner',   desc: 'heart shield · personality bars',  color: Colors.plum,         bg: Colors.lavenderSoft, tape: 'heart' },
+  { key: 'get-to-know', label: 'Get to Know', desc: 'popular · fill out their info', color: Colors.sakuraDeep, bg: Colors.sakuraSoft, tape: 'floral' },
+  { key: 'kawaii-ui', label: 'Kawaii UI', desc: 'stats card · aesthetics', color: Colors.lavenderDeep, bg: Colors.lavenderSoft, tape: 'dot' },
+  { key: 'heart-frame', label: 'Heart Frame', desc: 'romantic · twin portraits', color: Colors.peachDeep, bg: Colors.peachSoft, tape: 'heart' },
+  { key: 'aesthetic', label: 'Aesthetic', desc: 'mood board · palette · photos', color: Colors.butterDeep, bg: Colors.butterSoft, tape: 'star' },
+  { key: 'flip-phone', label: 'Flip Phone', desc: 'Y2K windows · chat · music', color: Colors.sakuraDeep, bg: Colors.sakura, tape: 'floral' },
+  { key: 'talking-about', label: 'Talking About', desc: 'dual portrait · sliders · tropes', color: Colors.sageDeep, bg: Colors.sageSoft, tape: 'dot' },
+  { key: 'bond-banner', label: 'Bond Banner', desc: 'heart shield · personality bars', color: Colors.plum, bg: Colors.lavenderSoft, tape: 'heart' },
 ] as const;
 
 type Props = {
@@ -270,11 +270,11 @@ const s = StyleSheet.create({
     color: Colors.ink, textTransform: 'capitalize', flexShrink: 1,
   },
   styleChip: {
-    paddingHorizontal: 8, paddingVertical: 3,
-    backgroundColor: Colors.paperDeep, borderWidth: 1, borderColor: Colors.line,
+    paddingHorizontal: 10, paddingVertical: 4,
+    backgroundColor: Colors.sakuraSoft, borderWidth: 1, borderColor: Colors.sakura,
     borderRadius: Radius.pill,
   },
-  styleChipText: { fontFamily: FontFamily.marker, fontSize: 8, color: Colors.ink3, letterSpacing: 0.8 },
+  styleChipText: { fontFamily: FontFamily.uiMedium, fontSize: 10, color: Colors.sakuraDeep },
   exportBtn: {
     width: 32, height: 32, alignItems: 'center', justifyContent: 'center',
     backgroundColor: Colors.vellum, borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.pill,
@@ -293,7 +293,7 @@ const s = StyleSheet.create({
   sheetHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: Spacing.s4, borderBottomWidth: 1, borderBottomColor: Colors.line },
   sheetTitle: { fontFamily: FontFamily.displayItalic, fontSize: 17, color: Colors.ink },
   sheetClose: { fontSize: 13, color: Colors.ink3, fontFamily: FontFamily.ui },
-  sheetSub: { fontFamily: FontFamily.ui, fontSize: 11, color: Colors.ink3, paddingHorizontal: Spacing.s5, paddingTop: Spacing.s3, paddingBottom: Spacing.s1 },
+  sheetSub: { fontFamily: FontFamily.script, fontSize: 11, color: Colors.ink3, paddingHorizontal: Spacing.s5, paddingTop: Spacing.s3, paddingBottom: Spacing.s1 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, padding: Spacing.s5 },
   tplCard: {
     width: '47%', padding: Spacing.s3, borderRadius: Radius.r3,

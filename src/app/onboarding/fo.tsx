@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Bullets, Sparkle, StickerWaxSeal, WashiTape } from '@/components/deco';
+import { Bullets, Sparkle, StickerWaxSeal } from '@/components/deco';
 import { ThoughtCloud } from '@/components/ui';
 import { Button } from '@/components/ui/Button';
 import { Mark } from '@/components/ui/Mark';
@@ -88,11 +88,6 @@ export default function OnbFO() {
 
         {/* Premium redesign card containing all fields in step two */}
         <View style={styles.card}>
-          {/* washi tape corner overlay */}
-          <View style={{ position: 'absolute', top: -7, left: -6, zIndex: 10 }}>
-            <WashiTape width={56} height={14} pattern="heart" color={selectedPalette.start} rotate={-6} />
-          </View>
-
           {/* SHIP NAME field */}
           <View style={{ marginBottom: 20 }}>
             <Text style={styles.fieldLabel}>SHIP NAME · what you call this</Text>
@@ -100,7 +95,7 @@ export default function OnbFO() {
               <TextInput
                 value={shipName}
                 onChangeText={handleShipName}
-                placeholder="e.g. Mei x Kuroo"
+                placeholder="e.g. kurotsuki"
                 placeholderTextColor={Colors.ink3}
                 style={{ flex: 1, paddingVertical: 0, fontFamily: FontFamily.ui, fontSize: 18, color: Colors.ink, height: 28 }}
               />
@@ -131,9 +126,6 @@ export default function OnbFO() {
               <Text style={{ color: '#ffffff', fontFamily: FontFamily.displayItalic, fontSize: 36, fontWeight: 'bold' }}>
                 {foName.charAt(0).toUpperCase() || '♡'}
               </Text>
-              <View style={{ position: 'absolute', top: -4, left: -8, zIndex: 15 }}>
-                <WashiTape pattern="heart" width={28} height={10} color={selectedPalette.start} rotate={-8} />
-              </View>
             </LinearGradient>
 
             <View style={{ flex: 1, gap: 8 }}>

@@ -25,60 +25,26 @@ export default function TermsScreen() {
       >
         <Text style={styles.updated}>Last updated: May 27, 2025</Text>
 
-        <Section title="1. Acceptance of Terms">
-          By downloading, installing, or using Yumeship ("App"), you agree to be bound by these
-          Terms of Service. If you do not agree, please do not use the App.
+        <Section title="Licensed Application EULA">
+          Yumeship is licensed to you under Apple's standard End User License Agreement (EULA).
+          The EULA applies to your use of this App and is available at:
+          https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
         </Section>
 
-        <Section title="2. Use of the App">
-          Yumeship is a personal creative companion app intended for users 13 years of age and
-          older. You agree to use the App only for lawful, personal, non-commercial purposes.
-          You are solely responsible for any content you create within the App.
+        <Section title="Subscriptions">
+          Yumeship Premium is an auto-renewable subscription sold through Apple's App Store.
+          Payment is charged to your Apple ID at confirmation of purchase. Subscriptions renew
+          automatically unless cancelled at least 24 hours before the end of the current period.
+          Manage or cancel anytime in your Apple ID Account Settings.
         </Section>
 
-        <Section title="3. Subscriptions & Payments">
-          Yumeship offers auto-renewable subscriptions through Apple's App Store. Subscription
-          prices and available plans are displayed in the App and may change. Payment is charged
-          to your Apple ID at confirmation of purchase. Subscriptions renew automatically unless
-          cancelled at least 24 hours before the end of the current period. You can manage and
-          cancel subscriptions in your Apple ID Account Settings. No refunds are provided for
-          unused portions of a subscription period, except as required by applicable law.
+        <Section title="Your Content">
+          Everything you create in Yumeship — ships, letters, headcanons — stays on your device.
+          We have no access to it. It belongs entirely to you.
         </Section>
 
-        <Section title="4. Free Trials">
-          Free trials, where offered, are available to new subscribers only. If you do not cancel
-          before the trial ends, you will be charged the standard subscription price. Trial
-          eligibility is determined at runtime by our payment processor (RevenueCat).
-        </Section>
-
-        <Section title="5. Intellectual Property">
-          The App and its original content, features, and functionality are owned by Yumeship and
-          are protected by applicable intellectual property laws. Content you create inside the App
-          remains yours. You grant us no rights to your creative content.
-        </Section>
-
-        <Section title="6. Privacy">
-          Your use of the App is also governed by our Privacy Policy. All personal data is
-          processed in accordance with that policy.
-        </Section>
-
-        <Section title="7. Disclaimer of Warranties">
-          The App is provided "as is" without warranties of any kind, express or implied. We do
-          not warrant that the App will be uninterrupted, error-free, or free of viruses.
-        </Section>
-
-        <Section title="8. Limitation of Liability">
-          To the fullest extent permitted by law, Yumeship shall not be liable for any indirect,
-          incidental, special, or consequential damages arising from your use of the App.
-        </Section>
-
-        <Section title="9. Changes to Terms">
-          We reserve the right to update these Terms at any time. Continued use of the App after
-          changes constitutes acceptance of the new Terms.
-        </Section>
-
-        <Section title="10. Contact">
-          For questions about these Terms, contact us at: support@yumeship.app
+        <Section title="Contact">
+          Questions? Reach us at: support@yumeship.app
         </Section>
       </ScrollView>
     </View>
