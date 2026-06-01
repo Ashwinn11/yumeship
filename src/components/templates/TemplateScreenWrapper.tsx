@@ -8,7 +8,6 @@ import { WashiTape } from '@/components/deco/WashiTape';
 import { CozyModal } from '@/components/ui/CozyModal';
 import { IconExport } from '@/components/ui/Icon';
 import { Colors, FontFamily, Radius, Shadow, Spacing } from '@/constants/theme';
-import { usePremium } from '@/store/premium';
 import { getShip, updateShip } from '@/store/ships';
 import { TemplateDataCtx, buildPreFill, loadTemplateData, migrateTemplateData, saveTemplateData } from '@/store/templateData';
 import { router } from 'expo-router';
@@ -37,7 +36,6 @@ type Props = {
 export function TemplateScreenWrapper({ templateKey, shipId, children }: Props) {
   const insets = useSafeAreaInsets();
   const ship = shipId ? getShip(shipId) : undefined;
-  const premium = usePremium();
   const [showPicker, setShowPicker] = useState(false);
   const [selected, setSelected] = useState(templateKey);
   const [confirming, setConfirming] = useState(false);
@@ -74,7 +72,6 @@ export function TemplateScreenWrapper({ templateKey, shipId, children }: Props) 
   }), [shipId, templateKey]);
 
   async function exportImage() {
-    if (!premium) { router.push('/paywall'); return; }
     if (!exportRef.current) return;
     setExporting(true);
     try {

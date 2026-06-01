@@ -337,17 +337,17 @@ export default function PaywallScreen() {
         </View>
 
         {/* Title */}
-        <Text style={styles.heroTitle}>{'your F/O deserves\nthe full vault ♡'}</Text>
+        <Text style={styles.heroTitle}>{'ship more than one\nF/O at a time ♡'}</Text>
         <Text style={styles.heroSub}>
-          every ship, every story, no limits.
+          unlimited ships, every story, no limits.
         </Text>
 
         {/* Features card */}
         <View style={styles.featCard}>
           {[
             { icon: '♡', label: 'Unlimited ships — all your F/Os' },
-            { icon: '♡', label: 'Unlimited scenarios — no story caps' },
-            { icon: '♡', label: 'Albums, Storyline & Love Letters' },
+            { icon: '♡', label: 'Full vault for every ship' },
+            { icon: '♡', label: 'Scenarios, Albums & Love Letters' },
             { icon: '♡', label: 'F/O notifications & date reminders' },
             { icon: '♡', label: 'Export & share templates to camera roll' },
           ].map((f, i, arr) => (

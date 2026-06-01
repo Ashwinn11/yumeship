@@ -1,4 +1,4 @@
-import { router, useNavigation } from 'expo-router';
+import { useNavigation } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
   Image, KeyboardAvoidingView, Platform, Pressable,
@@ -22,7 +22,7 @@ import { StorylineTab } from '@/components/tabs/StorylineTab';
 import { ThisOrThatTab } from '@/components/tabs/ThisOrThatTab';
 import { INK, SquareCheck } from '@/components/templates/primitives';
 import { CozyModal } from '@/components/ui/CozyModal';
-import { IconChevronLeft, IconLockSolid, IconPlus, IconTrashSolid } from '@/components/ui/Icon';
+import { IconChevronLeft, IconPlus, IconTrashSolid } from '@/components/ui/Icon';
 import { Mark } from '@/components/ui/Mark';
 import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing } from '@/constants/theme';
 import { addFoMessage, deleteFoMessage, toggleFoMessage, updateFoMessage, useFoMessages } from '@/store/foNotifications';
@@ -30,7 +30,6 @@ import { addHeadcanon, clearCategoryHeadcanons, deleteHeadcanon, updateHeadcanon
 import { requestPermission } from '@/store/notifications';
 import { getGlobalSetting, saveGlobalSetting } from '@/store/onboarding';
 import { addScenario, deleteScenario, updateScenario, useScenarios } from '@/store/scenarios';
-import { usePremium } from '@/store/premium';
 import { useShips } from '@/store/ships';
 import { loadTemplateData, saveTemplateData } from '@/store/templateData';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -47,24 +46,23 @@ type Feature =
   | 'this-or-that'
   | 'love-letter';
 
-const FEATURES: { id: Feature; ja: string; label: string; desc: string; color: string; bg: string; premium: boolean }[] = [
-  { id: 'headcanons', ja: '想', label: 'Headcanons', desc: 'personality · habits · favorites', color: Colors.sakuraDeep, bg: Colors.sakuraSoft, premium: false },
-  { id: 'scenarios', ja: '物', label: 'Scenarios', desc: 'write your stories', color: Colors.lavenderDeep, bg: Colors.lavenderSoft, premium: false },
-  { id: 'messages', ja: '話', label: 'Messages', desc: 'conversations & threads', color: Colors.peachDeep, bg: Colors.peachSoft, premium: false },
-  { id: 'albums', ja: '写', label: 'Albums', desc: 'photo collections', color: Colors.sageDeep, bg: Colors.sageSoft, premium: true },
-  { id: 'boundaries', ja: '夢', label: 'Boundaries', desc: 'sharing rules & what\'s ok', color: Colors.plum, bg: Colors.lavenderSoft, premium: false },
-  { id: 'storyline', ja: '時', label: 'Storyline', desc: 'timeline of moments', color: Colors.ink2, bg: Colors.paperDeep, premium: true },
-  { id: 'dates', ja: '日', label: 'Dates', desc: 'anniversaries & events', color: Colors.peachDeep, bg: Colors.peachSoft, premium: true },
-  { id: 'fo-messages', ja: '通', label: 'F/O Notifications', desc: 'notes & nudges from them', color: Colors.sakuraInk, bg: Colors.sakuraSoft, premium: true },
-  { id: 'this-or-that', ja: '択', label: 'This or That', desc: 'how do they choose?', color: Colors.lavenderDeep, bg: Colors.lavenderSoft, premium: false },
-  { id: 'love-letter', ja: '文', label: 'Love Letters', desc: 'letters to & from them', color: Colors.sakuraDeep, bg: Colors.sakuraSoft, premium: true },
+const FEATURES: { id: Feature; ja: string; label: string; desc: string; color: string; bg: string }[] = [
+  { id: 'headcanons', ja: '想', label: 'Headcanons', desc: 'personality · habits · favorites', color: Colors.sakuraDeep, bg: Colors.sakuraSoft },
+  { id: 'scenarios', ja: '物', label: 'Scenarios', desc: 'write your stories', color: Colors.lavenderDeep, bg: Colors.lavenderSoft },
+  { id: 'messages', ja: '話', label: 'Messages', desc: 'conversations & threads', color: Colors.peachDeep, bg: Colors.peachSoft },
+  { id: 'albums', ja: '写', label: 'Albums', desc: 'photo collections', color: Colors.sageDeep, bg: Colors.sageSoft },
+  { id: 'boundaries', ja: '夢', label: 'Boundaries', desc: 'sharing rules & what\'s ok', color: Colors.plum, bg: Colors.lavenderSoft },
+  { id: 'storyline', ja: '時', label: 'Storyline', desc: 'timeline of moments', color: Colors.ink2, bg: Colors.paperDeep },
+  { id: 'dates', ja: '日', label: 'Dates', desc: 'anniversaries & events', color: Colors.peachDeep, bg: Colors.peachSoft },
+  { id: 'fo-messages', ja: '通', label: 'F/O Notifications', desc: 'notes & nudges from them', color: Colors.sakuraInk, bg: Colors.sakuraSoft },
+  { id: 'this-or-that', ja: '択', label: 'This or That', desc: 'how do they choose?', color: Colors.lavenderDeep, bg: Colors.lavenderSoft },
+  { id: 'love-letter', ja: '文', label: 'Love Letters', desc: 'letters to & from them', color: Colors.sakuraDeep, bg: Colors.sakuraSoft },
 ];
 
 export default function VaultScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const ships = useShips();
-  const premium = usePremium();
   const [selectedShipIdx, setSelectedShipIdx] = useState(0);
   const [activeFeature, setActiveFeature] = useState<Feature | null>(null);
   const [showShipPicker, setShowShipPicker] = useState(false);
@@ -186,28 +184,17 @@ export default function VaultScreen() {
         </View>
       ) : (
         <ScrollView contentContainerStyle={styles.grid} showsVerticalScrollIndicator={false}>
-          {FEATURES.map((f) => {
-            const locked = f.premium && !premium;
-            return (
-              <Pressable
-                key={f.id}
-                style={[styles.featureCard, { backgroundColor: f.bg }, locked && styles.featureCardLocked]}
-                onPress={() => {
-                  if (locked) { router.push('/paywall'); return; }
-                  setActiveFeature(f.id);
-                }}
-              >
-                <Text style={[styles.featureJa, { color: f.color }, locked && styles.featureTextLocked]}>{f.ja}</Text>
-                <Text style={[styles.featureLabel, { color: f.color }, locked && styles.featureTextLocked]}>{f.label}</Text>
-                <Text style={[styles.featureDesc, locked && styles.featureTextLocked]}>{f.desc}</Text>
-                {locked && (
-                  <View style={styles.lockBadge}>
-                    <IconLockSolid size={9} color={Colors.ink3} />
-                  </View>
-                )}
-              </Pressable>
-            );
-          })}
+          {FEATURES.map((f) => (
+            <Pressable
+              key={f.id}
+              style={[styles.featureCard, { backgroundColor: f.bg }]}
+              onPress={() => setActiveFeature(f.id)}
+            >
+              <Text style={[styles.featureJa, { color: f.color }]}>{f.ja}</Text>
+              <Text style={[styles.featureLabel, { color: f.color }]}>{f.label}</Text>
+              <Text style={styles.featureDesc}>{f.desc}</Text>
+            </Pressable>
+          ))}
         </ScrollView>
       )}
 
@@ -736,19 +723,12 @@ const SC_PROMPTS: { ja: string; label: string }[] = [
   { ja: '初', label: 'first meeting' },
 ];
 
-const FREE_SCENARIO_LIMIT = 3;
-
 function ScenariosFeature({ shipId, shipName, setCustomBack }: { shipId: string; shipName: string; setCustomBack: (fn: (() => void) | null) => void }) {
   const scenarios = useScenarios(shipId);
-  const premium = usePremium();
   const [editing, setEditing] = useState<{ id: string | null; title: string; body: string } | null>(null);
   const [scDeleteTarget, setScDeleteTarget] = useState<string | null>(null);
 
   function handleNewScenario(title = '', body = '') {
-    if (!premium && scenarios.length >= FREE_SCENARIO_LIMIT) {
-      router.push('/paywall');
-      return;
-    }
     setEditing({ id: null, title, body });
     setCustomBack(() => () => { setEditing(null); setCustomBack(null); });
   }
