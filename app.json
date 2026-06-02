@@ -16,6 +16,8 @@
       "supportsTablet": true,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleLocalizations": ["en", "ja", "ko", "zh-Hans", "zh-Hant"],
+        "CFBundleDevelopmentRegion": "en",
         "UISupportedInterfaceOrientations~ipad": [
           "UIInterfaceOrientationPortrait",
           "UIInterfaceOrientationPortraitUpsideDown",
