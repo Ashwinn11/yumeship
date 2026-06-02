@@ -68,7 +68,7 @@ function ThreadView({
   onBack?: () => void;
 }) {
   const insets = useSafeAreaInsets();
-  const { column } = useIPad();
+  const { isIPad } = useIPad();
   const ship = useShip(shipId);
   const gradStart = ship?.gradStart ?? Colors.sakura;
   const gradEnd = ship?.gradEnd ?? Colors.sakuraDeep;
@@ -120,7 +120,7 @@ function ThreadView({
 
       {/* ── Header ── */}
       <View
-        style={[{
+        style={{
           flexDirection: 'row',
           alignItems: 'center',
           gap: 10,
@@ -132,7 +132,7 @@ function ThreadView({
           backgroundColor: Colors.paper,
           zIndex: 10,
           overflow: 'visible',
-        }, column]}
+        }}
       >
         {/* Washi tape strip across top edge of header */}
         <View style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 20 }} pointerEvents="none">
@@ -233,7 +233,7 @@ function ThreadView({
         <ScrollView
           ref={scrollRef}
           style={s.bubbleScroll}
-          contentContainerStyle={[s.bubbleContent, column, messages.length === 0 && { flexGrow: 1, justifyContent: 'center' }]}
+          contentContainerStyle={[s.bubbleContent, messages.length === 0 && { flexGrow: 1, justifyContent: 'center' }]}
           showsVerticalScrollIndicator={false}
         >
           {messages.length === 0 ? (
