@@ -2,8 +2,8 @@
   "expo": {
     "name": "Yumeship",
     "slug": "yumeship",
-    "version": "1.0.0",
-    "orientation": "portrait",
+    "version": "1.0.1",
+    "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "yumeship",
     "userInterfaceStyle": "automatic",
@@ -13,9 +13,15 @@
     "ios": {
       "icon": "./assets/images/icon.png",
       "bundleIdentifier": "com.yumeship.app",
-      "supportsTablet": false,
+      "supportsTablet": true,
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "UISupportedInterfaceOrientations~ipad": [
+          "UIInterfaceOrientationPortrait",
+          "UIInterfaceOrientationPortraitUpsideDown",
+          "UIInterfaceOrientationLandscapeLeft",
+          "UIInterfaceOrientationLandscapeRight"
+        ]
       }
     },
     "runtimeVersion": {
