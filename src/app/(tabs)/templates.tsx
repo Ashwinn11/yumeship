@@ -6,7 +6,7 @@ import { Mark } from '@/components/ui/Mark';
 import { Ribbon } from '@/components/deco/Ribbon';
 import { WashiTape } from '@/components/deco/WashiTape';
 import { Sparkle } from '@/components/deco/Sparkle';
-import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing } from '@/constants/theme';
+import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing ,sf } from '@/constants/theme';
 
 const TEMPLATES = [
   { key: 'get-to-know', title: 'Get to Know Them',   tapePattern: 'heart'  as const, color: Colors.sakuraDeep, bg: Colors.sakuraSoft },
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: FontFamily.displayItalic,
-    fontSize: 34,
+    fontSize: sf(34),
     lineHeight: 34,
     letterSpacing: -0.4,
     color: Colors.ink,
@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontFamily: FontFamily.markerBold,
-    fontSize: 13,
+    fontSize: sf(13),
     lineHeight: 17,
     textTransform: 'uppercase',
     letterSpacing: 0.3,

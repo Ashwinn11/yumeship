@@ -9,7 +9,7 @@ import Svg, { Path, Defs, ClipPath, Image as SvgImage } from 'react-native-svg';
 import * as ImagePicker from 'expo-image-picker';
 import { Ribbon } from '@/components/deco/Ribbon';
 import { useTemplateCtx } from '@/store/templateData';
-import { Colors, FontFamily } from '@/constants/theme';
+import { Colors, FontFamily ,sf } from '@/constants/theme';
 import { DateField, calcElapsed } from '@/components/ui/DateField';
 
 const SLIDERS = [
@@ -148,7 +148,7 @@ export function BondBannerContent({ editing = false }: { editing?: boolean }) {
           editing={e}
           placeholder="pick a date"
           style={{ borderWidth: 0, backgroundColor: 'transparent', paddingHorizontal: 0, height: 'auto', justifyContent: 'center' }}
-          textStyle={{ fontFamily: FontFamily.script, fontSize: 18, color: INK }}
+          textStyle={{ fontFamily: FontFamily.script, fontSize: sf(18), color: INK }}
           displayValue={(() => {
             const el = calcElapsed(vals.anniv);
             return el ? `${el.since}  ·  ${el.label}` : undefined;
@@ -202,30 +202,30 @@ const s = StyleSheet.create({
     borderRadius: 14,
     alignItems: 'center',
   },
-  bannerSmall: { fontFamily: FontFamily.markerBold, fontSize: 10, color: INK },
-  bannerBig: { fontFamily: FontFamily.markerBold, fontSize: 13, color: INK },
+  bannerSmall: { fontFamily: FontFamily.markerBold, fontSize: sf(10), color: INK },
+  bannerBig: { fontFamily: FontFamily.markerBold, fontSize: sf(13), color: INK },
   ribbonRow: { flexDirection: 'row', gap: 8, marginTop: 2 },
   shieldWrap: { alignSelf: 'center', marginVertical: -30, zIndex: 0 },
   aboutCols: { flexDirection: 'row', gap: 10, zIndex: 2, position: 'relative' },
   aboutCol: { flex: 1, gap: 4 },
-  aboutHeader: { fontFamily: FontFamily.markerBold, fontSize: 9, color: INK },
+  aboutHeader: { fontFamily: FontFamily.markerBold, fontSize: sf(9), color: INK },
   aboutField: { backgroundColor: 'rgba(255,255,255,0.6)', borderWidth: 1.5, borderColor: INK, borderRadius: 8, padding: 6, gap: 2 },
-  aboutFieldLabel: { fontFamily: FontFamily.markerBold, fontSize: 7, color: INK, letterSpacing: 0.4 },
+  aboutFieldLabel: { fontFamily: FontFamily.markerBold, fontSize: sf(7), color: INK, letterSpacing: 0.4 },
   aboutFieldVal: { height: 16, backgroundColor: 'transparent', borderWidth: 0 },
-  aboutFieldValText: { fontFamily: FontFamily.script, fontSize: 14, color: INK },
+  aboutFieldValText: { fontFamily: FontFamily.script, fontSize: sf(14), color: INK },
   annivBox: {
     backgroundColor: 'rgba(255,255,255,0.6)',
     borderWidth: 1.5, borderColor: INK,
     borderRadius: 10, padding: 10,
     alignItems: 'center',
   },
-  annivLabel: { fontFamily: FontFamily.markerBold, fontSize: 9, color: INK },
+  annivLabel: { fontFamily: FontFamily.markerBold, fontSize: sf(9), color: INK },
   annivInput: { marginTop: 2, alignSelf: 'center' },
-  annivText: { fontFamily: FontFamily.script, fontSize: 18, color: INK, marginTop: 2 },
+  annivText: { fontFamily: FontFamily.script, fontSize: sf(18), color: INK, marginTop: 2 },
   shieldHint:     { position: 'absolute', top: '35%', alignSelf: 'center' },
-  shieldHintText: { fontSize: 18 },
+  shieldHintText: { fontSize: sf(18) },
   sliderGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   sliderItem: { width: '47%' },
   sliderLabelRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 2 },
-  sliderSide: { fontFamily: FontFamily.markerBold, fontSize: 7.5, color: INK },
+  sliderSide: { fontFamily: FontFamily.markerBold, fontSize: sf(8), color: INK },
 });

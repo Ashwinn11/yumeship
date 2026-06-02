@@ -1,4 +1,4 @@
-import { Colors, FontFamily, FontSize, Radius } from '@/constants/theme';
+import { Colors, FontFamily, FontSize, Radius ,sf } from '@/constants/theme';
 import { StyleSheet, Text, View } from 'react-native';
 
 // design/screens.jsx — MiniHC
@@ -38,14 +38,14 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   label: {
-    fontSize: 10,
+    fontSize: sf(10),
     color: Colors.ink2,
     fontWeight: '500',
     fontFamily: FontFamily.ui,
   },
   count: {
     fontFamily: FontFamily.marker,
-    fontSize: 9,
+    fontSize: sf(9),
     fontWeight: '600',
   },
 });

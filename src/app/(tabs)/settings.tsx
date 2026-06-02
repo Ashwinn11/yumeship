@@ -19,7 +19,7 @@ import {
 } from '@/components/ui';
 import { Mark } from '@/components/ui/Mark';
 import { Toggle } from '@/components/ui/Toggle';
-import { Colors, FontFamily, FontSize, Radius, Spacing } from '@/constants/theme';
+import { Colors, FontFamily, FontSize, Radius, Spacing ,sf } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
 import {
   getNotifEnabled, requestPermission, setNotifEnabled,
@@ -53,10 +53,10 @@ function SettingGroup({
 const group = StyleSheet.create({
   wrap: { gap: 5 },
   labelRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  ja: { fontFamily: FontFamily.ja, fontSize: 11, color: Colors.sakuraDeep, fontWeight: '600' },
+  ja: { fontFamily: FontFamily.ja, fontSize: sf(11), color: Colors.sakuraDeep, fontWeight: '600' },
   name: {
     fontFamily: FontFamily.marker,
-    fontSize: 9,
+    fontSize: sf(9),
     color: Colors.ink3,
     letterSpacing: 1.4,
     textTransform: 'uppercase',
@@ -131,7 +131,7 @@ function MetaText({ children }: { children: string }) {
   return <Text style={meta.text}>{children}</Text>;
 }
 const meta = StyleSheet.create({
-  text: { fontSize: 11, color: Colors.ink3, fontFamily: FontFamily.ui },
+  text: { fontSize: sf(11), color: Colors.ink3, fontFamily: FontFamily.ui },
 });
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
@@ -323,7 +323,7 @@ const styles = StyleSheet.create({
   },
   version: {
     fontFamily: FontFamily.marker,
-    fontSize: 10,
+    fontSize: sf(10),
     color: Colors.ink3,
     letterSpacing: 1.2,
   },
@@ -335,7 +335,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: FontFamily.displayItalic,
-    fontSize: 34,
+    fontSize: sf(34),
     lineHeight: 34,
     letterSpacing: -0.4,
     color: Colors.ink,

@@ -8,7 +8,7 @@ import { ShipCard } from '@/components/cards/ShipCard';
 import { Button } from '@/components/ui/Button';
 import { IconBell, IconJournalOutline } from '@/components/ui/Icon';
 import { StepDots } from '@/components/ui/StepDots';
-import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing } from '@/constants/theme';
+import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing ,sf } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
 import { getOnbState, requestReviewIfEligible, resetOnb } from '@/store/onboarding';
 import { requestPermission } from '@/store/notifications';
@@ -178,7 +178,7 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: Spacing.s6, paddingTop: Spacing.s6, paddingBottom: Spacing.s4 },
   eyebrow: {
     fontFamily: FontFamily.marker,
-    fontSize: 10,
+    fontSize: sf(10),
     color: Colors.sakuraDeep,
     letterSpacing: 1.6,
     textTransform: 'uppercase',
@@ -186,12 +186,12 @@ const styles = StyleSheet.create({
   },
   heading: {
     fontFamily: FontFamily.displayItalic,
-    fontSize: 31,
+    fontSize: sf(31),
     lineHeight: 33,
     color: Colors.ink,
     marginTop: Spacing.s2,
   },
-  subcopy: { fontFamily: FontFamily.script, fontSize: 18, lineHeight: 22, color: Colors.ink2, marginTop: Spacing.s3 },
+  subcopy: { fontFamily: FontFamily.script, fontSize: sf(18), lineHeight: 22, color: Colors.ink2, marginTop: Spacing.s3 },
   cardWrap: { marginTop: Spacing.s5 },
   shipPreview: {
     width: 156,
@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
   },
   notifText: { flex: 1 },
   notifTitle: { fontFamily: FontFamily.uiSemiBold, fontSize: FontSize.caption, color: Colors.ink },
-  notifBody: { fontFamily: FontFamily.ui, fontSize: 11, lineHeight: 14, color: Colors.ink3, marginTop: 1 },
+  notifBody: { fontFamily: FontFamily.ui, fontSize: sf(11), lineHeight: 14, color: Colors.ink3, marginTop: 1 },
   notifBtn: {
     paddingHorizontal: Spacing.s3,
     paddingVertical: Spacing.s2,
@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.lavender,
   },
-  notifBtnText: { fontFamily: FontFamily.uiMedium, fontSize: 11, color: Colors.lavenderDeep },
+  notifBtnText: { fontFamily: FontFamily.uiMedium, fontSize: sf(11), color: Colors.lavenderDeep },
   actions: { paddingHorizontal: Spacing.s6, paddingBottom: Spacing.s3, gap: Spacing.s2 },
   skipPressable: { alignItems: 'center' },
   skip: { fontFamily: FontFamily.ui, fontSize: FontSize.meta, color: Colors.ink3, textDecorationLine: 'underline' },

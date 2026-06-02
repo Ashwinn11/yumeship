@@ -11,7 +11,7 @@ import { StickerSakuraFlower, StickerSparkle, WashiTape } from '@/components/dec
 import { CozyModal } from '@/components/ui/CozyModal';
 import { IconLockSolid, IconPlus, IconSearch } from '@/components/ui/Icon';
 import { Mark } from '@/components/ui/Mark';
-import { Colors, FontFamily, FontSize, Radius, Spacing } from '@/constants/theme';
+import { Colors, FontFamily, FontSize, Radius, Spacing ,sf } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
 import { resetOnb } from '@/store/onboarding';
 import { usePremium } from '@/store/premium';
@@ -125,10 +125,10 @@ export default function HomeScreen() {
       {ships.length === 0 ? (
         <View style={[styles.emptyState, { paddingVertical: 60, paddingHorizontal: 20, gap: 12 }]}>
           <StickerSakuraFlower size={88} />
-          <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: 26, color: Colors.ink, textAlign: 'center', marginTop: 10 }}>
+          <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: sf(26), color: Colors.ink, textAlign: 'center', marginTop: 10 }}>
             no ships yet
           </Text>
-          <Text style={{ fontFamily: FontFamily.script, fontSize: 18, lineHeight: 22, color: Colors.ink2, textAlign: 'center', marginVertical: 8 }}>
+          <Text style={{ fontFamily: FontFamily.script, fontSize: sf(18), lineHeight: 22, color: Colors.ink2, textAlign: 'center', marginVertical: 8 }}>
             your first F/O is waiting —{"\n"}let's build your notebook.
           </Text>
           <Pressable
@@ -150,7 +150,7 @@ export default function HomeScreen() {
             onPress={handleNewShip}
           >
             <IconPlus size={12} color={Colors.vellum} />
-            <Text style={{ fontFamily: FontFamily.uiMedium, fontSize: 14, color: Colors.vellum }}>start a new ship</Text>
+            <Text style={{ fontFamily: FontFamily.uiMedium, fontSize: sf(14), color: Colors.vellum }}>start a new ship</Text>
           </Pressable>
         </View>
       ) : filteredShips.length === 0 ? (
@@ -165,10 +165,10 @@ export default function HomeScreen() {
         >
           <View style={[styles.emptyState, { paddingVertical: 60, paddingHorizontal: 20, gap: 12 }]}>
             <StickerSakuraFlower size={88} />
-            <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: 26, color: Colors.ink, textAlign: 'center', marginTop: 10 }}>
+            <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: sf(26), color: Colors.ink, textAlign: 'center', marginTop: 10 }}>
               no ships found
             </Text>
-            <Text style={{ fontFamily: FontFamily.script, fontSize: 18, lineHeight: 22, color: Colors.ink2, textAlign: 'center', marginVertical: 8 }}>
+            <Text style={{ fontFamily: FontFamily.script, fontSize: sf(18), lineHeight: 22, color: Colors.ink2, textAlign: 'center', marginVertical: 8 }}>
               try adjusting your search term —{"\n"}they are out there.
             </Text>
           </View>
@@ -241,8 +241,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.sakuraSoft,
   },
   titleRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 10, marginTop: Spacing.s4 },
-  title: { fontFamily: FontFamily.displayItalic, fontSize: 38, lineHeight: 38, letterSpacing: -0.4, color: Colors.ink },
-  meta: { fontFamily: FontFamily.marker, fontSize: 10, color: Colors.ink3, letterSpacing: 1.2, marginTop: Spacing.s2 },
+  title: { fontFamily: FontFamily.displayItalic, fontSize: sf(38), lineHeight: 38, letterSpacing: -0.4, color: Colors.ink },
+  meta: { fontFamily: FontFamily.marker, fontSize: sf(10), color: Colors.ink3, letterSpacing: 1.2, marginTop: Spacing.s2 },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
   },
   clearBtnText: {
     fontFamily: FontFamily.uiMedium,
-    fontSize: 10,
+    fontSize: sf(10),
     color: Colors.ink3,
   },
   pressableBg: {
@@ -300,7 +300,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.sakuraSoft, alignItems: 'center', justifyContent: 'center',
   },
   addText: {
-    fontFamily: FontFamily.displayItalic, fontSize: 14, fontStyle: 'italic',
+    fontFamily: FontFamily.displayItalic, fontSize: sf(14), fontStyle: 'italic',
     color: Colors.ink2, textAlign: 'center', paddingHorizontal: 8, lineHeight: 18,
   },
   emptyState: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: Spacing.s3, paddingBottom: Spacing.s9 },

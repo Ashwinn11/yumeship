@@ -8,7 +8,7 @@ import { Sparkle } from '@/components/deco/Sparkle';
 import { StickerSakuraFlower, StickerWaxSeal } from '@/components/deco/Stickers';
 import { WashiTape } from '@/components/deco/WashiTape';
 import { Button } from '@/components/ui/Button';
-import { Colors, FontFamily, FontSize, Spacing } from '@/constants/theme';
+import { Colors, FontFamily, FontSize, Spacing ,sf } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
 
 export default function OnbWelcome() {
@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: FontFamily.displayItalic,
-    fontSize: 56,
+    fontSize: sf(56),
     lineHeight: 54,
     letterSpacing: -1,
     color: Colors.ink,
@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
   },
   ja: {
     fontFamily: FontFamily.ja,
-    fontSize: 14,
+    fontSize: sf(14),
     color: Colors.ink2,
     textAlign: 'center',
     marginTop: Spacing.s2,

@@ -8,7 +8,7 @@ import { Star } from '@/components/deco/Star';
 import { WashiTape } from '@/components/deco/WashiTape';
 import { CozyModal } from '@/components/ui/CozyModal';
 import { IconExport } from '@/components/ui/Icon';
-import { Colors, FontFamily, Radius, Shadow, Spacing } from '@/constants/theme';
+import { Colors, FontFamily, Radius, Shadow, Spacing ,sf } from '@/constants/theme';
 import { getShip, updateShip } from '@/store/ships';
 import { TemplateDataCtx, buildPreFill, loadTemplateData, migrateTemplateData, saveTemplateData } from '@/store/templateData';
 import { router } from 'expo-router';
@@ -262,10 +262,10 @@ const s = StyleSheet.create({
     width: 32, height: 32, alignItems: 'center', justifyContent: 'center',
     backgroundColor: Colors.vellum, borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.pill,
   },
-  backText: { fontSize: 20, lineHeight: 20, color: Colors.ink2, fontFamily: FontFamily.ui, includeFontPadding: false },
+  backText: { fontSize: sf(20), lineHeight: 20, color: Colors.ink2, fontFamily: FontFamily.ui, includeFontPadding: false },
   nameArea: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 },
   nameText: {
-    fontFamily: FontFamily.displayItalic, fontSize: 18,
+    fontFamily: FontFamily.displayItalic, fontSize: sf(18),
     color: Colors.ink, textTransform: 'capitalize', flexShrink: 1,
   },
   styleChip: {
@@ -273,13 +273,13 @@ const s = StyleSheet.create({
     backgroundColor: Colors.sakuraSoft, borderWidth: 1, borderColor: Colors.sakura,
     borderRadius: Radius.pill,
   },
-  styleChipText: { fontFamily: FontFamily.uiMedium, fontSize: 10, color: Colors.sakuraDeep },
+  styleChipText: { fontFamily: FontFamily.uiMedium, fontSize: sf(10), color: Colors.sakuraDeep },
   exportBtn: {
     width: 32, height: 32, alignItems: 'center', justifyContent: 'center',
     backgroundColor: Colors.vellum, borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.pill,
   },
   saveBtn: { paddingHorizontal: 14, paddingVertical: 7, backgroundColor: Colors.sakuraDeep, borderRadius: 999 },
-  saveBtnText: { fontFamily: FontFamily.markerBold, fontSize: 12, color: Colors.vellum, letterSpacing: 0.3 },
+  saveBtnText: { fontFamily: FontFamily.markerBold, fontSize: sf(12), color: Colors.vellum, letterSpacing: 0.3 },
   scroll: { padding: Spacing.s5, paddingBottom: Spacing.s8 },
   exportCapture: { backgroundColor: Colors.paper },
   decoTL: { position: 'absolute', top: 130, left: 20 },
@@ -290,9 +290,9 @@ const s = StyleSheet.create({
   sheet: { backgroundColor: Colors.paper, borderTopLeftRadius: Radius.r5, borderTopRightRadius: Radius.r5, paddingBottom: 34 },
   sheetHandle: { width: 40, height: 4, backgroundColor: Colors.line, borderRadius: 2, alignSelf: 'center', marginTop: 10 },
   sheetHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: Spacing.s4, borderBottomWidth: 1, borderBottomColor: Colors.line },
-  sheetTitle: { fontFamily: FontFamily.displayItalic, fontSize: 17, color: Colors.ink },
-  sheetClose: { fontSize: 13, color: Colors.ink3, fontFamily: FontFamily.ui },
-  sheetSub: { fontFamily: FontFamily.script, fontSize: 11, color: Colors.ink3, paddingHorizontal: Spacing.s5, paddingTop: Spacing.s3, paddingBottom: Spacing.s1 },
+  sheetTitle: { fontFamily: FontFamily.displayItalic, fontSize: sf(17), color: Colors.ink },
+  sheetClose: { fontSize: sf(13), color: Colors.ink3, fontFamily: FontFamily.ui },
+  sheetSub: { fontFamily: FontFamily.script, fontSize: sf(11), color: Colors.ink3, paddingHorizontal: Spacing.s5, paddingTop: Spacing.s3, paddingBottom: Spacing.s1 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, padding: Spacing.s5 },
   tplCard: {
     width: '47%', padding: Spacing.s3, borderRadius: Radius.r3,
@@ -300,12 +300,12 @@ const s = StyleSheet.create({
     justifyContent: 'flex-end', overflow: 'hidden', ...Shadow.s1,
   },
   tplTape: { position: 'absolute', top: -2, left: 6 },
-  tplLabel: { fontFamily: FontFamily.uiSemiBold, fontSize: 12, marginBottom: 2 },
-  tplDesc: { fontFamily: FontFamily.ui, fontSize: 10, color: Colors.ink3, lineHeight: 14 },
+  tplLabel: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(12), marginBottom: 2 },
+  tplDesc: { fontFamily: FontFamily.ui, fontSize: sf(10), color: Colors.ink3, lineHeight: 14 },
   tplCheck: { position: 'absolute', top: 8, right: 8, width: 18, height: 18, borderRadius: Radius.pill, alignItems: 'center', justifyContent: 'center' },
-  tplCheckText: { fontSize: 10, color: Colors.vellum, fontFamily: FontFamily.uiSemiBold },
+  tplCheckText: { fontSize: sf(10), color: Colors.vellum, fontFamily: FontFamily.uiSemiBold },
   sheetActions: { paddingHorizontal: Spacing.s5, paddingTop: Spacing.s2 },
   applyBtn: { backgroundColor: Colors.sakuraDeep, borderRadius: Radius.pill, paddingVertical: 12, alignItems: 'center' },
   applyBtnDisabled: { backgroundColor: Colors.line },
-  applyBtnText: { fontFamily: FontFamily.uiMedium, fontSize: 15, color: Colors.vellum },
+  applyBtnText: { fontFamily: FontFamily.uiMedium, fontSize: sf(15), color: Colors.vellum },
 });

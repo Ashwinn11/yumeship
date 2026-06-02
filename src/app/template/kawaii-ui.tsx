@@ -8,7 +8,7 @@ import { KawaiiPanel, BlankPill, PhotoBox, INK } from '@/components/templates/pr
 import { Heart } from '@/components/deco/Heart';
 import { DateField, calcElapsed } from '@/components/ui/DateField';
 import { useTemplateCtx } from '@/store/templateData';
-import { FontFamily } from '@/constants/theme';
+import { FontFamily ,sf } from '@/constants/theme';
 
 const PINK_INK = '#9c2d5a';
 const PINK_BG = '#fbe7ee';
@@ -119,10 +119,10 @@ export function KawaiiUIContent({ editing = false }: { editing?: boolean }) {
                   placeholder="——"
                   placeholderTextColor={PINK_INK + '88'}
                   underlineColorAndroid="transparent"
-                  style={{ fontFamily: FontFamily.ja, fontSize: 13, color: PINK_INK, padding: 0, flex: 1, fontWeight: '600' }}
+                  style={{ fontFamily: FontFamily.ja, fontSize: sf(13), color: PINK_INK, padding: 0, flex: 1, fontWeight: '600' }}
                 />
               ) : (
-                <Text style={{ fontFamily: FontFamily.ja, fontSize: 13, color: PINK_INK, fontWeight: '600' }}>
+                <Text style={{ fontFamily: FontFamily.ja, fontSize: sf(13), color: PINK_INK, fontWeight: '600' }}>
                   {vals[label] || '——'}
                 </Text>
               )}
@@ -146,7 +146,7 @@ export function KawaiiUIContent({ editing = false }: { editing?: boolean }) {
                     format="birthday"
                     placeholder="pick date"
                     style={[s.infoVal, { backgroundColor: PINK_BG, borderColor: PANEL_EDGE, borderWidth: 1, borderRadius: 4 }]}
-                    textStyle={{ fontSize: 9, color: PINK_INK, fontFamily: FontFamily.ja }}
+                    textStyle={{ fontSize: sf(9), color: PINK_INK, fontFamily: FontFamily.ja }}
                   />
                 ) : e ? (
                   <TextInput
@@ -159,7 +159,7 @@ export function KawaiiUIContent({ editing = false }: { editing?: boolean }) {
                       s.infoVal,
                       s.infoValInput,
                       { backgroundColor: PINK_BG, borderColor: PANEL_EDGE },
-                      k === 'love language' && { fontSize: 8.5 }
+                      k === 'love language' && { fontSize: sf(9) }
                     ]}
                   />
                 ) : (
@@ -200,7 +200,7 @@ export function KawaiiUIContent({ editing = false }: { editing?: boolean }) {
       <KawaiiPanel edge={PANEL_EDGE} bg={PANEL_BG} style={s.mt10}>
         <View style={s.songRow}>
           <View style={[s.songIcon, { backgroundColor: PINK_BG, borderColor: PANEL_EDGE }]}>
-            <Text style={{ color: PINK_INK, fontSize: 16 }}>♪</Text>
+            <Text style={{ color: PINK_INK, fontSize: sf(16) }}>♪</Text>
           </View>
           <View style={s.songInfo}>
             <Text style={[s.kawaiiLabel, { color: PINK_INK }]}>theme song</Text>
@@ -213,10 +213,10 @@ export function KawaiiUIContent({ editing = false }: { editing?: boolean }) {
                   placeholder="song title"
                   placeholderTextColor={PINK_INK + '88'}
                   underlineColorAndroid="transparent"
-                  style={{ fontFamily: FontFamily.ja, fontSize: 13, color: PINK_INK, padding: 0, flex: 1, fontWeight: '600' }}
+                  style={{ fontFamily: FontFamily.ja, fontSize: sf(13), color: PINK_INK, padding: 0, flex: 1, fontWeight: '600' }}
                 />
               ) : (
-                <Text style={{ fontFamily: FontFamily.ja, fontSize: 13, color: PINK_INK, fontWeight: '600' }}>
+                <Text style={{ fontFamily: FontFamily.ja, fontSize: sf(13), color: PINK_INK, fontWeight: '600' }}>
                   {vals.song || '——'}
                 </Text>
               )}
@@ -239,10 +239,10 @@ export function KawaiiUIContent({ editing = false }: { editing?: boolean }) {
                     placeholder="trope"
                     placeholderTextColor={PINK_INK + '88'}
                     underlineColorAndroid="transparent"
-                    style={{ fontFamily: FontFamily.markerBold, fontSize: 9, color: PINK_INK, padding: 0, flex: 1, fontWeight: '700' }}
+                    style={{ fontFamily: FontFamily.markerBold, fontSize: sf(9), color: PINK_INK, padding: 0, flex: 1, fontWeight: '700' }}
                   />
                 ) : (
-                  <Text style={{ fontFamily: FontFamily.markerBold, fontSize: 9, color: PINK_INK, fontWeight: '700' }}>
+                  <Text style={{ fontFamily: FontFamily.markerBold, fontSize: sf(9), color: PINK_INK, fontWeight: '700' }}>
                     {vals[`trope${i}`] || '——'}
                   </Text>
                 )}
@@ -258,7 +258,7 @@ export function KawaiiUIContent({ editing = false }: { editing?: boolean }) {
               if (e) {
                 return (
                   <View style={{ marginTop: 6 }}>
-                    <Text style={{ fontFamily: FontFamily.markerBold, fontSize: 26, color: PINK_INK, lineHeight: 28 }}>
+                    <Text style={{ fontFamily: FontFamily.markerBold, fontSize: sf(26), color: PINK_INK, lineHeight: 28 }}>
                       {el ? el.label : '——'}
                     </Text>
                     <DateField
@@ -276,22 +276,22 @@ export function KawaiiUIContent({ editing = false }: { editing?: boolean }) {
                         justifyContent: 'flex-start',
                         marginTop: 2,
                       }}
-                      textStyle={{ fontFamily: FontFamily.marker, fontSize: 9.5, color: PINK_INK, opacity: 0.7 }}
+                      textStyle={{ fontFamily: FontFamily.marker, fontSize: sf(10), color: PINK_INK, opacity: 0.7 }}
                     />
                   </View>
                 );
               } else {
                 return el ? (
                   <View style={{ marginTop: 6 }}>
-                    <Text style={{ fontFamily: FontFamily.markerBold, fontSize: 26, color: PINK_INK, lineHeight: 28 }}>
+                    <Text style={{ fontFamily: FontFamily.markerBold, fontSize: sf(26), color: PINK_INK, lineHeight: 28 }}>
                       {el.label}
                     </Text>
-                    <Text style={{ fontFamily: FontFamily.marker, fontSize: 9.5, color: PINK_INK, opacity: 0.7, marginTop: 2 }}>
+                    <Text style={{ fontFamily: FontFamily.marker, fontSize: sf(10), color: PINK_INK, opacity: 0.7, marginTop: 2 }}>
                       since {el.since}
                     </Text>
                   </View>
                 ) : (
-                  <Text style={{ fontFamily: FontFamily.ja, fontSize: 11, color: PINK_INK }}>——</Text>
+                  <Text style={{ fontFamily: FontFamily.ja, fontSize: sf(11), color: PINK_INK }}>——</Text>
                 );
               }
             })()}
@@ -333,22 +333,22 @@ const s = StyleSheet.create({
     zIndex: 10,
   },
   titlePill: { backgroundColor: '#9c2d5a', paddingHorizontal: 18, paddingVertical: 5, borderRadius: 999 },
-  titlePillText: { fontFamily: FontFamily.markerBold, fontWeight: '700', fontSize: 18, color: '#fff', letterSpacing: 0.5 },
+  titlePillText: { fontFamily: FontFamily.markerBold, fontWeight: '700', fontSize: sf(18), color: '#fff', letterSpacing: 0.5 },
   statRow: { flexDirection: 'row', gap: 8, marginTop: 58 },
   statPanel: { flex: 1 },
-  kawaiiLabel: { fontFamily: FontFamily.markerBold, fontSize: 8, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', opacity: 0.7 },
+  kawaiiLabel: { fontFamily: FontFamily.markerBold, fontSize: sf(8), fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', opacity: 0.7 },
   mainPanel: { marginTop: 10 },
   mainRow: { flexDirection: 'row', gap: 10 },
   portraitStyle: { borderRadius: 8, borderWidth: 1.5, borderColor: PANEL_EDGE },
   infoCol: { flex: 1, gap: 5 },
   infoRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  infoKey: { fontFamily: FontFamily.markerBold, fontSize: 8, fontWeight: '700', letterSpacing: 0.6, textTransform: 'uppercase', opacity: 0.7, width: 84 },
+  infoKey: { fontFamily: FontFamily.markerBold, fontSize: sf(8), fontWeight: '700', letterSpacing: 0.6, textTransform: 'uppercase', opacity: 0.7, width: 84 },
   infoVal: { flex: 1, height: 20, borderWidth: 1, borderRadius: 4, paddingHorizontal: 6, alignItems: 'center', justifyContent: 'center' },
-  infoValInput: { fontFamily: FontFamily.ja, fontSize: 11, color: INK, padding: 0, fontWeight: '600' },
+  infoValInput: { fontFamily: FontFamily.ja, fontSize: sf(11), color: INK, padding: 0, fontWeight: '600' },
   mt10: { marginTop: 10 },
   sharingRow: { flexDirection: 'row', justifyContent: 'center', gap: 14 },
   sharingOpt: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  sharingText: { fontSize: 11 },
+  sharingText: { fontSize: sf(11) },
   songRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   songIcon: { width: 36, height: 36, borderRadius: 999, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
   songInfo: { flex: 1 },
@@ -361,9 +361,9 @@ const s = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 5,
     fontFamily: FontFamily.marker,
-    fontSize: 11,
+    fontSize: sf(11),
     color: '#9c2d5a',
     minHeight: 28,
   },
-  author: { textAlign: 'center', fontFamily: FontFamily.script, fontSize: 12, opacity: 0.75, marginTop: 14 },
+  author: { textAlign: 'center', fontFamily: FontFamily.script, fontSize: sf(12), opacity: 0.75, marginTop: 14 },
 });

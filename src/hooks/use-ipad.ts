@@ -7,6 +7,9 @@ export function useIPad() {
   const { width } = useWindowDimensions();
   const isIPad = width >= IPAD_BREAKPOINT;
 
+  // Scale multiplier for icon sizes, image dimensions, etc.
+  const scale = isIPad ? 1.22 : 1.0;
+
   // Put on ScrollView's contentContainerStyle — makes content fill height so centering works
   const scrollFill = isIPad
     ? ({ flexGrow: 1 as const, justifyContent: 'center' as const })
@@ -17,5 +20,5 @@ export function useIPad() {
     ? ({ maxWidth: MAX_CONTENT_WIDTH, width: '100%' as const, alignSelf: 'center' as const })
     : undefined;
 
-  return { isIPad, scrollFill, column };
+  return { isIPad, scale, scrollFill, column };
 }

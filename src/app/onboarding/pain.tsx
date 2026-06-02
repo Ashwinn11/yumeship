@@ -7,7 +7,7 @@ import { Heart, Sparkle, StickerHeartPatch, StickerWaxSeal } from '@/components/
 import { Button } from '@/components/ui/Button';
 import { CalloutBubble } from '@/components/ui/Callouts';
 import { StepDots } from '@/components/ui/StepDots';
-import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing } from '@/constants/theme';
+import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing ,sf } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
 import { setOnbField } from '@/store/onboarding';
 
@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: Spacing.s6, paddingTop: Spacing.s6, paddingBottom: Spacing.s4 },
   eyebrow: {
     fontFamily: FontFamily.marker,
-    fontSize: 10,
+    fontSize: sf(10),
     color: Colors.plum,
     letterSpacing: 1.6,
     textTransform: 'uppercase',
@@ -121,12 +121,12 @@ const styles = StyleSheet.create({
   },
   heading: {
     fontFamily: FontFamily.displayItalic,
-    fontSize: 31,
+    fontSize: sf(31),
     lineHeight: 33,
     color: Colors.ink,
     marginTop: Spacing.s2,
   },
-  subcopy: { fontFamily: FontFamily.script, fontSize: 18, lineHeight: 22, color: Colors.ink2, marginTop: Spacing.s3 },
+  subcopy: { fontFamily: FontFamily.script, fontSize: sf(18), lineHeight: 22, color: Colors.ink2, marginTop: Spacing.s3 },
   list: { gap: Spacing.s3, marginTop: Spacing.s5 },
   row: {
     minHeight: 56,

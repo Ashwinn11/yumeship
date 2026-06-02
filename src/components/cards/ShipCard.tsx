@@ -1,7 +1,7 @@
 import { Ribbon } from '@/components/deco/Ribbon';
 import { WashiTape } from '@/components/deco/WashiTape';
 import { GradientCover } from '@/components/ui/GradientCover';
-import { Colors, FontFamily, FontSize, Radius, Shadow } from '@/constants/theme';
+import { Colors, FontFamily, FontSize, Radius, Shadow ,sf } from '@/constants/theme';
 import { Pressable, StyleSheet, Text, View, ViewStyle } from 'react-native';
 
 // design/screens.jsx — ShipCard
@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
   },
   initial: {
     fontFamily: FontFamily.displayItalic,
-    fontSize: 56,
+    fontSize: sf(56),
     color: 'rgba(255,255,255,0.92)',
   },
   tape: {
@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
   },
   polyculeText: {
     color: Colors.vellum,
-    fontSize: 9,
+    fontSize: sf(9),
     fontWeight: '600',
     fontFamily: FontFamily.marker,
     letterSpacing: 0.6,
@@ -171,12 +171,12 @@ const styles = StyleSheet.create({
     borderRadius: Radius.pill,
   },
   src: {
-    fontSize: 10,
+    fontSize: sf(10),
     color: Colors.ink3,
     fontFamily: FontFamily.ui,
   },
   days: {
-    fontSize: 9,
+    fontSize: sf(9),
     color: Colors.ink3,
     fontFamily: FontFamily.marker,
     letterSpacing: 0.5,

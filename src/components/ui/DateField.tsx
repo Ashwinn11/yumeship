@@ -1,7 +1,7 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
-import { Colors, FontFamily, Radius } from '@/constants/theme';
+import { Colors, FontFamily, Radius ,sf } from '@/constants/theme';
 
 type Props = {
   value: string;           // stored as "YYYY-MM-DD"
@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
   },
   text: {
     fontFamily: FontFamily.ja,
-    fontSize: 11,
+    fontSize: sf(11),
     color: '#1f1219',
     fontWeight: '600',
   },
@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
   },
   doneBtnText: {
     fontFamily: FontFamily.markerBold,
-    fontSize: 14,
+    fontSize: sf(14),
     color: '#fff',
     letterSpacing: 0.3,
   },

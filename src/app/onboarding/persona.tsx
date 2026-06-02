@@ -14,7 +14,7 @@ import { Row } from '@/components/ui/Row';
 import { StepDots } from '@/components/ui/StepDots';
 import { UnderInput } from '@/components/ui/UnderInput';
 import { CalloutBubble } from '@/components/ui';
-import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing } from '@/constants/theme';
+import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing ,sf } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
 import { setOnbField } from '@/store/onboarding';
 
@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
   },
   eyebrow: {
     fontFamily: FontFamily.marker,
-    fontSize: 10,
+    fontSize: sf(10),
     color: Colors.sakuraDeep,
     letterSpacing: 1.6,
     textTransform: 'uppercase',
@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
   },
   heading: {
     fontFamily: FontFamily.displayItalic,
-    fontSize: 30,
+    fontSize: sf(30),
     lineHeight: 33,
     letterSpacing: -0.3,
     color: Colors.ink,

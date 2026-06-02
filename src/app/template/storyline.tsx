@@ -7,7 +7,7 @@ import {
   MarkerCard, TitleHeader, INK,
 } from '@/components/templates/primitives';
 import { Bullets, WashiTape } from '@/components/deco';
-import { Colors, FontFamily } from '@/constants/theme';
+import { Colors, FontFamily ,sf } from '@/constants/theme';
 import { useTemplateCtx } from '@/store/templateData';
 import { DateField } from '@/components/ui/DateField';
 import { DecoBar } from '@/components/templates/DecoBar';
@@ -96,7 +96,7 @@ export function StorylineContent({ editing = false }: { editing?: boolean }) {
                       }}
                       textStyle={{
                         fontFamily: FontFamily.markerBold,
-                        fontSize: 10,
+                        fontSize: sf(10),
                         color: INK,
                         textAlign: 'center',
                         fontWeight: '600',
@@ -188,7 +188,7 @@ const s = StyleSheet.create({
   eventTitle: {
     fontFamily: FontFamily.markerBold,
     fontWeight: '800',
-    fontSize: 14,
+    fontSize: sf(14),
     color: INK,
     textTransform: 'uppercase',
     letterSpacing: 0.3,
@@ -196,7 +196,7 @@ const s = StyleSheet.create({
   },
   eventBody: {
     fontFamily: FontFamily.ja,
-    fontSize: 12,
+    fontSize: sf(12),
     color: INK,
     lineHeight: 18,
     minHeight: 18,

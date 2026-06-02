@@ -6,7 +6,7 @@ import {
   MarkerCard, TitleHeader, TemplateField, SharingRow, TwinProfile, HeartClipPhoto, BlankPill, INK, FILL_GRAY,
 } from '@/components/templates/primitives';
 import { Heart } from '@/components/deco/Heart';
-import { FontFamily } from '@/constants/theme';
+import { FontFamily ,sf } from '@/constants/theme';
 import { useTemplateCtx } from '@/store/templateData';
 import { DateField, calcElapsed } from '@/components/ui/DateField';
 
@@ -158,7 +158,7 @@ export function HeartFrameContent({ editing = false }: { editing?: boolean }) {
               }}
               textStyle={{
                 fontFamily: FontFamily.ja,
-                fontSize: 13,
+                fontSize: sf(13),
                 color: INK,
               }}
               displayValue={(() => {
@@ -167,7 +167,7 @@ export function HeartFrameContent({ editing = false }: { editing?: boolean }) {
               })()}
             />
           ) : (
-            <Text style={{ fontFamily: FontFamily.ja, fontSize: 13, color: INK }}>
+            <Text style={{ fontFamily: FontFamily.ja, fontSize: sf(13), color: INK }}>
               {anniv ? `${calcElapsed(anniv)?.since} · ${calcElapsed(anniv)?.label}` : '——'}
             </Text>
           )}
@@ -203,7 +203,7 @@ const s = StyleSheet.create({
   metLabel: {
     fontFamily: FontFamily.markerBold,
     fontWeight: '700',
-    fontSize: 9,
+    fontSize: sf(9),
     letterSpacing: 1,
     textTransform: 'uppercase',
     color: INK,
@@ -212,7 +212,7 @@ const s = StyleSheet.create({
   },
   metText: {
     fontFamily: FontFamily.ja,
-    fontSize: 12,
+    fontSize: sf(12),
     color: INK,
     lineHeight: 18,
     minHeight: 60,
@@ -232,11 +232,11 @@ const s = StyleSheet.create({
     borderRadius: 999,
     gap: 10,
   },
-  anniversaryLabel: { fontFamily: FontFamily.markerBold, fontWeight: '700', fontSize: 10, color: INK, letterSpacing: 0.8, textTransform: 'uppercase' },
+  anniversaryLabel: { fontFamily: FontFamily.markerBold, fontWeight: '700', fontSize: sf(10), color: INK, letterSpacing: 0.8, textTransform: 'uppercase' },
   nameLabel: {
     fontFamily: FontFamily.markerBold,
     fontWeight: '700',
-    fontSize: 12,
+    fontSize: sf(12),
     color: INK,
     textTransform: 'uppercase',
     letterSpacing: 0.8,

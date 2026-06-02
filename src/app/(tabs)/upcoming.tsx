@@ -9,7 +9,7 @@ import { StickerEnvelope } from '@/components/deco/Stickers';
 import { Sakura } from '@/components/deco/Sakura';
 import { Sparkle } from '@/components/deco/Sparkle';
 import { Star } from '@/components/deco/Star';
-import { Colors, FontFamily, FontSize, Radius, Spacing, RelationshipColors } from '@/constants/theme';
+import { Colors, FontFamily, FontSize, Radius, Spacing, RelationshipColors ,sf } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
 import { useAllUpcomingDates, daysUntil } from '@/store/dates';
 import { MiniUpcoming } from '@/components/cards/MiniUpcoming';
@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: FontFamily.displayItalic,
-    fontSize: 34,
+    fontSize: sf(34),
     lineHeight: 34,
     letterSpacing: -0.4,
     color: Colors.ink,
@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.line,
   },
   filterText: {
-    fontSize: 10,
+    fontSize: sf(10),
     fontFamily: FontFamily.ui,
     color: Colors.ink2,
     fontWeight: '500',
@@ -213,14 +213,14 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontFamily: FontFamily.displayItalic,
-    fontSize: 26,
+    fontSize: sf(26),
     color: Colors.ink,
     textAlign: 'center',
     marginTop: 10,
   },
   emptySub: {
     fontFamily: FontFamily.script,
-    fontSize: 18,
+    fontSize: sf(18),
     lineHeight: 22,
     color: Colors.ink2,
     textAlign: 'center',
@@ -240,7 +240,7 @@ const styles = StyleSheet.create({
   },
   emptyBtnTxt: {
     fontFamily: FontFamily.uiMedium,
-    fontSize: 14,
+    fontSize: sf(14),
     color: Colors.vellum,
   },
   decoTL: {

@@ -18,7 +18,7 @@ import {
 } from '@/components/deco/Stickers';
 import { WashiTape } from '@/components/deco/WashiTape';
 import { CozyModal } from '@/components/ui';
-import { Colors, FontFamily, FontSize, Radius, Spacing } from '@/constants/theme';
+import { Colors, FontFamily, FontSize, Radius, Spacing ,sf } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
 import { refreshPremium } from '@/store/premium';
 import { requestReviewIfEligible } from '@/store/onboarding';
@@ -589,7 +589,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  closeTxt: { fontSize: 13, color: Colors.ink3, fontFamily: FontFamily.ui, lineHeight: 14 },
+  closeTxt: { fontSize: sf(13), color: Colors.ink3, fontFamily: FontFamily.ui, lineHeight: 14 },
 
   scroll: { flex: 1 },
   content: { paddingHorizontal: Spacing.s5, paddingBottom: Spacing.s9 + 20 },
@@ -618,15 +618,15 @@ const styles = StyleSheet.create({
   },
   heroEyebrow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 6 },
   eyebrowTxt: {
-    fontFamily: FontFamily.marker, fontSize: 9, color: Colors.sakuraDeep,
+    fontFamily: FontFamily.marker, fontSize: sf(9), color: Colors.sakuraDeep,
     letterSpacing: 1.4, textTransform: 'uppercase', fontWeight: '600',
   },
   heroTitle: {
-    fontFamily: FontFamily.displayItalic, fontSize: 34, lineHeight: 38,
+    fontFamily: FontFamily.displayItalic, fontSize: sf(34), lineHeight: 38,
     color: Colors.ink, marginBottom: Spacing.s2,
   },
   heroSub: {
-    fontFamily: FontFamily.script, fontSize: 17, color: Colors.ink2,
+    fontFamily: FontFamily.script, fontSize: sf(17), color: Colors.ink2,
     lineHeight: 24, marginBottom: Spacing.s4,
   },
 
@@ -657,11 +657,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  featPillTxt: { fontSize: 10, color: '#fff' },
-  featLabel: { fontFamily: FontFamily.uiSemiBold, fontSize: 13, color: Colors.ink, flex: 1 },
+  featPillTxt: { fontSize: sf(10), color: '#fff' },
+  featLabel: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(13), color: Colors.ink, flex: 1 },
   // kept for compat
   featureRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
-  featureDot: { fontSize: 12, color: Colors.sakuraDeep },
+  featureDot: { fontSize: sf(12), color: Colors.sakuraDeep },
   featureTxt: { fontFamily: FontFamily.ui, fontSize: FontSize.caption, color: Colors.ink },
 
   plans: { gap: 14, marginTop: Spacing.s4 },
@@ -683,20 +683,20 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.sakuraDeep, borderRadius: Radius.pill,
     paddingVertical: 2, paddingHorizontal: 10,
   },
-  trialTxt: { fontFamily: FontFamily.uiSemiBold, fontSize: 10, color: '#fff' },
+  trialTxt: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(10), color: '#fff' },
   planName: {
-    fontFamily: FontFamily.uiSemiBold, fontSize: 13, color: Colors.ink,
+    fontFamily: FontFamily.uiSemiBold, fontSize: sf(13), color: Colors.ink,
   },
   planNameSel: { color: Colors.sakuraDeep },
   planPrice: {
-    fontFamily: FontFamily.uiSemiBold, fontSize: 18, color: Colors.ink,
+    fontFamily: FontFamily.uiSemiBold, fontSize: sf(18), color: Colors.ink,
   },
   planPriceSel: { color: Colors.ink },
   planPeriod: {
-    fontFamily: FontFamily.ui, fontSize: 12, color: Colors.ink2,
+    fontFamily: FontFamily.ui, fontSize: sf(12), color: Colors.ink2,
   },
   planDesc: {
-    fontFamily: FontFamily.ui, fontSize: 11, color: Colors.ink3, marginTop: 4,
+    fontFamily: FontFamily.ui, fontSize: sf(11), color: Colors.ink3, marginTop: 4,
   },
   planCardRow: {
     flexDirection: 'row',
@@ -725,13 +725,13 @@ const styles = StyleSheet.create({
   },
   trialInlineTxt: {
     fontFamily: FontFamily.uiSemiBold,
-    fontSize: 8,
+    fontSize: sf(8),
     color: Colors.sakuraDeep,
     fontWeight: '800',
   },
   planSubLabel: {
     fontFamily: FontFamily.ui,
-    fontSize: 11,
+    fontSize: sf(11),
     color: Colors.ink2,
     opacity: 0.75,
     marginTop: 2,
@@ -742,7 +742,7 @@ const styles = StyleSheet.create({
   },
   strikethroughPrice: {
     fontFamily: FontFamily.ui,
-    fontSize: 11,
+    fontSize: sf(11),
     color: Colors.ink3,
     textDecorationLine: 'line-through',
     opacity: 0.65,
@@ -766,7 +766,7 @@ const styles = StyleSheet.create({
   },
   savingsTxt: {
     fontFamily: FontFamily.uiSemiBold,
-    fontSize: 9,
+    fontSize: sf(9),
     color: '#fff',
     fontWeight: '900',
   },
@@ -786,7 +786,7 @@ const styles = StyleSheet.create({
   },
   planLabelTxt: {
     fontFamily: FontFamily.uiSemiBold,
-    fontSize: 7.5,
+    fontSize: sf(8),
     color: Colors.sakuraDeep,
     fontWeight: '800',
     letterSpacing: 0.3,
@@ -797,11 +797,11 @@ const styles = StyleSheet.create({
     borderRadius: Radius.pill, paddingVertical: 15, alignItems: 'center',
   },
   ctaBtnDisabled: { opacity: 0.45 },
-  ctaTxt: { fontFamily: FontFamily.uiSemiBold, fontSize: 15, color: '#fff' },
+  ctaTxt: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(15), color: '#fff' },
 
   subNote: {
     textAlign: 'center', marginTop: 10,
-    fontFamily: FontFamily.ui, fontSize: 11, color: Colors.ink3,
+    fontFamily: FontFamily.ui, fontSize: sf(11), color: Colors.ink3,
   },
 
   footerRow: {
@@ -809,14 +809,14 @@ const styles = StyleSheet.create({
     gap: 12, marginTop: Spacing.s5, marginBottom: Spacing.s2,
   },
   footerLink: {
-    fontFamily: FontFamily.ui, fontSize: 11, color: Colors.ink3,
+    fontFamily: FontFamily.ui, fontSize: sf(11), color: Colors.ink3,
     textDecorationLine: 'underline',
   },
   footerSep: {
-    fontFamily: FontFamily.ui, fontSize: 11, color: Colors.line,
+    fontFamily: FontFamily.ui, fontSize: sf(11), color: Colors.line,
   },
   noPlans: {
     textAlign: 'center', marginTop: 32,
-    fontFamily: FontFamily.ui, fontSize: 13, color: Colors.ink3,
+    fontFamily: FontFamily.ui, fontSize: sf(13), color: Colors.ink3,
   },
 });

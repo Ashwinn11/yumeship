@@ -1,4 +1,4 @@
-import { Colors, FontFamily, Radius, Shadow } from '@/constants/theme';
+import { Colors, FontFamily, Radius, Shadow ,sf } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import {
@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
     ...Shadow.s2,
   },
   label: {
-    fontSize: 9,
+    fontSize: sf(9),
     marginTop: 1,
   },
 });

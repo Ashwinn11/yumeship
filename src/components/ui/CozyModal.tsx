@@ -1,7 +1,7 @@
 import React from 'react';
 import { Modal, StyleSheet, Text, View, TouchableWithoutFeedback } from 'react-native';
 import { Button } from './Button';
-import { Colors, FontFamily, Radius, Spacing, Shadow } from '@/constants/theme';
+import { Colors, FontFamily, Radius, Spacing, Shadow ,sf } from '@/constants/theme';
 
 type Props = {
   visible: boolean;
@@ -107,13 +107,13 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: FontFamily.displayItalic,
-    fontSize: 22,
+    fontSize: sf(22),
     color: Colors.ink,
     textAlign: 'center',
   },
   description: {
     fontFamily: FontFamily.ui,
-    fontSize: 13,
+    fontSize: sf(13),
     color: Colors.ink2,
     lineHeight: 18,
     textAlign: 'center',

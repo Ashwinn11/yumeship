@@ -10,7 +10,7 @@ import { CalloutBubble } from '@/components/ui';
 import { Button } from '@/components/ui/Button';
 import { Field } from '@/components/ui/Field';
 import { StepDots } from '@/components/ui/StepDots';
-import { Colors, FontFamily, FontSize, Radius, Spacing } from '@/constants/theme';
+import { Colors, FontFamily, FontSize, Radius, Spacing ,sf } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
 import { getOnbState, resetOnb } from '@/store/onboarding';
 import { addShip, REL_GRADS } from '@/store/ships';
@@ -154,16 +154,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.s5, paddingVertical: Spacing.s2,
   },
   backBtn: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.paperDeep, borderRadius: Radius.pill, borderWidth: 1, borderColor: Colors.line },
-  backBtnText: { fontSize: 24, color: Colors.ink2 },
+  backBtnText: { fontSize: sf(24), color: Colors.ink2 },
   headerTitle: { fontFamily: FontFamily.displayItalic, fontSize: FontSize.h6, color: Colors.ink },
   scroll: { flex: 1 },
   scrollContent: { paddingHorizontal: Spacing.s6, paddingTop: Spacing.s5, paddingBottom: Spacing.s4 },
   eyebrow: {
-    fontFamily: FontFamily.marker, fontSize: 10, color: Colors.plum,
+    fontFamily: FontFamily.marker, fontSize: sf(10), color: Colors.plum,
     letterSpacing: 1.6, textTransform: 'uppercase', fontWeight: '600',
   },
   heading: {
-    fontFamily: FontFamily.displayItalic, fontSize: 26, lineHeight: 28,
+    fontFamily: FontFamily.displayItalic, fontSize: sf(26), lineHeight: 28,
     letterSpacing: -0.3, color: Colors.ink, marginTop: Spacing.s2,
   },
   headingNew: { marginTop: 0 },
@@ -174,13 +174,13 @@ const styles = StyleSheet.create({
     borderWidth: 1.4, borderColor: Colors.line, position: 'relative', overflow: 'hidden',
   },
   templateTape: { position: 'absolute', top: -3, left: 10 },
-  templateLabel: { fontFamily: FontFamily.uiSemiBold, fontSize: 13, marginTop: 4 },
-  templateDesc: { fontFamily: FontFamily.ui, fontSize: 10, color: Colors.ink3, marginTop: 2, lineHeight: 12 },
+  templateLabel: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(13), marginTop: 4 },
+  templateDesc: { fontFamily: FontFamily.ui, fontSize: sf(10), color: Colors.ink3, marginTop: 2, lineHeight: 12 },
   templateCheck: {
     position: 'absolute', bottom: 6, right: 6, width: 14, height: 14,
     borderRadius: Radius.pill, alignItems: 'center', justifyContent: 'center',
   },
-  templateCheckText: { color: Colors.vellum, fontSize: 8, fontWeight: 'bold' },
+  templateCheckText: { color: Colors.vellum, fontSize: sf(8), fontWeight: 'bold' },
   privacyNote: {
     flexDirection: 'row', gap: Spacing.s3, padding: Spacing.s4,
     backgroundColor: Colors.vellum, borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.r3,
@@ -191,8 +191,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.lavenderSoft, alignItems: 'center', justifyContent: 'center',
   },
   privacyText: { flex: 1, gap: 2 },
-  privacyTitle: { fontFamily: FontFamily.uiSemiBold, fontSize: 13, color: Colors.ink },
-  privacyBody: { fontFamily: FontFamily.ui, fontSize: 11, color: Colors.ink3, lineHeight: 15 },
+  privacyTitle: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(13), color: Colors.ink },
+  privacyBody: { fontFamily: FontFamily.ui, fontSize: sf(11), color: Colors.ink3, lineHeight: 15 },
   actions: { paddingHorizontal: Spacing.s6, paddingBottom: Spacing.s3 },
   decoTR: { position: 'absolute', top: 0, right: 0 },
   decoBL: { position: 'absolute', bottom: 120, right: 30 },

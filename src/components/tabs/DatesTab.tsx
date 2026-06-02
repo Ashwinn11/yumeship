@@ -9,7 +9,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { StickerTicket, WashiTape, Bullets, Sparkle } from '@/components/deco';
 import { CozyModal } from '@/components/ui/CozyModal';
 import { IconPlus } from '@/components/ui/Icon';
-import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing } from '@/constants/theme';
+import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing ,sf } from '@/constants/theme';
 import { addDate, deleteDate, daysUntil, useDates } from '@/store/dates';
 import { requestPermission } from '@/store/notifications';
 import { DateField } from '@/components/ui/DateField';
@@ -71,10 +71,10 @@ export function DatesTab({ shipId, shipName }: { shipId: string; shipName?: stri
       {dates.length === 0 ? (
         <View style={[s.empty, { paddingVertical: 60, paddingHorizontal: 20, gap: 12 }]}>
           <StickerTicket size={88} />
-          <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: 26, color: Colors.ink, textAlign: 'center', marginTop: 10 }}>
+          <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: sf(26), color: Colors.ink, textAlign: 'center', marginTop: 10 }}>
             no dates saved
           </Text>
-          <Text style={{ fontFamily: FontFamily.script, fontSize: 18, lineHeight: 22, color: Colors.ink2, textAlign: 'center', marginVertical: 8 }}>
+          <Text style={{ fontFamily: FontFamily.script, fontSize: sf(18), lineHeight: 22, color: Colors.ink2, textAlign: 'center', marginVertical: 8 }}>
             anniversaries, character birthdays, release dates —{"\n"}anything worth remembering.
           </Text>
           <Pressable
@@ -96,7 +96,7 @@ export function DatesTab({ shipId, shipName }: { shipId: string; shipName?: stri
             onPress={() => setComposing(true)}
           >
             <IconPlus size={12} color={Colors.vellum} />
-            <Text style={{ fontFamily: FontFamily.uiMedium, fontSize: 14, color: Colors.vellum }}>add a date</Text>
+            <Text style={{ fontFamily: FontFamily.uiMedium, fontSize: sf(14), color: Colors.vellum }}>add a date</Text>
           </Pressable>
         </View>
       ) : (
@@ -171,10 +171,10 @@ export function DatesTab({ shipId, shipName }: { shipId: string; shipName?: stri
                     justifyContent: 'center',
                   }}
                 >
-                  <Text style={{ fontFamily: FontFamily.marker, fontSize: 9, fontWeight: '600', color: tint, letterSpacing: 1.4, textAlign: 'center' }}>
+                  <Text style={{ fontFamily: FontFamily.marker, fontSize: sf(9), fontWeight: '600', color: tint, letterSpacing: 1.4, textAlign: 'center' }}>
                     {monthStr}
                   </Text>
-                  <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: 28, lineHeight: 28, color: tint, marginTop: -1, textAlign: 'center' }}>
+                  <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: sf(28), lineHeight: 28, color: tint, marginTop: -1, textAlign: 'center' }}>
                     {dayStr}
                   </Text>
                 </View>
@@ -182,22 +182,22 @@ export function DatesTab({ shipId, shipName }: { shipId: string; shipName?: stri
                 {/* center text */}
                 <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: 16, color: Colors.ink, lineHeight: 18 }} numberOfLines={1}>
+                    <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: sf(16), color: Colors.ink, lineHeight: 18 }} numberOfLines={1}>
                       {d.title}
                     </Text>
                     {isAnn && <Bullets.Heart size={10} color={tint} />}
                   </View>
-                  <Text style={{ fontFamily: FontFamily.script, fontSize: 16, color: Colors.ink2, marginTop: 2 }} numberOfLines={1}>
+                  <Text style={{ fontFamily: FontFamily.script, fontSize: sf(16), color: Colors.ink2, marginTop: 2 }} numberOfLines={1}>
                     {d.subtitle || (isAnn ? 'the day we met' : (d.yearly ? 'repeating yearly ♡' : 'one-time memory'))}
                   </Text>
                 </View>
 
                 {/* countdown right */}
                 <View style={{ alignItems: 'flex-end', justifyContent: 'center' }}>
-                  <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: 22, color: tint, lineHeight: 22 }}>
+                  <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: sf(22), color: tint, lineHeight: 22 }}>
                     {numDisplay}
                   </Text>
-                  <Text style={{ fontFamily: FontFamily.marker, fontSize: 8, color: Colors.ink3, letterSpacing: 1.4 }}>
+                  <Text style={{ fontFamily: FontFamily.marker, fontSize: sf(8), color: Colors.ink3, letterSpacing: 1.4 }}>
                     {unitDisplay}
                   </Text>
                 </View>
@@ -236,7 +236,7 @@ export function DatesTab({ shipId, shipName }: { shipId: string; shipName?: stri
               onChangeText={setSubtitle}
               placeholder="e.g. fictional pisces ♡, we hold hands here"
               placeholderTextColor={Colors.ink3}
-              style={[s.input, { fontFamily: FontFamily.script, fontSize: 16, paddingTop: 4, paddingBottom: 4 }]}
+              style={[s.input, { fontFamily: FontFamily.script, fontSize: sf(16), paddingTop: 4, paddingBottom: 4 }]}
             />
 
             <Text style={s.fieldLabel}>when is it?</Text>
@@ -257,7 +257,7 @@ export function DatesTab({ shipId, shipName }: { shipId: string; shipName?: stri
               }}
               textStyle={{
                 fontFamily: FontFamily.ja,
-                fontSize: 13,
+                fontSize: sf(13),
                 color: date ? Colors.ink : Colors.ink3,
               }}
             />
@@ -305,7 +305,7 @@ export function DatesTab({ shipId, shipName }: { shipId: string; shipName?: stri
 const s = StyleSheet.create({
   tab: { paddingHorizontal: Spacing.s5, paddingTop: Spacing.s2, paddingBottom: Spacing.s6, gap: 10 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
-  label: { fontFamily: FontFamily.marker, fontSize: 9, color: Colors.ink3, letterSpacing: 1.4, textTransform: 'uppercase' },
+  label: { fontFamily: FontFamily.marker, fontSize: sf(9), color: Colors.ink3, letterSpacing: 1.4, textTransform: 'uppercase' },
   empty: { alignItems: 'center', gap: Spacing.s3, paddingVertical: Spacing.s7, paddingHorizontal: Spacing.s2 },
   emptyTitle: { fontFamily: FontFamily.displayItalic, fontSize: FontSize.h5, color: Colors.ink },
   emptySub: { fontFamily: FontFamily.displayItalic, fontSize: FontSize.meta, color: Colors.ink2, textAlign: 'center', lineHeight: 20 },
@@ -324,27 +324,27 @@ const s = StyleSheet.create({
   },
   annHeart: { position: 'absolute', top: 10, left: 12 },
   cardLeft: { width: 52, alignItems: 'flex-start', justifyContent: 'center' },
-  cardNum: { fontFamily: FontFamily.displayItalic, fontSize: 36, lineHeight: 38, letterSpacing: -1 },
-  cardUnit: { fontFamily: FontFamily.marker, fontSize: 9, letterSpacing: 1.4, textTransform: 'uppercase', marginTop: -4 },
+  cardNum: { fontFamily: FontFamily.displayItalic, fontSize: sf(36), lineHeight: 38, letterSpacing: -1 },
+  cardUnit: { fontFamily: FontFamily.marker, fontSize: sf(9), letterSpacing: 1.4, textTransform: 'uppercase', marginTop: -4 },
   cardInfo: { flex: 1, gap: 2 },
-  cardTitle: { fontFamily: FontFamily.displayItalic, fontSize: 17, color: Colors.ink, lineHeight: 20 },
-  cardSub: { fontFamily: FontFamily.ui, fontSize: 11, color: Colors.ink3 },
+  cardTitle: { fontFamily: FontFamily.displayItalic, fontSize: sf(17), color: Colors.ink, lineHeight: 20 },
+  cardSub: { fontFamily: FontFamily.ui, fontSize: sf(11), color: Colors.ink3 },
 
   // Sheet
   overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.3)' },
   sheet: { backgroundColor: Colors.paper, borderTopLeftRadius: Radius.r5, borderTopRightRadius: Radius.r5, paddingBottom: 40 },
   sheetHandle: { width: 40, height: 4, backgroundColor: Colors.line, borderRadius: 2, alignSelf: 'center', marginTop: 10 },
   sheetHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: Spacing.s4, borderBottomWidth: 1, borderBottomColor: Colors.line },
-  sheetTitle: { fontFamily: FontFamily.displayItalic, fontSize: 17, color: Colors.ink },
-  sheetClose: { fontSize: 13, color: Colors.ink3, fontFamily: FontFamily.ui },
+  sheetTitle: { fontFamily: FontFamily.displayItalic, fontSize: sf(17), color: Colors.ink },
+  sheetClose: { fontSize: sf(13), color: Colors.ink3, fontFamily: FontFamily.ui },
   sheetContent: { padding: Spacing.s5, gap: 6 },
-  fieldLabel: { fontFamily: FontFamily.marker, fontSize: 9, color: Colors.ink3, letterSpacing: 1.2, marginTop: 10, marginBottom: 4 },
-  input: { fontFamily: FontFamily.ja, fontSize: 13, color: Colors.ink, borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.r2, paddingVertical: 9, paddingHorizontal: 12, backgroundColor: Colors.vellum },
+  fieldLabel: { fontFamily: FontFamily.marker, fontSize: sf(9), color: Colors.ink3, letterSpacing: 1.2, marginTop: 10, marginBottom: 4 },
+  input: { fontFamily: FontFamily.ja, fontSize: sf(13), color: Colors.ink, borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.r2, paddingVertical: 9, paddingHorizontal: 12, backgroundColor: Colors.vellum },
   toggleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 14, padding: Spacing.s4, backgroundColor: Colors.vellum, borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.r3 },
   toggleLabel: { flex: 1, gap: 2 },
-  toggleTitle: { fontFamily: FontFamily.uiMedium, fontSize: 14, color: Colors.ink },
-  toggleSub: { fontFamily: FontFamily.ui, fontSize: 11, color: Colors.ink3 },
+  toggleTitle: { fontFamily: FontFamily.uiMedium, fontSize: sf(14), color: Colors.ink },
+  toggleSub: { fontFamily: FontFamily.ui, fontSize: sf(11), color: Colors.ink3 },
   saveBtn: { marginTop: 20, backgroundColor: Colors.sakuraDeep, borderRadius: Radius.pill, paddingVertical: 12, alignItems: 'center' },
   saveBtnDisabled: { opacity: 0.4 },
-  saveBtnText: { fontFamily: FontFamily.uiMedium, fontSize: 15, color: Colors.vellum },
+  saveBtnText: { fontFamily: FontFamily.uiMedium, fontSize: sf(15), color: Colors.vellum },
 });

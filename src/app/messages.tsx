@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Heart } from '@/components/deco/Heart';
 import { Sparkle } from '@/components/deco/Sparkle';
 import { IconLock, IconSend } from '@/components/ui/Icon';
-import { Colors, FontFamily, FontSize, Radius, Spacing } from '@/constants/theme';
+import { Colors, FontFamily, FontSize, Radius, Spacing ,sf } from '@/constants/theme';
 
 export default function MessagesScreen() {
   const insets = useSafeAreaInsets();
@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.paper,
   },
   back: {
-    fontSize: 20,
+    fontSize: sf(20),
     color: Colors.ink2,
     fontFamily: FontFamily.ui,
   },
@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
   },
   avatarInitial: {
     fontFamily: FontFamily.displayItalic,
-    fontSize: 14,
+    fontSize: sf(14),
     color: Colors.vellum,
   },
   appBarInfo: {
@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
   },
   appBarMeta: {
     fontFamily: FontFamily.marker,
-    fontSize: 8,
+    fontSize: sf(8),
     color: Colors.ink3,
     letterSpacing: 0.8,
   },
@@ -150,12 +150,12 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontFamily: FontFamily.displayItalic,
-    fontSize: 18,
+    fontSize: sf(18),
     color: Colors.ink3,
   },
   emptySub: {
     fontFamily: FontFamily.displayItalic,
-    fontSize: 13,
+    fontSize: sf(13),
     color: Colors.ink3,
     opacity: 0.7,
   },
@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.paperDeep,
   },
   sideChipText: {
-    fontSize: 10,
+    fontSize: sf(10),
     fontFamily: FontFamily.ui,
     color: Colors.ink2,
     fontWeight: '500',

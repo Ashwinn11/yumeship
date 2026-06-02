@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import { Bullets, WashiTape } from '@/components/deco';
-import { Colors, FontFamily, Radius, Spacing } from '@/constants/theme';
+import { Colors, FontFamily, Radius, Spacing ,sf } from '@/constants/theme';
 
 type Props = {
   days: number;
@@ -77,10 +77,10 @@ export function MiniUpcoming({ days, title, fo, tint, featured, muted, dateStr, 
           justifyContent: 'center',
         }}
       >
-        <Text style={{ fontFamily: FontFamily.marker, fontSize: 9, fontWeight: '600', color: tint, letterSpacing: 1.4, textAlign: 'center' }}>
+        <Text style={{ fontFamily: FontFamily.marker, fontSize: sf(9), fontWeight: '600', color: tint, letterSpacing: 1.4, textAlign: 'center' }}>
           {monthStr}
         </Text>
-        <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: 28, lineHeight: 28, color: tint, marginTop: -1, textAlign: 'center' }}>
+        <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: sf(28), lineHeight: 28, color: tint, marginTop: -1, textAlign: 'center' }}>
           {dayStr}
         </Text>
       </View>
@@ -88,22 +88,22 @@ export function MiniUpcoming({ days, title, fo, tint, featured, muted, dateStr, 
       {/* center text */}
       <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-          <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: 16, color: Colors.ink, lineHeight: 18 }} numberOfLines={1}>
+          <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: sf(16), color: Colors.ink, lineHeight: 18 }} numberOfLines={1}>
             {title}
           </Text>
           {isAnn && <Bullets.Heart size={10} color={tint} />}
         </View>
-        <Text style={{ fontFamily: FontFamily.script, fontSize: 16, color: Colors.ink2, marginTop: 2 }} numberOfLines={1}>
-          {subtitleText} <Text style={{ fontFamily: FontFamily.ui, fontSize: 11, color: Colors.ink3 }}>· {fo}</Text>
+        <Text style={{ fontFamily: FontFamily.script, fontSize: sf(16), color: Colors.ink2, marginTop: 2 }} numberOfLines={1}>
+          {subtitleText} <Text style={{ fontFamily: FontFamily.ui, fontSize: sf(11), color: Colors.ink3 }}>· {fo}</Text>
         </Text>
       </View>
 
       {/* countdown right */}
       <View style={{ alignItems: 'flex-end', justifyContent: 'center' }}>
-        <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: 22, color: tint, lineHeight: 22 }}>
+        <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: sf(22), color: tint, lineHeight: 22 }}>
           {numDisplay}
         </Text>
-        <Text style={{ fontFamily: FontFamily.marker, fontSize: 8, color: Colors.ink3, letterSpacing: 1.4 }}>
+        <Text style={{ fontFamily: FontFamily.marker, fontSize: sf(8), color: Colors.ink3, letterSpacing: 1.4 }}>
           {unitDisplay}
         </Text>
       </View>

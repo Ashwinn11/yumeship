@@ -6,7 +6,7 @@ import {
 } from '@/components/templates/primitives';
 import { TemplateScreenWrapper } from '@/components/templates/TemplateScreenWrapper';
 import { Heart } from '@/components/deco/Heart';
-import { Colors, FontFamily, Radius, Spacing } from '@/constants/theme';
+import { Colors, FontFamily, Radius, Spacing ,sf } from '@/constants/theme';
 import { useTemplateCtx } from '@/store/templateData';
 import { getShip } from '@/store/ships';
 
@@ -77,10 +77,10 @@ export function AestheticContent({ editing = false }: { editing?: boolean }) {
               placeholder="song title..."
               placeholderTextColor={INK + '88'}
               underlineColorAndroid="transparent"
-              style={{ fontFamily: FontFamily.ui, fontSize: 14, color: INK, marginBottom: 6, padding: 0 }}
+              style={{ fontFamily: FontFamily.ui, fontSize: sf(14), color: INK, marginBottom: 6, padding: 0 }}
             />
           ) : (
-            song ? <Text style={{ fontFamily: FontFamily.ui, fontSize: 14, color: INK, marginBottom: 6 }}>{song}</Text> : null
+            song ? <Text style={{ fontFamily: FontFamily.ui, fontSize: sf(14), color: INK, marginBottom: 6 }}>{song}</Text> : null
           )}
           <MusicPlayer />
         </View>
@@ -168,8 +168,8 @@ const s = StyleSheet.create({
   paletteRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   swatch: { width: 28, height: 28, borderWidth: 1.5, borderColor: INK, borderRadius: 4, alignItems: 'center', justifyContent: 'center' },
   swatchEdit: { position: 'absolute', bottom: 1, right: 2 },
-  swatchEditDot: { fontSize: 8, color: 'rgba(255,255,255,0.8)' },
-  palHint: { fontFamily: FontFamily.ui, fontSize: 9, color: INK + '60', marginTop: 6 },
+  swatchEditDot: { fontSize: sf(8), color: 'rgba(255,255,255,0.8)' },
+  palHint: { fontFamily: FontFamily.ui, fontSize: sf(9), color: INK + '60', marginTop: 6 },
   footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 14 },
 
   // Picker
@@ -179,7 +179,7 @@ const s = StyleSheet.create({
     padding: Spacing.s5, paddingBottom: 40,
   },
   pickerHandle: { width: 40, height: 4, backgroundColor: Colors.line, borderRadius: 2, alignSelf: 'center', marginBottom: Spacing.s4 },
-  pickerTitle: { fontFamily: FontFamily.displayItalic, fontSize: 16, color: Colors.ink, marginBottom: Spacing.s4 },
+  pickerTitle: { fontFamily: FontFamily.displayItalic, fontSize: sf(16), color: Colors.ink, marginBottom: Spacing.s4 },
   pickerGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   pickerSwatch: { width: 36, height: 36, borderRadius: 6, borderWidth: 1.5, borderColor: Colors.line },
   pickerSwatchActive: { borderColor: Colors.ink, borderWidth: 2.5 },

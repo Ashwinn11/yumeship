@@ -1,5 +1,5 @@
 import { Heart } from '@/components/deco/Heart';
-import { Colors, FontFamily, FontSize, Radius, Shadow } from '@/constants/theme';
+import { Colors, FontFamily, FontSize, Radius, Shadow ,sf } from '@/constants/theme';
 import { StyleSheet, Text, View } from 'react-native';
 
 // design/cards.jsx — Bubble
@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: -16,
     right: 0,
-    fontSize: 10,
+    fontSize: sf(10),
     color: Colors.ink3,
     fontFamily: FontFamily.marker,
     letterSpacing: 0.5,

@@ -1,4 +1,12 @@
-import { Platform } from 'react-native';
+import { Dimensions, Platform } from 'react-native';
+
+// Scale multiplier — read once at module load; safe because Dimensions is
+// available before any component renders, and iPad portrait is always ≥ 768pt.
+const _w = Dimensions.get('window').width;
+const _s = _w >= 768 ? 1.22 : 1.0;
+/** Scale a font size for the current device (iPad gets 1.22×). */
+export const sf = (n: number) => Math.round(n * _s);
+const ss = (n: number) => Math.round(n * (_w >= 768 ? 1.1 : 1.0));
 
 // ─── Foundation ──────────────────────────────────────────────────────────────
 export const Paper = {
@@ -106,35 +114,35 @@ export const FontFamily = {
 } as const;
 
 export const FontSize = {
-  hairline: 11,
-  caption: 12,
-  meta: 13,
-  body: 15,
-  bodyLg: 17,
-  h6: 18,
-  h5: 22,
-  h4: 28,
-  h3: 36,
-  h2: 48,
-  h1: 64,
-  display: 96,
-} as const;
+  hairline: sf(11),
+  caption: sf(12),
+  meta: sf(13),
+  body: sf(15),
+  bodyLg: sf(17),
+  h6: sf(18),
+  h5: sf(22),
+  h4: sf(28),
+  h3: sf(36),
+  h2: sf(48),
+  h1: sf(64),
+  display: sf(96),
+};
 
 // ─── Spacing (4-step base) ────────────────────────────────────────────────────
 export const Spacing = {
-  s0: 2,
-  s1: 4,
-  s2: 8,
-  s3: 12,
-  s4: 16,
-  s5: 20,
-  s6: 24,
-  s7: 32,
-  s8: 40,
-  s9: 56,
-  s10: 72,
-  s11: 96,
-} as const;
+  s0: ss(2),
+  s1: ss(4),
+  s2: ss(8),
+  s3: ss(12),
+  s4: ss(16),
+  s5: ss(20),
+  s6: ss(24),
+  s7: ss(32),
+  s8: ss(40),
+  s9: ss(56),
+  s10: ss(72),
+  s11: ss(96),
+};
 
 // ─── Radii (soft, never sharp) ───────────────────────────────────────────────
 export const Radius = {

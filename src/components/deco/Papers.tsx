@@ -1,4 +1,4 @@
-import { Colors, FontFamily } from '@/constants/theme';
+import { Colors, FontFamily ,sf } from '@/constants/theme';
 import React from 'react';
 import { StyleSheet, Text, View, ViewStyle } from 'react-native';
 import Svg, { Circle, Line, Path } from 'react-native-svg';
@@ -114,7 +114,7 @@ export function PaperScalloped({ width = 100, height = 130, children, color = '#
           right: 12,
           color: Colors.sakuraInk,
           opacity: 0.6,
-          fontSize: 12,
+          fontSize: sf(12),
         }}
       >
         ♡
@@ -163,7 +163,7 @@ export function PaperPolaroid({ width = 92, height = 120, rotate = 4, children, 
           right: 0,
           textAlign: 'center',
           fontFamily: FontFamily.script,
-          fontSize: 12,
+          fontSize: sf(12),
           color: Colors.ink2,
         }}
       >

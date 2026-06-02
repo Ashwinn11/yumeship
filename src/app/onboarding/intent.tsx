@@ -7,7 +7,7 @@ import { Ribbon, Sparkle, StickerEnvelope, StickerSakuraBranch, WashiTape } from
 import { Button } from '@/components/ui/Button';
 import { IconBookmark, IconHeart, IconJournalOutline, IconMailOutline, IconSend } from '@/components/ui/Icon';
 import { StepDots } from '@/components/ui/StepDots';
-import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing } from '@/constants/theme';
+import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing ,sf } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
 import { setOnbField } from '@/store/onboarding';
 
@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: Spacing.s6, paddingTop: Spacing.s6, paddingBottom: Spacing.s4 },
   eyebrow: {
     fontFamily: FontFamily.marker,
-    fontSize: 10,
+    fontSize: sf(10),
     color: Colors.sakuraDeep,
     letterSpacing: 1.6,
     textTransform: 'uppercase',
@@ -145,14 +145,14 @@ const styles = StyleSheet.create({
   },
   heading: {
     fontFamily: FontFamily.displayItalic,
-    fontSize: 31,
+    fontSize: sf(31),
     lineHeight: 33,
     color: Colors.ink,
     marginTop: Spacing.s2,
   },
   subcopy: {
     fontFamily: FontFamily.script,
-    fontSize: 18,
+    fontSize: sf(18),
     lineHeight: 22,
     color: Colors.ink2,
     marginTop: Spacing.s3,
@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.line,
   },
-  noteText: { flex: 1, fontFamily: FontFamily.script, fontSize: 16, lineHeight: 18, color: Colors.ink2 },
+  noteText: { flex: 1, fontFamily: FontFamily.script, fontSize: sf(16), lineHeight: 18, color: Colors.ink2 },
   actions: { paddingHorizontal: Spacing.s6, paddingBottom: Spacing.s3 },
   decoTR: { position: 'absolute', top: 0, right: 0 },
   decoBL: { position: 'absolute', bottom: 132, left: 24 },

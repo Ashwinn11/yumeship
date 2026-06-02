@@ -1,6 +1,6 @@
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { Sparkle } from '@/components/deco/Sparkle';
-import { Colors, FontFamily, FontSize, Radius } from '@/constants/theme';
+import { Colors, FontFamily, FontSize, Radius ,sf } from '@/constants/theme';
 
 type Props = {
   ja: string;
@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   name: {
-    fontSize: 10,
+    fontSize: sf(10),
     fontFamily: FontFamily.ui,
     letterSpacing: 0.2,
   },

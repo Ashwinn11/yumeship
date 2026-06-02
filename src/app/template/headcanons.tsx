@@ -8,7 +8,7 @@ import {
   MarkerHeader, TemplateField,
   TitleHeader,
 } from '@/components/templates/primitives';
-import { FontFamily } from '@/constants/theme';
+import { FontFamily ,sf } from '@/constants/theme';
 import { useTemplateCtx } from '@/store/templateData';
 import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
@@ -99,13 +99,13 @@ export function HeadcanonsContent({ editing = false }: { editing?: boolean }) {
                         placeholder="something you know..."
                         placeholderTextColor={INK + '88'}
                         underlineColorAndroid="transparent"
-                        style={{ fontFamily: FontFamily.ja, fontSize: 11, color: INK, padding: 0, minHeight: 18, fontWeight: '600' }}
+                        style={{ fontFamily: FontFamily.ja, fontSize: sf(11), color: INK, padding: 0, minHeight: 18, fontWeight: '600' }}
                       />
                     ) : (
                       item ? (
-                        <Text style={{ fontFamily: FontFamily.ja, fontSize: 11, color: INK, fontWeight: '600' }}>{item}</Text>
+                        <Text style={{ fontFamily: FontFamily.ja, fontSize: sf(11), color: INK, fontWeight: '600' }}>{item}</Text>
                       ) : (
-                        <Text style={{ fontFamily: FontFamily.ja, fontSize: 11, color: INK + '44' }}>——</Text>
+                        <Text style={{ fontFamily: FontFamily.ja, fontSize: sf(11), color: INK + '44' }}>——</Text>
                       )
                     )}
                   </View>
@@ -142,7 +142,7 @@ const s = StyleSheet.create({
     borderBottomWidth: 1.5,
     borderBottomColor: INK,
   },
-  catJa: { fontFamily: FontFamily.ja, fontSize: 18, fontWeight: '600', color: INK },
+  catJa: { fontFamily: FontFamily.ja, fontSize: sf(18), fontWeight: '600', color: INK },
   countBadge: {
     marginLeft: 'auto',
     paddingHorizontal: 8,
@@ -152,7 +152,7 @@ const s = StyleSheet.create({
     borderColor: INK,
     borderRadius: 999,
   },
-  countText: { fontFamily: FontFamily.markerBold, fontSize: 10, color: INK },
+  countText: { fontFamily: FontFamily.markerBold, fontSize: sf(10), color: INK },
   catBody: { paddingHorizontal: 12, paddingVertical: 6, gap: 4 },
   item: { flexDirection: 'row', gap: 8, alignItems: 'center', paddingVertical: 4 },
   itemBorder: { borderBottomWidth: 1, borderBottomColor: INK + '30' },

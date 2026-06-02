@@ -7,7 +7,7 @@ import Svg, {
   LinearGradient as SvgLinearGradient, Stop,
   Pattern as SvgPattern,
 } from 'react-native-svg';
-import { FontFamily } from '@/constants/theme';
+import { FontFamily ,sf } from '@/constants/theme';
 
 export const INK = '#1f1219';
 export const FILL_GRAY = '#e9d8cb';
@@ -88,7 +88,7 @@ export function BlankPill({ width = '100%' as number | string, value, onChangeTe
       style
     ]}>
       {value ? (
-        <Text style={[{ fontFamily: FontFamily.ja, fontSize: 11, color: INK, fontWeight: '600' }, style && { fontSize: style.fontSize }]}>{value}</Text>
+        <Text style={[{ fontFamily: FontFamily.ja, fontSize: sf(11), color: INK, fontWeight: '600' }, style && { fontSize: style.fontSize }]}>{value}</Text>
       ) : null}
     </View>
   );
@@ -669,7 +669,7 @@ const s = StyleSheet.create({
   },
   scriptCredit: {
     fontFamily: FontFamily.script,
-    fontSize: 14,
+    fontSize: sf(14),
     color: INK,
     fontStyle: 'italic',
   },
@@ -683,7 +683,7 @@ const s = StyleSheet.create({
   },
   titleSubtitle: {
     fontFamily: FontFamily.script,
-    fontSize: 13,
+    fontSize: sf(13),
     color: INK,
     fontStyle: 'italic',
     marginTop: 3,
@@ -699,7 +699,7 @@ const s = StyleSheet.create({
     backgroundColor: '#fff',
     paddingHorizontal: 10,
     fontFamily: FontFamily.ja,
-    fontSize: 11,
+    fontSize: sf(11),
     color: INK,
     fontWeight: '600',
   },
@@ -711,7 +711,7 @@ const s = StyleSheet.create({
   fieldLabel: {
     fontFamily: FontFamily.markerBold,
     fontWeight: '600',
-    fontSize: 11,
+    fontSize: sf(11),
     color: INK,
     textTransform: 'uppercase',
     letterSpacing: 0.6,
@@ -728,14 +728,14 @@ const s = StyleSheet.create({
   },
   fieldValueInput: {
     fontFamily: FontFamily.ja,
-    fontSize: 11,
+    fontSize: sf(11),
     color: INK,
     textAlign: 'center',
     fontWeight: '600',
   },
   fieldValueText: {
     fontFamily: FontFamily.ja,
-    fontSize: 11,
+    fontSize: sf(11),
     color: INK,
     textAlign: 'center',
     fontWeight: '600',
@@ -747,7 +747,7 @@ const s = StyleSheet.create({
   },
   dichotomyText: {
     fontFamily: FontFamily.marker,
-    fontSize: 11,
+    fontSize: sf(11),
     fontWeight: '500',
     color: INK,
   },
@@ -761,7 +761,7 @@ const s = StyleSheet.create({
   },
   dichotomySlash: {
     fontFamily: FontFamily.marker,
-    fontSize: 11,
+    fontSize: sf(11),
     color: INK,
     opacity: 0.5,
   },
@@ -774,7 +774,7 @@ const s = StyleSheet.create({
   sharingLabel: {
     fontFamily: FontFamily.markerBold,
     fontWeight: '700',
-    fontSize: 13,
+    fontSize: sf(13),
     color: INK,
     textTransform: 'uppercase',
   },
@@ -785,7 +785,7 @@ const s = StyleSheet.create({
   },
   sharingText: {
     fontFamily: FontFamily.marker,
-    fontSize: 12,
+    fontSize: sf(12),
     fontWeight: '500',
     color: INK,
   },
@@ -800,7 +800,7 @@ const s = StyleSheet.create({
   sliderLabel: {
     fontFamily: FontFamily.markerBold,
     fontWeight: '600',
-    fontSize: 9,
+    fontSize: sf(9),
     color: INK,
     letterSpacing: 0.8,
     textTransform: 'uppercase',
@@ -848,7 +848,7 @@ const s = StyleSheet.create({
   },
   photoBoxLabel: {
     fontFamily: FontFamily.marker,
-    fontSize: 9,
+    fontSize: sf(9),
     color: INK,
     opacity: 0.55,
     textTransform: 'uppercase',
@@ -884,14 +884,14 @@ const s = StyleSheet.create({
   polaroidCaption: {
     marginTop: 6,
     fontFamily: FontFamily.script,
-    fontSize: 12,
+    fontSize: sf(12),
     color: INK,
     textAlign: 'center',
   },
   polaroidCaptionInput: {
     marginTop: 6,
     fontFamily: FontFamily.script,
-    fontSize: 12,
+    fontSize: sf(12),
     color: INK,
     textAlign: 'center',
     padding: 0,
@@ -916,7 +916,7 @@ const s = StyleSheet.create({
   windowTitle: {
     fontFamily: FontFamily.markerBold,
     fontWeight: '700',
-    fontSize: 12,
+    fontSize: sf(12),
     color: INK,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -935,7 +935,7 @@ const s = StyleSheet.create({
   },
   musicTrack: {
     fontFamily: FontFamily.script,
-    fontSize: 14,
+    fontSize: sf(14),
     color: INK,
     marginBottom: 2,
   },
@@ -1030,7 +1030,7 @@ const s = StyleSheet.create({
   },
   profileWhoText: {
     fontFamily: FontFamily.markerBold,
-    fontSize: 10,
+    fontSize: sf(10),
     fontWeight: '700',
     color: INK,
     letterSpacing: 0.8,
@@ -1047,7 +1047,7 @@ const s = StyleSheet.create({
   },
   profileGoodLabel: {
     fontFamily: FontFamily.markerBold,
-    fontSize: 9,
+    fontSize: sf(9),
     fontWeight: '600',
     color: INK,
     textTransform: 'uppercase',
@@ -1056,14 +1056,14 @@ const s = StyleSheet.create({
   },
   profileGoodText: {
     fontFamily: FontFamily.ja,
-    fontSize: 11,
+    fontSize: sf(11),
     color: INK,
     flex: 1,
     lineHeight: 16,
   },
   profileGoodInput: {
     fontFamily: FontFamily.ja,
-    fontSize: 11,
+    fontSize: sf(11),
     color: INK,
     flex: 1,
     padding: 0,
@@ -1094,7 +1094,7 @@ const s = StyleSheet.create({
   },
   twinProfileWho: {
     fontFamily: FontFamily.markerBold,
-    fontSize: 10,
+    fontSize: sf(10),
     fontWeight: '700',
     color: INK,
     letterSpacing: 0.8,
@@ -1111,7 +1111,7 @@ const s = StyleSheet.create({
   twinProfileKey: {
     fontFamily: FontFamily.markerBold,
     fontWeight: '600',
-    fontSize: 8,
+    fontSize: sf(8),
     letterSpacing: 0.5,
     textTransform: 'uppercase',
     color: INK,
@@ -1120,7 +1120,7 @@ const s = StyleSheet.create({
   },
   twinProfileVal: {
     fontFamily: FontFamily.ja,
-    fontSize: 11,
+    fontSize: sf(11),
     color: INK,
     flex: 1,
     fontWeight: '600',

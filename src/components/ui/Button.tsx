@@ -1,4 +1,4 @@
-import { Colors, FontFamily, FontSize, Radius, Shadow } from '@/constants/theme';
+import { Colors, FontFamily, FontSize, Radius, Shadow ,sf } from '@/constants/theme';
 import { Pressable, StyleSheet, Text, View, ViewStyle } from 'react-native';
 
 // design/components.jsx — Btn
@@ -21,7 +21,7 @@ type Props = {
 
 const SIZES = {
   sm: { height: 32, paddingHorizontal: 14, fontSize: FontSize.meta,  gap: 6 },
-  md: { height: 40, paddingHorizontal: 18, fontSize: 14,              gap: 8 },
+  md: { height: 40, paddingHorizontal: 18, fontSize: sf(14),              gap: 8 },
   lg: { height: 50, paddingHorizontal: 24, fontSize: FontSize.bodyLg, gap: 10 },
 } as const;
 

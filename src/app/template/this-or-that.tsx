@@ -6,7 +6,7 @@ import {
   MarkerCard, TitleHeader, Check, INK,
 } from '@/components/templates/primitives';
 import { CalloutBubble } from '@/components/ui/Callouts';
-import { FontFamily } from '@/constants/theme';
+import { FontFamily ,sf } from '@/constants/theme';
 import { useTemplateCtx } from '@/store/templateData';
 
 const PAIRS: [string, string][] = [
@@ -103,8 +103,8 @@ export default function TemplateThisOrThat() {
 
 const s = StyleSheet.create({
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
-  themLabel: { fontFamily: FontFamily.markerBold, fontWeight: '700', fontSize: 12, color: INK },
-  themName: { fontFamily: FontFamily.ja, fontWeight: '600', fontSize: 12, color: INK },
+  themLabel: { fontFamily: FontFamily.markerBold, fontWeight: '700', fontSize: sf(12), color: INK },
+  themName: { fontFamily: FontFamily.ja, fontWeight: '600', fontSize: sf(12), color: INK },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   pairCard: {
     width: '48.5%',
@@ -115,17 +115,17 @@ const s = StyleSheet.create({
     backgroundColor: '#fff',
     gap: 4,
   },
-  pairIndex: { fontFamily: FontFamily.markerBold, fontWeight: '600', fontSize: 9, color: INK, opacity: 0.85, letterSpacing: 0.8 },
+  pairIndex: { fontFamily: FontFamily.markerBold, fontWeight: '600', fontSize: sf(9), color: INK, opacity: 0.85, letterSpacing: 0.8 },
   pairRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   pairHalf: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   pairHalfRight: {},
-  pairText: { fontFamily: FontFamily.marker, fontWeight: '500', fontSize: 10.5, color: INK },
+  pairText: { fontFamily: FontFamily.marker, fontWeight: '500', fontSize: sf(11), color: INK },
   pairChosen: { fontFamily: FontFamily.markerBold, fontWeight: '700', textDecorationLine: 'underline' },
-  pairSlash: { fontFamily: FontFamily.marker, fontSize: 9, color: INK, opacity: 0.7, marginHorizontal: 2 },
+  pairSlash: { fontFamily: FontFamily.marker, fontSize: sf(9), color: INK, opacity: 0.7, marginHorizontal: 2 },
   noteWrap: { marginTop: 14, alignItems: 'center' },
   noteText: {
     fontFamily: FontFamily.script,
-    fontSize: 16,
+    fontSize: sf(16),
     color: '#8b3a4a',
     lineHeight: 18,
     textAlign: 'center',

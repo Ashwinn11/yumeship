@@ -8,7 +8,7 @@ import { useIPad } from '@/hooks/use-ipad';
 
 import { CozyModal } from '@/components/ui/CozyModal';
 import { IconPlus, IconTrashSolid } from '@/components/ui/Icon';
-import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing } from '@/constants/theme';
+import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing ,sf } from '@/constants/theme';
 import { addAlbum, addAlbumPhoto, deleteAlbum, deleteAlbumPhoto, useAlbumPhotos, useAlbums } from '@/store/albums';
 import { StickerPolaroid } from '@/components/deco';
 
@@ -96,10 +96,10 @@ export function AlbumsTab({ shipId, setCustomBack }: { shipId: string; setCustom
       {albums.length === 0 && !creating ? (
         <View style={[s.empty, { paddingVertical: 60, paddingHorizontal: 20, gap: 12 }]}>
           <StickerPolaroid size={88} />
-          <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: 26, color: Colors.ink, textAlign: 'center', marginTop: 10 }}>
+          <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: sf(26), color: Colors.ink, textAlign: 'center', marginTop: 10 }}>
             no memories yet
           </Text>
-          <Text style={{ fontFamily: FontFamily.script, fontSize: 18, lineHeight: 22, color: Colors.ink2, textAlign: 'center', marginVertical: 8 }}>
+          <Text style={{ fontFamily: FontFamily.script, fontSize: sf(18), lineHeight: 22, color: Colors.ink2, textAlign: 'center', marginVertical: 8 }}>
             candid snaps, cozy dates, and polaroids —{"\n"}keep them safe.
           </Text>
           <Pressable
@@ -121,7 +121,7 @@ export function AlbumsTab({ shipId, setCustomBack }: { shipId: string; setCustom
             onPress={() => setCreating(true)}
           >
             <IconPlus size={12} color={Colors.vellum} />
-            <Text style={{ fontFamily: FontFamily.uiMedium, fontSize: 14, color: Colors.vellum }}>new album</Text>
+            <Text style={{ fontFamily: FontFamily.uiMedium, fontSize: sf(14), color: Colors.vellum }}>new album</Text>
           </Pressable>
         </View>
       ) : (
@@ -238,10 +238,10 @@ function AlbumView({ albumId, albumTitle, onBack }: { albumId: string; albumTitl
       {photos.length === 0 ? (
         <View style={[s.empty, { paddingVertical: 60, paddingHorizontal: 20, gap: 12 }]}>
           <StickerPolaroid size={88} />
-          <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: 26, color: Colors.ink, textAlign: 'center', marginTop: 10 }}>
+          <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: sf(26), color: Colors.ink, textAlign: 'center', marginTop: 10 }}>
             empty album
           </Text>
-          <Text style={{ fontFamily: FontFamily.script, fontSize: 18, lineHeight: 22, color: Colors.ink2, textAlign: 'center', marginVertical: 8 }}>
+          <Text style={{ fontFamily: FontFamily.script, fontSize: sf(18), lineHeight: 22, color: Colors.ink2, textAlign: 'center', marginVertical: 8 }}>
             save your favorite moments —{"\n"}tap to add photos.
           </Text>
           <Pressable
@@ -263,7 +263,7 @@ function AlbumView({ albumId, albumTitle, onBack }: { albumId: string; albumTitl
             onPress={pickPhoto}
           >
             <IconPlus size={12} color={Colors.vellum} />
-            <Text style={{ fontFamily: FontFamily.uiMedium, fontSize: 14, color: Colors.vellum }}>add photos</Text>
+            <Text style={{ fontFamily: FontFamily.uiMedium, fontSize: sf(14), color: Colors.vellum }}>add photos</Text>
           </Pressable>
         </View>
       ) : (
@@ -330,19 +330,19 @@ function AlbumView({ albumId, albumTitle, onBack }: { albumId: string; albumTitl
 const s = StyleSheet.create({
   tab: { paddingHorizontal: Spacing.s5, paddingTop: Spacing.s2, paddingBottom: Spacing.s6, gap: 10 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
-  label: { fontFamily: FontFamily.marker, fontSize: 9, color: Colors.ink3, letterSpacing: 1.4, textTransform: 'uppercase' },
+  label: { fontFamily: FontFamily.marker, fontSize: sf(9), color: Colors.ink3, letterSpacing: 1.4, textTransform: 'uppercase' },
   newBox: {
     padding: Spacing.s4, backgroundColor: Colors.vellum,
     borderWidth: 1, borderColor: Colors.sakura, borderRadius: Radius.r3, gap: 10,
   },
   newInput: {
-    fontFamily: FontFamily.ui, fontSize: 15, color: Colors.ink,
+    fontFamily: FontFamily.ui, fontSize: sf(15), color: Colors.ink,
     borderBottomWidth: 1, borderBottomColor: Colors.line, paddingBottom: 6,
   },
   newActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 12 },
-  cancelText: { fontFamily: FontFamily.ui, fontSize: 13, color: Colors.ink3, padding: 4 },
+  cancelText: { fontFamily: FontFamily.ui, fontSize: sf(13), color: Colors.ink3, padding: 4 },
   createBtn: { paddingVertical: 4, paddingHorizontal: 14, backgroundColor: Colors.sakuraDeep, borderRadius: Radius.pill },
-  createBtnText: { fontFamily: FontFamily.uiMedium, fontSize: 13, color: Colors.vellum },
+  createBtnText: { fontFamily: FontFamily.uiMedium, fontSize: sf(13), color: Colors.vellum },
   empty: { alignItems: 'center', gap: Spacing.s3, paddingVertical: Spacing.s7 },
   emptyTitle: { fontFamily: FontFamily.displayItalic, fontSize: FontSize.h5, color: Colors.ink },
   emptySub: { fontFamily: FontFamily.displayItalic, fontSize: FontSize.meta, color: Colors.ink2, textAlign: 'center' },
@@ -365,17 +365,17 @@ const s = StyleSheet.create({
     backgroundColor: Colors.ink, alignItems: 'center', justifyContent: 'center',
     zIndex: 10,
   },
-  albumDeleteText: { fontSize: 10, color: Colors.vellum, fontFamily: FontFamily.ui },
+  albumDeleteText: { fontSize: sf(10), color: Colors.vellum, fontFamily: FontFamily.ui },
   albumCover: { width: '100%', height: 100 },
   albumCoverEmpty: {
     width: '100%', height: 100,
     backgroundColor: Colors.sakuraSoft, alignItems: 'center', justifyContent: 'center',
   },
-  albumCoverIcon: { fontFamily: FontFamily.ja, fontSize: 36, color: Colors.sakura },
+  albumCoverIcon: { fontFamily: FontFamily.ja, fontSize: sf(36), color: Colors.sakura },
   albumInfo: { padding: Spacing.s3 },
   albumInfoRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  albumTitle: { fontFamily: FontFamily.uiSemiBold, fontSize: 13, color: Colors.ink, flex: 1, marginRight: 4 },
-  albumCount: { fontFamily: FontFamily.script, fontSize: 14, color: Colors.ink3, marginTop: 2 },
+  albumTitle: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(13), color: Colors.ink, flex: 1, marginRight: 4 },
+  albumCount: { fontFamily: FontFamily.script, fontSize: sf(14), color: Colors.ink3, marginTop: 2 },
 
   // Album view
   albumView: { flex: 1, backgroundColor: Colors.paper },
@@ -383,14 +383,14 @@ const s = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: Spacing.s5, paddingTop: Spacing.s2, paddingBottom: Spacing.s3,
   },
-  albumViewTitle: { fontFamily: FontFamily.uiSemiBold, fontSize: 17, color: Colors.ink, flex: 1 },
+  albumViewTitle: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(17), color: Colors.ink, flex: 1 },
   albumTopActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   albumActionBtn: {
     paddingVertical: 4, paddingHorizontal: 12,
     borderRadius: Radius.pill, borderWidth: 1, borderColor: Colors.line,
     backgroundColor: Colors.vellum,
   },
-  albumActionText: { fontFamily: FontFamily.uiMedium, fontSize: 12, color: Colors.ink2 },
+  albumActionText: { fontFamily: FontFamily.uiMedium, fontSize: sf(12), color: Colors.ink2 },
   albumAddBtn: {
     width: 30, height: 30, borderRadius: Radius.pill,
     backgroundColor: Colors.vellum, borderWidth: 1, borderColor: Colors.line,
@@ -415,7 +415,7 @@ const s = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
     ...Shadow.s1,
   },
-  checkMark: { color: '#fff', fontSize: 12, fontFamily: FontFamily.uiSemiBold },
+  checkMark: { color: '#fff', fontSize: sf(12), fontFamily: FontFamily.uiSemiBold },
 
   // Select action bar
   selectBar: {
@@ -424,13 +424,13 @@ const s = StyleSheet.create({
     backgroundColor: Colors.paper,
     borderTopWidth: 1, borderTopColor: Colors.line,
   },
-  selectCount: { fontFamily: FontFamily.uiMedium, fontSize: 14, color: Colors.ink2 },
+  selectCount: { fontFamily: FontFamily.uiMedium, fontSize: sf(14), color: Colors.ink2 },
   deleteBtn: {
     paddingVertical: 8, paddingHorizontal: 20,
     backgroundColor: Colors.ember, borderRadius: Radius.pill,
   },
   deleteBtnDisabled: { opacity: 0.35 },
-  deleteBtnText: { fontFamily: FontFamily.uiMedium, fontSize: 14, color: '#fff' },
+  deleteBtnText: { fontFamily: FontFamily.uiMedium, fontSize: sf(14), color: '#fff' },
 
   // Lightbox
   lightbox: {

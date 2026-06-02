@@ -9,7 +9,7 @@ import { ThoughtCloud } from '@/components/ui';
 import { Button } from '@/components/ui/Button';
 import { Mark } from '@/components/ui/Mark';
 import { StepDots } from '@/components/ui/StepDots';
-import { Colors, FontFamily, FontSize, Radius, Spacing } from '@/constants/theme';
+import { Colors, FontFamily, FontSize, Radius, Spacing ,sf } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
 import { resetOnb, setOnbField } from '@/store/onboarding';
 
@@ -98,7 +98,7 @@ export default function OnbFO() {
                 onChangeText={handleShipName}
                 placeholder="e.g. kurotsuki"
                 placeholderTextColor={Colors.ink3}
-                style={{ flex: 1, paddingVertical: 0, fontFamily: FontFamily.ui, fontSize: 18, color: Colors.ink, height: 28 }}
+                style={{ flex: 1, paddingVertical: 0, fontFamily: FontFamily.ui, fontSize: sf(18), color: Colors.ink, height: 28 }}
               />
               <Bullets.Heart size={12} color={Colors.sakuraDeep} />
             </View>
@@ -124,7 +124,7 @@ export default function OnbFO() {
                 elevation: 2,
               }}
             >
-              <Text style={{ color: '#ffffff', fontFamily: FontFamily.displayItalic, fontSize: 36, fontWeight: 'bold' }}>
+              <Text style={{ color: '#ffffff', fontFamily: FontFamily.displayItalic, fontSize: sf(36), fontWeight: 'bold' }}>
                 {foName.charAt(0).toUpperCase() || '♡'}
               </Text>
             </LinearGradient>
@@ -137,7 +137,7 @@ export default function OnbFO() {
                   onChangeText={handleFoName}
                   placeholder="e.g. Kuroo Tetsurou"
                   placeholderTextColor={Colors.ink3}
-                  style={{ borderBottomWidth: 1, borderBottomColor: Colors.line, paddingVertical: 2, fontFamily: FontFamily.ui, fontSize: 15, color: Colors.ink }}
+                  style={{ borderBottomWidth: 1, borderBottomColor: Colors.line, paddingVertical: 2, fontFamily: FontFamily.ui, fontSize: sf(15), color: Colors.ink }}
                 />
               </View>
 
@@ -148,7 +148,7 @@ export default function OnbFO() {
                   onChangeText={handleFandom}
                   placeholder="e.g. Haikyuu!! · canon"
                   placeholderTextColor={Colors.ink3}
-                  style={{ borderBottomWidth: 1, borderBottomColor: Colors.line, paddingVertical: 2, fontFamily: FontFamily.ui, fontSize: 12, color: Colors.ink2 }}
+                  style={{ borderBottomWidth: 1, borderBottomColor: Colors.line, paddingVertical: 2, fontFamily: FontFamily.ui, fontSize: sf(12), color: Colors.ink2 }}
                 />
               </View>
             </View>
@@ -180,7 +180,7 @@ export default function OnbFO() {
                       backgroundColor: isActive ? activeBg : Colors.paperDeep,
                     }}
                   >
-                    <Text style={{ fontSize: 11, fontFamily: FontFamily.uiMedium, color: isActive ? activeColor : Colors.ink2 }}>
+                    <Text style={{ fontSize: sf(11), fontFamily: FontFamily.uiMedium, color: isActive ? activeColor : Colors.ink2 }}>
                       {r}
                     </Text>
                   </Pressable>
@@ -217,7 +217,7 @@ export default function OnbFO() {
                       backgroundColor: isActive ? activeBg : Colors.paperDeep,
                     }}
                   >
-                    <Text style={{ fontSize: 11, fontFamily: FontFamily.uiMedium, color: isActive ? activeColor : Colors.ink2 }}>
+                    <Text style={{ fontSize: sf(11), fontFamily: FontFamily.uiMedium, color: isActive ? activeColor : Colors.ink2 }}>
                       {label}
                     </Text>
                   </Pressable>
@@ -297,17 +297,17 @@ const styles = StyleSheet.create({
     width: 32, height: 32, borderRadius: Radius.pill,
     backgroundColor: Colors.paperDeep, alignItems: 'center', justifyContent: 'center',
   },
-  closeBtnText: { fontSize: 12, color: Colors.ink2, fontFamily: FontFamily.ui },
+  closeBtnText: { fontSize: sf(12), color: Colors.ink2, fontFamily: FontFamily.ui },
   headerCenter: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   headerTitle: { fontFamily: FontFamily.displayItalic, fontSize: FontSize.h6, color: Colors.ink },
   scroll: { flex: 1 },
   scrollContent: { paddingHorizontal: Spacing.s6, paddingTop: Spacing.s5, paddingBottom: Spacing.s4 },
   eyebrow: {
-    fontFamily: FontFamily.marker, fontSize: 10, color: Colors.plum,
+    fontFamily: FontFamily.marker, fontSize: sf(10), color: Colors.plum,
     letterSpacing: 1.6, textTransform: 'uppercase', fontWeight: '600',
   },
   heading: {
-    fontFamily: FontFamily.displayItalic, fontSize: 26, lineHeight: 28,
+    fontFamily: FontFamily.displayItalic, fontSize: sf(26), lineHeight: 28,
     letterSpacing: -0.3, color: Colors.ink, marginTop: Spacing.s2,
   },
   headingNew: { marginTop: 0 },
@@ -317,7 +317,7 @@ const styles = StyleSheet.create({
     shadowColor: 'rgba(110, 58, 90, 0.05)', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 1, shadowRadius: 4, elevation: 1,
   },
   cardDivider: { height: 1.2, backgroundColor: Colors.line, marginVertical: 14, opacity: 0.6 },
-  fieldLabel: { fontFamily: FontFamily.marker, fontSize: 8, color: Colors.ink3, letterSpacing: 1.4, fontWeight: '600' },
+  fieldLabel: { fontFamily: FontFamily.marker, fontSize: sf(8), color: Colors.ink3, letterSpacing: 1.4, fontWeight: '600' },
   paletteRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap', marginTop: 6 },
   swatch: {
     width: 24, height: 24, borderRadius: Radius.pill,

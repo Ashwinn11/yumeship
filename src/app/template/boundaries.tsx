@@ -1,6 +1,6 @@
 import { TemplateScreenWrapper } from '@/components/templates/TemplateScreenWrapper';
 import { INK, MarkerCard, ScriptCredit, SquareCheck } from '@/components/templates/primitives';
-import { FontFamily } from '@/constants/theme';
+import { FontFamily ,sf } from '@/constants/theme';
 import { useTemplateCtx } from '@/store/templateData';
 import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
@@ -118,9 +118,9 @@ const s = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 999,
   },
-  titleJa: { fontFamily: FontFamily.ja, fontWeight: '600', fontSize: 18, color: '#fff' },
-  titleText: { fontFamily: FontFamily.markerBold, fontWeight: '700', fontSize: 16, color: '#fff', letterSpacing: 0.8, textTransform: 'uppercase' },
-  titleSub: { fontFamily: FontFamily.script, fontSize: 14, color: INK },
+  titleJa: { fontFamily: FontFamily.ja, fontWeight: '600', fontSize: sf(18), color: '#fff' },
+  titleText: { fontFamily: FontFamily.markerBold, fontWeight: '700', fontSize: sf(16), color: '#fff', letterSpacing: 0.8, textTransform: 'uppercase' },
+  titleSub: { fontFamily: FontFamily.script, fontSize: sf(14), color: INK },
   states: { marginTop: 14, gap: 10 },
   stateCard: {
     borderWidth: 2,
@@ -140,18 +140,18 @@ const s = StyleSheet.create({
     justifyContent: 'center',
     flexShrink: 0,
   },
-  sealJa: { fontFamily: FontFamily.ja, fontWeight: '600', fontSize: 22 },
+  sealJa: { fontFamily: FontFamily.ja, fontWeight: '600', fontSize: sf(22) },
   stateContent: { flex: 1, minWidth: 0 },
-  stateTitle: { fontFamily: FontFamily.markerBold, fontWeight: '700', fontSize: 15, letterSpacing: 0.5 },
-  stateDesc: { fontFamily: FontFamily.ui, fontSize: 11, color: INK, marginTop: 1 },
+  stateTitle: { fontFamily: FontFamily.markerBold, fontWeight: '700', fontSize: sf(15), letterSpacing: 0.5 },
+  stateDesc: { fontFamily: FontFamily.ui, fontSize: sf(11), color: INK, marginTop: 1 },
   checkGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 3, marginTop: 6 },
   checkRow: { flexDirection: 'row', alignItems: 'center', gap: 4, width: '48%' },
-  checkText: { fontFamily: FontFamily.marker, fontSize: 9, fontWeight: '500', color: INK },
+  checkText: { fontFamily: FontFamily.marker, fontSize: sf(9), fontWeight: '500', color: INK },
   chibi: { flexShrink: 0, alignSelf: 'center' },
   footer: {
     textAlign: 'center',
     fontFamily: FontFamily.ui,
-    fontSize: 11,
+    fontSize: sf(11),
     color: INK,
     opacity: 0.7,
     marginTop: 14,

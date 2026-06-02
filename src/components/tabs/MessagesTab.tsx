@@ -10,7 +10,7 @@ import { useIPad } from '@/hooks/use-ipad';
 
 import { CozyModal } from '@/components/ui/CozyModal';
 import { IconSend } from '@/components/ui/Icon';
-import { Colors, FontFamily, Radius, Spacing } from '@/constants/theme';
+import { Colors, FontFamily, Radius, Spacing ,sf } from '@/constants/theme';
 import { addMessage, addThread, deleteMessage, useMessages, useThreads } from '@/store/messages';
 import { useShip } from '@/store/ships';
 import { StickerEnvelope, WashiTape } from '@/components/deco';
@@ -142,7 +142,7 @@ function ThreadView({
         {/* Back chevron */}
         {onBack && (
           <Pressable onPress={onBack} hitSlop={8} style={{ marginRight: 2 }}>
-            <Text style={{ fontSize: 28, color: Colors.ink2, fontFamily: FontFamily.ui, lineHeight: 28 }}>‹</Text>
+            <Text style={{ fontSize: sf(28), color: Colors.ink2, fontFamily: FontFamily.ui, lineHeight: 28 }}>‹</Text>
           </Pressable>
         )}
 
@@ -166,17 +166,17 @@ function ThreadView({
             elevation: 2,
           }}
         >
-          <Text style={{ color: '#fff', fontFamily: FontFamily.displayItalic, fontSize: 21 }}>
+          <Text style={{ color: '#fff', fontFamily: FontFamily.displayItalic, fontSize: sf(21) }}>
             {foName.charAt(0).toUpperCase()}
           </Text>
         </LinearGradient>
 
         {/* Name + subtitle */}
         <View style={{ flex: 1 }}>
-          <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: 19, color: Colors.ink, lineHeight: 21 }}>
+          <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: sf(19), color: Colors.ink, lineHeight: 21 }}>
             {foName}
           </Text>
-          <Text style={{ fontFamily: FontFamily.script, fontSize: 13, color: Colors.sakuraInk, marginTop: 1 }}>
+          <Text style={{ fontFamily: FontFamily.script, fontSize: sf(13), color: Colors.sakuraInk, marginTop: 1 }}>
             {shipTitle || 'imagined ♡'}
           </Text>
         </View>
@@ -201,7 +201,7 @@ function ThreadView({
           >
             <Text style={{
               fontFamily: FontFamily.uiMedium,
-              fontSize: 12,
+              fontSize: sf(12),
               color: sender === 'me' ? Colors.vellum : Colors.ink2,
             }}>
               me
@@ -219,7 +219,7 @@ function ThreadView({
           >
             <Text style={{
               fontFamily: FontFamily.uiMedium,
-              fontSize: 12,
+              fontSize: sf(12),
               color: sender === 'them' ? Colors.vellum : Colors.ink2,
             }}>
               {foName}
@@ -239,10 +239,10 @@ function ThreadView({
           {messages.length === 0 ? (
             <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 60, paddingHorizontal: 20, gap: 12 }}>
               <StickerEnvelope size={88} />
-              <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: 26, color: Colors.ink, textAlign: 'center', marginTop: 10 }}>
+              <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: sf(26), color: Colors.ink, textAlign: 'center', marginTop: 10 }}>
                 your conversation starts here
               </Text>
-              <Text style={{ fontFamily: FontFamily.script, fontSize: 18, lineHeight: 22, color: Colors.ink2, textAlign: 'center', marginVertical: 8 }}>
+              <Text style={{ fontFamily: FontFamily.script, fontSize: sf(18), lineHeight: 22, color: Colors.ink2, textAlign: 'center', marginVertical: 8 }}>
                 imagined texts —{"\n"}never sent, always read.
               </Text>
               <Pressable
@@ -264,7 +264,7 @@ function ThreadView({
                 onPress={() => inputRef.current?.focus()}
               >
                 <IconSend size={11} color={Colors.vellum} />
-                <Text style={{ fontFamily: FontFamily.uiMedium, fontSize: 14, color: Colors.vellum }}>write the first one</Text>
+                <Text style={{ fontFamily: FontFamily.uiMedium, fontSize: sf(14), color: Colors.vellum }}>write the first one</Text>
               </Pressable>
             </View>
           ) : (
@@ -280,7 +280,7 @@ function ThreadView({
                   const time = dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }).toLowerCase();
                   list.push(
                     <View key={`time-${m.id}`} style={{ alignItems: 'center', marginVertical: 14 }}>
-                      <Text style={{ fontFamily: FontFamily.marker, fontSize: 10, color: Colors.ink3, letterSpacing: 1.2, textTransform: 'uppercase' }}>
+                      <Text style={{ fontFamily: FontFamily.marker, fontSize: sf(10), color: Colors.ink3, letterSpacing: 1.2, textTransform: 'uppercase' }}>
                         🌸 {weekday.toUpperCase()} · {time.toUpperCase()}
                       </Text>
                     </View>
@@ -330,7 +330,7 @@ function ThreadView({
 const s = StyleSheet.create({
   tab: { flex: 1, backgroundColor: Colors.paperDeep },
   loadingBox: { padding: 40, alignItems: 'center', justifyContent: 'center' },
-  loadingText: { fontFamily: FontFamily.ui, color: Colors.ink3, fontSize: 14 },
+  loadingText: { fontFamily: FontFamily.ui, color: Colors.ink3, fontSize: sf(14) },
 
   // Thread view
   threadView: { flex: 1 },
@@ -338,16 +338,16 @@ const s = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingVertical: 8, marginBottom: 12,
   },
-  threadViewTitle: { fontFamily: FontFamily.marker, fontSize: 10, color: Colors.ink3, letterSpacing: 1.4, textTransform: 'uppercase' },
+  threadViewTitle: { fontFamily: FontFamily.marker, fontSize: sf(10), color: Colors.ink3, letterSpacing: 1.4, textTransform: 'uppercase' },
   senderToggle: { flexDirection: 'row', backgroundColor: Colors.paperDeep, borderRadius: Radius.pill, padding: 3, borderWidth: 1, borderColor: Colors.line },
   senderBtn: { paddingVertical: 4, paddingHorizontal: 10, borderRadius: Radius.pill },
   senderBtnActive: { backgroundColor: Colors.sakuraDeep },
-  senderBtnText: { fontFamily: FontFamily.ui, fontSize: 11, color: Colors.ink2 },
+  senderBtnText: { fontFamily: FontFamily.ui, fontSize: sf(11), color: Colors.ink2 },
   senderBtnTextActive: { color: Colors.vellum },
 
   bubbleScroll: { flex: 1 },
   bubbleContent: { paddingHorizontal: 16, paddingVertical: 18, gap: 12 },
-  noMessages: { textAlign: 'center', fontFamily: FontFamily.ui, fontSize: 12, color: Colors.ink3, paddingTop: 40, paddingHorizontal: 20 },
+  noMessages: { textAlign: 'center', fontFamily: FontFamily.ui, fontSize: sf(12), color: Colors.ink3, paddingTop: 40, paddingHorizontal: 20 },
 
   bubbleRow: { flexDirection: 'row', width: '100%' },
   bubbleRowMe: { justifyContent: 'flex-end' },
@@ -374,7 +374,7 @@ const s = StyleSheet.create({
     borderColor: Colors.line,
     borderBottomLeftRadius: 4,
   },
-  bubbleText: { fontFamily: FontFamily.ui, fontSize: 13, lineHeight: 18 },
+  bubbleText: { fontFamily: FontFamily.ui, fontSize: sf(13), lineHeight: 18 },
   bubbleTextMe: { color: Colors.vellum },
   bubbleTextThem: { color: Colors.ink },
 
@@ -387,17 +387,17 @@ const s = StyleSheet.create({
   input: {
     flex: 1, minHeight: 40, maxHeight: 120, paddingVertical: 10, paddingHorizontal: 14,
     backgroundColor: Colors.vellum, borderWidth: 1, borderColor: Colors.line,
-    borderRadius: 20, fontFamily: FontFamily.ui, fontSize: 14, color: Colors.ink,
+    borderRadius: 20, fontFamily: FontFamily.ui, fontSize: sf(14), color: Colors.ink,
     lineHeight: 20,
   },
   sendBtn: {
     width: 38, height: 38, borderRadius: Radius.pill,
     backgroundColor: Colors.sakuraDeep, alignItems: 'center', justifyContent: 'center',
   },
-  sendBtnText: { fontSize: 16, color: Colors.vellum },
+  sendBtnText: { fontSize: sf(16), color: Colors.vellum },
   dayLabel: {
     textAlign: 'center',
-    fontSize: 11,
+    fontSize: sf(11),
     color: Colors.ink3,
     fontFamily: FontFamily.marker,
     letterSpacing: 0.6,

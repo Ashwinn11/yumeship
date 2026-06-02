@@ -1,4 +1,4 @@
-import { Colors, FontFamily, FontSize } from '@/constants/theme';
+import { Colors, FontFamily, FontSize ,sf } from '@/constants/theme';
 import { Text, View, ViewStyle } from 'react-native';
 
 // design/components.jsx — Field
@@ -26,7 +26,7 @@ export function Field({ label, hint, children, style }: Props) {
       </Text>
       {children}
       {hint && (
-        <Text style={{ fontFamily: FontFamily.ui, fontSize: 11, color: Colors.ink3 }}>
+        <Text style={{ fontFamily: FontFamily.ui, fontSize: sf(11), color: Colors.ink3 }}>
           {hint}
         </Text>
       )}

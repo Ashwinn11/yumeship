@@ -1,6 +1,6 @@
 import { Sakura } from '@/components/deco/Sakura';
 import { IconChevronLeft } from '@/components/ui/Icon';
-import { Colors, FontFamily, FontSize, Radius, Spacing } from '@/constants/theme';
+import { Colors, FontFamily, FontSize, Radius, Spacing ,sf } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
 import { router } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -65,7 +65,7 @@ function Section({ title, children }: { title: string; children: string }) {
 const s = StyleSheet.create({
   section: { marginBottom: Spacing.s4 },
   heading: {
-    fontFamily: FontFamily.uiSemiBold, fontSize: 13, color: Colors.ink,
+    fontFamily: FontFamily.uiSemiBold, fontSize: sf(13), color: Colors.ink,
     marginBottom: 6, fontWeight: '600',
   },
   body: {
@@ -97,14 +97,14 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   title: {
-    fontFamily: FontFamily.displayItalic, fontSize: 22, color: Colors.ink, flex: 1,
+    fontFamily: FontFamily.displayItalic, fontSize: sf(22), color: Colors.ink, flex: 1,
   },
   scroll: { flex: 1 },
   content: {
     paddingHorizontal: Spacing.s5, paddingTop: Spacing.s4, paddingBottom: Spacing.s9,
   },
   updated: {
-    fontFamily: FontFamily.ui, fontSize: 11, color: Colors.ink3,
+    fontFamily: FontFamily.ui, fontSize: sf(11), color: Colors.ink3,
     marginBottom: Spacing.s4,
   },
 });

@@ -1,4 +1,4 @@
-import { Colors, FontFamily } from '@/constants/theme';
+import { Colors, FontFamily ,sf } from '@/constants/theme';
 import React from 'react';
 import { StyleSheet, Text, View, ViewStyle } from 'react-native';
 import Svg, { Circle, Ellipse, Path } from 'react-native-svg';
@@ -42,7 +42,7 @@ export function CalloutBubble({ children, tone = 'pink', notch = true, raw = fal
             top: 2,
             left: 8,
             fontFamily: 'Georgia',
-            fontSize: 22,
+            fontSize: sf(22),
             color: t.quote,
             fontStyle: 'italic',
             opacity: 0.85,
@@ -55,7 +55,7 @@ export function CalloutBubble({ children, tone = 'pink', notch = true, raw = fal
           <Text
             style={{
               fontFamily: FontFamily.script,
-              fontSize: 16,
+              fontSize: sf(16),
               lineHeight: 18,
               color: t.color,
               textAlign: 'center',
@@ -72,7 +72,7 @@ export function CalloutBubble({ children, tone = 'pink', notch = true, raw = fal
             bottom: -2,
             right: 10,
             fontFamily: 'Georgia',
-            fontSize: 26,
+            fontSize: sf(26),
             color: t.quote,
             fontStyle: 'italic',
             opacity: 0.9,
@@ -166,7 +166,7 @@ export function ThoughtCloud({ children, tone = 'lavender', flower = true, style
         <Text
           style={{
             fontFamily: FontFamily.script,
-            fontSize: 16,
+            fontSize: sf(16),
             lineHeight: 18,
             color: t.color,
             textAlign: 'center',

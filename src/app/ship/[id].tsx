@@ -22,7 +22,7 @@ import { Chip } from '@/components/ui/Chip';
 import { CozyModal } from '@/components/ui/CozyModal';
 import { GradientCover } from '@/components/ui/GradientCover';
 import { IconEdit, IconPlus, IconTrashSolid } from '@/components/ui/Icon';
-import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing } from '@/constants/theme';
+import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing ,sf } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
 import {
   addHeadcanon, deleteHeadcanon, updateHeadcanon, useHeadcanonCounts, useHeadcanons,
@@ -446,7 +446,7 @@ function ScenariosTab({ shipId, shipName }: { shipId: string; shipName: string }
           }}
         >
           <Pressable onPress={() => setComposing(false)} hitSlop={8}>
-            <Text style={{ fontFamily: FontFamily.ui, fontSize: 14, color: Colors.ink2 }}>cancel</Text>
+            <Text style={{ fontFamily: FontFamily.ui, fontSize: sf(14), color: Colors.ink2 }}>cancel</Text>
           </Pressable>
           <Pressable
             onPress={save}
@@ -462,7 +462,7 @@ function ScenariosTab({ shipId, shipName }: { shipId: string; shipName: string }
               elevation: 1,
             }}
           >
-            <Text style={{ fontFamily: FontFamily.uiMedium, fontSize: 13, color: Colors.vellum }}>save</Text>
+            <Text style={{ fontFamily: FontFamily.uiMedium, fontSize: sf(13), color: Colors.vellum }}>save</Text>
           </Pressable>
         </View>
 
@@ -500,7 +500,7 @@ function ScenariosTab({ shipId, shipName }: { shipId: string; shipName: string }
             placeholderTextColor={Colors.ink3}
             style={{
               fontFamily: FontFamily.displayItalic,
-              fontSize: 22,
+              fontSize: sf(22),
               color: Colors.ink,
               borderBottomWidth: 1,
               borderBottomColor: Colors.line,
@@ -517,7 +517,7 @@ function ScenariosTab({ shipId, shipName }: { shipId: string; shipName: string }
             placeholderTextColor={Colors.ink3}
             style={{
               fontFamily: FontFamily.script,
-              fontSize: 18,
+              fontSize: sf(18),
               color: Colors.ink2,
               lineHeight: 26,
               flex: 1,
@@ -562,11 +562,11 @@ function ScenariosTab({ shipId, shipName }: { shipId: string; shipName: string }
       {/* Redesigned Scenarios Header */}
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 14, paddingHorizontal: 4 }}>
         <View>
-          <Text style={{ fontFamily: FontFamily.marker, fontSize: 9, color: Colors.sakuraDeep, letterSpacing: 1.4, textTransform: 'uppercase', marginBottom: 2 }}>
+          <Text style={{ fontFamily: FontFamily.marker, fontSize: sf(9), color: Colors.sakuraDeep, letterSpacing: 1.4, textTransform: 'uppercase', marginBottom: 2 }}>
             SCENARIOS · {scenarios.length} SAVED
           </Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: 34, color: Colors.ink, lineHeight: 36 }}>
+            <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: sf(34), color: Colors.ink, lineHeight: 36 }}>
               what-ifs
             </Text>
             <Bullets.Sakura size={12} color={Colors.sakuraDeep} />
@@ -597,10 +597,10 @@ function ScenariosTab({ shipId, shipName }: { shipId: string; shipName: string }
       {scenarios.length === 0 ? (
         <View style={[styles.sceneEmpty, { paddingVertical: 60, paddingHorizontal: 20, gap: 12, alignItems: 'center', justifyContent: 'center' }]}>
           <StickerSakuraBranch size={88} />
-          <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: 26, color: Colors.ink, textAlign: 'center', marginTop: 10 }}>
+          <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: sf(26), color: Colors.ink, textAlign: 'center', marginTop: 10 }}>
             no daydreams yet
           </Text>
-          <Text style={{ fontFamily: FontFamily.script, fontSize: 18, lineHeight: 22, color: Colors.ink2, textAlign: 'center', marginVertical: 8 }}>
+          <Text style={{ fontFamily: FontFamily.script, fontSize: sf(18), lineHeight: 22, color: Colors.ink2, textAlign: 'center', marginVertical: 8 }}>
             the rainy afternoons,{"\n"}the airport goodbyes —{"\n"}start somewhere.
           </Text>
           <Pressable
@@ -622,7 +622,7 @@ function ScenariosTab({ shipId, shipName }: { shipId: string; shipName: string }
             onPress={() => setComposing(true)}
           >
             <IconPlus size={12} color={Colors.vellum} />
-            <Text style={{ fontFamily: FontFamily.uiMedium, fontSize: 14, color: Colors.vellum }}>write a scenario</Text>
+            <Text style={{ fontFamily: FontFamily.uiMedium, fontSize: sf(14), color: Colors.vellum }}>write a scenario</Text>
           </Pressable>
         </View>
       ) : (
@@ -664,15 +664,15 @@ function ScenariosTab({ shipId, shipName }: { shipId: string; shipName: string }
                 {/* metadata row with Sakura flower bullet */}
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <Text style={{ fontFamily: FontFamily.marker, fontSize: 9, color: Colors.sakuraDeep, fontWeight: '600', letterSpacing: 1 }}>
+                    <Text style={{ fontFamily: FontFamily.marker, fontSize: sf(9), color: Colors.sakuraDeep, fontWeight: '600', letterSpacing: 1 }}>
                       {scDate}
                     </Text>
                     <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: Colors.lineStrong }} />
-                    <Text style={{ fontFamily: FontFamily.marker, fontSize: 9, color: Colors.ink3, letterSpacing: 0.8, textTransform: 'uppercase' }}>
+                    <Text style={{ fontFamily: FontFamily.marker, fontSize: sf(9), color: Colors.ink3, letterSpacing: 0.8, textTransform: 'uppercase' }}>
                       RAINY DAY
                     </Text>
                     <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: Colors.lineStrong }} />
-                    <Text style={{ fontFamily: FontFamily.marker, fontSize: 9, color: Colors.ink3, letterSpacing: 0.8 }}>
+                    <Text style={{ fontFamily: FontFamily.marker, fontSize: sf(9), color: Colors.ink3, letterSpacing: 0.8 }}>
                       {readTime}
                     </Text>
                   </View>
@@ -681,7 +681,7 @@ function ScenariosTab({ shipId, shipName }: { shipId: string; shipName: string }
 
                 {/* title row */}
                 <View style={styles.scCardTitleRow}>
-                  <Text style={[styles.scCardTitle, { fontFamily: FontFamily.displayItalic, fontSize: 20, textTransform: 'none', fontWeight: 'normal', color: Colors.ink }]} numberOfLines={1}>
+                  <Text style={[styles.scCardTitle, { fontFamily: FontFamily.displayItalic, fontSize: sf(20), textTransform: 'none', fontWeight: 'normal', color: Colors.ink }]} numberOfLines={1}>
                     {sc.title || 'untitled'}
                   </Text>
                   <Pressable hitSlop={8} onPress={() => setScDeleteTarget(sc.id)}>
@@ -690,17 +690,17 @@ function ScenariosTab({ shipId, shipName }: { shipId: string; shipName: string }
                 </View>
 
                 {/* body in Caveat script font */}
-                <Text style={[styles.scCardPreview, { fontFamily: FontFamily.script, fontSize: 16, lineHeight: 20, color: Colors.ink2, marginTop: 4 }]} numberOfLines={4}>
+                <Text style={[styles.scCardPreview, { fontFamily: FontFamily.script, fontSize: sf(16), lineHeight: 20, color: Colors.ink2, marginTop: 4 }]} numberOfLines={4}>
                   “{sc.body}”
                 </Text>
 
                 {/* chip tags */}
                 <View style={{ flexDirection: 'row', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
                   <View style={{ paddingHorizontal: 8, paddingVertical: 3, backgroundColor: Colors.sakuraSoft, borderColor: Colors.sakura, borderWidth: 1, borderRadius: 999 }}>
-                    <Text style={{ fontSize: 10, fontFamily: FontFamily.ui, color: Colors.sakuraInk }}>♡ comfort</Text>
+                    <Text style={{ fontSize: sf(10), fontFamily: FontFamily.ui, color: Colors.sakuraInk }}>♡ comfort</Text>
                   </View>
                   <View style={{ paddingHorizontal: 8, paddingVertical: 3, backgroundColor: Colors.lavenderSoft, borderColor: Colors.lavender, borderWidth: 1, borderRadius: 999 }}>
-                    <Text style={{ fontSize: 10, fontFamily: FontFamily.ui, color: Colors.lavenderDeep }}>✿ slowburn</Text>
+                    <Text style={{ fontSize: sf(10), fontFamily: FontFamily.ui, color: Colors.lavenderDeep }}>✿ slowburn</Text>
                   </View>
                 </View>
               </View>
@@ -718,21 +718,21 @@ function ScenariosTab({ shipId, shipName }: { shipId: string; shipName: string }
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: Colors.paper },
   backBtn: { padding: Spacing.s3 },
-  backText: { fontSize: 22, color: Colors.ink2, fontFamily: FontFamily.ui },
+  backText: { fontSize: sf(22), color: Colors.ink2, fontFamily: FontFamily.ui },
   notFound: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   notFoundText: { fontFamily: FontFamily.displayItalic, fontSize: FontSize.h5, color: Colors.ink2 },
   appBar: {
     paddingHorizontal: Spacing.s5, paddingVertical: 6,
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
   },
-  back: { fontSize: 22, color: Colors.ink2, fontFamily: FontFamily.ui },
-  appBarTitle: { fontFamily: FontFamily.marker, fontSize: 10, color: Colors.ink3, letterSpacing: 1.4 },
+  back: { fontSize: sf(22), color: Colors.ink2, fontFamily: FontFamily.ui },
+  appBarTitle: { fontFamily: FontFamily.marker, fontSize: sf(10), color: Colors.ink3, letterSpacing: 1.4 },
   scroll: { flex: 1 },
   hero: {
     marginHorizontal: Spacing.s4, height: 180,
     borderRadius: Radius.r4, alignItems: 'center', justifyContent: 'center',
   },
-  heroInitial: { fontFamily: FontFamily.displayItalic, fontSize: 100, color: 'rgba(255,255,255,0.95)', lineHeight: 100 },
+  heroInitial: { fontFamily: FontFamily.displayItalic, fontSize: sf(100), color: 'rgba(255,255,255,0.95)', lineHeight: 100 },
   heroTape: { position: 'absolute', top: -2, left: 14 },
   heroPin: {
     position: 'absolute', top: 12, right: 12,
@@ -744,7 +744,7 @@ const styles = StyleSheet.create({
   heroChips: { position: 'absolute', bottom: 10, left: 12, flexDirection: 'row', gap: 6 },
   nameBlock: { paddingHorizontal: Spacing.s5, paddingTop: 12, paddingBottom: Spacing.s1 },
   nameRow: { flexDirection: 'row', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' },
-  name: { fontFamily: FontFamily.displayItalic, fontSize: 32, lineHeight: 33, color: Colors.ink },
+  name: { fontFamily: FontFamily.displayItalic, fontSize: sf(32), lineHeight: 33, color: Colors.ink },
   // Profile tab
   profileContent: { paddingHorizontal: Spacing.s5, paddingTop: Spacing.s1, paddingBottom: Spacing.s6, gap: 14 },
   anniversary: {
@@ -753,25 +753,25 @@ const styles = StyleSheet.create({
     borderRadius: Radius.r3, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
   },
   anniversaryLeft: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  anniversaryText: { fontFamily: FontFamily.displayItalic, fontSize: 14, color: Colors.sakuraDeep },
-  anniversaryDate: { fontFamily: FontFamily.marker, fontSize: 9, color: Colors.sakuraDeep },
+  anniversaryText: { fontFamily: FontFamily.displayItalic, fontSize: sf(14), color: Colors.sakuraDeep },
+  anniversaryDate: { fontFamily: FontFamily.marker, fontSize: sf(9), color: Colors.sakuraDeep },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
-  sectionLabel: { fontFamily: FontFamily.marker, fontSize: 9, color: Colors.ink3, letterSpacing: 1.4, textTransform: 'uppercase' },
+  sectionLabel: { fontFamily: FontFamily.marker, fontSize: sf(9), color: Colors.ink3, letterSpacing: 1.4, textTransform: 'uppercase' },
   aboutSection: { gap: 2 },
   aboutEditBox: {
     borderWidth: 1, borderColor: Colors.sakura, borderRadius: Radius.r3,
     backgroundColor: Colors.vellum, padding: Spacing.s3,
   },
   aboutInput: {
-    fontFamily: FontFamily.ui, fontSize: 14,
+    fontFamily: FontFamily.ui, fontSize: sf(14),
     color: Colors.ink, lineHeight: 21, minHeight: 80, textAlignVertical: 'top',
   },
   aboutEditActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 10, marginTop: 8 },
   aboutCancelBtn: { padding: 4 },
-  aboutCancelText: { fontFamily: FontFamily.ui, fontSize: 13, color: Colors.ink3 },
+  aboutCancelText: { fontFamily: FontFamily.ui, fontSize: sf(13), color: Colors.ink3 },
   aboutSaveBtn: { paddingVertical: 4, paddingHorizontal: 12, backgroundColor: Colors.sakuraDeep, borderRadius: Radius.pill },
-  aboutSaveText: { fontFamily: FontFamily.uiMedium, fontSize: 13, color: Colors.vellum },
-  aboutText: { fontFamily: FontFamily.displayItalic, fontSize: 14, color: Colors.ink2, lineHeight: 21 },
+  aboutSaveText: { fontFamily: FontFamily.uiMedium, fontSize: sf(13), color: Colors.vellum },
+  aboutText: { fontFamily: FontFamily.displayItalic, fontSize: sf(14), color: Colors.ink2, lineHeight: 21 },
   hcSection: { gap: 2 },
   hcRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
 
@@ -787,34 +787,34 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 8,
     padding: Spacing.s4, paddingBottom: Spacing.s3, borderBottomWidth: 1, borderBottomColor: Colors.line,
   },
-  sheetJa: { fontFamily: FontFamily.ja, fontSize: 18, fontWeight: '600' },
-  sheetTitle: { fontFamily: FontFamily.uiSemiBold, fontSize: 15, color: Colors.ink, flex: 1 },
-  sheetClose: { fontSize: 13, color: Colors.ink3, fontFamily: FontFamily.ui },
+  sheetJa: { fontFamily: FontFamily.ja, fontSize: sf(18), fontWeight: '600' },
+  sheetTitle: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(15), color: Colors.ink, flex: 1 },
+  sheetClose: { fontSize: sf(13), color: Colors.ink3, fontFamily: FontFamily.ui },
   sheetList: { flex: 0, maxHeight: 280, paddingHorizontal: Spacing.s4 },
-  sheetEmpty: { fontFamily: FontFamily.displayItalic, fontSize: 13, color: Colors.ink3, textAlign: 'center', padding: Spacing.s5 },
+  sheetEmpty: { fontFamily: FontFamily.displayItalic, fontSize: sf(13), color: Colors.ink3, textAlign: 'center', padding: Spacing.s5 },
   hcItem: {
     paddingVertical: 10, paddingHorizontal: 4,
     borderBottomWidth: 1, borderBottomColor: Colors.paperDeep,
   },
-  hcBody: { fontFamily: FontFamily.displayItalic, fontSize: 14, color: Colors.ink, lineHeight: 20 },
+  hcBody: { fontFamily: FontFamily.displayItalic, fontSize: sf(14), color: Colors.ink, lineHeight: 20 },
   hcEditRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   hcBodyWrap: { flex: 1 },
   hcEditInput: {
-    fontFamily: FontFamily.displayItalic, fontSize: 14, color: Colors.ink, lineHeight: 20,
+    fontFamily: FontFamily.displayItalic, fontSize: sf(14), color: Colors.ink, lineHeight: 20,
     borderBottomWidth: 1, borderBottomColor: Colors.sakura, paddingVertical: 2,
   },
   hcDeleteBtn: { padding: 4 },
-  hcDeleteText: { fontSize: 12, color: Colors.ink3, fontFamily: FontFamily.ui },
+  hcDeleteText: { fontSize: sf(12), color: Colors.ink3, fontFamily: FontFamily.ui },
   hcSaveBtn: { padding: 4 },
-  hcSaveBtnText: { fontSize: 12, fontFamily: FontFamily.uiMedium },
+  hcSaveBtnText: { fontSize: sf(12), fontFamily: FontFamily.uiMedium },
   hcShowMore: {
     alignSelf: 'flex-start', paddingVertical: 6, paddingHorizontal: 10,
     marginVertical: 4, borderRadius: Radius.pill,
     backgroundColor: Colors.paperDeep,
   },
-  hcShowMoreText: { fontFamily: FontFamily.uiMedium, fontSize: 12 },
+  hcShowMoreText: { fontFamily: FontFamily.uiMedium, fontSize: sf(12) },
   dateInput: {
-    fontFamily: FontFamily.ui, fontSize: 15, color: Colors.ink,
+    fontFamily: FontFamily.ui, fontSize: sf(15), color: Colors.ink,
     borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.r2,
     paddingVertical: 8, paddingHorizontal: 12, backgroundColor: Colors.vellum,
   },
@@ -825,7 +825,7 @@ const styles = StyleSheet.create({
   sheetInput: {
     flex: 1, paddingVertical: 9, paddingHorizontal: 14,
     backgroundColor: Colors.vellum, borderWidth: 1, borderColor: Colors.line,
-    borderRadius: Radius.pill, fontFamily: FontFamily.ui, fontSize: 14, color: Colors.ink,
+    borderRadius: Radius.pill, fontFamily: FontFamily.ui, fontSize: sf(14), color: Colors.ink,
   },
   sheetAdd: {
     width: 36, height: 36, borderRadius: Radius.pill,
@@ -843,8 +843,8 @@ const styles = StyleSheet.create({
     paddingVertical: 5, paddingHorizontal: 10,
     backgroundColor: Colors.paperDeep, borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.pill,
   },
-  promptJa: { fontFamily: FontFamily.ja, fontSize: 11, color: Colors.sakuraDeep, fontWeight: '600' },
-  promptLabel: { fontFamily: FontFamily.ui, fontSize: 11, color: Colors.ink2 },
+  promptJa: { fontFamily: FontFamily.ja, fontSize: sf(11), color: Colors.sakuraDeep, fontWeight: '600' },
+  promptLabel: { fontFamily: FontFamily.ui, fontSize: sf(11), color: Colors.ink2 },
   sceneAddBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     backgroundColor: Colors.sakuraDeep, paddingHorizontal: Spacing.s5, paddingVertical: 10, borderRadius: Radius.pill,
@@ -856,22 +856,22 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.r3,
   },
   scCardTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6, marginBottom: 2 },
-  scCardTitle: { fontFamily: FontFamily.displayItalic, fontSize: 17, color: Colors.ink, flex: 1 },
-  scCardPreview: { fontFamily: FontFamily.displayItalic, fontSize: 13, color: Colors.ink2, lineHeight: 19 },
-  scCardDate: { fontFamily: FontFamily.marker, fontSize: 9, color: Colors.ink3, letterSpacing: 0.6, marginTop: 2 },
+  scCardTitle: { fontFamily: FontFamily.displayItalic, fontSize: sf(17), color: Colors.ink, flex: 1 },
+  scCardPreview: { fontFamily: FontFamily.displayItalic, fontSize: sf(13), color: Colors.ink2, lineHeight: 19 },
+  scCardDate: { fontFamily: FontFamily.marker, fontSize: sf(9), color: Colors.ink3, letterSpacing: 0.6, marginTop: 2 },
 
   // Compose scenario
   scenarioCompose: { flex: 1, padding: Spacing.s5, gap: 12, backgroundColor: Colors.paper },
   sceneHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  sceneCancel: { fontFamily: FontFamily.ui, fontSize: 14, color: Colors.ink2 },
+  sceneCancel: { fontFamily: FontFamily.ui, fontSize: sf(14), color: Colors.ink2 },
   sceneSaveBtn: { paddingVertical: 6, paddingHorizontal: 16, backgroundColor: Colors.sakuraDeep, borderRadius: Radius.pill },
-  sceneSaveText: { fontFamily: FontFamily.uiMedium, fontSize: 14, color: Colors.vellum },
+  sceneSaveText: { fontFamily: FontFamily.uiMedium, fontSize: sf(14), color: Colors.vellum },
   sceneTitleInput: {
-    fontFamily: FontFamily.ui, fontSize: 18, color: Colors.ink,
+    fontFamily: FontFamily.ui, fontSize: sf(18), color: Colors.ink,
     borderBottomWidth: 1, borderBottomColor: Colors.line, paddingVertical: 6,
   },
   sceneBodyInput: {
-    fontFamily: FontFamily.ui, fontSize: 15, color: Colors.ink,
+    fontFamily: FontFamily.ui, fontSize: sf(15), color: Colors.ink,
     lineHeight: 24, flex: 1, textAlignVertical: 'top',
   },
   decoTR: {

@@ -12,7 +12,7 @@ import {
   StickerTicket, StickerWaxSeal, StickerHeartPatch, StickerSakuraFlower,
 } from '@/components/deco/Stickers';
 import { WashiTape } from '@/components/deco/WashiTape';
-import { FontFamily } from '@/constants/theme';
+import { FontFamily ,sf } from '@/constants/theme';
 import { INK, Polaroid } from './primitives';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -350,7 +350,7 @@ const s = StyleSheet.create({
   },
   removeXText: {
     color: '#fff',
-    fontSize: 12,
+    fontSize: sf(12),
     lineHeight: 14,
     fontFamily: FontFamily.ui,
   },
@@ -367,7 +367,7 @@ const s = StyleSheet.create({
   },
   addBtnText: {
     fontFamily: FontFamily.markerBold,
-    fontSize: 10,
+    fontSize: sf(10),
     color: INK,
     letterSpacing: 0.5,
   },
@@ -403,7 +403,7 @@ const s = StyleSheet.create({
     backgroundColor: '#fff',
   },
   sheetTabOn:     { backgroundColor: '#fadde5', borderColor: '#e8a8b5' },
-  sheetTabText:   { fontFamily: FontFamily.markerBold, fontSize: 10, color: INK, letterSpacing: 0.5 },
+  sheetTabText:   { fontFamily: FontFamily.markerBold, fontSize: sf(10), color: INK, letterSpacing: 0.5 },
   sheetTabTextOn: { color: '#8b3a4a' },
 
 
@@ -424,14 +424,14 @@ const s = StyleSheet.create({
   },
   paperLabel: {
     fontFamily: FontFamily.markerBold,
-    fontSize: 8,
+    fontSize: sf(8),
     color: INK,
     letterSpacing: 0.4,
   },
 
   paperInput: {
     fontFamily: FontFamily.ja,
-    fontSize: 10,
+    fontSize: sf(10),
     color: INK,
     padding: 0,
     flex: 1,

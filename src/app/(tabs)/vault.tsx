@@ -24,7 +24,7 @@ import { INK, SquareCheck } from '@/components/templates/primitives';
 import { CozyModal } from '@/components/ui/CozyModal';
 import { IconChevronLeft, IconPlus, IconTrashSolid } from '@/components/ui/Icon';
 import { Mark } from '@/components/ui/Mark';
-import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing } from '@/constants/theme';
+import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing ,sf } from '@/constants/theme';
 import { addFoMessage, deleteFoMessage, toggleFoMessage, updateFoMessage, useFoMessages } from '@/store/foNotifications';
 import { addHeadcanon, clearCategoryHeadcanons, deleteHeadcanon, updateHeadcanon, useHeadcanonCounts, useHeadcanons } from '@/store/headcanons';
 import { requestPermission } from '@/store/notifications';
@@ -169,10 +169,10 @@ export default function VaultScreen() {
       {ships.length === 0 ? (
         <View style={[styles.emptyShips, { paddingVertical: 60, paddingHorizontal: 20, gap: 12 }]}>
           <StickerWaxSeal size={88} />
-          <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: 26, color: Colors.ink, textAlign: 'center', marginTop: 10 }}>
+          <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: sf(26), color: Colors.ink, textAlign: 'center', marginTop: 10 }}>
             no ships yet
           </Text>
-          <Text style={{ fontFamily: FontFamily.script, fontSize: 18, lineHeight: 22, color: Colors.ink2, textAlign: 'center', marginVertical: 8 }}>
+          <Text style={{ fontFamily: FontFamily.script, fontSize: sf(18), lineHeight: 22, color: Colors.ink2, textAlign: 'center', marginVertical: 8 }}>
             pick a ship from the home tab{"\n"}to start filling the vault.
           </Text>
         </View>
@@ -440,7 +440,7 @@ function HCList({ shipId, shipName, catId, catLabel, catColor, onBack }: {
                         <IconTrashSolid size={12} color={Colors.ink3} />
                       </Pressable>
                       <Pressable hitSlop={8} onPress={() => { if (editDraft.trim()) { updateHeadcanon(h.id, editDraft.trim()); } setEditingId(null); }}>
-                        <Text style={{ fontSize: 12, color: catColor, fontFamily: FontFamily.uiMedium }}>done</Text>
+                        <Text style={{ fontSize: sf(12), color: catColor, fontFamily: FontFamily.uiMedium }}>done</Text>
                       </Pressable>
                     </>
                   ) : (
@@ -756,11 +756,11 @@ function ScenariosFeature({ shipId, shipName, setCustomBack }: { shipId: string;
       {/* Redesigned Scenarios Header */}
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 14, paddingHorizontal: 4 }}>
         <View>
-          <Text style={{ fontFamily: FontFamily.marker, fontSize: 9, color: Colors.sakuraDeep, letterSpacing: 1.4, textTransform: 'uppercase', marginBottom: 2 }}>
+          <Text style={{ fontFamily: FontFamily.marker, fontSize: sf(9), color: Colors.sakuraDeep, letterSpacing: 1.4, textTransform: 'uppercase', marginBottom: 2 }}>
             SCENARIOS · {scenarios.length} SAVED
           </Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: 34, color: Colors.ink, lineHeight: 36 }}>
+            <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: sf(34), color: Colors.ink, lineHeight: 36 }}>
               what-ifs
             </Text>
             <Bullets.Sakura size={12} color={Colors.sakuraDeep} />
@@ -791,10 +791,10 @@ function ScenariosFeature({ shipId, shipName, setCustomBack }: { shipId: string;
       {scenarios.length === 0 ? (
         <View style={[sc.empty, { paddingVertical: 60, paddingHorizontal: 20, gap: 12 }]}>
           <StickerSakuraBranch size={88} />
-          <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: 26, color: Colors.ink, textAlign: 'center', marginTop: 10 }}>
+          <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: sf(26), color: Colors.ink, textAlign: 'center', marginTop: 10 }}>
             no daydreams yet
           </Text>
-          <Text style={{ fontFamily: FontFamily.script, fontSize: 18, lineHeight: 22, color: Colors.ink2, textAlign: 'center', marginVertical: 8 }}>
+          <Text style={{ fontFamily: FontFamily.script, fontSize: sf(18), lineHeight: 22, color: Colors.ink2, textAlign: 'center', marginVertical: 8 }}>
             the rainy afternoons,{"\n"}the airport goodbyes —{"\n"}start somewhere.
           </Text>
           <Pressable
@@ -817,7 +817,7 @@ function ScenariosFeature({ shipId, shipName, setCustomBack }: { shipId: string;
             onPress={() => handleNewScenario()}
           >
             <IconPlus size={12} color={Colors.vellum} />
-            <Text style={{ fontFamily: FontFamily.uiMedium, fontSize: 14, color: Colors.vellum }}>write a scenario</Text>
+            <Text style={{ fontFamily: FontFamily.uiMedium, fontSize: sf(14), color: Colors.vellum }}>write a scenario</Text>
           </Pressable>
 
           <View style={sc.prompts}>
@@ -888,15 +888,15 @@ function ScenariosFeature({ shipId, shipName, setCustomBack }: { shipId: string;
                   {/* metadata row with Sakura flower bullet */}
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Text style={{ fontFamily: FontFamily.marker, fontSize: 9, color: Colors.sakuraDeep, fontWeight: '600', letterSpacing: 1 }}>
+                      <Text style={{ fontFamily: FontFamily.marker, fontSize: sf(9), color: Colors.sakuraDeep, fontWeight: '600', letterSpacing: 1 }}>
                         {scDate}
                       </Text>
                       <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: Colors.lineStrong }} />
-                      <Text style={{ fontFamily: FontFamily.marker, fontSize: 9, color: Colors.ink3, letterSpacing: 0.8, textTransform: 'uppercase' }}>
+                      <Text style={{ fontFamily: FontFamily.marker, fontSize: sf(9), color: Colors.ink3, letterSpacing: 0.8, textTransform: 'uppercase' }}>
                         RAINY DAY
                       </Text>
                       <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: Colors.lineStrong }} />
-                      <Text style={{ fontFamily: FontFamily.marker, fontSize: 9, color: Colors.ink3, letterSpacing: 0.8 }}>
+                      <Text style={{ fontFamily: FontFamily.marker, fontSize: sf(9), color: Colors.ink3, letterSpacing: 0.8 }}>
                         {readTime}
                       </Text>
                     </View>
@@ -905,7 +905,7 @@ function ScenariosFeature({ shipId, shipName, setCustomBack }: { shipId: string;
 
                   {/* title row */}
                   <View style={sc.cardTitleRow}>
-                    <Text style={[sc.cardTitle, { fontFamily: FontFamily.displayItalic, fontSize: 20, textTransform: 'none', fontWeight: 'normal', color: Colors.ink }]} numberOfLines={1}>
+                    <Text style={[sc.cardTitle, { fontFamily: FontFamily.displayItalic, fontSize: sf(20), textTransform: 'none', fontWeight: 'normal', color: Colors.ink }]} numberOfLines={1}>
                       {s.title || 'untitled'}
                     </Text>
                     <Pressable hitSlop={8} onPress={() => setScDeleteTarget(s.id)}>
@@ -915,20 +915,20 @@ function ScenariosFeature({ shipId, shipName, setCustomBack }: { shipId: string;
 
                   {/* body in Caveat script font */}
                   {s.body ? (
-                    <Text style={[sc.cardPreview, { fontFamily: FontFamily.script, fontSize: 16, lineHeight: 20, color: Colors.ink2, marginTop: 4 }]} numberOfLines={4}>
+                    <Text style={[sc.cardPreview, { fontFamily: FontFamily.script, fontSize: sf(16), lineHeight: 20, color: Colors.ink2, marginTop: 4 }]} numberOfLines={4}>
                       “{s.body}”
                     </Text>
                   ) : (
-                    <Text style={[sc.cardEmpty, { fontFamily: FontFamily.script, fontSize: 16, color: Colors.ink3, marginTop: 4 }]}>tap to write...</Text>
+                    <Text style={[sc.cardEmpty, { fontFamily: FontFamily.script, fontSize: sf(16), color: Colors.ink3, marginTop: 4 }]}>tap to write...</Text>
                   )}
 
                   {/* chip tags */}
                   <View style={{ flexDirection: 'row', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
                     <View style={{ paddingHorizontal: 8, paddingVertical: 3, backgroundColor: Colors.sakuraSoft, borderColor: Colors.sakura, borderWidth: 1, borderRadius: 999 }}>
-                      <Text style={{ fontSize: 10, fontFamily: FontFamily.ui, color: Colors.sakuraInk }}>♡ comfort</Text>
+                      <Text style={{ fontSize: sf(10), fontFamily: FontFamily.ui, color: Colors.sakuraInk }}>♡ comfort</Text>
                     </View>
                     <View style={{ paddingHorizontal: 8, paddingVertical: 3, backgroundColor: Colors.lavenderSoft, borderColor: Colors.lavender, borderWidth: 1, borderRadius: 999 }}>
-                      <Text style={{ fontSize: 10, fontFamily: FontFamily.ui, color: Colors.lavenderDeep }}>✿ slowburn</Text>
+                      <Text style={{ fontSize: sf(10), fontFamily: FontFamily.ui, color: Colors.lavenderDeep }}>✿ slowburn</Text>
                     </View>
                   </View>
                 </View>
@@ -978,13 +978,13 @@ function ScenarioEditor({ initial, shipName, onSave, onDelete }: {
           backgroundColor: Colors.paper,
         }}
       >
-        <Text style={{ fontFamily: FontFamily.marker, fontSize: 9, color: Colors.ink3, letterSpacing: 1.2, textTransform: 'uppercase' }}>
+        <Text style={{ fontFamily: FontFamily.marker, fontSize: sf(9), color: Colors.ink3, letterSpacing: 1.2, textTransform: 'uppercase' }}>
           writing what-if
         </Text>
         <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
           {onDelete && (
             <Pressable hitSlop={8} onPress={() => setConfirmDelete(true)}>
-              <Text style={{ fontFamily: FontFamily.ui, fontSize: 13, color: Colors.ember }}>delete</Text>
+              <Text style={{ fontFamily: FontFamily.ui, fontSize: sf(13), color: Colors.ember }}>delete</Text>
             </Pressable>
           )}
           <Pressable
@@ -1001,7 +1001,7 @@ function ScenarioEditor({ initial, shipName, onSave, onDelete }: {
               elevation: 1,
             }}
           >
-            <Text style={{ fontFamily: FontFamily.uiMedium, fontSize: 13, color: Colors.vellum }}>save</Text>
+            <Text style={{ fontFamily: FontFamily.uiMedium, fontSize: sf(13), color: Colors.vellum }}>save</Text>
           </Pressable>
         </View>
       </View>
@@ -1038,7 +1038,7 @@ function ScenarioEditor({ initial, shipName, onSave, onDelete }: {
           placeholderTextColor={Colors.ink3}
           style={{
             fontFamily: FontFamily.displayItalic,
-            fontSize: 22,
+            fontSize: sf(22),
             color: Colors.ink,
             borderBottomWidth: 1,
             borderBottomColor: Colors.line,
@@ -1055,7 +1055,7 @@ function ScenarioEditor({ initial, shipName, onSave, onDelete }: {
           placeholderTextColor={Colors.ink3}
           style={{
             fontFamily: FontFamily.script,
-            fontSize: 18,
+            fontSize: sf(18),
             color: Colors.ink2,
             lineHeight: 26,
             flex: 1,
@@ -1162,10 +1162,10 @@ function FoMessagesFeature({ shipId, shipName, setCustomBack }: { shipId: string
       {messages.length === 0 ? (
         <View style={[fo.emptyCard, { paddingVertical: 60, paddingHorizontal: 20, gap: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent', borderWidth: 0 }]}>
           <StickerEnvelope size={88} />
-          <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: 26, color: Colors.ink, textAlign: 'center', marginTop: 10 }}>
+          <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: sf(26), color: Colors.ink, textAlign: 'center', marginTop: 10 }}>
             no notifications yet
           </Text>
-          <Text style={{ fontFamily: FontFamily.script, fontSize: 18, lineHeight: 22, color: Colors.ink2, textAlign: 'center', marginVertical: 8 }}>
+          <Text style={{ fontFamily: FontFamily.script, fontSize: sf(18), lineHeight: 22, color: Colors.ink2, textAlign: 'center', marginVertical: 8 }}>
             little notes from them —{"\n"}straight to your lock screen.
           </Text>
           <Pressable
@@ -1190,7 +1190,7 @@ function FoMessagesFeature({ shipId, shipName, setCustomBack }: { shipId: string
             }}
           >
             <IconPlus size={12} color={Colors.vellum} />
-            <Text style={{ fontFamily: FontFamily.uiMedium, fontSize: 14, color: Colors.vellum }}>add a notification</Text>
+            <Text style={{ fontFamily: FontFamily.uiMedium, fontSize: sf(14), color: Colors.vellum }}>add a notification</Text>
           </Pressable>
         </View>
       ) : (
@@ -1539,7 +1539,7 @@ function FoCompose({ shipName, initialMessage, onQueue }: {
                 }}
                 style={{ padding: 4, marginLeft: 8 }}
               >
-                <Text style={{ color: Colors.ember, fontSize: 16, fontFamily: FontFamily.uiMedium }}>✕</Text>
+                <Text style={{ color: Colors.ember, fontSize: sf(16), fontFamily: FontFamily.uiMedium }}>✕</Text>
               </Pressable>
             )}
           </View>
@@ -1689,7 +1689,7 @@ const styles = StyleSheet.create({
     maxWidth: 180,
   },
   subHeaderChevron: {
-    fontSize: 16,
+    fontSize: sf(16),
     color: Colors.ink3,
     fontFamily: FontFamily.ui,
     marginTop: 2,
@@ -1731,7 +1731,7 @@ const styles = StyleSheet.create({
     marginRight: 6,
   },
   titleChevron: {
-    fontSize: 22,
+    fontSize: sf(22),
     color: Colors.ink3,
     fontFamily: FontFamily.ui,
     marginLeft: 4,
@@ -1748,9 +1748,9 @@ const styles = StyleSheet.create({
     borderWidth: 1.5, borderColor: INK, position: 'relative', overflow: 'hidden',
   },
   featureCardLocked: { opacity: 0.55 },
-  featureJa: { fontFamily: FontFamily.ja, fontSize: 22, marginBottom: 2 },
-  featureLabel: { fontFamily: FontFamily.uiSemiBold, fontSize: 13, marginBottom: 2 },
-  featureDesc: { fontFamily: FontFamily.ui, fontSize: 10, color: Colors.ink3, lineHeight: 14 },
+  featureJa: { fontFamily: FontFamily.ja, fontSize: sf(22), marginBottom: 2 },
+  featureLabel: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(13), marginBottom: 2 },
+  featureDesc: { fontFamily: FontFamily.ui, fontSize: sf(10), color: Colors.ink3, lineHeight: 14 },
   featureTextLocked: { opacity: 0.7 },
   lockBadge: {
     position: 'absolute', top: 8, right: 8,
@@ -1770,7 +1770,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.vellum, borderTopLeftRadius: Radius.r4, borderTopRightRadius: Radius.r4,
     padding: Spacing.s5, paddingBottom: Spacing.s9, gap: 4,
   },
-  pickerTitle: { fontFamily: FontFamily.displayItalic, fontSize: 18, color: Colors.ink, marginBottom: Spacing.s3 },
+  pickerTitle: { fontFamily: FontFamily.displayItalic, fontSize: sf(18), color: Colors.ink, marginBottom: Spacing.s3 },
   pickerRow: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
     paddingVertical: Spacing.s3, paddingHorizontal: Spacing.s4,
@@ -1778,14 +1778,14 @@ const styles = StyleSheet.create({
   },
   pickerRowActive: { backgroundColor: Colors.sakuraSoft },
   pickerDot: { width: 12, height: 12, borderRadius: 6 },
-  pickerName: { fontFamily: FontFamily.uiSemiBold, fontSize: 15, color: Colors.ink },
-  pickerFandom: { fontFamily: FontFamily.ui, fontSize: 12, color: Colors.ink3 },
-  pickerCheck: { fontSize: 14, color: Colors.sakuraDeep, fontFamily: FontFamily.uiSemiBold },
+  pickerName: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(15), color: Colors.ink },
+  pickerFandom: { fontFamily: FontFamily.ui, fontSize: sf(12), color: Colors.ink3 },
+  pickerCheck: { fontSize: sf(14), color: Colors.sakuraDeep, fontFamily: FontFamily.uiSemiBold },
 
   msgSenderToggle: { flexDirection: 'row', backgroundColor: Colors.paperDeep, borderRadius: Radius.pill, padding: 2, borderWidth: 1, borderColor: Colors.line },
   msgSenderBtn: { paddingVertical: 3, paddingHorizontal: 8, borderRadius: Radius.pill },
   msgSenderBtnActive: { backgroundColor: Colors.sakuraDeep },
-  msgSenderBtnText: { fontFamily: FontFamily.ui, fontSize: 10, color: Colors.ink2 },
+  msgSenderBtnText: { fontFamily: FontFamily.ui, fontSize: sf(10), color: Colors.ink2 },
   msgSenderBtnTextActive: { color: Colors.vellum },
   emptyShips: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: Spacing.s3, paddingBottom: Spacing.s9 },
   emptyTitle: { fontFamily: FontFamily.displayItalic, fontSize: FontSize.h5, color: Colors.ink },
@@ -1809,7 +1809,7 @@ const styles = StyleSheet.create({
 
 const hc = StyleSheet.create({
   wrap: { paddingHorizontal: Spacing.s5, paddingTop: Spacing.s3, paddingBottom: Spacing.s6 },
-  hint: { fontFamily: FontFamily.ui, fontSize: 12, color: Colors.ink3, marginBottom: Spacing.s4 },
+  hint: { fontFamily: FontFamily.ui, fontSize: sf(12), color: Colors.ink3, marginBottom: Spacing.s4 },
   categories: { marginTop: 16, gap: 12 },
   catCard: {
     borderWidth: 1.5,
@@ -1835,8 +1835,8 @@ const hc = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
-  catJa: { fontFamily: FontFamily.ja, fontSize: 18, fontWeight: '600', color: INK },
-  catLabelText: { fontFamily: FontFamily.markerBold, fontSize: 13, color: INK, fontWeight: '700', letterSpacing: 0.5 },
+  catJa: { fontFamily: FontFamily.ja, fontSize: sf(18), fontWeight: '600', color: INK },
+  catLabelText: { fontFamily: FontFamily.markerBold, fontSize: sf(13), color: INK, fontWeight: '700', letterSpacing: 0.5 },
   catCountBadge: {
     marginLeft: 'auto',
     backgroundColor: '#fff',
@@ -1846,23 +1846,23 @@ const hc = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 1,
   },
-  catCountText: { fontFamily: FontFamily.markerBold, fontSize: 10, color: INK, fontWeight: '600' },
+  catCountText: { fontFamily: FontFamily.markerBold, fontSize: sf(10), color: INK, fontWeight: '600' },
   catContent: { padding: 10 },
-  catEmptyText: { fontFamily: FontFamily.ui, fontSize: 12, color: Colors.ink3, fontStyle: 'italic', paddingVertical: 4 },
+  catEmptyText: { fontFamily: FontFamily.ui, fontSize: sf(12), color: Colors.ink3, fontStyle: 'italic', paddingVertical: 4 },
   catItemRow: { paddingVertical: 6 },
   catItemRowBorder: { borderBottomWidth: 1, borderBottomColor: INK + '22' },
-  moreText: { fontFamily: FontFamily.uiMedium, fontSize: 11, color: Colors.sakuraDeep, marginTop: 4 },
-  emptyHint: { fontFamily: FontFamily.ui, fontSize: 12, color: INK, fontStyle: 'italic', opacity: 0.45 },
+  moreText: { fontFamily: FontFamily.uiMedium, fontSize: sf(11), color: Colors.sakuraDeep, marginTop: 4 },
+  emptyHint: { fontFamily: FontFamily.ui, fontSize: sf(12), color: INK, fontStyle: 'italic', opacity: 0.45 },
 
   listHeader: { paddingHorizontal: Spacing.s5, paddingVertical: Spacing.s3 },
-  back: { fontFamily: FontFamily.markerBold, fontSize: 11, color: Colors.ink2, letterSpacing: 0.8 },
+  back: { fontFamily: FontFamily.markerBold, fontSize: sf(11), color: Colors.ink2, letterSpacing: 0.8 },
   listWrap: { paddingHorizontal: Spacing.s5, paddingBottom: Spacing.s2 },
-  itemBody: { fontFamily: FontFamily.ui, fontSize: 13, color: INK, lineHeight: 18 },
+  itemBody: { fontFamily: FontFamily.ui, fontSize: sf(13), color: INK, lineHeight: 18 },
   addRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, paddingHorizontal: Spacing.s5, paddingTop: Spacing.s2, paddingBottom: Spacing.s5 },
   input: {
     flex: 1, maxHeight: 80, paddingVertical: 9, paddingHorizontal: 14,
     backgroundColor: Colors.vellum, borderWidth: 1, borderColor: Colors.line,
-    borderRadius: Radius.r3, fontFamily: FontFamily.ui, fontSize: 13, color: Colors.ink,
+    borderRadius: Radius.r3, fontFamily: FontFamily.ui, fontSize: sf(13), color: Colors.ink,
   },
   addBtn: { width: 38, height: 38, borderRadius: Radius.pill, alignItems: 'center', justifyContent: 'center' },
 });
@@ -1870,13 +1870,13 @@ const hc = StyleSheet.create({
 const sc = StyleSheet.create({
   wrap: { paddingHorizontal: Spacing.s5, paddingTop: Spacing.s4, paddingBottom: Spacing.s6 },
   topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: Spacing.s4 },
-  eyebrow: { fontFamily: FontFamily.marker, fontSize: 9, color: Colors.ink3, letterSpacing: 1.4 },
+  eyebrow: { fontFamily: FontFamily.marker, fontSize: sf(9), color: Colors.ink3, letterSpacing: 1.4 },
   newBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
     paddingVertical: 5, paddingHorizontal: 12,
     backgroundColor: Colors.sakuraDeep, borderRadius: Radius.pill,
   },
-  newBtnText: { fontFamily: FontFamily.uiMedium, fontSize: 11, color: Colors.vellum },
+  newBtnText: { fontFamily: FontFamily.uiMedium, fontSize: sf(11), color: Colors.vellum },
 
   empty: { alignItems: 'center', gap: Spacing.s3, paddingVertical: Spacing.s7, paddingHorizontal: Spacing.s4 },
   emptyTitle: { fontFamily: FontFamily.displayItalic, fontSize: FontSize.h5, color: Colors.ink },
@@ -1888,8 +1888,8 @@ const sc = StyleSheet.create({
     backgroundColor: Colors.vellum, borderWidth: 1, borderColor: Colors.line,
     borderRadius: Radius.pill, ...Shadow.s1,
   },
-  promptJa: { fontFamily: FontFamily.ja, fontSize: 14, color: Colors.sakuraDeep },
-  promptLabel: { fontFamily: FontFamily.ui, fontSize: 12, color: Colors.ink2 },
+  promptJa: { fontFamily: FontFamily.ja, fontSize: sf(14), color: Colors.sakuraDeep },
+  promptLabel: { fontFamily: FontFamily.ui, fontSize: sf(12), color: Colors.ink2 },
 
   list: { gap: 10 },
   card: {
@@ -1901,10 +1901,10 @@ const sc = StyleSheet.create({
   cardStripe: { width: 4, backgroundColor: Colors.sakura },
   cardBody: { flex: 1, padding: Spacing.s4, gap: 3 },
   cardTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6 },
-  cardTitle: { fontFamily: FontFamily.displayItalic, fontSize: 16, color: Colors.ink, flex: 1 },
-  cardPreview: { fontFamily: FontFamily.script, fontSize: 14, color: Colors.ink2, lineHeight: 20 },
-  cardEmpty: { fontFamily: FontFamily.displayItalic, fontSize: 13, color: Colors.ink3, fontStyle: 'italic' },
-  cardDate: { fontFamily: FontFamily.marker, fontSize: 9, color: Colors.ink3, letterSpacing: 0.5, marginTop: 4 },
+  cardTitle: { fontFamily: FontFamily.displayItalic, fontSize: sf(16), color: Colors.ink, flex: 1 },
+  cardPreview: { fontFamily: FontFamily.script, fontSize: sf(14), color: Colors.ink2, lineHeight: 20 },
+  cardEmpty: { fontFamily: FontFamily.displayItalic, fontSize: sf(13), color: Colors.ink3, fontStyle: 'italic' },
+  cardDate: { fontFamily: FontFamily.marker, fontSize: sf(9), color: Colors.ink3, letterSpacing: 0.5, marginTop: 4 },
 
   editor: { flex: 1, backgroundColor: Colors.paper },
   editorBar: {
@@ -1920,14 +1920,14 @@ const sc = StyleSheet.create({
     borderWidth: 1, borderColor: Colors.line,
     alignItems: 'center', justifyContent: 'center',
   },
-  barBack: { fontFamily: FontFamily.ui, fontSize: 14, color: Colors.ink2 },
-  barWords: { fontFamily: FontFamily.ja, fontSize: 11, color: Colors.ink3, letterSpacing: 0.5 },
-  barDelete: { fontFamily: FontFamily.ui, fontSize: 13, color: Colors.ember },
+  barBack: { fontFamily: FontFamily.ui, fontSize: sf(14), color: Colors.ink2 },
+  barWords: { fontFamily: FontFamily.ja, fontSize: sf(11), color: Colors.ink3, letterSpacing: 0.5 },
+  barDelete: { fontFamily: FontFamily.ui, fontSize: sf(13), color: Colors.ember },
   barSave: { paddingVertical: 5, paddingHorizontal: 16, backgroundColor: Colors.sakuraDeep, borderRadius: Radius.pill },
-  barSaveText: { fontFamily: FontFamily.uiMedium, fontSize: 13, color: Colors.vellum },
+  barSaveText: { fontFamily: FontFamily.uiMedium, fontSize: sf(13), color: Colors.vellum },
   titleInput: {
     paddingHorizontal: Spacing.s5, paddingTop: Spacing.s5, paddingBottom: Spacing.s4,
-    fontFamily: FontFamily.displayItalic, fontSize: 22, color: Colors.ink,
+    fontFamily: FontFamily.displayItalic, fontSize: sf(22), color: Colors.ink,
     borderBottomWidth: 1.5, borderBottomColor: Colors.line,
     backgroundColor: Colors.paper,
   },
@@ -1942,7 +1942,7 @@ const sc = StyleSheet.create({
   },
   bodyInput: {
     flex: 1, padding: Spacing.s4,
-    fontFamily: FontFamily.script, fontSize: 15, color: Colors.ink, lineHeight: 26,
+    fontFamily: FontFamily.script, fontSize: sf(15), color: Colors.ink, lineHeight: 26,
     minHeight: 260,
   },
 });
@@ -1956,30 +1956,30 @@ const fo = StyleSheet.create({
     borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.r3, marginBottom: Spacing.s3,
   },
   hubLeft: { gap: 2 },
-  eyebrow: { fontFamily: FontFamily.marker, fontSize: 9, color: Colors.ink3, letterSpacing: 1.4 },
-  activeCount: { fontFamily: FontFamily.displayItalic, fontSize: 22, color: Colors.ink },
-  noSaved: { fontFamily: FontFamily.ja, fontSize: 11, color: Colors.ink3, marginTop: 2 },
+  eyebrow: { fontFamily: FontFamily.marker, fontSize: sf(9), color: Colors.ink3, letterSpacing: 1.4 },
+  activeCount: { fontFamily: FontFamily.displayItalic, fontSize: sf(22), color: Colors.ink },
+  noSaved: { fontFamily: FontFamily.ja, fontSize: sf(11), color: Colors.ink3, marginTop: 2 },
   newBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
     paddingVertical: 5, paddingHorizontal: 12,
     backgroundColor: Colors.sakuraSoft, borderWidth: 1, borderColor: Colors.sakura,
     borderRadius: Radius.pill,
   },
-  newBtnText: { fontFamily: FontFamily.uiMedium, fontSize: 11, color: Colors.sakuraDeep },
+  newBtnText: { fontFamily: FontFamily.uiMedium, fontSize: sf(11), color: Colors.sakuraDeep },
 
   emptyCard: {
     padding: Spacing.s5, backgroundColor: Colors.vellum,
     borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.r3,
     alignItems: 'flex-start', gap: Spacing.s3,
   },
-  emptyCardText: { fontFamily: FontFamily.ja, fontSize: 12, color: Colors.ink3 },
+  emptyCardText: { fontFamily: FontFamily.ja, fontSize: sf(12), color: Colors.ink3 },
   createBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     paddingVertical: 8, paddingHorizontal: 16,
     backgroundColor: Colors.sakuraSoft, borderWidth: 1, borderColor: Colors.sakura,
     borderRadius: Radius.pill,
   },
-  createBtnText: { fontFamily: FontFamily.uiMedium, fontSize: 13, color: Colors.sakuraDeep },
+  createBtnText: { fontFamily: FontFamily.uiMedium, fontSize: sf(13), color: Colors.sakuraDeep },
 
   list: { gap: 12 },
 
@@ -1992,11 +1992,11 @@ const fo = StyleSheet.create({
   },
   msgCardOff: { opacity: 0.5 },
   msgCardTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 },
-  msgSender: { fontFamily: FontFamily.displayItalic, fontSize: 16, color: Colors.ink, lineHeight: 18 },
-  msgTime: { fontFamily: FontFamily.marker, fontSize: 9, color: Colors.ink3, letterSpacing: 1.2, textTransform: 'uppercase' },
-  msgBody: { fontFamily: FontFamily.script, fontSize: 16, color: Colors.ink, lineHeight: 22 },
+  msgSender: { fontFamily: FontFamily.displayItalic, fontSize: sf(16), color: Colors.ink, lineHeight: 18 },
+  msgTime: { fontFamily: FontFamily.marker, fontSize: sf(9), color: Colors.ink3, letterSpacing: 1.2, textTransform: 'uppercase' },
+  msgBody: { fontFamily: FontFamily.script, fontSize: sf(16), color: Colors.ink, lineHeight: 22 },
   msgBodyOff: { color: Colors.ink3 },
-  msgVariation: { fontFamily: FontFamily.uiMedium, fontSize: 11, color: Colors.sakuraDeep },
+  msgVariation: { fontFamily: FontFamily.uiMedium, fontSize: sf(11), color: Colors.sakuraDeep },
 
   actionRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 },
   actionBtn: {
@@ -2006,7 +2006,7 @@ const fo = StyleSheet.create({
   actionBtnResume: { backgroundColor: Colors.sageSoft, borderColor: Colors.sage },
   actionBtnPause: { backgroundColor: Colors.sakuraSoft, borderColor: Colors.sakura },
   actionBtnDelete: { borderColor: Colors.ember },
-  actionBtnText: { fontFamily: FontFamily.uiMedium, fontSize: 11, color: Colors.ink2 },
+  actionBtnText: { fontFamily: FontFamily.uiMedium, fontSize: sf(11), color: Colors.ink2 },
   actionBtnTextResume: { color: Colors.sageDeep },
   actionBtnTextPause: { color: Colors.sakuraInk },
   actionBtnTextDelete: { color: Colors.ember },
@@ -2016,7 +2016,7 @@ const fo = StyleSheet.create({
     borderRadius: Radius.r3, paddingHorizontal: Spacing.s3, paddingVertical: 10,
   },
   fromInput: {
-    fontFamily: FontFamily.script, fontSize: 15, color: Colors.ink,
+    fontFamily: FontFamily.script, fontSize: sf(15), color: Colors.ink,
     padding: 0,
   },
 
@@ -2024,10 +2024,10 @@ const fo = StyleSheet.create({
   compose: { flex: 1, backgroundColor: Colors.paper },
   composeContent: { paddingHorizontal: Spacing.s5, paddingBottom: Spacing.s9 },
   composeBack: { paddingVertical: Spacing.s3 },
-  composeBackText: { fontFamily: FontFamily.ui, fontSize: 14, color: Colors.ink2 },
+  composeBackText: { fontFamily: FontFamily.ui, fontSize: sf(14), color: Colors.ink2 },
 
   sectionLabel: {
-    fontFamily: FontFamily.marker, fontSize: 9, color: Colors.ink3,
+    fontFamily: FontFamily.marker, fontSize: sf(9), color: Colors.ink3,
     letterSpacing: 1.4, marginTop: Spacing.s4, marginBottom: Spacing.s2,
   },
   starterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
@@ -2038,15 +2038,15 @@ const fo = StyleSheet.create({
     borderRadius: Radius.pill, ...Shadow.s1,
   },
   starterActive: { backgroundColor: Colors.sakuraSoft, borderColor: Colors.sakura },
-  starterEmoji: { fontSize: 14 },
-  starterText: { fontFamily: FontFamily.ui, fontSize: 12, color: Colors.ink2 },
+  starterEmoji: { fontSize: sf(14) },
+  starterText: { fontFamily: FontFamily.ui, fontSize: sf(12), color: Colors.ink2 },
 
   msgInputWrap: {
     backgroundColor: Colors.vellum, borderWidth: 1, borderColor: Colors.line,
     borderRadius: Radius.r3, padding: Spacing.s3,
   },
   msgInput: {
-    fontFamily: FontFamily.script, fontSize: 16, color: Colors.ink,
+    fontFamily: FontFamily.script, fontSize: sf(16), color: Colors.ink,
     minHeight: 72, textAlignVertical: 'top', lineHeight: 24,
   },
   addMsgBtn: {
@@ -2055,7 +2055,7 @@ const fo = StyleSheet.create({
     backgroundColor: 'rgba(243,182,196,0.15)', borderWidth: 1, borderColor: Colors.sakura,
     borderRadius: Radius.pill, marginTop: 4, marginBottom: Spacing.s4,
   },
-  addMsgBtnText: { fontFamily: FontFamily.uiMedium, fontSize: 13, color: Colors.sakuraDeep },
+  addMsgBtnText: { fontFamily: FontFamily.uiMedium, fontSize: sf(13), color: Colors.sakuraDeep },
 
   notifBanner: {
     backgroundColor: 'rgba(20, 20, 22, 0.72)',
@@ -2086,18 +2086,18 @@ const fo = StyleSheet.create({
   },
   notifTitle: {
     fontFamily: FontFamily.uiSemiBold,
-    fontSize: 11,
+    fontSize: sf(11),
     color: '#ffffff',
     fontWeight: '600',
   },
   notifTime: {
     fontFamily: FontFamily.ui,
-    fontSize: 11,
+    fontSize: sf(11),
     color: 'rgba(255, 255, 255, 0.45)',
   },
   notifBody: {
     fontFamily: FontFamily.ui,
-    fontSize: 10,
+    fontSize: sf(10),
     color: 'rgba(255, 255, 255, 0.80)',
     lineHeight: 13,
   },
@@ -2121,7 +2121,7 @@ const fo = StyleSheet.create({
   },
   lockscreenDate: {
     color: 'rgba(255, 255, 255, 0.75)',
-    fontSize: 13,
+    fontSize: sf(13),
     fontFamily: FontFamily.ui,
     fontWeight: '400',
     textTransform: 'uppercase',
@@ -2129,7 +2129,7 @@ const fo = StyleSheet.create({
   },
   lockscreenTime: {
     color: '#ffffff',
-    fontSize: 64,
+    fontSize: sf(64),
     fontFamily: FontFamily.ui,
     fontWeight: '100',
     marginTop: 0,
@@ -2192,7 +2192,7 @@ const fo = StyleSheet.create({
     borderRadius: Radius.pill,
   },
   chipActive: { backgroundColor: Colors.paperDeep, borderColor: Colors.lineStrong },
-  chipText: { fontFamily: FontFamily.ui, fontSize: 13, color: Colors.ink2 },
+  chipText: { fontFamily: FontFamily.ui, fontSize: sf(13), color: Colors.ink2 },
   chipTextActive: { color: Colors.ink, fontFamily: FontFamily.uiMedium },
 
   previewRow: {
@@ -2200,28 +2200,28 @@ const fo = StyleSheet.create({
     marginTop: Spacing.s4, paddingVertical: Spacing.s3,
     borderTopWidth: 1, borderTopColor: Colors.line,
   },
-  previewLabel: { fontFamily: FontFamily.uiSemiBold, fontSize: 13, color: Colors.ink },
-  previewValue: { fontFamily: FontFamily.ui, fontSize: 13, color: Colors.ink3 },
+  previewLabel: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(13), color: Colors.ink },
+  previewValue: { fontFamily: FontFamily.ui, fontSize: sf(13), color: Colors.ink3 },
 
   queueBtn: {
     marginTop: Spacing.s4, backgroundColor: Colors.sakuraDeep,
     borderRadius: Radius.pill, paddingVertical: 14, alignItems: 'center',
   },
   queueBtnDisabled: { opacity: 0.4 },
-  queueBtnText: { fontFamily: FontFamily.uiSemiBold, fontSize: 15, color: Colors.vellum },
+  queueBtnText: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(15), color: Colors.vellum },
 });
 
 const bn = StyleSheet.create({
   wrap: { paddingHorizontal: Spacing.s5, paddingTop: Spacing.s4, paddingBottom: Spacing.s6 },
   topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: Spacing.s3 },
-  eyebrow: { fontFamily: FontFamily.marker, fontSize: 9, color: Colors.ink3, letterSpacing: 1.4 },
+  eyebrow: { fontFamily: FontFamily.marker, fontSize: sf(9), color: Colors.ink3, letterSpacing: 1.4 },
   editBtn: {
     paddingVertical: 5, paddingHorizontal: 14,
     borderRadius: Radius.pill, borderWidth: 1, borderColor: Colors.line,
     backgroundColor: Colors.vellum,
   },
   editBtnOn: { backgroundColor: Colors.sakuraDeep, borderColor: Colors.sakuraDeep },
-  editBtnText: { fontFamily: FontFamily.uiMedium, fontSize: 12, color: Colors.ink2 },
+  editBtnText: { fontFamily: FontFamily.uiMedium, fontSize: sf(12), color: Colors.ink2 },
   editBtnTextOn: { color: Colors.vellum },
 
   titleCenter: { alignItems: 'center', marginBottom: 6, gap: 4 },
@@ -2229,9 +2229,9 @@ const bn = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 10,
     backgroundColor: INK, paddingHorizontal: 18, paddingVertical: 6, borderRadius: 999,
   },
-  titleJa: { fontFamily: FontFamily.ja, fontWeight: '600', fontSize: 18, color: '#fff' },
-  titleText: { fontFamily: FontFamily.markerBold, fontWeight: '700', fontSize: 16, color: '#fff', letterSpacing: 0.8 },
-  titleSub: { fontFamily: FontFamily.ui, fontSize: 12, color: INK, opacity: 0.7 },
+  titleJa: { fontFamily: FontFamily.ja, fontWeight: '600', fontSize: sf(18), color: '#fff' },
+  titleText: { fontFamily: FontFamily.markerBold, fontWeight: '700', fontSize: sf(16), color: '#fff', letterSpacing: 0.8 },
+  titleSub: { fontFamily: FontFamily.ui, fontSize: sf(12), color: INK, opacity: 0.7 },
 
   states: { marginTop: 14, gap: 10 },
   stateCard: {
@@ -2242,19 +2242,19 @@ const bn = StyleSheet.create({
     width: 44, height: 44, borderRadius: 999, borderWidth: 2,
     backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
   },
-  sealJa: { fontFamily: FontFamily.ja, fontWeight: '600', fontSize: 22, textAlign: 'center' },
+  sealJa: { fontFamily: FontFamily.ja, fontWeight: '600', fontSize: sf(22), textAlign: 'center' },
   stateContent: { flex: 1, minWidth: 0 },
-  stateTitle: { fontFamily: FontFamily.markerBold, fontWeight: '700', fontSize: 14, letterSpacing: 0.5 },
-  stateDesc: { fontFamily: FontFamily.ui, fontSize: 11, color: INK, marginTop: 2 },
+  stateTitle: { fontFamily: FontFamily.markerBold, fontWeight: '700', fontSize: sf(14), letterSpacing: 0.5 },
+  stateDesc: { fontFamily: FontFamily.ui, fontSize: sf(11), color: INK, marginTop: 2 },
   checkGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 6 },
   checkRow: { flexDirection: 'row', alignItems: 'center', gap: 4, width: '48%', minWidth: 0 },
-  checkText: { fontFamily: FontFamily.marker, fontSize: 9, fontWeight: '500', color: INK, flex: 1 },
-  checkInput: { fontFamily: FontFamily.ui, fontSize: 9, color: INK, flex: 1, padding: 0 },
-  removeCheck: { fontSize: 9, color: INK, opacity: 0.4 },
+  checkText: { fontFamily: FontFamily.marker, fontSize: sf(9), fontWeight: '500', color: INK, flex: 1 },
+  checkInput: { fontFamily: FontFamily.ui, fontSize: sf(9), color: INK, flex: 1, padding: 0 },
+  removeCheck: { fontSize: sf(9), color: INK, opacity: 0.4 },
   addCheckBtn: { paddingVertical: 2, paddingHorizontal: 4 },
-  addCheckText: { fontFamily: FontFamily.uiMedium, fontSize: 10 },
+  addCheckText: { fontFamily: FontFamily.uiMedium, fontSize: sf(10) },
   chibi: { flexShrink: 0, alignSelf: 'center' },
 
-  footer: { textAlign: 'center', fontFamily: FontFamily.ui, fontSize: 11, color: INK, opacity: 0.7, marginTop: 14 },
-  footerInput: { textAlign: 'center', fontFamily: FontFamily.ui, fontSize: 11, color: INK, marginTop: 14, borderBottomWidth: 1, borderBottomColor: INK + '33', paddingBottom: 2 },
+  footer: { textAlign: 'center', fontFamily: FontFamily.ui, fontSize: sf(11), color: INK, opacity: 0.7, marginTop: 14 },
+  footerInput: { textAlign: 'center', fontFamily: FontFamily.ui, fontSize: sf(11), color: INK, marginTop: 14, borderBottomWidth: 1, borderBottomColor: INK + '33', paddingBottom: 2 },
 });

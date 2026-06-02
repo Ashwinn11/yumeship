@@ -6,7 +6,7 @@ import {
   MarkerCard, TitleHeader, MarkerHeader, BlankPill, INK,
 } from '@/components/templates/primitives';
 import { Heart } from '@/components/deco/Heart';
-import { FontFamily } from '@/constants/theme';
+import { FontFamily ,sf } from '@/constants/theme';
 import { useTemplateCtx } from '@/store/templateData';
 import { DecoBar } from '@/components/templates/DecoBar';
 
@@ -94,7 +94,7 @@ export function LoveLetterContent({ editing = false }: { editing?: boolean }) {
                      underlineColorAndroid="transparent"
                      style={{
                        fontFamily: FontFamily.ui,
-                       fontSize: 15,
+                       fontSize: sf(15),
                        color: INK,
                        padding: 0,
                        minWidth: 120,
@@ -103,7 +103,7 @@ export function LoveLetterContent({ editing = false }: { editing?: boolean }) {
                  ) : (
                    <Text style={{
                      fontFamily: FontFamily.ui,
-                     fontSize: 15,
+                     fontSize: sf(15),
                      color: INK,
                    }}>
                      {signName || '——'}
@@ -126,7 +126,7 @@ export function LoveLetterContent({ editing = false }: { editing?: boolean }) {
                     placeholder=""
                     underlineColorAndroid="transparent"
                     style={[
-                      { fontFamily: FontFamily.ja, fontSize: 11, color: INK, padding: 0, minHeight: 18, fontWeight: '600' },
+                      { fontFamily: FontFamily.ja, fontSize: sf(11), color: INK, padding: 0, minHeight: 18, fontWeight: '600' },
                       !things[i] && {
                         height: 14,
                         backgroundColor: '#e9d8cb',
@@ -138,7 +138,7 @@ export function LoveLetterContent({ editing = false }: { editing?: boolean }) {
                   />
                 ) : (
                   things[i] ? (
-                    <Text style={{ fontFamily: FontFamily.ja, fontSize: 11, color: INK }}>{things[i]}</Text>
+                    <Text style={{ fontFamily: FontFamily.ja, fontSize: sf(11), color: INK }}>{things[i]}</Text>
                   ) : (
                     <View style={{
                       height: 14,
@@ -197,7 +197,7 @@ const s = StyleSheet.create({
   dearText: {
     fontFamily: FontFamily.markerBold,
     fontWeight: '700',
-    fontSize: 11,
+    fontSize: sf(11),
     color: INK,
     letterSpacing: 0.6,
     textTransform: 'uppercase',
@@ -205,12 +205,12 @@ const s = StyleSheet.create({
   dearName: {
     fontFamily: FontFamily.ja,
     fontWeight: '600',
-    fontSize: 11,
+    fontSize: sf(11),
     color: INK,
   },
   dearNameInput: {
     fontFamily: FontFamily.ja,
-    fontSize: 11,
+    fontSize: sf(11),
     color: INK,
     minWidth: 60,
     padding: 0,
@@ -219,7 +219,7 @@ const s = StyleSheet.create({
   },
   letterBody: {
     fontFamily: FontFamily.ja,
-    fontSize: 12,
+    fontSize: sf(12),
     color: INK,
     lineHeight: 20,
     marginTop: 4,
@@ -229,7 +229,7 @@ const s = StyleSheet.create({
   },
   signoff: {
     fontFamily: FontFamily.ui,
-    fontSize: 13,
+    fontSize: sf(13),
     color: INK,
     marginTop: 12,
   },
