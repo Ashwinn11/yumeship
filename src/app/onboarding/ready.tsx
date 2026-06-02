@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/Button';
 import { IconBell, IconJournalOutline } from '@/components/ui/Icon';
 import { StepDots } from '@/components/ui/StepDots';
 import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing } from '@/constants/theme';
+import { useIPad } from '@/hooks/use-ipad';
 import { getOnbState, requestReviewIfEligible, resetOnb } from '@/store/onboarding';
 import { requestPermission } from '@/store/notifications';
 import { daysAgo, getShip } from '@/store/ships';
@@ -24,6 +25,7 @@ const CREATION_LABEL: Record<string, string> = {
 
 export default function OnbReady() {
   const insets = useSafeAreaInsets();
+  const { scrollFill, column } = useIPad();
   const { shipId } = useLocalSearchParams<{ shipId?: string }>();
   const [asking, setAsking] = useState(false);
   const ship = shipId ? getShip(shipId) : undefined;
@@ -83,18 +85,18 @@ export default function OnbReady() {
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top + Spacing.s1, paddingBottom: insets.bottom + Spacing.s1 }]}>
-      <View style={styles.decoTR} pointerEvents="none">
-        <StickerSakuraFlower size={54} />
-      </View>
-      <View style={styles.decoBL} pointerEvents="none">
-        <StickerEnvelope size={44} />
-      </View>
-
       <View style={styles.dotsRow}>
         <StepDots step={4} total={5} />
       </View>
 
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.scroll} contentContainerStyle={[styles.content, scrollFill]} showsVerticalScrollIndicator={false}>
+        <View style={[column, { position: 'relative' }]}>
+          <View style={styles.decoTR} pointerEvents="none">
+            <StickerSakuraFlower size={54} />
+          </View>
+          <View style={styles.decoBL} pointerEvents="none">
+            <StickerEnvelope size={44} />
+          </View>
         <Text style={styles.eyebrow}>saved safely</Text>
         <Text style={styles.heading}>Your first ship{'\n'}is waiting.</Text>
         <Text style={styles.subcopy}>
@@ -147,9 +149,10 @@ export default function OnbReady() {
             <Text style={styles.notifBtnText}>{asking ? 'asking...' : 'allow'}</Text>
           </Pressable>
         </View>
+        </View>
       </ScrollView>
 
-      <View style={styles.actions}>
+      <View style={[styles.actions, column]}>
         <Button
           variant="primary"
           size="lg"
@@ -244,6 +247,6 @@ const styles = StyleSheet.create({
   skipPressable: { alignItems: 'center' },
   skip: { fontFamily: FontFamily.ui, fontSize: FontSize.meta, color: Colors.ink3, textDecorationLine: 'underline' },
   centerEmpty: { flex: 1, justifyContent: 'center', paddingHorizontal: Spacing.s6, gap: Spacing.s5 },
-  decoTR: { position: 'absolute', top: 108, right: 22 },
+  decoTR: { position: 'absolute', top: 0, right: 0 },
   decoBL: { position: 'absolute', bottom: 142, left: 22 },
 });

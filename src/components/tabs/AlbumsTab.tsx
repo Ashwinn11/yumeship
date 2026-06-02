@@ -4,6 +4,7 @@ import {
   Dimensions, Image, Pressable,
   ScrollView, StyleSheet, Text, TextInput, View,
 } from 'react-native';
+import { useIPad } from '@/hooks/use-ipad';
 
 import { CozyModal } from '@/components/ui/CozyModal';
 import { IconPlus, IconTrashSolid } from '@/components/ui/Icon';
@@ -17,6 +18,7 @@ const GRID_GAP = 2;
 const COL_WIDTH = Math.floor((SCREEN_W - GRID_PAD * 2 - GRID_GAP * 2) / 3);
 
 export function AlbumsTab({ shipId, setCustomBack }: { shipId: string; setCustomBack?: (fn: (() => void) | null) => void }) {
+  const { column } = useIPad();
   const albums = useAlbums(shipId);
   const [openAlbumId, setOpenAlbumId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
@@ -61,7 +63,7 @@ export function AlbumsTab({ shipId, setCustomBack }: { shipId: string; setCustom
         onConfirm={() => { if (albumToDelete) deleteAlbum(albumToDelete); setAlbumToDelete(null); }}
         onClose={() => setAlbumToDelete(null)}
       />
-      <View style={s.header}>
+      <View style={[s.header, column]}>
         <Text style={s.label}>albums · {albums.length}</Text>
         <Pressable hitSlop={8} onPress={() => setCreating(true)}>
           <IconPlus size={14} color={Colors.sakuraDeep} />
@@ -155,6 +157,7 @@ export function AlbumsTab({ shipId, setCustomBack }: { shipId: string; setCustom
 }
 
 function AlbumView({ albumId, albumTitle, onBack }: { albumId: string; albumTitle: string; onBack: () => void }) {
+  const { column } = useIPad();
   const photos = useAlbumPhotos(albumId);
   const [lightboxUri, setLightboxUri] = useState<string | null>(null);
   const [selecting, setSelecting] = useState(false);
@@ -210,7 +213,7 @@ function AlbumView({ albumId, albumTitle, onBack }: { albumId: string; albumTitl
         onClose={() => setConfirmPhotoDelete(false)}
       />
       {/* Top row: title + action buttons */}
-      <View style={s.albumTopRow}>
+      <View style={[s.albumTopRow, column]}>
         <Text style={s.albumViewTitle} numberOfLines={1}>{albumTitle}</Text>
         <View style={s.albumTopActions}>
           {selecting ? (
@@ -264,7 +267,7 @@ function AlbumView({ albumId, albumTitle, onBack }: { albumId: string; albumTitl
           </Pressable>
         </View>
       ) : (
-        <ScrollView contentContainerStyle={s.photoGrid}>
+        <ScrollView contentContainerStyle={[s.photoGrid, column]}>
           {photos.map((p) => {
             const isSelected = selected.has(p.id);
             return (

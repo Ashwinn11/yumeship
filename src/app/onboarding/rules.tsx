@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/Button';
 import { Field } from '@/components/ui/Field';
 import { StepDots } from '@/components/ui/StepDots';
 import { Colors, FontFamily, FontSize, Radius, Spacing } from '@/constants/theme';
+import { useIPad } from '@/hooks/use-ipad';
 import { getOnbState, resetOnb } from '@/store/onboarding';
 import { addShip, REL_GRADS } from '@/store/ships';
 
@@ -32,6 +33,7 @@ const TAPE_BY_REL: Record<string, { color: string; pattern: 'stripe' | 'dot' | '
 
 export default function OnbRules() {
   const insets = useSafeAreaInsets();
+  const { scrollFill, column } = useIPad();
   const { mode } = useLocalSearchParams<{ mode?: string }>();
   const isNew = mode === 'new';
 
@@ -68,14 +70,6 @@ export default function OnbRules() {
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top + Spacing.s1, paddingBottom: insets.bottom + Spacing.s1 }]}>
-      {/* Background accents */}
-      <View style={styles.decoTR} pointerEvents="none">
-        <Ribbon size={18} color={Colors.sakuraDeep} />
-      </View>
-      <View style={styles.decoBL} pointerEvents="none">
-        <StickerHeartPatch size={48} />
-      </View>
-
       {isNew ? (
         <View style={styles.header}>
           <Pressable onPress={() => router.back()} style={styles.backBtn}>
@@ -90,7 +84,14 @@ export default function OnbRules() {
         </View>
       )}
 
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.scroll} contentContainerStyle={[styles.scrollContent, scrollFill]} showsVerticalScrollIndicator={false}>
+        <View style={[column, { position: 'relative' }]}>
+          <View style={styles.decoTR} pointerEvents="none">
+            <Ribbon size={18} color={Colors.sakuraDeep} />
+          </View>
+          <View style={styles.decoBL} pointerEvents="none">
+            <StickerHeartPatch size={48} />
+          </View>
         {!isNew && <Text style={styles.eyebrow}>step five · style</Text>}
         <Text style={[styles.heading, isNew && styles.headingNew]}>
           A style that feels{"\n"}like your world.
@@ -126,9 +127,10 @@ export default function OnbRules() {
             private by default — nothing leaves your phone.
           </CalloutBubble>
         </View>
+        </View>
       </ScrollView>
 
-      <View style={styles.actions}>
+      <View style={[styles.actions, column]}>
         <Button
           variant="primary"
           size="lg"
@@ -192,6 +194,6 @@ const styles = StyleSheet.create({
   privacyTitle: { fontFamily: FontFamily.uiSemiBold, fontSize: 13, color: Colors.ink },
   privacyBody: { fontFamily: FontFamily.ui, fontSize: 11, color: Colors.ink3, lineHeight: 15 },
   actions: { paddingHorizontal: Spacing.s6, paddingBottom: Spacing.s3 },
-  decoTR: { position: 'absolute', top: 130, right: 20 },
+  decoTR: { position: 'absolute', top: 0, right: 0 },
   decoBL: { position: 'absolute', bottom: 120, right: 30 },
 });

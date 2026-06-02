@@ -1,5 +1,6 @@
 import { useMemo, useRef } from 'react';
 import { ScrollView, StyleSheet } from 'react-native';
+import { useIPad } from '@/hooks/use-ipad';
 
 import { LoveLetterContent } from '@/app/template/love-letter';
 import { getShip } from '@/store/ships';
@@ -7,6 +8,7 @@ import { TemplateDataCtx, loadTemplateData, saveTemplateData, buildPreFill } fro
 import { Spacing } from '@/constants/theme';
 
 export function LoveLetterTab({ shipId }: { shipId: string }) {
+  const { column } = useIPad();
   const ship = getShip(shipId);
   const templateKey = 'love-letter';
 
@@ -31,7 +33,7 @@ export function LoveLetterTab({ shipId }: { shipId: string }) {
 
   return (
     <TemplateDataCtx.Provider value={ctx}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.tab}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[s.tab, column]}>
         <LoveLetterContent editing />
       </ScrollView>
     </TemplateDataCtx.Provider>

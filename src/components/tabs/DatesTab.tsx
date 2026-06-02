@@ -3,6 +3,7 @@ import {
   Modal, Pressable, ScrollView,
   StyleSheet, Switch, Text, TextInput, TouchableWithoutFeedback, View,
 } from 'react-native';
+import { useIPad } from '@/hooks/use-ipad';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { StickerTicket, WashiTape, Bullets, Sparkle } from '@/components/deco';
@@ -16,6 +17,7 @@ import { DateField } from '@/components/ui/DateField';
 const DATE_COLORS = [Colors.sakuraDeep, Colors.peachDeep, Colors.lavenderDeep, Colors.sageDeep];
 
 export function DatesTab({ shipId, shipName }: { shipId: string; shipName?: string }) {
+  const { column } = useIPad();
   const dates = useDates(shipId);
   const [composing, setComposing] = useState(false);
   const [title, setTitle] = useState('');
@@ -59,7 +61,7 @@ export function DatesTab({ shipId, shipName }: { shipId: string; shipName?: stri
         confirmText="got it"
         onClose={() => setAnnivInfo(false)}
       />
-      <View style={s.header}>
+      <View style={[s.header, column]}>
         <Text style={s.label}>dates · {dates.length}</Text>
         <Pressable hitSlop={8} onPress={() => setComposing(true)}>
           <IconPlus size={14} color={Colors.sakuraDeep} />

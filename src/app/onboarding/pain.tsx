@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { CalloutBubble } from '@/components/ui/Callouts';
 import { StepDots } from '@/components/ui/StepDots';
 import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing } from '@/constants/theme';
+import { useIPad } from '@/hooks/use-ipad';
 import { setOnbField } from '@/store/onboarding';
 
 const PAINS = [
@@ -21,6 +22,7 @@ const PAINS = [
 
 export default function OnbPain() {
   const insets = useSafeAreaInsets();
+  const { scrollFill, column } = useIPad();
   const [selected, setSelected] = useState<string[]>(['i have ideas, but starting feels hard']);
 
   const canContinue = selected.length > 0;
@@ -45,18 +47,18 @@ export default function OnbPain() {
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top + Spacing.s1, paddingBottom: insets.bottom + Spacing.s1 }]}>
-      <View style={styles.decoTR} pointerEvents="none">
-        <StickerWaxSeal size={52} />
-      </View>
-      <View style={styles.decoBL} pointerEvents="none">
-        <StickerHeartPatch size={44} />
-      </View>
-
       <View style={styles.dotsRow}>
         <StepDots step={1} total={5} />
       </View>
 
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.scroll} contentContainerStyle={[styles.content, scrollFill]} showsVerticalScrollIndicator={false}>
+        <View style={[column, { position: 'relative' }]}>
+          <View style={styles.decoTR} pointerEvents="none">
+            <StickerWaxSeal size={52} />
+          </View>
+          <View style={styles.decoBL} pointerEvents="none">
+            <StickerHeartPatch size={44} />
+          </View>
         <Text style={styles.eyebrow}>the stuck part</Text>
         <Text style={styles.heading}>What gets in{'\n'}the way?</Text>
         <Text style={styles.subcopy}>
@@ -84,9 +86,10 @@ export default function OnbPain() {
         <View style={styles.bubbleWrap}>
           <CalloutBubble tone="pink">{helper}</CalloutBubble>
         </View>
+        </View>
       </ScrollView>
 
-      <View style={styles.actions}>
+      <View style={[styles.actions, column]}>
         <Button
           variant="primary"
           size="lg"
@@ -154,6 +157,6 @@ const styles = StyleSheet.create({
   rowTextActive: { color: Colors.sakuraInk },
   bubbleWrap: { marginTop: Spacing.s6, alignItems: 'center' },
   actions: { paddingHorizontal: Spacing.s6, paddingBottom: Spacing.s3 },
-  decoTR: { position: 'absolute', top: 106, right: 22 },
+  decoTR: { position: 'absolute', top: 0, right: 0 },
   decoBL: { position: 'absolute', bottom: 134, left: 22 },
 });

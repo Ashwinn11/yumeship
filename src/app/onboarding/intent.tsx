@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { IconBookmark, IconHeart, IconJournalOutline, IconMailOutline, IconSend } from '@/components/ui/Icon';
 import { StepDots } from '@/components/ui/StepDots';
 import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing } from '@/constants/theme';
+import { useIPad } from '@/hooks/use-ipad';
 import { setOnbField } from '@/store/onboarding';
 
 const OPTIONS = [
@@ -55,6 +56,7 @@ const OPTIONS = [
 
 export default function OnbIntent() {
   const insets = useSafeAreaInsets();
+  const { scrollFill, column } = useIPad();
   const [selected, setSelected] = useState<(typeof OPTIONS)[number]['key']>('letter');
 
   function continueFlow() {
@@ -64,18 +66,18 @@ export default function OnbIntent() {
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top + Spacing.s1, paddingBottom: insets.bottom + Spacing.s1 }]}>
-      <View style={styles.decoTR} pointerEvents="none">
-        <StickerSakuraBranch size={58} />
-      </View>
-      <View style={styles.decoBL} pointerEvents="none">
-        <Sparkle size={18} color={Colors.lavenderDeep} />
-      </View>
-
       <View style={styles.dotsRow}>
         <StepDots step={0} total={5} />
       </View>
 
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.scroll} contentContainerStyle={[styles.content, scrollFill]} showsVerticalScrollIndicator={false}>
+        <View style={[column, { position: 'relative' }]}>
+          <View style={styles.decoTR} pointerEvents="none">
+            <StickerSakuraBranch size={58} />
+          </View>
+          <View style={styles.decoBL} pointerEvents="none">
+            <Sparkle size={18} color={Colors.lavenderDeep} />
+          </View>
         <Text style={styles.eyebrow}>first wish</Text>
         <Text style={styles.heading}>What do you want{'\n'}to make first?</Text>
         <Text style={styles.subcopy}>
@@ -116,9 +118,10 @@ export default function OnbIntent() {
           <StickerEnvelope size={30} />
           <Text style={styles.noteText}>you can change your mind later. this just opens the first page.</Text>
         </View>
+        </View>
       </ScrollView>
 
-      <View style={styles.actions}>
+      <View style={[styles.actions, column]}>
         <Button variant="primary" size="lg" full onPress={continueFlow} icon={<Ribbon size={14} color={Colors.vellum} />} iconPosition="right">
           continue
         </Button>
@@ -195,6 +198,6 @@ const styles = StyleSheet.create({
   },
   noteText: { flex: 1, fontFamily: FontFamily.script, fontSize: 16, lineHeight: 18, color: Colors.ink2 },
   actions: { paddingHorizontal: Spacing.s6, paddingBottom: Spacing.s3 },
-  decoTR: { position: 'absolute', top: 104, right: 20 },
+  decoTR: { position: 'absolute', top: 0, right: 0 },
   decoBL: { position: 'absolute', bottom: 132, left: 24 },
 });

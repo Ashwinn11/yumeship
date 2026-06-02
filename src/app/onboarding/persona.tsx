@@ -15,6 +15,7 @@ import { StepDots } from '@/components/ui/StepDots';
 import { UnderInput } from '@/components/ui/UnderInput';
 import { CalloutBubble } from '@/components/ui';
 import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing } from '@/constants/theme';
+import { useIPad } from '@/hooks/use-ipad';
 import { setOnbField } from '@/store/onboarding';
 
 const PRONOUNS = ['she/her', 'he/him', 'they/them', '+'];
@@ -29,6 +30,7 @@ const COLOR_OPTIONS = [
 
 export default function OnbPersona() {
   const insets = useSafeAreaInsets();
+  const { scrollFill, column } = useIPad();
   const [name, setName] = useState('');
   const [pronoun, setPronoun] = useState('she/her');
 
@@ -38,19 +40,18 @@ export default function OnbPersona() {
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top + Spacing.s1, paddingBottom: insets.bottom + Spacing.s1 }]}>
-      {/* Background accents */}
-      <View style={styles.decoTR} pointerEvents="none">
-        <StickerSakuraBranch size={60} />
-      </View>
-      <View style={styles.decoBL} pointerEvents="none">
-        <Sparkle size={18} color={Colors.lavenderDeep} />
-      </View>
-
       <View style={styles.dotsRow}>
         <StepDots step={2} total={5} />
       </View>
 
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.scroll} contentContainerStyle={[styles.scrollContent, scrollFill]} showsVerticalScrollIndicator={false}>
+        <View style={[column, { position: 'relative' }]}>
+          <View style={styles.decoTR} pointerEvents="none">
+            <StickerSakuraBranch size={60} />
+          </View>
+          <View style={styles.decoBL} pointerEvents="none">
+            <Sparkle size={18} color={Colors.lavenderDeep} />
+          </View>
         <Text style={styles.eyebrow}>step three · you</Text>
         <Text style={styles.heading}>Who are you,{'\n'}in their world?</Text>
 
@@ -112,9 +113,10 @@ export default function OnbPersona() {
             a self-insert is{'\n'}you in their story.{'\n'}no wrong way.
           </CalloutBubble>
         </View>
+        </View>
       </ScrollView>
 
-      <View style={styles.actions}>
+      <View style={[styles.actions, column]}>
         <Button
           variant="primary"
           size="lg"
@@ -223,8 +225,8 @@ const styles = StyleSheet.create({
   },
   decoTR: {
     position: 'absolute',
-    top: 100,
-    right: 24,
+    top: 0,
+    right: 0,
   },
   decoBL: {
     position: 'absolute',

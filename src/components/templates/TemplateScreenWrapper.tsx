@@ -1,3 +1,4 @@
+import { useIPad } from '@/hooks/use-ipad';
 import { Cloud } from '@/components/deco/Cloud';
 import { Heart } from '@/components/deco/Heart';
 import { Ribbon } from '@/components/deco/Ribbon';
@@ -35,6 +36,7 @@ type Props = {
 
 export function TemplateScreenWrapper({ templateKey, shipId, children }: Props) {
   const insets = useSafeAreaInsets();
+  const { column } = useIPad();
   const ship = shipId ? getShip(shipId) : undefined;
   const [showPicker, setShowPicker] = useState(false);
   const [selected, setSelected] = useState(templateKey);
@@ -142,7 +144,7 @@ export function TemplateScreenWrapper({ templateKey, shipId, children }: Props) 
     <TemplateDataCtx.Provider value={ctx}>
       <View style={[s.screen, { paddingTop: insets.top }]}>
         {renderTemplateDecos()}
-        <View style={s.appBar}>
+        <View style={[s.appBar, column]}>
           <Pressable
             onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)' as any)}
             style={s.back}
@@ -177,7 +179,7 @@ export function TemplateScreenWrapper({ templateKey, shipId, children }: Props) 
         </View>
 
         <ScrollView
-          contentContainerStyle={s.scroll}
+          contentContainerStyle={[s.scroll, column]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >

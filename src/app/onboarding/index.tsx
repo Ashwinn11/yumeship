@@ -9,9 +9,11 @@ import { StickerSakuraFlower, StickerWaxSeal } from '@/components/deco/Stickers'
 import { WashiTape } from '@/components/deco/WashiTape';
 import { Button } from '@/components/ui/Button';
 import { Colors, FontFamily, FontSize, Spacing } from '@/constants/theme';
+import { useIPad } from '@/hooks/use-ipad';
 
 export default function OnbWelcome() {
   const insets = useSafeAreaInsets();
+  const { column } = useIPad();
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top + Spacing.s4, paddingBottom: insets.bottom + Spacing.s4 }]}>
@@ -27,7 +29,7 @@ export default function OnbWelcome() {
       </View>
 
       {/* Main content */}
-      <View style={styles.content}>
+      <View style={[styles.content, column]}>
         <View style={styles.iconWrap}>
           <WashiTape
             width={64} height={12} pattern="floral" color="#fadde5" rotate={-3}
@@ -62,7 +64,7 @@ export default function OnbWelcome() {
       </View>
 
       {/* Bottom actions */}
-      <View style={styles.actions}>
+      <View style={[styles.actions, column]}>
         <Button
           variant="primary"
           size="lg"

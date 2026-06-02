@@ -23,6 +23,7 @@ import { CozyModal } from '@/components/ui/CozyModal';
 import { GradientCover } from '@/components/ui/GradientCover';
 import { IconEdit, IconPlus, IconTrashSolid } from '@/components/ui/Icon';
 import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing } from '@/constants/theme';
+import { useIPad } from '@/hooks/use-ipad';
 import {
   addHeadcanon, deleteHeadcanon, updateHeadcanon, useHeadcanonCounts, useHeadcanons,
 } from '@/store/headcanons';
@@ -59,6 +60,7 @@ const SCENARIO_PROMPTS = [
 
 export default function ShipDetail() {
   const insets = useSafeAreaInsets();
+  const { column } = useIPad();
   const { id } = useLocalSearchParams<{ id: string }>();
   const ship = useShip(id ?? '');
   const [activeTab, setActiveTab] = useState<DetailTab>('profile');
@@ -101,7 +103,7 @@ export default function ShipDetail() {
         onClose={() => setConfirmDelete(false)}
       />
 
-      <View style={styles.appBar}>
+      <View style={[styles.appBar, column]}>
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <Text style={styles.back}>‹</Text>
         </Pressable>
@@ -112,6 +114,7 @@ export default function ShipDetail() {
       </View>
 
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
+        <View style={column}>
         <GradientCover gradStart={ship.gradStart} gradEnd={ship.gradEnd} style={styles.hero}>
           <Text style={styles.heroInitial}>{ship.name.charAt(0).toUpperCase() || '♡'}</Text>
           <View style={styles.heroTape}>
@@ -146,6 +149,7 @@ export default function ShipDetail() {
         {activeTab === 'dates'        && <DatesTab shipId={id!} shipName={ship.name} />}
         {activeTab === 'this-or-that' && <ThisOrThatTab shipId={id!} />}
         {activeTab === 'love-letter'  && <LoveLetterTab shipId={id!} />}
+        </View>
       </ScrollView>
     </View>
   );

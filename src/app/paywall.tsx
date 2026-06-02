@@ -19,6 +19,7 @@ import {
 import { WashiTape } from '@/components/deco/WashiTape';
 import { CozyModal } from '@/components/ui';
 import { Colors, FontFamily, FontSize, Radius, Spacing } from '@/constants/theme';
+import { useIPad } from '@/hooks/use-ipad';
 import { refreshPremium } from '@/store/premium';
 import { requestReviewIfEligible } from '@/store/onboarding';
 import {
@@ -166,6 +167,7 @@ function getWeeklyEquivalentOnly(pkg: PurchasesPackage): string | null {
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
 export default function PaywallScreen() {
+  const { column } = useIPad();
   const [packages, setPackages] = useState<PurchasesPackage[]>([]);
   const [selected, setSelected] = useState<PurchasesPackage | null>(null);
   const [loading, setLoading] = useState(true);
@@ -286,7 +288,7 @@ export default function PaywallScreen() {
 
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, column]}
         showsVerticalScrollIndicator={false}
       >
         {/* ── Hero ─────────────────────────────────────────────────── */}

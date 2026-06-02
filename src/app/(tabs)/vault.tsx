@@ -28,6 +28,7 @@ import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing } from '@/constan
 import { addFoMessage, deleteFoMessage, toggleFoMessage, updateFoMessage, useFoMessages } from '@/store/foNotifications';
 import { addHeadcanon, clearCategoryHeadcanons, deleteHeadcanon, updateHeadcanon, useHeadcanonCounts, useHeadcanons } from '@/store/headcanons';
 import { requestPermission } from '@/store/notifications';
+import { useIPad } from '@/hooks/use-ipad';
 import { getGlobalSetting, saveGlobalSetting } from '@/store/onboarding';
 import { addScenario, deleteScenario, updateScenario, useScenarios } from '@/store/scenarios';
 import { useShips } from '@/store/ships';
@@ -61,6 +62,7 @@ const FEATURES: { id: Feature; ja: string; label: string; desc: string; color: s
 
 export default function VaultScreen() {
   const insets = useSafeAreaInsets();
+  const { column } = useIPad();
   const navigation = useNavigation();
   const ships = useShips();
   const [selectedShipIdx, setSelectedShipIdx] = useState(0);
@@ -121,7 +123,7 @@ export default function VaultScreen() {
       {/* Header — hidden when in messages (MessagesTab owns its own header) */}
       {activeFeature !== 'messages' && (
         activeFeature ? (
-          <View style={styles.subHeader}>
+          <View style={[styles.subHeader, column]}>
             <Pressable style={styles.backBtn} onPress={handleBack}>
               <IconChevronLeft size={14} color={Colors.ink2} />
             </Pressable>
@@ -141,7 +143,7 @@ export default function VaultScreen() {
             <View style={{ width: 32 }} />
           </View>
         ) : (
-          <View style={styles.header}>
+          <View style={[styles.header, column]}>
             <View style={styles.headerRow}>
               <Mark size={26} />
             </View>
@@ -177,13 +179,13 @@ export default function VaultScreen() {
       ) : activeFeature ? (
         <View style={styles.featureWrap}>
           {activeFeature === 'messages' ? renderFeature() : (
-            <ScrollView showsVerticalScrollIndicator={false}>
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={column}>
               {renderFeature()}
             </ScrollView>
           )}
         </View>
       ) : (
-        <ScrollView contentContainerStyle={styles.grid} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={[styles.grid, column]} showsVerticalScrollIndicator={false}>
           {FEATURES.map((f) => (
             <Pressable
               key={f.id}

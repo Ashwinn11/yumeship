@@ -1,17 +1,19 @@
 import { Sakura } from '@/components/deco/Sakura';
 import { IconChevronLeft } from '@/components/ui/Icon';
 import { Colors, FontFamily, FontSize, Radius, Spacing } from '@/constants/theme';
+import { useIPad } from '@/hooks/use-ipad';
 import { router } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function PrivacyScreen() {
   const insets = useSafeAreaInsets();
+  const { column } = useIPad();
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]}>
       <View style={styles.decoTR} pointerEvents="none"><Sakura size={26} color={Colors.sakura} /></View>
       <View style={styles.decoBR} pointerEvents="none"><Sakura size={18} color={Colors.sakura} /></View>
-      <View style={styles.header}>
+      <View style={[styles.header, column]}>
         <Pressable style={styles.backBtn} onPress={() => router.back()} id="privacy-back">
           <IconChevronLeft size={14} color={Colors.ink2} />
         </Pressable>
@@ -20,7 +22,7 @@ export default function PrivacyScreen() {
 
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, column]}
         showsVerticalScrollIndicator={false}
       >
         <Text style={styles.updated}>Last updated: May 27, 2025</Text>

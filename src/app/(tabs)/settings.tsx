@@ -20,6 +20,7 @@ import {
 import { Mark } from '@/components/ui/Mark';
 import { Toggle } from '@/components/ui/Toggle';
 import { Colors, FontFamily, FontSize, Radius, Spacing } from '@/constants/theme';
+import { useIPad } from '@/hooks/use-ipad';
 import {
   getNotifEnabled, requestPermission, setNotifEnabled,
 } from '@/store/notifications';
@@ -137,6 +138,7 @@ const meta = StyleSheet.create({
 
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
+  const { column } = useIPad();
   const [notifEnabled, setNotifEnabledState] = useState(() => getNotifEnabled());
   const [storageLabel, setStorageLabel] = useState('—');
   const premium = usePremium();
@@ -196,7 +198,7 @@ export default function SettingsScreen() {
       </View>
 
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, column]}>
         <View style={styles.headerRow}>
           <Mark size={26} />
         </View>
@@ -208,7 +210,7 @@ export default function SettingsScreen() {
 
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[styles.list, column]}
         showsVerticalScrollIndicator={false}
       >
         {/* Pro area */}

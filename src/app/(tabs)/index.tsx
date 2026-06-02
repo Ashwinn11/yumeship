@@ -12,12 +12,14 @@ import { CozyModal } from '@/components/ui/CozyModal';
 import { IconLockSolid, IconPlus, IconSearch } from '@/components/ui/Icon';
 import { Mark } from '@/components/ui/Mark';
 import { Colors, FontFamily, FontSize, Radius, Spacing } from '@/constants/theme';
+import { useIPad } from '@/hooks/use-ipad';
 import { resetOnb } from '@/store/onboarding';
 import { usePremium } from '@/store/premium';
 import { daysTogetherLabel, daysAgo, deleteShip, useShips } from '@/store/ships';
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
+  const { column } = useIPad();
   const ships = useShips();
   const premium = usePremium();
   const [searchQuery, setSearchQuery] = useState('');
@@ -66,7 +68,7 @@ export default function HomeScreen() {
         <Heart size={24} color={Colors.lavenderDeep} outline />
       </View>
 
-      <View style={styles.header}>
+      <View style={[styles.header, column]}>
         <View style={styles.headerRow}>
           {showSearch ? (
             <View style={styles.searchContainer}>
@@ -172,7 +174,7 @@ export default function HomeScreen() {
           </View>
         </Pressable>
       ) : (
-        <ScrollView contentContainerStyle={styles.grid} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={[styles.grid, column]} showsVerticalScrollIndicator={false}>
           <Pressable
             style={styles.gridPressable}
             onPress={() => {

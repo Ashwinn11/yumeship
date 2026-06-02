@@ -1,5 +1,6 @@
 import { useMemo, useRef } from 'react';
 import { StyleSheet, View } from 'react-native';
+import { useIPad } from '@/hooks/use-ipad';
 
 import { StorylineContent } from '@/app/template/storyline';
 import { getShip } from '@/store/ships';
@@ -7,6 +8,7 @@ import { TemplateDataCtx, loadTemplateData, saveTemplateData, buildPreFill } fro
 import { Spacing } from '@/constants/theme';
 
 export function StorylineTab({ shipId, shipName }: { shipId: string; shipName: string }) {
+  const { column } = useIPad();
   const ship = getShip(shipId);
   const templateKey = 'storyline';
 
@@ -31,7 +33,7 @@ export function StorylineTab({ shipId, shipName }: { shipId: string; shipName: s
 
   return (
     <TemplateDataCtx.Provider value={ctx}>
-      <View style={s.tab}>
+      <View style={[s.tab, column]}>
         <StorylineContent editing />
       </View>
     </TemplateDataCtx.Provider>

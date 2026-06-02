@@ -1,4 +1,5 @@
 import { Colors, FontFamily, Radius, Shadow } from '@/constants/theme';
+import { useIPad } from '@/hooks/use-ipad';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import {
   IconHomeOutline,
@@ -17,6 +18,7 @@ type Props = {
 };
 
 export function RootTabBar({ active, onPress, onPlusPress }: Props) {
+  const { column } = useIPad();
   const tabsList: { id: RootTab; label: string; icon: (color: string) => React.ReactNode }[] = [
     { id: 'home', label: 'home', icon: (color) => <IconHomeOutline color={color} /> },
     { id: 'vault', label: 'vault', icon: (color) => <IconJournalOutline color={color} /> },
@@ -25,7 +27,7 @@ export function RootTabBar({ active, onPress, onPlusPress }: Props) {
   ];
 
   return (
-    <View style={styles.wrap}>
+    <View style={[styles.wrap, column]}>
       <View style={styles.track}>
         {/* Left two tabs: home and vault */}
         {tabsList.slice(0, 2).map((t) => {

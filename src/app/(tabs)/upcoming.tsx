@@ -10,6 +10,7 @@ import { Sakura } from '@/components/deco/Sakura';
 import { Sparkle } from '@/components/deco/Sparkle';
 import { Star } from '@/components/deco/Star';
 import { Colors, FontFamily, FontSize, Radius, Spacing, RelationshipColors } from '@/constants/theme';
+import { useIPad } from '@/hooks/use-ipad';
 import { useAllUpcomingDates, daysUntil } from '@/store/dates';
 import { MiniUpcoming } from '@/components/cards/MiniUpcoming';
 
@@ -23,6 +24,7 @@ const FILTER_LABELS: { key: FilterKey; label: string }[] = [
 
 export default function UpcomingScreen() {
   const insets = useSafeAreaInsets();
+  const { column } = useIPad();
   const [filter, setFilter] = useState<FilterKey>('next30');
   const allDates = useAllUpcomingDates();
 
@@ -50,7 +52,7 @@ export default function UpcomingScreen() {
       </View>
 
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, column]}>
         <View style={styles.headerRow}>
           <Mark size={26} />
         </View>
@@ -94,7 +96,7 @@ export default function UpcomingScreen() {
           </Pressable>
         </View>
       ) : (
-        <ScrollView contentContainerStyle={styles.listContainer} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={[styles.listContainer, column]} showsVerticalScrollIndicator={false}>
           {filteredDates.map((d) => {
             const days = daysUntil(d.date, d.yearly) ?? 0;
             const tint = RelationshipColors[d.relType as keyof typeof RelationshipColors] || Colors.sakuraDeep;

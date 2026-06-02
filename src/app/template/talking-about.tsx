@@ -543,7 +543,7 @@ const s = StyleSheet.create({
   rule:      { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2, width: '100%' },
   ruleLine:  { flex: 1, height: 1, backgroundColor: INK + '55' },
   row2:      { flexDirection: 'row', gap: 10 },
-  col:       { flex: 1 },
+  col:       { flex: 1, alignItems: 'center' },
   colTitle:  { fontFamily: FontFamily.markerBold, fontWeight: '700', fontSize: 11, color: INK },
   checkRow:  { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 4 },
   checkLabel:{ fontFamily: FontFamily.marker, fontSize: 10, color: INK },

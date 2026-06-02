@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/Button';
 import { Mark } from '@/components/ui/Mark';
 import { StepDots } from '@/components/ui/StepDots';
 import { Colors, FontFamily, FontSize, Radius, Spacing } from '@/constants/theme';
+import { useIPad } from '@/hooks/use-ipad';
 import { resetOnb, setOnbField } from '@/store/onboarding';
 
 export const COVER_PALETTES: { id: string; start: string; end: string }[] = [
@@ -25,6 +26,7 @@ export const COVER_PALETTES: { id: string; start: string; end: string }[] = [
 
 export default function OnbFO() {
   const insets = useSafeAreaInsets();
+  const { scrollFill, column } = useIPad();
   const { mode } = useLocalSearchParams<{ mode?: string }>();
   const isNew = mode === 'new';
 
@@ -55,14 +57,6 @@ export default function OnbFO() {
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top + Spacing.s1, paddingBottom: insets.bottom + Spacing.s1 }]}>
-      {/* Background accents */}
-      <View style={styles.decoTR} pointerEvents="none">
-        <StickerWaxSeal size={60} />
-      </View>
-      <View style={styles.decoBR} pointerEvents="none">
-        <Sparkle size={18} color={Colors.lavenderDeep} />
-      </View>
-
       {isNew ? (
         <View style={styles.header}>
           <Pressable onPress={() => { resetOnb(); router.back(); }} style={styles.closeBtn}>
@@ -80,7 +74,14 @@ export default function OnbFO() {
         </View>
       )}
 
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.scroll} contentContainerStyle={[styles.scrollContent, scrollFill]} showsVerticalScrollIndicator={false}>
+        <View style={[column, { position: 'relative' }]}>
+          <View style={styles.decoTR} pointerEvents="none">
+            <StickerWaxSeal size={60} />
+          </View>
+          <View style={styles.decoBR} pointerEvents="none">
+            <Sparkle size={18} color={Colors.lavenderDeep} />
+          </View>
         {!isNew && <Text style={styles.eyebrow}>step four · them</Text>}
         <Text style={[styles.heading, isNew && styles.headingNew]}>
           Meet them,{"\n"}your forever-someone.
@@ -263,9 +264,10 @@ export default function OnbFO() {
             heart is just yours.
           </ThoughtCloud>
         </View>
+        </View>
       </ScrollView>
 
-      <View style={styles.actions}>
+      <View style={[styles.actions, column]}>
         <Button
           variant="primary"
           size="lg"
@@ -327,8 +329,8 @@ const styles = StyleSheet.create({
   skip: { fontFamily: FontFamily.ui, fontSize: FontSize.meta, color: Colors.ink3, textDecorationLine: 'underline' },
   decoTR: {
     position: 'absolute',
-    top: 100,
-    right: 20,
+    top: 0,
+    right: 0,
   },
   decoBR: {
     position: 'absolute',

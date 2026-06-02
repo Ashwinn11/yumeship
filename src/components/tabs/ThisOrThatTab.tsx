@@ -1,5 +1,6 @@
 import { useMemo, useRef } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
+import { useIPad } from '@/hooks/use-ipad';
 
 import { ThisOrThatContent } from '@/app/template/this-or-that';
 import { getShip } from '@/store/ships';
@@ -7,6 +8,7 @@ import { TemplateDataCtx, loadTemplateData, saveTemplateData, buildPreFill } fro
 import { Spacing } from '@/constants/theme';
 
 export function ThisOrThatTab({ shipId }: { shipId: string }) {
+  const { column } = useIPad();
   const ship = getShip(shipId);
   const templateKey = 'this-or-that';
 
@@ -31,7 +33,7 @@ export function ThisOrThatTab({ shipId }: { shipId: string }) {
 
   return (
     <TemplateDataCtx.Provider value={ctx}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={s.tab}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[s.tab, column]}>
         <ThisOrThatContent editing />
       </ScrollView>
     </TemplateDataCtx.Provider>
