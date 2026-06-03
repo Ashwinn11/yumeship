@@ -6,11 +6,15 @@ import { getGlobalSetting } from './onboarding';
 type TemplateCtx = {
   get: (key: string, fallback?: string) => string;
   set: (key: string, val: string) => void;
+  bgColor: string;
+  bgImage: string;
 };
 
 export const TemplateDataCtx = createContext<TemplateCtx>({
   get: (_, fb = '') => fb,
   set: () => {},
+  bgColor: '',
+  bgImage: '',
 });
 
 export function useTemplateCtx() {

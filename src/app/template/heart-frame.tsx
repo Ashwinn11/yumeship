@@ -15,6 +15,7 @@ const INFO_LABELS = ['age', 'pronouns', 'pet name', 'love language'];
 
 export function HeartFrameContent({ editing = false }: { editing?: boolean }) {
   const ctx = useTemplateCtx();
+  const customBg = ctx.bgColor || ctx.bgImage;
 
   const [vals, setVals] = useState<{
     sharing: 'Yes' | 'No' | 'Selective' | undefined;
@@ -75,7 +76,7 @@ export function HeartFrameContent({ editing = false }: { editing?: boolean }) {
   const themInfoPairs: [string, string?][] = INFO_LABELS.map((l, i) => [l, themInfo[i]]);
 
   return (
-    <MarkerCard tint="#fff5f6">
+    <MarkerCard tint={customBg ? 'transparent' : '#fff5f6'}>
       <TitleHeader title="GET TO KNOW MY YUMESHIP!!" subtitle="our love in one page" by="@bunny.thoughts" />
 
       <View style={s.mt6}>
@@ -123,7 +124,7 @@ export function HeartFrameContent({ editing = false }: { editing?: boolean }) {
         </View>
       </View>
 
-      <View style={s.metBox}>
+      <View style={[s.metBox, customBg ? { backgroundColor: 'transparent' } : null]}>
         <Text style={s.metLabel}>how we met</Text>
         {e ? (
           <TextInput
@@ -140,7 +141,7 @@ export function HeartFrameContent({ editing = false }: { editing?: boolean }) {
         )}
       </View>
 
-      <View style={s.anniversaryPill}>
+      <View style={[s.anniversaryPill, customBg ? { backgroundColor: 'transparent' } : null]}>
         <Text style={s.anniversaryLabel}>♡ anniversary</Text>
         <View style={{ alignItems: 'flex-end' }}>
           {e ? (

@@ -25,6 +25,7 @@ const DEFAULT_PALETTE = ['#8b3a4a', '#d77a8d', '#f3b6c4', '#fadde5', '#1f1219'];
 export function AestheticContent({ editing = false }: { editing?: boolean }) {
   const ctx = useTemplateCtx();
   const e = editing;
+  const customBg = ctx.bgColor || ctx.bgImage;
 
   const [vals, setVals] = useState(() => ({
     song:   ctx.get('song'),
@@ -57,8 +58,8 @@ export function AestheticContent({ editing = false }: { editing?: boolean }) {
   const { song, cap0, cap1, cap2, photo0, photo1, photo2, polPh0, polPh1, polPh2 } = vals;
 
   return (
-    <MarkerCard tint="#fffbf6">
-      <WindowFrame title="My Yumeship Aesthetic">
+    <MarkerCard tint={customBg ? 'transparent' : '#fffbf6'}>
+      <WindowFrame title="My Yumeship Aesthetic" style={customBg ? { backgroundColor: 'transparent' } : undefined}>
         <View style={s.photoGrid}>
           <PhotoBox width="31%" height={90} style={s.gridPhoto} editing={e} uri={photo0} onUriChange={e ? set('photo0') : undefined} />
           <PhotoBox width="31%" height={90} style={s.gridPhoto} editing={e} uri={photo1} onUriChange={e ? set('photo1') : undefined} />
@@ -68,7 +69,7 @@ export function AestheticContent({ editing = false }: { editing?: boolean }) {
 
       <View style={s.gap12} />
 
-      <WindowFrame title="Our song">
+      <WindowFrame title="Our song" style={customBg ? { backgroundColor: 'transparent' } : undefined}>
         <View style={{ padding: 2 }}>
           {e ? (
             <TextInput
@@ -96,7 +97,7 @@ export function AestheticContent({ editing = false }: { editing?: boolean }) {
 
       <View style={s.gap12} />
 
-      <WindowFrame title="Palette">
+      <WindowFrame title="Palette" style={customBg ? { backgroundColor: 'transparent' } : undefined}>
         <View style={s.paletteRow}>
           {palette.map((c, i) => (
             <Pressable

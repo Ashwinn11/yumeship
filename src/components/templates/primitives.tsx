@@ -21,7 +21,7 @@ type MarkerCardProps = {
 };
 export function MarkerCard({ children, tint = '#fffbf6', style }: MarkerCardProps) {
   return (
-    <View style={[s.markerCard, { backgroundColor: tint }, style]}>
+    <View style={[s.markerCard, { backgroundColor: tint === 'transparent' ? 'transparent' : tint }, style]}>
       {children}
     </View>
   );
@@ -690,7 +690,7 @@ const s = StyleSheet.create({
   },
   blankPill: {
     height: 18,
-    backgroundColor: FILL_GRAY,
+    backgroundColor: 'rgba(0,0,0,0.07)',
     borderWidth: 1.5,
     borderColor: INK,
     borderRadius: 999,

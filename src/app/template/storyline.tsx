@@ -17,6 +17,7 @@ const BLANK_EVENTS: EventEntry[] = Array.from({ length: 5 }, () => ({ d: '', t: 
 
 export function StorylineContent({ editing = false }: { editing?: boolean }) {
   const ctx = useTemplateCtx();
+  const customBg = ctx.bgColor || ctx.bgImage;
 
   const [events, setEvents] = useState<EventEntry[]>(() =>
     JSON.parse(ctx.get('events', 'null')) ?? BLANK_EVENTS
@@ -35,7 +36,7 @@ export function StorylineContent({ editing = false }: { editing?: boolean }) {
     } : undefined;
 
   return (
-    <MarkerCard tint="#fffbf6" style={s.card}>
+    <MarkerCard tint={customBg ? 'transparent' : '#fffbf6'} style={s.card}>
       <View style={{ position: 'absolute', top: -7, right: 24, zIndex: 10 }}>
         <WashiTape width={65} height={14} pattern="star" color="#b8902a" rotate={5} />
       </View>

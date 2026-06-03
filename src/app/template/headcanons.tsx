@@ -24,6 +24,7 @@ const BLANK_CAT_ITEMS = CATS.map(() => Array(ITEMS_PER_CAT).fill('') as string[]
 
 export function HeadcanonsContent({ editing = false }: { editing?: boolean }) {
   const ctx = useTemplateCtx();
+  const customBg = ctx.bgColor || ctx.bgImage;
 
   const [vals, setVals] = useState<{ fo: string; source: string; catItems: string[][] }>(() => ({
     fo: ctx.get('fo'),
@@ -50,7 +51,7 @@ export function HeadcanonsContent({ editing = false }: { editing?: boolean }) {
   const { fo, source, catItems } = vals;
 
   return (
-    <MarkerCard tint="#fffbf6">
+    <MarkerCard tint={customBg ? 'transparent' : '#fffbf6'}>
       <TitleHeader title="HEADCANONS" subtitle="the things only I'd notice" by="@daydreamr" />
 
       <View style={s.fieldRow}>

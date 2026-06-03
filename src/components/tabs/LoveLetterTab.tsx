@@ -29,6 +29,8 @@ export function LoveLetterTab({ shipId }: { shipId: string }) {
       (dataRef.current as Record<string, string>)[key] = val;
       saveTemplateData(shipId, templateKey, dataRef.current as Record<string, string>);
     },
+    bgColor: '',
+    bgImage: '',
   }), [shipId]);
 
   return (

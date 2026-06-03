@@ -14,6 +14,7 @@ const BLANK_THINGS = ['', '', '', '', ''];
 
 export function LoveLetterContent({ editing = false }: { editing?: boolean }) {
   const ctx = useTemplateCtx();
+  const customBg = ctx.bgColor || ctx.bgImage;
 
   const [vals, setVals] = useState<{ dearName: string; letterBody: string; signName: string; things: string[] }>(() => ({
     dearName: ctx.get('dearName'),
@@ -42,7 +43,7 @@ export function LoveLetterContent({ editing = false }: { editing?: boolean }) {
   const { dearName, letterBody, signName, things } = vals;
 
   return (
-    <MarkerCard tint="#fff5f0">
+    <MarkerCard tint={customBg ? 'transparent' : '#fff5f0'}>
       <View style={s.watermark} pointerEvents="none">
         <Heart size={140} color={INK} />
       </View>

@@ -27,7 +27,6 @@ export default function OnbReady() {
   const insets = useSafeAreaInsets();
   const { scrollFill, column } = useIPad();
   const { shipId } = useLocalSearchParams<{ shipId?: string }>();
-  const [asking, setAsking] = useState(false);
   const ship = shipId ? getShip(shipId) : undefined;
   const state = getOnbState();
 
@@ -45,17 +44,12 @@ export default function OnbReady() {
     return () => clearTimeout(timer);
   }, []);
 
-  async function askNotifications() {
-    setAsking(true);
-    await requestPermission();
-    setAsking(false);
-  }
-
   async function maybeRequestReview() {
     await requestReviewIfEligible();
   }
 
   async function openFirstPiece() {
+    await requestPermission();
     if (!ship?.id) {
       resetOnb();
       router.replace('/(tabs)');
@@ -145,9 +139,6 @@ export default function OnbReady() {
             <Text style={styles.notifTitle}>little reminders, only if you want them</Text>
             <Text style={styles.notifBody}>special dates and tiny notes can show up gently. you can skip this.</Text>
           </View>
-          <Pressable style={styles.notifBtn} onPress={askNotifications} disabled={asking}>
-            <Text style={styles.notifBtnText}>{asking ? 'asking...' : 'allow'}</Text>
-          </Pressable>
         </View>
         </View>
       </ScrollView>

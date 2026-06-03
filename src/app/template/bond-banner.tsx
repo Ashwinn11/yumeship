@@ -23,6 +23,7 @@ const SLIDERS = [
 
 export function BondBannerContent({ editing = false }: { editing?: boolean }) {
   const ctx = useTemplateCtx();
+  const customBg = ctx.bgColor || ctx.bgImage;
 
   const [vals, setVals] = useState<Record<string, string>>(() => ({
     meName:  ctx.get('meName', ''),
@@ -47,7 +48,7 @@ export function BondBannerContent({ editing = false }: { editing?: boolean }) {
   const e = editing;
 
   return (
-    <MarkerCard tint={Colors.sakuraSoft} style={s.root}>
+    <MarkerCard tint={customBg ? 'transparent' : Colors.sakuraSoft} style={s.root}>
       {/* Twinkle dots */}
       <View style={s.twinkles} pointerEvents="none">
         <Svg width="100%" height="100%" style={{ position: 'absolute', inset: 0 }}>
@@ -65,7 +66,7 @@ export function BondBannerContent({ editing = false }: { editing?: boolean }) {
 
       {/* Banner + ribbon */}
       <View style={s.bannerWrap}>
-        <View style={s.banner}>
+        <View style={[s.banner, customBg ? { backgroundColor: 'transparent' } : null]}>
           <Text style={s.bannerSmall}>get to know my</Text>
           <Text style={s.bannerBig}>♡ YumeShip ♡</Text>
         </View>
@@ -125,7 +126,7 @@ export function BondBannerContent({ editing = false }: { editing?: boolean }) {
             {(['Name', 'Pronouns', 'MBTI', 'Vibe'] as const).map((f) => {
               const key = `${pfx}${f}`;
               return (
-                <View key={key} style={s.aboutField}>
+                <View key={key} style={[s.aboutField, customBg ? { backgroundColor: 'transparent' } : null]}>
                   <Text style={s.aboutFieldLabel}>{f}:</Text>
                   {e ? (
                     <BlankPill value={vals[key]} onChangeText={v => setVal(key, v)} placeholder="——" style={s.aboutFieldVal} />
@@ -140,7 +141,7 @@ export function BondBannerContent({ editing = false }: { editing?: boolean }) {
       </View>
 
       {/* Anniversary */}
-      <View style={s.annivBox}>
+      <View style={[s.annivBox, customBg ? { backgroundColor: 'transparent' } : null]}>
         <Text style={s.annivLabel}>♡ Anniversary ♡</Text>
         <DateField
           value={vals.anniv}
@@ -192,7 +193,7 @@ export default function TemplateBondBanner() {
 }
 
 const s = StyleSheet.create({
-  root: { gap: 10, backgroundColor: Colors.sakuraSoft, overflow: 'hidden' },
+  root: { gap: 10, overflow: 'hidden' },
   twinkles: { position: 'absolute', inset: 0, pointerEvents: 'none' as any },
   bannerWrap: { alignItems: 'center', gap: 2 },
   banner: {

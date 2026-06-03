@@ -14,6 +14,7 @@ const PINK_INK = '#9c2d5a';
 const PINK_BG = '#fbe7ee';
 const PANEL_EDGE = '#f3a8c4';
 const PANEL_BG = '#ffffff';
+const TRANSPARENT = 'transparent';
 
 const INFO_KEYS = ['age', 'birthday', 'pronouns', 'love language', 'mbti'] as const;
 const SHARING_OPTS = ['No sharing', 'Selective', 'Ok with sharing'] as const;
@@ -39,6 +40,9 @@ function calculateTimeSince(dateStr: string) {
 
 export function KawaiiUIContent({ editing = false }: { editing?: boolean }) {
   const ctx = useTemplateCtx();
+  const customBg = ctx.bgColor || ctx.bgImage;
+  const panelBg = customBg ? TRANSPARENT : PANEL_BG;
+  const infoBg = customBg ? TRANSPARENT : PINK_BG;
   const [bgSize, setBgSize] = useState({ width: 0, height: 0 });
 
   const [vals, setVals] = useState<Record<string, string>>(() => ({
@@ -71,7 +75,7 @@ export function KawaiiUIContent({ editing = false }: { editing?: boolean }) {
 
   return (
     <LinearGradient
-      colors={['#fcd6e2', '#f5b3c8']}
+      colors={customBg ? ['transparent', 'transparent'] : ['#fcd6e2', '#f5b3c8']}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={s.card}
@@ -101,14 +105,14 @@ export function KawaiiUIContent({ editing = false }: { editing?: boolean }) {
       </Svg>
 
       <View style={s.titlePillRow}>
-        <View style={s.titlePill}>
+        <View style={[s.titlePill, customBg ? { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: PINK_INK } : null]}>
           <Text style={s.titlePillText}>My YumeShip</Text>
         </View>
       </View>
 
       <View style={s.statRow}>
         {(['name', 'from', 'type'] as const).map((label) => (
-          <KawaiiPanel key={label} edge={PANEL_EDGE} bg={PANEL_BG} style={s.statPanel}>
+          <KawaiiPanel key={label} edge={PANEL_EDGE} bg={panelBg} style={s.statPanel}>
             <Text style={[s.kawaiiLabel, { color: PINK_INK }]}>{label}</Text>
             <View style={{ marginTop: 6, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
               {label === 'name' && <Heart size={12} color={PINK_INK} outline />}
@@ -131,7 +135,7 @@ export function KawaiiUIContent({ editing = false }: { editing?: boolean }) {
         ))}
       </View>
 
-      <KawaiiPanel edge={PANEL_EDGE} bg={PANEL_BG} style={s.mainPanel}>
+      <KawaiiPanel edge={PANEL_EDGE} bg={panelBg} style={s.mainPanel}>
         <View style={s.mainRow}>
           <PhotoBox width={110} height={130} editing={e} style={s.portraitStyle} uri={vals.portrait} onUriChange={e ? (u) => setVal('portrait', u) : undefined} />
           <View style={s.infoCol}>
@@ -145,7 +149,7 @@ export function KawaiiUIContent({ editing = false }: { editing?: boolean }) {
                     editing={e}
                     format="birthday"
                     placeholder="pick date"
-                    style={[s.infoVal, { backgroundColor: PINK_BG, borderColor: PANEL_EDGE, borderWidth: 1, borderRadius: 4 }]}
+                    style={[s.infoVal, { backgroundColor: infoBg, borderColor: PANEL_EDGE, borderWidth: 1, borderRadius: 4 }]}
                     textStyle={{ fontSize: sf(9), color: PINK_INK, fontFamily: FontFamily.ja }}
                   />
                 ) : e ? (
@@ -158,12 +162,12 @@ export function KawaiiUIContent({ editing = false }: { editing?: boolean }) {
                     style={[
                       s.infoVal,
                       s.infoValInput,
-                      { backgroundColor: PINK_BG, borderColor: PANEL_EDGE },
+                      { backgroundColor: infoBg, borderColor: PANEL_EDGE },
                       k === 'love language' && { fontSize: sf(9) }
                     ]}
                   />
                 ) : (
-                  <View style={[s.infoVal, { backgroundColor: PINK_BG, borderColor: PANEL_EDGE, justifyContent: 'center' }]}>
+                  <View style={[s.infoVal, { backgroundColor: infoBg, borderColor: PANEL_EDGE, justifyContent: 'center' }]}>
                     <Text style={{
                       fontFamily: FontFamily.ja,
                       fontSize: k === 'love language' ? 8.5 : 11,
@@ -178,7 +182,7 @@ export function KawaiiUIContent({ editing = false }: { editing?: boolean }) {
         </View>
       </KawaiiPanel>
 
-      <KawaiiPanel edge={PANEL_EDGE} bg={PANEL_BG} style={s.mt10}>
+      <KawaiiPanel edge={PANEL_EDGE} bg={panelBg} style={s.mt10}>
         <Text style={[s.kawaiiLabel, { color: PINK_INK, marginBottom: 6 }]}>sharing status</Text>
         <View style={s.sharingRow}>
           {SHARING_OPTS.map((t) => (
@@ -197,9 +201,9 @@ export function KawaiiUIContent({ editing = false }: { editing?: boolean }) {
         </View>
       </KawaiiPanel>
 
-      <KawaiiPanel edge={PANEL_EDGE} bg={PANEL_BG} style={s.mt10}>
+      <KawaiiPanel edge={PANEL_EDGE} bg={panelBg} style={s.mt10}>
         <View style={s.songRow}>
-          <View style={[s.songIcon, { backgroundColor: PINK_BG, borderColor: PANEL_EDGE }]}>
+          <View style={[s.songIcon, { backgroundColor: infoBg, borderColor: PANEL_EDGE }]}>
             <Text style={{ color: PINK_INK, fontSize: sf(16) }}>♪</Text>
           </View>
           <View style={s.songInfo}>
@@ -226,11 +230,11 @@ export function KawaiiUIContent({ editing = false }: { editing?: boolean }) {
       </KawaiiPanel>
 
       <View style={s.bottomGrid}>
-        <KawaiiPanel edge={PANEL_EDGE} bg={PANEL_BG} style={s.bottomPanel}>
+        <KawaiiPanel edge={PANEL_EDGE} bg={panelBg} style={s.bottomPanel}>
           <Text style={[s.kawaiiLabel, { color: PINK_INK }]}>tropes</Text>
           <View style={s.tropesWrap}>
             {[0, 1, 2].map((i) => (
-              <View key={i} style={[s.tropeChip, { backgroundColor: PINK_BG, borderColor: PANEL_EDGE, flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 6 }]}>
+              <View key={i} style={[s.tropeChip, { backgroundColor: infoBg, borderColor: PANEL_EDGE, flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 6 }]}>
                 <Heart size={10} color={PINK_INK} />
                 {e ? (
                   <TextInput
@@ -250,7 +254,7 @@ export function KawaiiUIContent({ editing = false }: { editing?: boolean }) {
             ))}
           </View>
         </KawaiiPanel>
-        <KawaiiPanel edge={PANEL_EDGE} bg={PANEL_BG} style={s.bottomPanel}>
+        <KawaiiPanel edge={PANEL_EDGE} bg={panelBg} style={s.bottomPanel}>
           <Text style={[s.kawaiiLabel, { color: PINK_INK }]}>anniversary</Text>
           <View style={{ marginTop: 6 }}>
             {(() => {
@@ -333,7 +337,7 @@ const s = StyleSheet.create({
     zIndex: 10,
   },
   titlePill: { backgroundColor: '#9c2d5a', paddingHorizontal: 18, paddingVertical: 5, borderRadius: 999 },
-  titlePillText: { fontFamily: FontFamily.markerBold, fontWeight: '700', fontSize: sf(18), color: '#fff', letterSpacing: 0.5 },
+  titlePillText: { fontFamily: FontFamily.markerBold, fontWeight: '700', fontSize: sf(18), color: PINK_INK, letterSpacing: 0.5 },
   statRow: { flexDirection: 'row', gap: 8, marginTop: 58 },
   statPanel: { flex: 1 },
   kawaiiLabel: { fontFamily: FontFamily.markerBold, fontSize: sf(8), fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', opacity: 0.7 },

@@ -205,11 +205,11 @@ function parsePath(raw: string): { d: string; color: string; width: number } {
   return { d: raw, color: INK, width: 2 };
 }
 
-function DoodleThumb({ paths, editing, onOpen }: { paths: string[]; editing: boolean; onOpen: () => void }) {
+function DoodleThumb({ paths, editing, onOpen, transparent }: { paths: string[]; editing: boolean; onOpen: () => void; transparent?: boolean }) {
   const parsed = paths.map(parsePath);
   const hasPaths = paths.length > 0;
   return (
-    <Pressable style={[dc.wrap, hasPaths && dc.wrapFilled]} onPress={editing ? onOpen : undefined}>
+    <Pressable style={[dc.wrap, hasPaths && (transparent ? null : dc.wrapFilled)]} onPress={editing ? onOpen : undefined}>
       <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
         {parsed.map((p, i) => (
           <Path key={i} d={p.d} stroke={p.color} strokeWidth={p.width}
@@ -239,6 +239,7 @@ function HeartDot({ color, onPress }: { color: string; onPress?: () => void }) {
 // ─── Main Template ─────────────────────────────────────────────
 export function TalkingAboutContent({ editing = false }: { editing?: boolean }) {
   const ctx = useTemplateCtx();
+  const customBg = ctx.bgColor || ctx.bgImage;
 
   const [vals, setVals] = useState<Record<string, string>>(() => ({
     relTypes:  ctx.get('relTypes', '["Married"]'),
@@ -293,7 +294,7 @@ export function TalkingAboutContent({ editing = false }: { editing?: boolean }) 
   ];
 
   return (
-    <MarkerCard tint={Colors.sakuraSoft} style={s.card}>
+    <MarkerCard tint={customBg ? 'transparent' : Colors.sakuraSoft} style={s.card}>
       {/* Header */}
       <View style={s.header}>
         <PhotoBox size={48} editing={e} uri={vals.photoL}
@@ -350,6 +351,7 @@ export function TalkingAboutContent({ editing = false }: { editing?: boolean }) 
           paths={JSON.parse(vals.doodle || '[]')}
           editing={e}
           onOpen={() => setDoodleOpen(true)}
+          transparent={!!customBg}
         />
         <View style={s.sparkBL} pointerEvents="none"><Sparkle size={12} color={INK} /></View>
         <View style={s.sparkTR} pointerEvents="none"><Sparkle size={14} color={INK} /></View>
@@ -380,7 +382,7 @@ export function TalkingAboutContent({ editing = false }: { editing?: boolean }) 
           return (
             <View key={pfx} style={s.charCol}>
               {/* Emoji */}
-              <View style={s.emojiBox}>
+              <View style={[s.emojiBox, customBg ? { backgroundColor: 'transparent' } : null]}>
                 <TextInput
                   value={vals[`${pfx}Emoji`]}
                   onChangeText={e ? v => setVal(`${pfx}Emoji`, v) : undefined}
@@ -438,7 +440,7 @@ export function TalkingAboutContent({ editing = false }: { editing?: boolean }) 
       </View>
 
       {/* Tropes box */}
-      <View style={s.tropesBox}>
+      <View style={[s.tropesBox, customBg ? { backgroundColor: 'transparent' } : null]}>
         <Text style={s.tropesLabel}>Tropes</Text>
         {e ? (
           <TextInput value={vals.tropes} onChangeText={v => setVal('tropes', v)}

@@ -29,6 +29,7 @@ function Y2KWindow({ title, children, tint, mini = false }: { title: string; chi
 
 export function FlipPhoneContent({ editing = false }: { editing?: boolean }) {
   const ctx = useTemplateCtx();
+  const customBg = ctx.bgColor || ctx.bgImage;
   const [vals, setVals] = useState<Record<string, string>>(() => ({
     chat:     ctx.get('chat', 'xx says:\ni miss you\nxx says:\ncome over?\nxx says:\n♡♡♡'),
     name:     ctx.get('name', ''),
@@ -49,11 +50,11 @@ export function FlipPhoneContent({ editing = false }: { editing?: boolean }) {
   };
 
   const e = editing;
-  const tint = Colors.sakura + 'b0'; // ~70% primary
+  const tint = customBg ? 'rgba(0,0,0,0.18)' : Colors.sakura + 'b0';
 
   return (
-    <View style={s.bg}>
-      <View style={s.card}>
+    <View style={[s.bg, customBg ? { backgroundColor: 'transparent' } : null]}>
+      <View style={[s.card, customBg ? { backgroundColor: 'transparent' } : null]}>
         {/* Washi tape */}
         <View style={s.tape} pointerEvents="none">
           <WashiTape width={70} height={14} pattern="floral" color={Colors.sakuraInk} rotate={-8} />
@@ -73,7 +74,7 @@ export function FlipPhoneContent({ editing = false }: { editing?: boolean }) {
             ) : (
               <Text style={s.windowText}>{vals.chat}</Text>
             )}
-            <View style={s.chatBar} />
+            <View style={[s.chatBar, customBg ? { backgroundColor: 'rgba(255,255,255,0.3)' } : null]} />
           </Y2KWindow>
           <Y2KWindow title="About Me" tint={tint}>
             {[
@@ -102,7 +103,7 @@ export function FlipPhoneContent({ editing = false }: { editing?: boolean }) {
 
         {/* Middle: phone-frame photo picker */}
         <View style={s.phoneWrap}>
-          <View style={s.phoneOuter}>
+          <View style={[s.phoneOuter, customBg ? { backgroundColor: 'transparent' } : null]}>
             <Text style={s.phoneDots}>+ + + +</Text>
             <View style={s.phoneInner}>
               <PhotoBox
@@ -135,7 +136,7 @@ export function FlipPhoneContent({ editing = false }: { editing?: boolean }) {
                 ))}
               </View>
             ) : (
-              <View style={s.sharingBox}>
+              <View style={[s.sharingBox, customBg ? { backgroundColor: 'rgba(255,255,255,0.25)' } : null]}>
                 <Text style={s.sharingBoxText}>{vals.sharing}</Text>
               </View>
             )}
@@ -155,7 +156,7 @@ export function FlipPhoneContent({ editing = false }: { editing?: boolean }) {
         </View>
 
         {/* Theme song player */}
-        <View style={[s.songBar, { backgroundColor: tint }]}>
+        <View style={[s.songBar, { backgroundColor: tint }, customBg ? { borderColor: 'rgba(255,255,255,0.4)' } : null]}>
           {e ? (
             <TextInput
               value={vals.song}

@@ -15,6 +15,7 @@ type DichoState = Partial<{ spoon: 'left' | 'right'; energy: 'left' | 'right'; p
 
 export function GetToKnowContent({ editing = false }: { editing?: boolean }) {
   const ctx = useTemplateCtx();
+  const customBg = ctx.bgColor || ctx.bgImage;
 
   const [vals, setVals] = useState<Record<string, string>>(() => ({
     meName:      ctx.get('meName'),
@@ -56,7 +57,7 @@ export function GetToKnowContent({ editing = false }: { editing?: boolean }) {
   };
 
   return (
-    <MarkerCard tint="#fffbf6">
+    <MarkerCard tint={customBg ? 'transparent' : '#fffbf6'}>
       <View style={s.heartCorner}>
         <Heart size={20} color={INK} outline />
       </View>

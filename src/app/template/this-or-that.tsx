@@ -26,6 +26,7 @@ const BLANK_CHOICES: ('left' | 'right' | null)[] = PAIRS.map(() => null);
 
 export function ThisOrThatContent({ editing = false }: { editing?: boolean }) {
   const ctx = useTemplateCtx();
+  const customBg = ctx.bgColor || ctx.bgImage;
 
   const [vals, setVals] = useState<{ name: string; choices: ('left' | 'right' | null)[]; note: string }>(() => ({
     name: ctx.get('name'),
@@ -47,7 +48,7 @@ export function ThisOrThatContent({ editing = false }: { editing?: boolean }) {
   const { name, choices, note } = vals;
 
   return (
-    <View style={{ padding: 10 }}>
+    <View style={{ padding: 10, backgroundColor: customBg ? 'transparent' : undefined }}>
       <TitleHeader title="THIS or THAT" subtitle="how do they choose?" by="@softfangs" />
 
       <View style={s.nameRow}>

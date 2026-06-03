@@ -32,6 +32,7 @@ const DEFAULT_CHECK_STATES = STATES.map((st) => [...st.defaults]);
 
 export function BoundariesContent({ editing = false }: { editing?: boolean }) {
   const ctx = useTemplateCtx();
+  const customBg = ctx.bgColor || ctx.bgImage;
 
   const [checkStates, setCheckStates] = useState<boolean[][]>(() =>
     JSON.parse(ctx.get('checkStates', 'null')) ?? DEFAULT_CHECK_STATES
@@ -47,7 +48,7 @@ export function BoundariesContent({ editing = false }: { editing?: boolean }) {
   };
 
   return (
-    <MarkerCard tint="#fffaf1">
+    <MarkerCard tint={customBg ? 'transparent' : '#fffaf1'}>
       <View style={s.titleCenter}>
         <View style={s.titlePill}>
           <Text style={s.titleJa}>夢</Text>
