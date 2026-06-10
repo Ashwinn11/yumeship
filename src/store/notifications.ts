@@ -1,4 +1,5 @@
 import * as Notifications from 'expo-notifications';
+import { Platform } from 'react-native';
 import { getGlobalSetting, saveGlobalSetting } from './onboarding';
 
 Notifications.setNotificationHandler({
@@ -9,6 +10,14 @@ Notifications.setNotificationHandler({
     shouldSetBadge: false,
   }),
 });
+
+if (Platform.OS === 'android') {
+  Notifications.setNotificationChannelAsync('default', {
+    name: 'Reminders',
+    importance: Notifications.AndroidImportance.DEFAULT,
+    sound: undefined,
+  });
+}
 
 export async function requestPermission(): Promise<boolean> {
   const { status: existing } = await Notifications.getPermissionsAsync();
@@ -111,10 +120,11 @@ export async function scheduleAnniversaryNotification(
         title: discreet ? '♡' : 'a special day',
         body: discreet ? 'a reminder for you~' : `${title} is today ♡`,
       },
+      // YEARLY works on both platforms (CALENDAR is iOS-only) and takes a
+      // JS-Date-style 0-based month, unlike the 1-based dateStr.
       trigger: {
-        type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
-        repeats: true,
-        month,
+        type: Notifications.SchedulableTriggerInputTypes.YEARLY,
+        month: month - 1,
         day,
         hour,
         minute: 0,

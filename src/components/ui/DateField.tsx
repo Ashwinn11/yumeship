@@ -1,6 +1,6 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Colors, FontFamily, Radius ,sf } from '@/constants/theme';
 
 type Props = {
@@ -53,6 +53,14 @@ export function DateField({ value, onChange, editing, placeholder = 'pick a date
   const display = displayValue !== undefined ? displayValue : formatDisplay(value, format);
   const date = parseDate(value) ?? new Date();
 
+  const commit = (selected?: Date) => {
+    if (!selected) return;
+    const y = selected.getFullYear();
+    const m = String(selected.getMonth() + 1).padStart(2, '0');
+    const d = String(selected.getDate()).padStart(2, '0');
+    onChange(`${y}-${m}-${d}`);
+  };
+
   return (
     <>
       <Pressable
@@ -65,7 +73,21 @@ export function DateField({ value, onChange, editing, placeholder = 'pick a date
         </Text>
       </Pressable>
 
-      {open && (
+      {/* On Android the picker is a native dialog (the component renders null),
+          so it can't live inside the custom sheet — mounting it opens the dialog. */}
+      {open && Platform.OS === 'android' && (
+        <DateTimePicker
+          value={date}
+          mode="date"
+          onValueChange={(_, selected) => {
+            setOpen(false);
+            commit(selected);
+          }}
+          onDismiss={() => setOpen(false)}
+        />
+      )}
+
+      {open && Platform.OS === 'ios' && (
         <Modal transparent animationType="fade">
           <Pressable style={styles.backdrop} onPress={() => setOpen(false)}>
             <View style={styles.sheet} onStartShouldSetResponder={() => true}>
@@ -75,14 +97,7 @@ export function DateField({ value, onChange, editing, placeholder = 'pick a date
                 display="spinner"
                 themeVariant="light"
                 textColor="#1f1219"
-                onValueChange={(_, selected) => {
-                  if (selected) {
-                    const y = selected.getFullYear();
-                    const m = String(selected.getMonth() + 1).padStart(2, '0');
-                    const d = String(selected.getDate()).padStart(2, '0');
-                    onChange(`${y}-${m}-${d}`);
-                  }
-                }}
+                onValueChange={(_, selected) => commit(selected)}
                 />
               <Pressable style={styles.doneBtn} onPress={() => setOpen(false)}>
                 <Text style={styles.doneBtnText}>done ♡</Text>

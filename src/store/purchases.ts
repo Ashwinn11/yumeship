@@ -5,6 +5,7 @@
  * dynamically from RevenueCat offerings at runtime — nothing is
  * hardcoded here except the env-var references.
  */
+import { Platform } from 'react-native';
 import Purchases, {
   CustomerInfo,
   LOG_LEVEL,
@@ -13,7 +14,11 @@ import Purchases, {
   PurchasesPackage,
 } from 'react-native-purchases';
 
-const RC_API_KEY = process.env.EXPO_PUBLIC_RC_API_KEY ?? '';
+// RevenueCat issues a separate public API key per store (Apple / Google Play).
+const RC_API_KEY =
+  Platform.OS === 'android'
+    ? process.env.EXPO_PUBLIC_RC_API_KEY_ANDROID ?? ''
+    : process.env.EXPO_PUBLIC_RC_API_KEY ?? '';
 const ENTITLEMENT_ID = process.env.EXPO_PUBLIC_RC_ENTITLEMENT_ID ?? '';
 let configured = false;
 
@@ -25,7 +30,11 @@ function canUsePurchases() {
 
 export function configureRevenueCat(userId?: string | null) {
   if (!RC_API_KEY || !ENTITLEMENT_ID) {
-    console.warn('RevenueCat is not configured. Missing EXPO_PUBLIC_RC_API_KEY or EXPO_PUBLIC_RC_ENTITLEMENT_ID.');
+    console.warn(
+      Platform.OS === 'android'
+        ? 'RevenueCat is not configured. Missing EXPO_PUBLIC_RC_API_KEY_ANDROID or EXPO_PUBLIC_RC_ENTITLEMENT_ID.'
+        : 'RevenueCat is not configured. Missing EXPO_PUBLIC_RC_API_KEY or EXPO_PUBLIC_RC_ENTITLEMENT_ID.',
+    );
     return;
   }
 

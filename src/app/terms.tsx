@@ -3,7 +3,7 @@ import { IconChevronLeft } from '@/components/ui/Icon';
 import { Colors, FontFamily, FontSize, Radius, Spacing ,sf } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
 import { router } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TermsScreen() {
@@ -27,17 +27,24 @@ export default function TermsScreen() {
       >
         <Text style={styles.updated}>Last updated: May 27, 2025</Text>
 
-        <Section title="Licensed Application EULA">
-          Yumeship is licensed to you under Apple's standard End User License Agreement (EULA).
-          The EULA applies to your use of this App and is available at:
-          https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
-        </Section>
+        {Platform.OS === 'ios' ? (
+          <Section title="Licensed Application EULA">
+            Yumeship is licensed to you under Apple's standard End User License Agreement (EULA).
+            The EULA applies to your use of this App and is available at:
+            https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+          </Section>
+        ) : null}
 
         <Section title="Subscriptions">
-          Yumeship Premium is an auto-renewable subscription sold through Apple's App Store.
-          Payment is charged to your Apple ID at confirmation of purchase. Subscriptions renew
-          automatically unless cancelled at least 24 hours before the end of the current period.
-          Manage or cancel anytime in your Apple ID Account Settings.
+          {Platform.OS === 'ios'
+            ? "Yumeship Premium is an auto-renewable subscription sold through Apple's App Store. " +
+              'Payment is charged to your Apple ID at confirmation of purchase. Subscriptions renew ' +
+              'automatically unless cancelled at least 24 hours before the end of the current period. ' +
+              'Manage or cancel anytime in your Apple ID Account Settings.'
+            : 'Yumeship Premium is an auto-renewable subscription sold through Google Play. ' +
+              'Payment is charged to your Google account at confirmation of purchase. Subscriptions renew ' +
+              'automatically unless cancelled at least 24 hours before the end of the current period. ' +
+              'Manage or cancel anytime in Google Play subscription settings.'}
         </Section>
 
         <Section title="Your Content">
