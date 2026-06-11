@@ -10,6 +10,7 @@ export type OnbState = {
   shareType: string;
   gradStart: string;
   gradEnd: string;
+  coverUri: string;
 };
 
 import { getDb } from '@/db/client';
@@ -46,6 +47,7 @@ let state: OnbState = {
   shareType: 'mirror',
   gradStart: '',
   gradEnd: '',
+  coverUri: '',
 };
 
 export function getOnbState(): OnbState {
@@ -75,17 +77,8 @@ export function resetOnb() {
     shareType: 'mirror',
     gradStart: '',
     gradEnd: '',
+    coverUri: '',
   };
-}
-
-export async function requestReviewIfEligible() {
-  const count = parseInt(getGlobalSetting('review_prompted_count', '0'), 10);
-  if (count >= 3) return;
-  const { isAvailableAsync, requestReview } = await import('expo-store-review');
-  if (await isAvailableAsync()) {
-    saveGlobalSetting('review_prompted_count', String(count + 1));
-    await requestReview();
-  }
 }
 
 export function buildInitialData(templateKey: string, s: OnbState): Record<string, string> {

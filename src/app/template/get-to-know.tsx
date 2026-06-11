@@ -3,7 +3,7 @@ import { View, StyleSheet } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { TemplateScreenWrapper } from '@/components/templates/TemplateScreenWrapper';
 import {
-  MarkerCard, MarkerHeader, ScriptCredit, SharingRow,
+  MarkerCard, MarkerHeader, SharingRow,
   BlankPill, ProfileBlock, PhotoBox, INK,
 } from '@/components/templates/primitives';
 import { Heart } from '@/components/deco/Heart';
@@ -67,9 +67,8 @@ export function GetToKnowContent({ editing = false }: { editing?: boolean }) {
           <PhotoBox size={140} editing={e} uri={vals.photo0} onUriChange={e ? (u) => setVal('photo0', u) : undefined} />
         </View>
         <View style={s.headerText}>
-          <MarkerHeader size={20}>GET TO KNOW</MarkerHeader>
+          <MarkerHeader size={20}>ALL ABOUT</MarkerHeader>
           <MarkerHeader size={20} style={s.mt4}>MY YUMESHIP</MarkerHeader>
-          <View style={s.mt8}><ScriptCredit by="@reversiblekisses" /></View>
         </View>
       </View>
 

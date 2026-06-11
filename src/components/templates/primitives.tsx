@@ -37,24 +37,13 @@ export function MarkerHeader({ children, size = 32, style }: MarkerHeaderProps) 
   );
 }
 
-// ─── ScriptCredit ─────────────────────────────────────────────
-export function ScriptCredit({ by }: { by: string }) {
-  return (
-    <Text style={s.scriptCredit}>
-      template by{' '}
-      <Text style={s.scriptCreditUnder}>{by}</Text>
-    </Text>
-  );
-}
-
 // ─── TitleHeader ──────────────────────────────────────────────
-type TitleHeaderProps = { title: string; subtitle?: string; by?: string };
-export function TitleHeader({ title, subtitle, by }: TitleHeaderProps) {
+type TitleHeaderProps = { title: string; subtitle?: string };
+export function TitleHeader({ title, subtitle }: TitleHeaderProps) {
   return (
     <View style={s.titleHeader}>
       <MarkerHeader size={26}>{title}</MarkerHeader>
       {subtitle && <Text style={s.titleSubtitle}>{subtitle}</Text>}
-      {by && <ScriptCredit by={by} />}
     </View>
   );
 }
@@ -666,16 +655,6 @@ const s = StyleSheet.create({
     letterSpacing: -0.3,
     color: INK,
     textTransform: 'uppercase',
-  },
-  scriptCredit: {
-    fontFamily: FontFamily.script,
-    fontSize: sf(14),
-    color: INK,
-    fontStyle: 'italic',
-  },
-  scriptCreditUnder: {
-    textDecorationLine: 'underline',
-    textDecorationColor: INK,
   },
   titleHeader: {
     marginBottom: 12,

@@ -21,8 +21,12 @@ const SHARING_OPTS = ['No sharing', 'Selective', 'Ok with sharing'] as const;
 
 function calculateTimeSince(dateStr: string) {
   if (!dateStr) return '——';
-  const clean = dateStr.trim();
-  const parsed = Date.parse(clean.replace(/\./g, '-'));
+  const clean = dateStr.trim().replace(/\./g, '-');
+  // parse YYYY-MM-DD as local time, not UTC, or the count shifts a day
+  const m = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(clean);
+  const parsed = m
+    ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])).getTime()
+    : Date.parse(clean);
   if (isNaN(parsed)) return clean;
   
   const diffMs = Date.now() - parsed;
@@ -106,7 +110,7 @@ export function KawaiiUIContent({ editing = false }: { editing?: boolean }) {
 
       <View style={s.titlePillRow}>
         <View style={[s.titlePill, customBg ? { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: PINK_INK } : null]}>
-          <Text style={s.titlePillText}>My YumeShip</Text>
+          <Text style={[s.titlePillText, customBg ? { color: PINK_INK } : null]}>My YumeShip</Text>
         </View>
       </View>
 
@@ -303,7 +307,6 @@ export function KawaiiUIContent({ editing = false }: { editing?: boolean }) {
         </KawaiiPanel>
       </View>
 
-      <Text style={[s.author, { color: PINK_INK }]}>template ♡ by @cherrypopstamp</Text>
     </LinearGradient>
   );
 }
@@ -337,7 +340,7 @@ const s = StyleSheet.create({
     zIndex: 10,
   },
   titlePill: { backgroundColor: '#9c2d5a', paddingHorizontal: 18, paddingVertical: 5, borderRadius: 999 },
-  titlePillText: { fontFamily: FontFamily.markerBold, fontWeight: '700', fontSize: sf(18), color: PINK_INK, letterSpacing: 0.5 },
+  titlePillText: { fontFamily: FontFamily.markerBold, fontWeight: '700', fontSize: sf(18), color: '#fff', letterSpacing: 0.5 },
   statRow: { flexDirection: 'row', gap: 8, marginTop: 58 },
   statPanel: { flex: 1 },
   kawaiiLabel: { fontFamily: FontFamily.markerBold, fontSize: sf(8), fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', opacity: 0.7 },
@@ -369,5 +372,4 @@ const s = StyleSheet.create({
     color: '#9c2d5a',
     minHeight: 28,
   },
-  author: { textAlign: 'center', fontFamily: FontFamily.script, fontSize: sf(12), opacity: 0.75, marginTop: 14 },
 });

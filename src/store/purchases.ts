@@ -1,9 +1,9 @@
 /**
  * RevenueCat purchases store
  *
- * All plans, prices, trial eligibility, and period info come
- * dynamically from RevenueCat offerings at runtime — nothing is
- * hardcoded here except the env-var references.
+ * All plans, prices, and period info come dynamically from
+ * RevenueCat offerings at runtime — nothing is hardcoded here
+ * except the env-var references.
  */
 import { Platform } from 'react-native';
 import Purchases, {
@@ -65,8 +65,7 @@ export async function isPremium(): Promise<boolean> {
 
 /**
  * Returns the current RevenueCat offering.
- * Prices, plans, trial period, eligibility — all come from RevenueCat,
- * nothing is hardcoded.
+ * Prices and plans all come from RevenueCat, nothing is hardcoded.
  */
 export async function getCurrentOffering(): Promise<PurchasesOffering | null> {
   try {
@@ -101,22 +100,6 @@ export async function getAvailablePackages(): Promise<PurchasesPackage[]> {
   );
 }
 
-/**
- * Checks if the user is eligible for an intro/trial offer on a given package.
- * Returns the intro price info (includes trial days) or null if not eligible.
- */
-export function getIntroOfferInfo(pkg: PurchasesPackage) {
-  const intro = pkg.product.introPrice;
-  if (!intro) return null;
-  return {
-    price: intro.priceString,            // e.g. "$0.00"
-    period: intro.period,                // e.g. "P7D" ISO 8601
-    periodUnit: intro.periodUnit,        // "DAY" | "WEEK" | "MONTH" | "YEAR"
-    periodUnits: intro.periodNumberOfUnits, // e.g. 7
-    cycles: intro.cycles,                // number of intro periods
-    isFree: intro.price === 0,           // true = free trial
-  };
-}
 
 // ─── Purchase ─────────────────────────────────────────────────────────────────
 

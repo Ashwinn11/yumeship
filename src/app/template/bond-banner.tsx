@@ -3,7 +3,7 @@ import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { TemplateScreenWrapper } from '@/components/templates/TemplateScreenWrapper';
 import {
-  MarkerCard, MarkerHeader, ScriptCredit, BlankPill, AttrSlider, INK,
+  MarkerCard, MarkerHeader, BlankPill, AttrSlider, INK,
 } from '@/components/templates/primitives';
 import Svg, { Path, Defs, ClipPath, Image as SvgImage } from 'react-native-svg';
 import * as ImagePicker from 'expo-image-picker';
@@ -26,14 +26,14 @@ export function BondBannerContent({ editing = false }: { editing?: boolean }) {
   const customBg = ctx.bgColor || ctx.bgImage;
 
   const [vals, setVals] = useState<Record<string, string>>(() => ({
-    meName:  ctx.get('meName', ''),
-    mePron:  ctx.get('mePron', ''),
-    meMbti:  ctx.get('meMbti', ''),
-    meVibe:  ctx.get('meVibe', ''),
-    foName:  ctx.get('foName', ''),
-    foPron:  ctx.get('foPron', ''),
-    foMbti:  ctx.get('foMbti', ''),
-    foVibe:  ctx.get('foVibe', ''),
+    meName:      ctx.get('meName', ''),
+    mePronouns:  ctx.get('mePronouns', ''),
+    meMBTI:      ctx.get('meMBTI', ''),
+    meVibe:      ctx.get('meVibe', ''),
+    foName:      ctx.get('foName', ''),
+    foPronouns:  ctx.get('foPronouns', ''),
+    foMBTI:      ctx.get('foMBTI', ''),
+    foVibe:      ctx.get('foVibe', ''),
     anniv:      ctx.get('anniv', ''),
     shieldPhoto: ctx.get('shieldPhoto', ''),
     sliders: ctx.get('sliders', JSON.stringify(SLIDERS.map(() => 0.5))),
@@ -67,7 +67,7 @@ export function BondBannerContent({ editing = false }: { editing?: boolean }) {
       {/* Banner + ribbon */}
       <View style={s.bannerWrap}>
         <View style={[s.banner, customBg ? { backgroundColor: 'transparent' } : null]}>
-          <Text style={s.bannerSmall}>get to know my</Text>
+          <Text style={s.bannerSmall}>all about my</Text>
           <Text style={s.bannerBig}>♡ YumeShip ♡</Text>
         </View>
         <View style={s.ribbonRow}>
@@ -178,7 +178,6 @@ export function BondBannerContent({ editing = false }: { editing?: boolean }) {
         ))}
       </View>
 
-      <ScriptCredit by="@yumeship" />
     </MarkerCard>
   );
 }

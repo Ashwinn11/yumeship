@@ -16,7 +16,7 @@ import { getOnbState, resetOnb } from '@/store/onboarding';
 import { addShip, REL_GRADS } from '@/store/ships';
 
 const VISUAL_TEMPLATES = [
-  { key: 'get-to-know', label: 'Get to Know', desc: 'popular · fill out their info', color: Colors.sakuraDeep, bg: Colors.sakuraSoft, tape: 'floral' },
+  { key: 'get-to-know', label: 'All About Us', desc: 'popular · fill out their info', color: Colors.sakuraDeep, bg: Colors.sakuraSoft, tape: 'floral' },
   { key: 'kawaii-ui', label: 'Kawaii UI', desc: 'stats card · aesthetics', color: Colors.lavenderDeep, bg: Colors.lavenderSoft, tape: 'dot' },
   { key: 'heart-frame', label: 'Heart Frame', desc: 'romantic · twin portraits', color: Colors.peachDeep, bg: Colors.peachSoft, tape: 'heart' },
   { key: 'aesthetic', label: 'Aesthetic', desc: 'mood board · palette · photos', color: Colors.butterDeep, bg: Colors.butterSoft, tape: 'star' },
@@ -56,6 +56,7 @@ export default function OnbRules() {
       gradEnd: state.gradEnd || relGrad[1],
       tapePattern: tape.pattern,
       tapeColor: tape.color,
+      coverUri: state.coverUri,
       templateKey,
     });
 

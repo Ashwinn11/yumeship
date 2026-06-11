@@ -77,7 +77,7 @@ export function HeartFrameContent({ editing = false }: { editing?: boolean }) {
 
   return (
     <MarkerCard tint={customBg ? 'transparent' : '#fff5f6'}>
-      <TitleHeader title="GET TO KNOW MY YUMESHIP!!" subtitle="our love in one page" by="@bunny.thoughts" />
+      <TitleHeader title="ALL ABOUT MY YUMESHIP!!" subtitle="our love in one page" />
 
       <View style={s.mt6}>
         <SharingRow choice={sharing} onChoiceChange={e ? setSharing : undefined} />

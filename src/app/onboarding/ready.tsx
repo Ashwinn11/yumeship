@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -10,7 +10,7 @@ import { IconBell, IconJournalOutline } from '@/components/ui/Icon';
 import { StepDots } from '@/components/ui/StepDots';
 import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing ,sf } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
-import { getOnbState, requestReviewIfEligible, resetOnb } from '@/store/onboarding';
+import { getOnbState, resetOnb } from '@/store/onboarding';
 import { requestPermission } from '@/store/notifications';
 import { daysAgo, getShip } from '@/store/ships';
 
@@ -35,18 +35,6 @@ export default function OnbReady() {
     if (state.firstCreation === 'vault') return 'enter my vault';
     return `open ${creationLabel}`;
   }, [creationLabel, state.firstCreation]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      maybeRequestReview();
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  async function maybeRequestReview() {
-    await requestReviewIfEligible();
-  }
 
   async function openFirstPiece() {
     await requestPermission();
@@ -107,6 +95,7 @@ export default function OnbReady() {
             initial={(ship.shipName || ship.name).charAt(0).toUpperCase() || '♡'}
             gradStart={ship.gradStart}
             gradEnd={ship.gradEnd}
+            coverUri={ship.coverUri}
             type={ship.relType}
             days={daysAgo(ship.createdAt)}
             tapePattern={ship.tapePattern as any}

@@ -49,7 +49,7 @@ export function ThisOrThatContent({ editing = false }: { editing?: boolean }) {
 
   return (
     <View style={{ padding: 10, backgroundColor: customBg ? 'transparent' : undefined }}>
-      <TitleHeader title="THIS or THAT" subtitle="how do they choose?" by="@softfangs" />
+      <TitleHeader title="THIS or THAT" subtitle="how do they choose?" />
 
       <View style={s.nameRow}>
         <Text style={s.themLabel}>♡ THEM:</Text>

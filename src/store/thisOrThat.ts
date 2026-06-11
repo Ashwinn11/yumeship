@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { getDb } from '@/db/client';
+import { getDb, newId } from '@/db/client';
+import { trackMeaningfulAction } from './review';
 
 export type TotPair = {
   id: string;
@@ -60,7 +61,7 @@ export function ensureDefaultPairs(shipId: string) {
 }
 
 export function addPair(shipId: string, leftOpt: string, rightOpt: string): string {
-  const id = String(Date.now());
+  const id = newId();
   const row = getDb().getFirstSync(
     'SELECT MAX(sort_order) as m FROM this_or_that_pairs WHERE ship_id = ?',
     shipId,
@@ -82,6 +83,7 @@ export function updatePairOpts(id: string, leftOpt: string, rightOpt: string) {
 export function setPairChoice(id: string, choice: 'left' | 'right' | '') {
   getDb().runSync('UPDATE this_or_that_pairs SET choice = ? WHERE id = ?', choice, id);
   notify();
+  trackMeaningfulAction();
 }
 
 export function deletePair(id: string) {

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { getDb } from '@/db/client';
+import { getDb, newId } from '@/db/client';
+import { trackMeaningfulAction } from './review';
 
 export type Thread = {
   id: string;
@@ -39,7 +40,7 @@ export function getThreads(shipId: string): Thread[] {
 }
 
 export function addThread(shipId: string, title: string): string {
-  const id = String(Date.now());
+  const id = newId();
   getDb().runSync(
     'INSERT INTO message_threads (id, ship_id, title, created_at) VALUES (?, ?, ?, ?)',
     id, shipId, title, Date.now(),
@@ -68,12 +69,13 @@ export function getMessages(threadId: string): Message[] {
 }
 
 export function addMessage(threadId: string, sender: 'me' | 'them', body: string): string {
-  const id = String(Date.now());
+  const id = newId();
   getDb().runSync(
     'INSERT INTO messages (id, thread_id, sender, body, created_at) VALUES (?, ?, ?, ?, ?)',
     id, threadId, sender, body, Date.now(),
   );
   notify();
+  trackMeaningfulAction();
   return id;
 }
 

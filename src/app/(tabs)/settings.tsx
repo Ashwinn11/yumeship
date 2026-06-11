@@ -25,6 +25,7 @@ import {
   getNotifEnabled, requestPermission, setNotifEnabled,
 } from '@/store/notifications';
 import { manageSubscriptions, restorePurchases } from '@/store/purchases';
+import { openWriteReview } from '@/store/review';
 import { usePremium } from '@/store/premium';
 import { deleteAllData } from '@/store/ships';
 
@@ -249,6 +250,15 @@ export default function SettingsScreen() {
             label="Restore purchases"
             icon={<IconRestoreSolid size={14} />}
             onPress={handleRestorePurchases}
+          />
+        </SettingGroup>
+
+        <SettingGroup ja="愛" name="Support us">
+          <SettingRow
+            label="Rate yumeship ♡"
+            icon={<Heart size={14} color={Colors.sakuraDeep} />}
+            onPress={openWriteReview}
+            trailing={<MetaText>›</MetaText>}
           />
         </SettingGroup>
 

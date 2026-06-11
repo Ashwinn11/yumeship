@@ -2,6 +2,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { Bullets, WashiTape } from '@/components/deco';
 import { Colors, FontFamily, Radius, Spacing ,sf } from '@/constants/theme';
+import { parseLocalDate } from '@/store/dates';
 
 type Props = {
   days: number;
@@ -21,8 +22,8 @@ export function MiniUpcoming({ days, title, fo, tint, featured, muted, dateStr, 
 
   if (dateStr) {
     try {
-      const dateObj = new Date(dateStr);
-      if (!isNaN(dateObj.getTime())) {
+      const dateObj = parseLocalDate(dateStr);
+      if (dateObj) {
         monthStr = dateObj.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
         dayStr = dateObj.toLocaleDateString('en-US', { day: 'numeric' });
       }

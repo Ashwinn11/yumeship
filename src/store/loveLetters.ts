@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { getDb } from '@/db/client';
+import { getDb, newId } from '@/db/client';
+import { trackMeaningfulAction } from './review';
 
 export type PaperStyle = 'plain' | 'lined' | 'grid' | 'scallop';
 export type LetterSticker = '' | 'envelope' | 'sakura' | 'polaroid' | 'ticket' | 'waxseal' | 'heartpatch' | 'sakuraflower';
@@ -43,12 +44,13 @@ export function addLetter(
   paper: PaperStyle,
   sticker: LetterSticker,
 ): string {
-  const id = String(Date.now());
+  const id = newId();
   getDb().runSync(
     'INSERT INTO love_letters (id, ship_id, title, body, paper, sticker, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
     id, shipId, title, body, paper, sticker, Date.now(),
   );
   notify();
+  trackMeaningfulAction();
   return id;
 }
 

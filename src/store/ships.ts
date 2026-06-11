@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getDb } from '@/db/client';
+import { getDb, newId } from '@/db/client';
 import { notifyDates } from './dates';
 
 export type Ship = {
@@ -15,6 +15,7 @@ export type Ship = {
   gradEnd: string;
   tapePattern: string;
   tapeColor: string;
+  coverUri: string;
   pinned: boolean;
   startDate: string;
   templateKey: string;
@@ -38,6 +39,7 @@ function rowToShip(row: Record<string, unknown>): Ship {
     gradEnd: row.grad_end as string,
     tapePattern: row.tape_pattern as string,
     tapeColor: row.tape_color as string,
+    coverUri: (row.cover_uri as string) ?? '',
     pinned: !!(row.pinned as number),
     startDate: row.start_date as string,
     templateKey: (row.template_key as string) ?? 'get-to-know',
@@ -66,12 +68,13 @@ export function addShip(d: {
   gradEnd?: string;
   tapePattern?: string;
   tapeColor?: string;
+  coverUri?: string;
   templateKey?: string;
 }): string {
-  const id = String(Date.now());
+  const id = newId();
   getDb().runSync(
-    `INSERT INTO ships (id, name, ship_name, my_name, fandom, rel_type, share_type, nickname, grad_start, grad_end, tape_pattern, tape_color, template_key, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO ships (id, name, ship_name, my_name, fandom, rel_type, share_type, nickname, grad_start, grad_end, tape_pattern, tape_color, cover_uri, template_key, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     id,
     d.name,
     d.shipName ?? '',
@@ -84,6 +87,7 @@ export function addShip(d: {
     d.gradEnd ?? '#d77a8d',
     d.tapePattern ?? 'heart',
     d.tapeColor ?? 'rgba(255,255,255,0.9)',
+    d.coverUri ?? '',
     d.templateKey ?? 'get-to-know',
     Date.now(),
   );
@@ -106,6 +110,7 @@ export function updateShip(id: string, d: Partial<Omit<Ship, 'id' | 'createdAt'>
   if (d.gradEnd !== undefined)     { fields.push('grad_end = ?');      values.push(d.gradEnd); }
   if (d.tapePattern !== undefined) { fields.push('tape_pattern = ?');  values.push(d.tapePattern); }
   if (d.tapeColor !== undefined)   { fields.push('tape_color = ?');    values.push(d.tapeColor); }
+  if (d.coverUri !== undefined)    { fields.push('cover_uri = ?');     values.push(d.coverUri); }
   if (d.pinned !== undefined)      { fields.push('pinned = ?');        values.push(d.pinned ? 1 : 0); }
   if (d.startDate !== undefined)    { fields.push('start_date = ?');     values.push(d.startDate); }
   if (d.templateKey !== undefined)  { fields.push('template_key = ?');   values.push(d.templateKey); }
@@ -178,7 +183,11 @@ export function useShip(id: string | undefined): Ship | undefined {
 
 export function daysTogetherLabel(startDate: string): string {
   if (!startDate) return '';
-  const start = new Date(startDate).getTime();
+  // parse YYYY-MM-DD as local time, not UTC, or the count shifts a day
+  const m = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(startDate.trim());
+  const start = m
+    ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])).getTime()
+    : new Date(startDate).getTime();
   if (isNaN(start)) return '';
   const days = Math.floor((Date.now() - start) / 86_400_000);
   if (days < 0) return '';

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { getDb } from '@/db/client';
+import { getDb, newId } from '@/db/client';
+import { trackMeaningfulAction } from './review';
 
 export type Album = {
   id: string;
@@ -39,7 +40,7 @@ export function getAlbums(shipId: string): Album[] {
 }
 
 export function addAlbum(shipId: string, title: string): string {
-  const id = String(Date.now());
+  const id = newId();
   getDb().runSync(
     'INSERT INTO albums (id, ship_id, title, created_at) VALUES (?, ?, ?, ?)',
     id, shipId, title, Date.now(),
@@ -68,12 +69,13 @@ export function getAlbumPhotos(albumId: string): AlbumPhoto[] {
 }
 
 export function addAlbumPhoto(albumId: string, uri: string, caption = ''): string {
-  const id = String(Date.now());
+  const id = newId();
   getDb().runSync(
     'INSERT INTO album_photos (id, album_id, uri, caption, created_at) VALUES (?, ?, ?, ?, ?)',
     id, albumId, uri, caption, Date.now(),
   );
   notify();
+  trackMeaningfulAction();
   return id;
 }
 

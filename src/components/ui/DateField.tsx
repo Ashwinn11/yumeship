@@ -18,6 +18,14 @@ type Props = {
 function parseDate(v: string): Date | null {
   if (!v) return null;
   const clean = v.replace(/\./g, '-');
+  // Parse YYYY-MM-DD as *local* time — new Date("YYYY-MM-DD") is UTC
+  // midnight, which renders as the previous day in negative-offset
+  // timezones (picked Dec 31, saw Dec 30).
+  const m = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(clean.trim());
+  if (m) {
+    const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+    return isNaN(d.getTime()) ? null : d;
+  }
   const d = new Date(clean);
   return isNaN(d.getTime()) ? null : d;
 }
@@ -50,21 +58,24 @@ export function calcElapsed(dateStr: string): { label: string; since: string } |
 
 export function DateField({ value, onChange, editing, placeholder = 'pick a date', style, textStyle, format = 'full', displayValue }: Props) {
   const [open, setOpen] = useState(false);
+  // Spinner selection lives here until "done" — onValueChange never fires
+  // if the user accepts the wheel as-is, so committing from it loses dates.
+  const [draft, setDraft] = useState<Date | null>(null);
   const display = displayValue !== undefined ? displayValue : formatDisplay(value, format);
   const date = parseDate(value) ?? new Date();
 
-  const commit = (selected?: Date) => {
-    if (!selected) return;
-    const y = selected.getFullYear();
-    const m = String(selected.getMonth() + 1).padStart(2, '0');
-    const d = String(selected.getDate()).padStart(2, '0');
-    onChange(`${y}-${m}-${d}`);
-  };
+  function commit(d: Date) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    onChange(`${y}-${m}-${day}`);
+    setOpen(false);
+  }
 
   return (
     <>
       <Pressable
-        onPress={editing ? () => setOpen(true) : undefined}
+        onPress={editing ? () => { setDraft(date); setOpen(true); } : undefined}
         style={[styles.pill, style]}
         disabled={!editing}
       >
@@ -80,8 +91,8 @@ export function DateField({ value, onChange, editing, placeholder = 'pick a date
           value={date}
           mode="date"
           onValueChange={(_, selected) => {
-            setOpen(false);
-            commit(selected);
+            if (selected) commit(selected);
+            else setOpen(false);
           }}
           onDismiss={() => setOpen(false)}
         />
@@ -92,14 +103,16 @@ export function DateField({ value, onChange, editing, placeholder = 'pick a date
           <Pressable style={styles.backdrop} onPress={() => setOpen(false)}>
             <View style={styles.sheet} onStartShouldSetResponder={() => true}>
               <DateTimePicker
-                value={date}
+                value={draft ?? date}
                 mode="date"
                 display="spinner"
                 themeVariant="light"
                 textColor="#1f1219"
-                onValueChange={(_, selected) => commit(selected)}
+                onValueChange={(_, selected) => {
+                  if (selected) setDraft(selected);
+                }}
                 />
-              <Pressable style={styles.doneBtn} onPress={() => setOpen(false)}>
+              <Pressable style={styles.doneBtn} onPress={() => commit(draft ?? date)}>
                 <Text style={styles.doneBtnText}>done ♡</Text>
               </Pressable>
             </View>

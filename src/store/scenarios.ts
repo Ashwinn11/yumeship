@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { getDb } from '@/db/client';
+import { getDb, newId } from '@/db/client';
+import { trackMeaningfulAction } from './review';
 
 export type Scenario = {
   id: string;
@@ -28,12 +29,13 @@ export function getScenarios(shipId: string): Scenario[] {
 }
 
 export function addScenario(shipId: string, title: string, body: string): string {
-  const id = String(Date.now());
+  const id = newId();
   getDb().runSync(
     'INSERT INTO scenarios (id, ship_id, title, body, created_at) VALUES (?, ?, ?, ?, ?)',
     id, shipId, title, body, Date.now(),
   );
   notify();
+  trackMeaningfulAction();
   return id;
 }
 

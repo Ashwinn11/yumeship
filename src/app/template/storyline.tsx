@@ -40,7 +40,7 @@ export function StorylineContent({ editing = false }: { editing?: boolean }) {
       <View style={{ position: 'absolute', top: -7, right: 24, zIndex: 10 }}>
         <WashiTape width={65} height={14} pattern="star" color="#b8902a" rotate={5} />
       </View>
-      <TitleHeader title="OUR STORYLINE" subtitle="the year so far" by="@plumstamps" />
+      <TitleHeader title="OUR STORYLINE" subtitle="the year so far" />
 
       <View style={s.timeline} onLayout={(ev) => setTimelineH(ev.nativeEvent.layout.height)}>
         {timelineH > 0 && (
