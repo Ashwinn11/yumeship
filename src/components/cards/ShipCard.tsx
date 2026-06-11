@@ -2,6 +2,7 @@ import { Ribbon } from '@/components/deco/Ribbon';
 import { WashiTape } from '@/components/deco/WashiTape';
 import { GradientCover } from '@/components/ui/GradientCover';
 import { Colors, FontFamily, FontSize, Radius, Shadow ,sf } from '@/constants/theme';
+import { Image } from 'expo-image';
 import { Pressable, StyleSheet, Text, View, ViewStyle } from 'react-native';
 
 // design/screens.jsx — ShipCard
@@ -17,6 +18,8 @@ type Props = {
   initial: string;
   gradStart: string;
   gradEnd: string;
+  /** Optional photo cover; replaces the gradient + initial when set */
+  coverUri?: string;
   type: 'romantic' | 'platonic' | 'familial';
   pinned?: boolean;
   polycule?: boolean;
@@ -42,6 +45,7 @@ export function ShipCard({
   initial,
   gradStart,
   gradEnd,
+  coverUri,
   type,
   pinned,
   polycule,
@@ -59,7 +63,11 @@ export function ShipCard({
   return (
     <Pressable onPress={onPress} onLongPress={onLongPress} style={[styles.card, style]}>
       <GradientCover gradStart={gradStart} gradEnd={gradEnd} style={styles.cover}>
-        <Text style={styles.initial}>{initial}</Text>
+        {coverUri ? (
+          <Image source={{ uri: coverUri }} style={StyleSheet.absoluteFill} contentFit="cover" />
+        ) : (
+          <Text style={styles.initial}>{initial}</Text>
+        )}
 
         <View style={styles.tape}>
           <WashiTape width={56} height={14} pattern={tapePattern} color={tapeColor} rotate={-6} />

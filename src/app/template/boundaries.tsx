@@ -1,5 +1,5 @@
 import { TemplateScreenWrapper } from '@/components/templates/TemplateScreenWrapper';
-import { INK, MarkerCard, ScriptCredit, SquareCheck } from '@/components/templates/primitives';
+import { INK, MarkerCard, SquareCheck } from '@/components/templates/primitives';
 import { FontFamily ,sf } from '@/constants/theme';
 import { useTemplateCtx } from '@/store/templateData';
 import { useLocalSearchParams } from 'expo-router';
@@ -55,7 +55,6 @@ export function BoundariesContent({ editing = false }: { editing?: boolean }) {
           <Text style={s.titleText}>BOUNDARIES</Text>
         </View>
         <Text style={s.titleSub}>sharing status &amp; what's ok</Text>
-        <ScriptCredit by="@petalpressed" />
       </View>
 
       <View style={s.states}>

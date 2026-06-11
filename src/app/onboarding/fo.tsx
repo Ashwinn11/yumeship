@@ -1,3 +1,5 @@
+import { Image } from 'expo-image';
+import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
@@ -34,6 +36,7 @@ export default function OnbFO() {
   const [shipName, setShipName] = useState('');
   const [fandom, setFandom] = useState('');
   const [paletteId, setPaletteId] = useState('sakura');
+  const [coverUri, setCoverUri] = useState('');
   const [relType, setRelType] = useState<'romantic' | 'platonic' | 'familial'>('romantic');
   const [shareType, setShareType] = useState<'ng' | 'welcome' | 'mirror'>('mirror');
 
@@ -45,6 +48,21 @@ export default function OnbFO() {
     setPaletteId(p.id);
     setOnbField('gradStart', p.start);
     setOnbField('gradEnd', p.end);
+    setCoverUri('');
+    setOnbField('coverUri', '');
+  }
+
+  async function pickCoverImage() {
+    const res = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'] as ImagePicker.MediaType[],
+      allowsEditing: true,
+      aspect: [3, 4],
+      quality: 0.85,
+    });
+    if (!res.canceled && res.assets[0]) {
+      setCoverUri(res.assets[0].uri);
+      setOnbField('coverUri', res.assets[0].uri);
+    }
   }
 
   function goToRules() {
@@ -124,9 +142,13 @@ export default function OnbFO() {
                 elevation: 2,
               }}
             >
-              <Text style={{ color: '#ffffff', fontFamily: FontFamily.displayItalic, fontSize: sf(36), fontWeight: 'bold' }}>
-                {foName.charAt(0).toUpperCase() || '♡'}
-              </Text>
+              {coverUri ? (
+                <Image source={{ uri: coverUri }} style={{ width: 60, height: 76, borderRadius: 10 }} contentFit="cover" />
+              ) : (
+                <Text style={{ color: '#ffffff', fontFamily: FontFamily.displayItalic, fontSize: sf(36), fontWeight: 'bold' }}>
+                  {foName.charAt(0).toUpperCase() || '♡'}
+                </Text>
+              )}
             </LinearGradient>
 
             <View style={{ flex: 1, gap: 8 }}>
@@ -245,14 +267,34 @@ export default function OnbFO() {
                     },
                   ]}
                 >
-                  {paletteId === p.id && (
+                  {paletteId === p.id && !coverUri && (
                     <View style={styles.swatchSparkle}>
                       <Sparkle size={9} color={Colors.sakuraDeep} />
                     </View>
                   )}
                 </Pressable>
               ))}
+              <Pressable
+                onPress={pickCoverImage}
+                style={[
+                  styles.swatch,
+                  styles.imageSwatch,
+                  coverUri ? { borderColor: Colors.ink, borderWidth: 2, borderStyle: 'solid' } : null,
+                ]}
+              >
+                {coverUri ? (
+                  <Image source={{ uri: coverUri }} style={styles.imageSwatchThumb} contentFit="cover" />
+                ) : (
+                  <Text style={styles.imageSwatchPlus}>+</Text>
+                )}
+                {!!coverUri && (
+                  <View style={styles.swatchSparkle}>
+                    <Sparkle size={9} color={Colors.sakuraDeep} />
+                  </View>
+                )}
+              </Pressable>
             </View>
+            <Text style={styles.imageHint}>or tap + to use a photo · crop it your way</Text>
           </View>
         </View>
 
@@ -324,6 +366,18 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   swatchSparkle: { position: 'absolute', top: -6, left: -6 },
+  imageSwatch: {
+    backgroundColor: Colors.paperDeep,
+    borderWidth: 1.5,
+    borderColor: Colors.line,
+    borderStyle: 'dashed',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  imageSwatchThumb: { width: 24, height: 24, borderRadius: Radius.pill },
+  imageSwatchPlus: { fontSize: sf(13), color: Colors.ink3, fontFamily: FontFamily.ui, lineHeight: 16 },
+  imageHint: { fontFamily: FontFamily.ui, fontSize: sf(9), color: Colors.ink3, marginTop: 6 },
   actions: { paddingHorizontal: Spacing.s6, paddingBottom: Spacing.s3, gap: Spacing.s2 },
   skipPressable: { alignItems: 'center' },
   skip: { fontFamily: FontFamily.ui, fontSize: FontSize.meta, color: Colors.ink3, textDecorationLine: 'underline' },

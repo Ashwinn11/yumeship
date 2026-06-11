@@ -52,7 +52,7 @@ export function HeadcanonsContent({ editing = false }: { editing?: boolean }) {
 
   return (
     <MarkerCard tint={customBg ? 'transparent' : '#fffbf6'}>
-      <TitleHeader title="HEADCANONS" subtitle="the things only I'd notice" by="@daydreamr" />
+      <TitleHeader title="HEADCANONS" subtitle="the things only I'd notice" />
 
       <View style={s.fieldRow}>
         <TemplateField

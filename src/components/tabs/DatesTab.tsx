@@ -10,7 +10,7 @@ import { StickerTicket, WashiTape, Bullets, Sparkle } from '@/components/deco';
 import { CozyModal } from '@/components/ui/CozyModal';
 import { IconPlus } from '@/components/ui/Icon';
 import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing ,sf } from '@/constants/theme';
-import { addDate, deleteDate, daysUntil, useDates } from '@/store/dates';
+import { addDate, deleteDate, daysUntil, parseLocalDate, useDates } from '@/store/dates';
 import { requestPermission } from '@/store/notifications';
 import { DateField } from '@/components/ui/DateField';
 
@@ -108,8 +108,8 @@ export function DatesTab({ shipId, shipName }: { shipId: string; shipName?: stri
           let monthStr = 'DEC';
           let dayStr = '25';
           try {
-            const dateObj = new Date(d.date);
-            if (!isNaN(dateObj.getTime())) {
+            const dateObj = parseLocalDate(d.date);
+            if (dateObj) {
               monthStr = dateObj.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
               dayStr = dateObj.toLocaleDateString('en-US', { day: 'numeric' });
             }

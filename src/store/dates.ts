@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { getDb } from '@/db/client';
+import { getDb, newId } from '@/db/client';
+import { trackMeaningfulAction } from './review';
 import { cancelNotification, scheduleAnniversaryNotification } from './notifications';
 
 export type ShipDate = {
@@ -91,7 +92,7 @@ export function getAllUpcomingDates(): (ShipDate & { shipName: string; relType: 
 }
 
 export async function addDate(shipId: string, d: { title: string; date: string; yearly?: boolean; notify?: boolean; subtitle?: string }): Promise<string> {
-  const id = String(Date.now());
+  const id = newId();
   getDb().runSync(
     'INSERT INTO dates (id, ship_id, title, date, yearly, notify, notif_id, subtitle, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
     id, shipId, d.title, d.date, d.yearly ? 1 : 0, d.notify ? 1 : 0, '', d.subtitle ?? '', Date.now(),
@@ -103,6 +104,7 @@ export async function addDate(shipId: string, d: { title: string; date: string; 
     }
   }
   notifyDates();
+  trackMeaningfulAction();
   return id;
 }
 
@@ -113,9 +115,19 @@ export function deleteDate(id: string) {
   notifyDates();
 }
 
+// YYYY-MM-DD must parse as local time — new Date("YYYY-MM-DD") is UTC
+// midnight, which is the *previous* day in negative-offset timezones.
+export function parseLocalDate(dateStr: string): Date | null {
+  const m = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(dateStr.trim());
+  const d = m
+    ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]))
+    : new Date(dateStr);
+  return isNaN(d.getTime()) ? null : d;
+}
+
 export function daysUntil(dateStr: string, yearly: boolean): number | null {
-  const target = new Date(dateStr);
-  if (isNaN(target.getTime())) return null;
+  const target = parseLocalDate(dateStr);
+  if (!target) return null;
   const now = new Date();
   now.setHours(0, 0, 0, 0);
   if (yearly) {

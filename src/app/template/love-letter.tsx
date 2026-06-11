@@ -48,7 +48,7 @@ export function LoveLetterContent({ editing = false }: { editing?: boolean }) {
         <Heart size={140} color={INK} />
       </View>
 
-      <TitleHeader title="A LOVE LETTER" subtitle="for the one i never got to send" by="@inkdrop.diary" />
+      <TitleHeader title="A LOVE LETTER" subtitle="for the one i never got to send" />
 
       <View style={s.letterBox}>
         <View style={s.dearLabel}>

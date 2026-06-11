@@ -21,16 +21,42 @@ import { CozyModal } from '@/components/ui';
 import { Colors, FontFamily, FontSize, Radius, Spacing ,sf } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
 import { refreshPremium } from '@/store/premium';
-import { requestReviewIfEligible } from '@/store/onboarding';
+import { askForReview } from '@/store/review';
 import {
   getAvailablePackages,
-  getIntroOfferInfo,
   isPremium,
   purchasePackage,
   restorePurchases,
 } from '@/store/purchases';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function isLifetimePkg(pkg: PurchasesPackage): boolean {
+  return (
+    pkg.packageType === PACKAGE_TYPE.LIFETIME ||
+    pkg.identifier === '$rc_lifetime' ||
+    pkg.identifier.toLowerCase().includes('lifetime') ||
+    pkg.product.identifier.toLowerCase().includes('lifetime')
+  );
+}
+
+function isMonthlyPkg(pkg: PurchasesPackage): boolean {
+  return (
+    pkg.packageType === PACKAGE_TYPE.MONTHLY ||
+    pkg.identifier === '$rc_monthly' ||
+    pkg.identifier.toLowerCase().includes('monthly') ||
+    pkg.product.identifier.toLowerCase().includes('monthly')
+  );
+}
+
+function isWeeklyPkg(pkg: PurchasesPackage): boolean {
+  return (
+    pkg.packageType === PACKAGE_TYPE.WEEKLY ||
+    pkg.identifier === '$rc_weekly' ||
+    pkg.identifier.toLowerCase().includes('weekly') ||
+    pkg.product.identifier.toLowerCase().includes('weekly')
+  );
+}
 
 function periodLabel(pkg: PurchasesPackage): string {
   const p = pkg.product.subscriptionPeriod ?? '';
@@ -43,33 +69,6 @@ function periodLabel(pkg: PurchasesPackage): string {
   return '';
 }
 
-// Builds the trial label string from RevenueCat introPrice — fully dynamic.
-// Returns null if: user not eligible, no trial configured, or intro was removed.
-function trialLabel(pkg: PurchasesPackage): string | null {
-  const intro = getIntroOfferInfo(pkg);
-  if (!intro) return null;
-  const { periodUnit, periodUnits, price, isFree } = intro;
-  if (isFree) {
-    // Free trial — days derived from RevenueCat period fields
-    const days =
-      periodUnit === 'DAY' ? periodUnits :
-      periodUnit === 'WEEK' ? periodUnits * 7 :
-      null;
-    if (days) return `${days} days free`;
-    if (periodUnit === 'MONTH') return `${periodUnits} month${periodUnits > 1 ? 's' : ''} free`;
-    return 'free trial';
-  }
-  // Paid intro offer
-  return `${price} intro offer`;
-}
-
-// True only when the plan has a genuinely free (price=0) trial for this user.
-// RevenueCat already sets introPrice=null when the user is ineligible.
-function hasFreeIntro(pkg: PurchasesPackage | null): boolean {
-  if (!pkg) return false;
-  return getIntroOfferInfo(pkg)?.isFree === true;
-}
-
 function getSavingsVsWeekly(
   pkg: PurchasesPackage,
   weeklyPkg?: PurchasesPackage,
@@ -77,37 +76,13 @@ function getSavingsVsWeekly(
   const price = pkg.product.price;
   const weeklyPrice = weeklyPkg?.product.price;
   const priceString = pkg.product.priceString;
-  
+
   if (!price || !weeklyPrice) return null;
 
-  const isWeekly =
-    pkg.packageType === PACKAGE_TYPE.WEEKLY ||
-    pkg.identifier === '$rc_weekly' ||
-    pkg.identifier.toLowerCase().includes('weekly') ||
-    pkg.product.identifier.toLowerCase().includes('weekly');
-
-  if (isWeekly) return null;
-
-  const isAnnual =
-    pkg.packageType === PACKAGE_TYPE.ANNUAL ||
-    pkg.identifier === '$rc_annual' ||
-    pkg.identifier.toLowerCase().includes('annual') ||
-    pkg.product.identifier.toLowerCase().includes('annual');
-
-  const isMonthly =
-    pkg.packageType === PACKAGE_TYPE.MONTHLY ||
-    pkg.identifier === '$rc_monthly' ||
-    pkg.identifier.toLowerCase().includes('monthly') ||
-    pkg.product.identifier.toLowerCase().includes('monthly');
-
-  let weeks = 1;
-  if (isAnnual) {
-    weeks = 52;
-  } else if (isMonthly) {
-    weeks = 4;
-  } else {
-    return null;
-  }
+  // only monthly has a meaningful weekly equivalent — lifetime is a
+  // one-time purchase, weekly is the baseline itself
+  if (!isMonthlyPkg(pkg)) return null;
+  const weeks = 4;
 
   const weeklyEquiv = price / weeks;
   const strikethrough = weeklyPrice * weeks;
@@ -128,37 +103,9 @@ function getWeeklyEquivalentOnly(pkg: PurchasesPackage): string | null {
   const price = pkg.product.price;
   const priceString = pkg.product.priceString;
   if (!price || !priceString) return null;
+  if (!isMonthlyPkg(pkg)) return null;
 
-  const isWeekly =
-    pkg.packageType === PACKAGE_TYPE.WEEKLY ||
-    pkg.identifier === '$rc_weekly' ||
-    pkg.identifier.toLowerCase().includes('weekly') ||
-    pkg.product.identifier.toLowerCase().includes('weekly');
-
-  if (isWeekly) return null;
-
-  const isAnnual =
-    pkg.packageType === PACKAGE_TYPE.ANNUAL ||
-    pkg.identifier === '$rc_annual' ||
-    pkg.identifier.toLowerCase().includes('annual') ||
-    pkg.product.identifier.toLowerCase().includes('annual');
-
-  const isMonthly =
-    pkg.packageType === PACKAGE_TYPE.MONTHLY ||
-    pkg.identifier === '$rc_monthly' ||
-    pkg.identifier.toLowerCase().includes('monthly') ||
-    pkg.product.identifier.toLowerCase().includes('monthly');
-
-  let weeks = 1;
-  if (isAnnual) {
-    weeks = 52;
-  } else if (isMonthly) {
-    weeks = 4;
-  } else {
-    return null;
-  }
-
-  const weeklyEquiv = price / weeks;
+  const weeklyEquiv = price / 4;
   const match = priceString.match(/^[^\d\s]+/);
   const symbol = match?.[0] || '$';
   return `${symbol}${weeklyEquiv.toFixed(2)}`;
@@ -180,52 +127,20 @@ export default function PaywallScreen() {
       const already = await isPremium();
       if (already) { router.back(); return; }
       const pkgs = await getAvailablePackages();
-      // filter out all plans except annual, monthly, and weekly
-      const filtered = pkgs.filter((p) => {
-        const isWeekly =
-          p.packageType === PACKAGE_TYPE.WEEKLY ||
-          p.identifier === '$rc_weekly' ||
-          p.identifier.toLowerCase().includes('weekly') ||
-          p.product.identifier.toLowerCase().includes('weekly');
+      // filter out all plans except lifetime, monthly, and weekly
+      const filtered = pkgs.filter((p) => isWeeklyPkg(p) || isLifetimePkg(p) || isMonthlyPkg(p));
 
-        const isAnnual =
-          p.packageType === PACKAGE_TYPE.ANNUAL ||
-          p.identifier === '$rc_annual' ||
-          p.identifier.toLowerCase().includes('annual') ||
-          p.product.identifier.toLowerCase().includes('annual');
-
-        const isMonthly =
-          p.packageType === PACKAGE_TYPE.MONTHLY ||
-          p.identifier === '$rc_monthly' ||
-          p.identifier.toLowerCase().includes('monthly') ||
-          p.product.identifier.toLowerCase().includes('monthly');
-
-        return isWeekly || isAnnual || isMonthly;
-      });
-
-      // sort annual first, then monthly, then weekly
+      // sort lifetime first, then monthly, then weekly
       const sorted = [...filtered].sort((a, b) => {
         const getOrder = (p: PurchasesPackage) => {
-          const isAnnual =
-            p.packageType === PACKAGE_TYPE.ANNUAL ||
-            p.identifier === '$rc_annual' ||
-            p.identifier.toLowerCase().includes('annual') ||
-            p.product.identifier.toLowerCase().includes('annual');
-
-          const isMonthly =
-            p.packageType === PACKAGE_TYPE.MONTHLY ||
-            p.identifier === '$rc_monthly' ||
-            p.identifier.toLowerCase().includes('monthly') ||
-            p.product.identifier.toLowerCase().includes('monthly');
-
-          if (isAnnual) return 0;
-          if (isMonthly) return 1;
+          if (isLifetimePkg(p)) return 0;
+          if (isMonthlyPkg(p)) return 1;
           return 2; // weekly
         };
         return getOrder(a) - getOrder(b);
       });
       setPackages(sorted);
-      // pre-select the annual (first) package if available
+      // pre-select the lifetime (first) package if available
       if (sorted.length > 0) setSelected(sorted[0]);
       setLoading(false);
     })();
@@ -238,10 +153,10 @@ export default function PaywallScreen() {
       const result = await purchasePackage(selected);
       if (result.success) {
         await refreshPremium();
-        requestReviewIfEligible();
+        askForReview();
         setAlertModal({
           title: '🎉 Welcome to Premium!',
-          message: 'Your subscription is now active.',
+          message: 'Premium is now active.',
           onClose: () => router.back(),
         });
       } else if (!result.cancelled) {
@@ -262,11 +177,11 @@ export default function PaywallScreen() {
         await refreshPremium();
         setAlertModal({
           title: 'Restored! ✓',
-          message: 'Your premium subscription has been restored.',
+          message: 'Your premium access has been restored.',
           onClose: () => router.back(),
         });
       } else {
-        setAlertModal({ title: 'Nothing to restore', message: 'No active subscription found for this Apple ID.' });
+        setAlertModal({ title: 'Nothing to restore', message: 'No purchases found for this Apple ID.' });
       }
     } catch (e: any) {
       setAlertModal({ title: 'Error', message: e.message ?? 'Could not restore purchases.' });
@@ -371,34 +286,14 @@ export default function PaywallScreen() {
           <View style={styles.plans}>
             {packages.map((pkg) => {
               const isSel = selected?.identifier === pkg.identifier;
-              const trial = trialLabel(pkg);
               const period = periodLabel(pkg);
-              const weeklyPkg = packages.find(p =>
-                p.packageType === PACKAGE_TYPE.WEEKLY ||
-                p.identifier === '$rc_weekly' ||
-                p.identifier.toLowerCase().includes('weekly') ||
-                p.product.identifier.toLowerCase().includes('weekly')
-              );
+              const weeklyPkg = packages.find(isWeeklyPkg);
               const savings = getSavingsVsWeekly(pkg, weeklyPkg);
-              const isWeekly =
-                pkg.packageType === PACKAGE_TYPE.WEEKLY ||
-                pkg.identifier === '$rc_weekly' ||
-                pkg.identifier.toLowerCase().includes('weekly') ||
-                pkg.product.identifier.toLowerCase().includes('weekly');
+              const isWeekly = isWeeklyPkg(pkg);
+              const isLifetime = isLifetimePkg(pkg);
+              const isMonthly = isMonthlyPkg(pkg);
 
-              const isAnnual =
-                pkg.packageType === PACKAGE_TYPE.ANNUAL ||
-                pkg.identifier === '$rc_annual' ||
-                pkg.identifier.toLowerCase().includes('annual') ||
-                pkg.product.identifier.toLowerCase().includes('annual');
-
-              const isMonthly =
-                pkg.packageType === PACKAGE_TYPE.MONTHLY ||
-                pkg.identifier === '$rc_monthly' ||
-                pkg.identifier.toLowerCase().includes('monthly') ||
-                pkg.product.identifier.toLowerCase().includes('monthly');
-
-              const displayTitle = isAnnual ? 'Yearly' : isMonthly ? 'Monthly' : 'Weekly';
+              const displayTitle = isLifetime ? 'Lifetime' : isMonthly ? 'Monthly' : 'Weekly';
 
               return (
                 <Pressable
@@ -406,21 +301,21 @@ export default function PaywallScreen() {
                   style={[
                     styles.planCard,
                     isSel && styles.planCardSel,
-                    isAnnual && styles.planCardAnnual,
+                    isLifetime && styles.planCardLifetime,
                     isMonthly && styles.planCardMonthly,
                   ]}
                   onPress={() => setSelected(pkg)}
                   id={`plan-${pkg.identifier}`}
                 >
-                  {/* Floating SAVE % badge — annual & monthly */}
+                  {/* Floating SAVE % badge — monthly */}
                   {savings && savings.savePercent > 0 && (
                     <View style={styles.savingsBadge}>
                       <Text style={styles.savingsTxt}>SAVE {savings.savePercent}%</Text>
                     </View>
                   )}
 
-                  {/* Annual deco — sparkles in corners */}
-                  {isAnnual && (
+                  {/* Lifetime deco — sparkles in corners */}
+                  {isLifetime && (
                     <>
                       <View style={[styles.cardDeco, { top: 8, right: 10 }]} pointerEvents="none">
                         <Sparkle size={11} color={isSel ? Colors.sakuraDeep : Colors.sakura} />
@@ -460,16 +355,10 @@ export default function PaywallScreen() {
                         <Text style={[styles.planName, isSel && styles.planNameSel]}>
                           {displayTitle}
                         </Text>
-                        {/* Trial badge */}
-                        {trial && (
-                          <View style={styles.trialInlineBadge}>
-                            <Text style={styles.trialInlineTxt}>{trial.toUpperCase()}</Text>
-                          </View>
-                        )}
                         {/* Plan label badge */}
-                        {isAnnual && (
+                        {isLifetime && (
                           <View style={[styles.planLabelBadge, styles.planLabelBadgeDeal]}>
-                            <Text style={styles.planLabelTxt}>BEST DEAL</Text>
+                            <Text style={styles.planLabelTxt}>BEST VALUE</Text>
                           </View>
                         )}
                         {isMonthly && (
@@ -479,7 +368,9 @@ export default function PaywallScreen() {
                         )}
                       </View>
 
-                      {isWeekly ? (
+                      {isLifetime ? (
+                        <Text style={styles.planSubLabel}>pay once · yours forever</Text>
+                      ) : isWeekly ? (
                         <Text style={styles.planSubLabel}>billed weekly · cancel anytime</Text>
                       ) : savings ? (
                         <Text style={styles.planSubLabel}>{savings.weeklyEquivalent}/week</Text>
@@ -523,24 +414,19 @@ export default function PaywallScreen() {
           {purchasing ? (
             <ActivityIndicator color="#fff" />
           ) : (() => {
-            if (!selected) return <Text style={styles.ctaTxt}>Subscribe now ♡</Text>;
-            const trial = trialLabel(selected);
+            if (!selected) return <Text style={styles.ctaTxt}>Continue ♡</Text>;
             const period = periodLabel(selected);
             const price = selected.product.priceString;
             const suffix = period ? `${price} / ${period}` : price;
-            return (
-              <Text style={styles.ctaTxt}>
-                {trial ? `Try free for ${trial.replace(' free', '')} →` : `Continue · ${suffix}`}
-              </Text>
-            );
+            return <Text style={styles.ctaTxt}>Continue · {suffix}</Text>;
           })()}
         </Pressable>
 
         {/* Sub-CTA note */}
         <Text style={styles.subNote}>
-          {hasFreeIntro(selected)
-            ? 'No payment due now · Cancel anytime'
-            : 'Cancel anytime'}
+          {selected && isLifetimePkg(selected)
+            ? 'One-time payment · no subscription'
+            : 'Cancel anytime · 🔒 Secure checkout'}
         </Text>
 
         {/* Footer row: Restore | Terms | Privacy */}
@@ -675,15 +561,9 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   planCardSel: { borderColor: Colors.sakuraDeep, backgroundColor: Colors.sakuraSoft },
-  planCardAnnual: { borderColor: Colors.sakura },
+  planCardLifetime: { borderColor: Colors.sakura },
   planCardMonthly: { borderColor: Colors.lavender },
   cardDeco: { position: 'absolute' },
-  trialBadge: {
-    position: 'absolute', top: -10, right: 12,
-    backgroundColor: Colors.sakuraDeep, borderRadius: Radius.pill,
-    paddingVertical: 2, paddingHorizontal: 10,
-  },
-  trialTxt: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(10), color: '#fff' },
   planName: {
     fontFamily: FontFamily.uiSemiBold, fontSize: sf(13), color: Colors.ink,
   },
@@ -713,21 +593,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     flexWrap: 'wrap',
-  },
-  trialInlineBadge: {
-    backgroundColor: Colors.butter,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: Radius.r2,
-    borderWidth: 1.5,
-    borderColor: Colors.sakuraDeep,
-    transform: [{ rotate: '1.5deg' }],
-  },
-  trialInlineTxt: {
-    fontFamily: FontFamily.uiSemiBold,
-    fontSize: sf(8),
-    color: Colors.sakuraDeep,
-    fontWeight: '800',
   },
   planSubLabel: {
     fontFamily: FontFamily.ui,

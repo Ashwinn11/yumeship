@@ -195,6 +195,7 @@ export default function HomeScreen() {
                 initial={(ship.shipName || ship.name).charAt(0).toUpperCase() || '♡'}
                 gradStart={ship.gradStart}
                 gradEnd={ship.gradEnd}
+                coverUri={ship.coverUri}
                 type={ship.relType}
                 days={daysTogetherLabel(ship.startDate) || daysAgo(ship.createdAt)}
                 tapePattern={ship.tapePattern as any}

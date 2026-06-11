@@ -3,7 +3,7 @@ import { View, Text, TextInput, StyleSheet, Pressable, Modal, TouchableWithoutFe
 import { useLocalSearchParams } from 'expo-router';
 import Svg, { Path } from 'react-native-svg';
 import { TemplateScreenWrapper } from '@/components/templates/TemplateScreenWrapper';
-import { ScriptCredit, PhotoBox, MarkerCard, INK } from '@/components/templates/primitives';
+import { PhotoBox, MarkerCard, INK } from '@/components/templates/primitives';
 import { Sparkle } from '@/components/deco';
 import { useTemplateCtx } from '@/store/templateData';
 import { Colors, FontFamily, Radius, Spacing ,sf } from '@/constants/theme';
@@ -472,7 +472,6 @@ export function TalkingAboutContent({ editing = false }: { editing?: boolean }) 
         />
       )}
 
-      <ScriptCredit by="@yumeship" />
 
       {/* Color picker modal */}
       <Modal visible={picking !== null} transparent animationType="fade"

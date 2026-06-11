@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { getDb } from '@/db/client';
+import { getDb, newId } from '@/db/client';
+import { trackMeaningfulAction } from './review';
 
 export type Headcanon = {
   id: string;
@@ -44,12 +45,13 @@ export function getHCCounts(shipId: string): Record<string, number> {
 }
 
 export function addHeadcanon(shipId: string, category: string, body: string): string {
-  const id = String(Date.now());
+  const id = newId();
   getDb().runSync(
     'INSERT INTO headcanons (id, ship_id, category, body, created_at) VALUES (?, ?, ?, ?, ?)',
     id, shipId, category, body, Date.now(),
   );
   notify();
+  trackMeaningfulAction();
   return id;
 }
 

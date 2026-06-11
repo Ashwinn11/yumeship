@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Modal, Pressable, TouchableWithoutFeedback, View, Text, TextInput, StyleSheet } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import {
-  MarkerCard, ScriptCredit, PhotoBox, Polaroid, WindowFrame, MusicPlayer, INK,
+  MarkerCard, PhotoBox, Polaroid, WindowFrame, MusicPlayer, INK,
 } from '@/components/templates/primitives';
 import { TemplateScreenWrapper } from '@/components/templates/TemplateScreenWrapper';
 import { Heart } from '@/components/deco/Heart';
@@ -113,7 +113,6 @@ export function AestheticContent({ editing = false }: { editing?: boolean }) {
       </WindowFrame>
 
       <View style={s.footer}>
-        <ScriptCredit by="@cloudbloom.kr" />
         <Heart size={20} color={INK} outline />
       </View>
 

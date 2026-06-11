@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { getDb } from '@/db/client';
+import { getDb, newId } from '@/db/client';
+import { trackMeaningfulAction } from './review';
 
 export type StorylineEvent = {
   id: string;
@@ -34,12 +35,13 @@ export function getStorylineEvents(shipId: string): StorylineEvent[] {
 }
 
 export function addStorylineEvent(shipId: string, d: { emoji?: string; title: string; date?: string; body?: string }): string {
-  const id = String(Date.now());
+  const id = newId();
   getDb().runSync(
     'INSERT INTO storyline_events (id, ship_id, emoji, title, date, body, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
     id, shipId, d.emoji ?? '✦', d.title, d.date ?? '', d.body ?? '', Date.now(),
   );
   notify();
+  trackMeaningfulAction();
   return id;
 }
 

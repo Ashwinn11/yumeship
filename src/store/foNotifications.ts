@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getDb } from '@/db/client';
+import { getDb, newId } from '@/db/client';
 import { cancelNotification, scheduleDailyNotification } from './notifications';
 
 export type FoMessage = {
@@ -44,7 +44,7 @@ export async function addFoMessage(
   scheduledHour = 9,
   senderName = '',
 ): Promise<string> {
-  const id = String(Date.now());
+  const id = newId();
   getDb().runSync(
     'INSERT INTO fo_messages (id, ship_id, body, sender_name, scheduled_hour, active, notif_id, current_index, created_at) VALUES (?, ?, ?, ?, ?, 1, ?, 0, ?)',
     id, shipId, body, senderName, scheduledHour, '', Date.now(),

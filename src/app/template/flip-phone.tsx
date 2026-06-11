@@ -3,7 +3,7 @@ import { View, Text, TextInput, StyleSheet, Pressable } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { TemplateScreenWrapper } from '@/components/templates/TemplateScreenWrapper';
 import {
-  MarkerCard, ScriptCredit, BlankPill, PhotoBox, INK,
+  MarkerCard, BlankPill, PhotoBox, INK,
 } from '@/components/templates/primitives';
 import { WashiTape } from '@/components/deco/WashiTape';
 import { Bullets } from '@/components/deco';
@@ -179,7 +179,6 @@ export function FlipPhoneContent({ editing = false }: { editing?: boolean }) {
           </View>
         </View>
 
-        <ScriptCredit by="@yumeship" />
       </View>
     </View>
   );

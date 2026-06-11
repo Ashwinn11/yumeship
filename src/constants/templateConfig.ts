@@ -8,7 +8,7 @@ export type TemplateConfig = {
 
 export const TEMPLATE_CONFIG: Record<string, TemplateConfig> = {
   'get-to-know': {
-    title: 'Get to Know',
+    title: 'All About Us',
     gradStart: '#f3b6c4',
     gradEnd: '#d77a8d',
     tapePattern: 'heart',

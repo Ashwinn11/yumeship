@@ -246,7 +246,7 @@ function HeadcanonsFeature({ shipId, shipName, setCustomBack }: { shipId: string
 
   return (
     <View style={hc.wrap}>
-      <TitleHeader title="HEADCANONS" subtitle="the things only I'd notice" by="@daydreamr" />
+      <TitleHeader title="HEADCANONS" subtitle="the things only I'd notice" />
 
       <View style={hc.categories}>
         {HC_CATS.map((c) => (
