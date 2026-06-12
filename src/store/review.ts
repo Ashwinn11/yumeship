@@ -8,6 +8,7 @@
  * not guarantees).
  */
 import { Linking, Platform } from 'react-native';
+import { isAvailableAsync, requestReview } from 'expo-store-review';
 import { getGlobalSetting, saveGlobalSetting } from './onboarding';
 
 const APP_STORE_ID = '6773642234';
@@ -38,7 +39,6 @@ export async function askForReview() {
   try {
     const last = parseInt(getGlobalSetting('review_last_ask_at', '0'), 10);
     if (last && Date.now() - last < MIN_GAP_MS) return;
-    const { isAvailableAsync, requestReview } = await import('expo-store-review');
     if (!(await isAvailableAsync())) return;
     saveGlobalSetting('review_last_ask_at', String(Date.now()));
     await requestReview();
