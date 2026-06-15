@@ -367,7 +367,7 @@ function HCList({ shipId, shipName, catId, catLabel, catColor, onBack }: {
   })();
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={160}>
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={160}>
       <CozyModal
         visible={!!deleteTarget}
         title="remove this?"
@@ -954,7 +954,7 @@ function ScenarioEditor({ initial, shipName, onSave, onDelete }: {
   const wordCount = body.trim() ? body.trim().split(/\s+/).filter(Boolean).length : 0;
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={[sc.editor, { backgroundColor: Colors.paper }]} keyboardVerticalOffset={120}>
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={[sc.editor, { backgroundColor: Colors.paper }]} keyboardVerticalOffset={120}>
       <CozyModal
         visible={confirmDelete}
         title="delete this scene?"
@@ -1480,7 +1480,7 @@ function FoCompose({ shipName, initialMessage, onQueue }: {
   const hasContent = options.some(o => o.trim().length > 0);
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={fo.compose} keyboardVerticalOffset={120}>
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={fo.compose} keyboardVerticalOffset={120}>
       <CozyModal
         visible={notifDenied}
         title="notifications off"

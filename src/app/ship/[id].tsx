@@ -325,7 +325,7 @@ function HCSheet({
       <TouchableWithoutFeedback onPress={onClose}>
         <View style={styles.sheetOverlay} />
       </TouchableWithoutFeedback>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.sheetWrap}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.sheetWrap}>
         <View style={styles.sheet}>
           <View style={styles.sheetHandle} />
           <View style={styles.sheetHeader}>
@@ -426,7 +426,7 @@ function ScenariosTab({ shipId, shipName }: { shipId: string; shipName: string }
 
   if (composing) {
     return (
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={[styles.scenarioCompose, { backgroundColor: Colors.paper }]} keyboardVerticalOffset={80}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={[styles.scenarioCompose, { backgroundColor: Colors.paper }]} keyboardVerticalOffset={80}>
         {/* Cozy Custom Editor Header */}
         <View
           style={{

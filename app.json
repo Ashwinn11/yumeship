@@ -51,6 +51,7 @@
     },
     "plugins": [
       "expo-router",
+      "./plugins/withPhoneOnly",
       [
         "expo-splash-screen",
         {

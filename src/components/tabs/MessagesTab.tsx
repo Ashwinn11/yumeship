@@ -87,11 +87,13 @@ function ThreadView({
   const inputRef = useRef<TextInput>(null);
 
   useEffect(() => {
-    const show = Keyboard.addListener('keyboardWillShow', () => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const show = Keyboard.addListener(showEvent, () => {
       setKeyboardOpen(true);
       setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 120);
     });
-    const hide = Keyboard.addListener('keyboardWillHide', () => setKeyboardOpen(false));
+    const hide = Keyboard.addListener(hideEvent, () => setKeyboardOpen(false));
     return () => { show.remove(); hide.remove(); };
   }, []);
 
@@ -104,9 +106,9 @@ function ThreadView({
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={{ flex: 1 }}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 80}
     >
       <CozyModal
         visible={!!msgToDelete}

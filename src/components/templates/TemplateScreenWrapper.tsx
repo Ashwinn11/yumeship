@@ -17,7 +17,7 @@ import Svg, { Circle, Path, Rect } from 'react-native-svg';
 import * as ImagePicker from 'expo-image-picker';
 import * as Sharing from 'expo-sharing';
 import { useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Image, ImageBackground, Modal, Pressable, ScrollView, StyleSheet, Text, TouchableWithoutFeedback, View } from 'react-native';
+import { ActivityIndicator, Image, ImageBackground, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TouchableWithoutFeedback, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { captureRef } from 'react-native-view-shot';
 
@@ -210,6 +210,10 @@ export function TemplateScreenWrapper({ templateKey, shipId, children }: Props) 
 
   return (
     <TemplateDataCtx.Provider value={ctx}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
       <View style={[s.screen, { paddingTop: insets.top }]}>
         {renderTemplateDecos()}
         <View style={[s.appBar, column]}>
@@ -394,6 +398,7 @@ export function TemplateScreenWrapper({ templateKey, shipId, children }: Props) 
           </View>
         </Modal>
       </View>
+      </KeyboardAvoidingView>
     </TemplateDataCtx.Provider>
   );
 }
