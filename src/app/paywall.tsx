@@ -9,6 +9,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PACKAGE_TYPE, PurchasesPackage } from 'react-native-purchases';
 
 import { Heart } from '@/components/deco/Heart';
@@ -115,6 +116,7 @@ function getWeeklyEquivalentOnly(pkg: PurchasesPackage): string | null {
 
 export default function PaywallScreen() {
   const { column } = useIPad();
+  const insets = useSafeAreaInsets();
   const [packages, setPackages] = useState<PurchasesPackage[]>([]);
   const [selected, setSelected] = useState<PurchasesPackage | null>(null);
   const [loading, setLoading] = useState(true);
@@ -194,7 +196,7 @@ export default function PaywallScreen() {
     <View style={styles.screen}>
       {/* Close button */}
       <Pressable
-        style={styles.closeBtn}
+        style={[styles.closeBtn, { top: insets.top + 10 }]}
         onPress={() => router.back()}
         id="paywall-close"
       >
@@ -203,7 +205,7 @@ export default function PaywallScreen() {
 
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={[styles.content, column]}
+        contentContainerStyle={[styles.content, column, { paddingTop: insets.top + 50 }]}
         showsVerticalScrollIndicator={false}
       >
         {/* ── Hero ─────────────────────────────────────────────────── */}

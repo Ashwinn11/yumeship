@@ -99,15 +99,15 @@ export type ColorToken = keyof typeof Colors;
 // ─── Typography ───────────────────────────────────────────────────────────────
 // Font family names match the asset filenames loaded via expo-font.
 export const FontFamily = {
-  display: Platform.select({ ios: 'InstrumentSerif-Italic', default: 'serif' }),
-  displayItalic: Platform.select({ ios: 'InstrumentSerif-Italic', default: 'serif' }),
-  ui: Platform.select({ ios: 'Fredoka-Regular', default: 'sans-serif' }),
-  uiMedium: Platform.select({ ios: 'Fredoka-Medium', default: 'sans-serif' }),
-  uiSemiBold: Platform.select({ ios: 'Fredoka-SemiBold', default: 'sans-serif' }),
-  ja: Platform.select({ ios: 'KleeOne-Regular', default: 'serif' }),
-  marker: Platform.select({ ios: 'Fredoka-Regular', default: 'sans-serif' }),
-  markerMedium: Platform.select({ ios: 'Fredoka-Medium', default: 'sans-serif' }),
-  markerBold: Platform.select({ ios: 'Fredoka-SemiBold', default: 'sans-serif' }),
+  display: 'InstrumentSerif-Italic',
+  displayItalic: 'InstrumentSerif-Italic',
+  ui: 'Fredoka-Regular',
+  uiMedium: 'Fredoka-Medium',
+  uiSemiBold: 'Fredoka-SemiBold',
+  ja: 'KleeOne-Regular',
+  marker: 'Fredoka-Regular',
+  markerMedium: 'Fredoka-Medium',
+  markerBold: 'Fredoka-SemiBold',
   // tokens.css imports Caveat wght@500;700 — base is Medium (500), not Regular (400)
   script: 'Caveat-Bold',
   scriptBold: 'Caveat-Bold',
