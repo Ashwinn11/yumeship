@@ -677,10 +677,13 @@ const s = StyleSheet.create({
   blankPillInput: {
     backgroundColor: '#fff',
     paddingHorizontal: 10,
+    paddingVertical: 0,
     fontFamily: FontFamily.ja,
     fontSize: sf(11),
     color: INK,
     fontWeight: '600',
+    textAlignVertical: 'center',
+    includeFontPadding: false,
   },
   fieldRow: {
     flexDirection: 'row',
@@ -711,6 +714,9 @@ const s = StyleSheet.create({
     color: INK,
     textAlign: 'center',
     fontWeight: '600',
+    paddingVertical: 0,
+    textAlignVertical: 'center',
+    includeFontPadding: false,
   },
   fieldValueText: {
     fontFamily: FontFamily.ja,
