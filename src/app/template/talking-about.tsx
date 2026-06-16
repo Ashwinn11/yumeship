@@ -3,7 +3,7 @@ import { View, Text, TextInput, StyleSheet, Pressable, Modal, TouchableWithoutFe
 import { useLocalSearchParams } from 'expo-router';
 import Svg, { Path } from 'react-native-svg';
 import { TemplateScreenWrapper } from '@/components/templates/TemplateScreenWrapper';
-import { PhotoBox, MarkerCard, INK } from '@/components/templates/primitives';
+import { PhotoBox, MarkerCard, INK, useSliderTrack } from '@/components/templates/primitives';
 import { Sparkle } from '@/components/deco';
 import { useTemplateCtx } from '@/store/templateData';
 import { Colors, FontFamily, Radius, Spacing ,sf } from '@/constants/theme';
@@ -31,29 +31,13 @@ function Checkbox({ on = false, onPress }: { on?: boolean; onPress?: () => void 
 
 // ─── DualSlider ────────────────────────────────────────────────
 function DualSlider({ label, value = 0.5, onValueChange }: { label: string; value?: number; onValueChange?: (v: number) => void }) {
-  const [trackW, setTrackW] = useState(0);
-  const trackRef = useRef<View>(null);
-  const clamp = (x: number) => Math.max(0, Math.min(1, x));
-  const responder = onValueChange ? {
-    onStartShouldSetResponderCapture: () => true,
-    onMoveShouldSetResponderCapture: () => true,
-    onResponderTerminationRequest: () => false,
-    onResponderGrant: (ev: any) => {
-      (trackRef.current as any)?.requestDisallowInterceptTouchEvent?.(true);
-      if (trackW > 0) onValueChange(clamp(ev.nativeEvent.locationX / trackW));
-    },
-    onResponderMove: (ev: any) => {
-      (trackRef.current as any)?.requestDisallowInterceptTouchEvent?.(true);
-      if (trackW > 0) onValueChange(clamp(ev.nativeEvent.locationX / trackW));
-    },
-  } : {};
+  const { trackRef, responder } = useSliderTrack(onValueChange);
   const pct = `${Math.round(value * 100)}%` as any;
   const rest = `${Math.round((1 - value) * 100)}%` as any;
   return (
     <View style={sl.wrap}>
       <Text style={sl.label}>{label}</Text>
       <View ref={trackRef} style={sl.track}
-        onLayout={(e) => setTrackW(e.nativeEvent.layout.width)}
         {...responder}>
         <View style={[sl.left, { width: pct }]} />
         <View style={[sl.right, { width: rest }]} />

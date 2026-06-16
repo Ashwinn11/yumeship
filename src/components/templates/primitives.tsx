@@ -13,6 +13,37 @@ export const INK = '#1f1219';
 export const FILL_GRAY = '#e9d8cb';
 export const FILL_GRAY_DARK = '#d0bba9';
 
+// ─── useSliderTrack ───────────────────────────────────────────
+// Shared touch handling for horizontal value sliders. Uses pageX
+// against the track's measured screen position rather than locationX,
+// because locationX is reported relative to whichever child view
+// (thumb/fill/divider) is under the finger, which makes the value jump.
+// Re-measures on each grant so it stays correct after the page scrolls.
+export function useSliderTrack(onChange?: (v: number) => void) {
+  const trackRef = useRef<View>(null);
+  const geo = useRef({ x: 0, w: 0 });
+  const clamp = (x: number) => Math.max(0, Math.min(1, x));
+  const responder = onChange ? {
+    onStartShouldSetResponderCapture: () => true,
+    onMoveShouldSetResponderCapture: () => true,
+    onResponderTerminationRequest: () => false,
+    onResponderGrant: (e: any) => {
+      (trackRef.current as any)?.requestDisallowInterceptTouchEvent?.(true);
+      const px = e.nativeEvent.pageX;
+      (trackRef.current as any)?.measureInWindow?.((x: number, _y: number, w: number) => {
+        geo.current = { x, w };
+        if (w > 0) onChange(clamp((px - x) / w));
+      });
+    },
+    onResponderMove: (e: any) => {
+      (trackRef.current as any)?.requestDisallowInterceptTouchEvent?.(true);
+      const { x, w } = geo.current;
+      if (w > 0) onChange(clamp((e.nativeEvent.pageX - x) / w));
+    },
+  } : {};
+  return { trackRef, responder };
+}
+
 // ─── MarkerCard ───────────────────────────────────────────────
 type MarkerCardProps = {
   children: React.ReactNode;
@@ -201,29 +232,13 @@ export function SharingRow({ choice, onChoiceChange }: { choice?: 'Yes' | 'No' |
 
 // ─── AttrSlider ───────────────────────────────────────────────
 export function AttrSlider({ label, value = 0, onValueChange }: { label: string; value?: number; onValueChange?: (v: number) => void }) {
-  const [trackW, setTrackW] = useState(0);
-  const trackRef = useRef<View>(null);
-  const clamp = (x: number) => Math.max(0, Math.min(1, x));
-  const responder = onValueChange ? {
-    onStartShouldSetResponderCapture: () => true,
-    onMoveShouldSetResponderCapture: () => true,
-    onResponderTerminationRequest: () => false,
-    onResponderGrant: (e: any) => {
-      (trackRef.current as any)?.requestDisallowInterceptTouchEvent?.(true);
-      if (trackW > 0) onValueChange(clamp(e.nativeEvent.locationX / trackW));
-    },
-    onResponderMove: (e: any) => {
-      (trackRef.current as any)?.requestDisallowInterceptTouchEvent?.(true);
-      if (trackW > 0) onValueChange(clamp(e.nativeEvent.locationX / trackW));
-    },
-  } : {};
+  const { trackRef, responder } = useSliderTrack(onValueChange);
   return (
     <View style={s.sliderCol}>
       <Text style={s.sliderLabel}>{label}</Text>
       <View
         ref={trackRef}
         style={s.sliderTrack}
-        onLayout={(e) => setTrackW(e.nativeEvent.layout.width)}
         {...responder}
       >
         <View style={[s.sliderFill, { width: `${value * 100}%` as any }]} />
@@ -396,22 +411,7 @@ export function WindowFrame({ title, children, style }: WindowFrameProps) {
 export function MusicPlayer({ track }: { track?: string }) {
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0.62);
-  const [barW, setBarW] = useState(0);
-  const barRef = useRef<View>(null);
-  const clamp = (x: number) => Math.max(0, Math.min(1, x));
-  const scrubProps = {
-    onStartShouldSetResponderCapture: () => true,
-    onMoveShouldSetResponderCapture: () => true,
-    onResponderTerminationRequest: () => false,
-    onResponderGrant: (e: any) => {
-      (barRef.current as any)?.requestDisallowInterceptTouchEvent?.(true);
-      if (barW > 0) setProgress(clamp(e.nativeEvent.locationX / barW));
-    },
-    onResponderMove: (e: any) => {
-      (barRef.current as any)?.requestDisallowInterceptTouchEvent?.(true);
-      if (barW > 0) setProgress(clamp(e.nativeEvent.locationX / barW));
-    },
-  };
+  const { trackRef: barRef, responder: scrubProps } = useSliderTrack(setProgress);
   return (
     <View style={s.musicPlayer}>
       {track && <Text style={s.musicTrack}>{track}</Text>}
@@ -419,7 +419,6 @@ export function MusicPlayer({ track }: { track?: string }) {
         <View
           ref={barRef}
           style={s.musicBar}
-          onLayout={(e) => setBarW(e.nativeEvent.layout.width)}
           {...scrubProps}
         >
           <View style={[s.musicFill, { width: `${progress * 100}%` as any }]} />
