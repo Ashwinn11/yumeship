@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -183,7 +184,7 @@ export default function PaywallScreen() {
           onClose: () => router.back(),
         });
       } else {
-        setAlertModal({ title: 'Nothing to restore', message: 'No purchases found for this Apple ID.' });
+        setAlertModal({ title: 'Nothing to restore', message: `No purchases found for this ${Platform.OS === 'android' ? 'Google account' : 'Apple ID'}.` });
       }
     } catch (e: any) {
       setAlertModal({ title: 'Error', message: e.message ?? 'Could not restore purchases.' });

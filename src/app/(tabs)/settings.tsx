@@ -1,7 +1,7 @@
 import * as FileSystem from 'expo-file-system/legacy';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Heart } from '@/components/deco/Heart';
@@ -181,7 +181,7 @@ export default function SettingsScreen() {
       if (active) {
         setAlertModal({ title: 'Restored! ✓', message: 'Your premium subscription has been restored.' });
       } else {
-        setAlertModal({ title: 'Nothing to restore', message: 'No active subscription found for this Apple ID.' });
+        setAlertModal({ title: 'Nothing to restore', message: `No active subscription found for this ${Platform.OS === 'android' ? 'Google account' : 'Apple ID'}.` });
       }
     } catch (e: any) {
       setAlertModal({ title: 'Error', message: e?.message ?? 'Could not restore purchases.' });
