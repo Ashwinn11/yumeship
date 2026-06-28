@@ -22,11 +22,11 @@ import { StorylineTab } from '@/components/tabs/StorylineTab';
 import { ThisOrThatTab } from '@/components/tabs/ThisOrThatTab';
 import { INK, SquareCheck } from '@/components/templates/primitives';
 import { CozyModal } from '@/components/ui/CozyModal';
-import { IconChevronLeft, IconPlus, IconTrashSolid } from '@/components/ui/Icon';
+import { IconChevronLeft, IconEdit, IconPlus, IconTrashSolid } from '@/components/ui/Icon';
 import { Mark } from '@/components/ui/Mark';
 import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing ,sf } from '@/constants/theme';
 import { addFoMessage, deleteFoMessage, toggleFoMessage, updateFoMessage, useFoMessages } from '@/store/foNotifications';
-import { addHeadcanon, clearCategoryHeadcanons, deleteHeadcanon, updateHeadcanon, useHeadcanonCounts, useHeadcanons } from '@/store/headcanons';
+import { addHeadcanon, clearCategoryHeadcanons, deleteHeadcanon, getHeadcanons, updateHeadcanon, useHeadcanonCounts, useHeadcanons } from '@/store/headcanons';
 import { requestPermission } from '@/store/notifications';
 import { useIPad } from '@/hooks/use-ipad';
 import { getGlobalSetting, saveGlobalSetting } from '@/store/onboarding';
@@ -246,61 +246,67 @@ export default function VaultScreen() {
 
 // ─── Headcanons feature ───────────────────────────────────────────────────────
 
-const HC_CATS: { id: string; ja: string; label: string; color: string }[] = [
+const HC_CAT_COLORS = [Colors.sakuraDeep, Colors.lavenderDeep, Colors.peachDeep, Colors.sageDeep, Colors.plum, Colors.ink2];
+const HC_CAT_JA = ['性', '癖', '好', '逢', '想', '記', '夢', '心'];
+
+const DEFAULT_HC_CATS: { id: string; ja: string; label: string; color: string }[] = [
   { id: 'personality', ja: '性', label: 'Personality', color: Colors.sakuraDeep },
   { id: 'habits', ja: '癖', label: 'Habits', color: Colors.lavenderDeep },
   { id: 'favorites', ja: '好', label: 'Favorites', color: Colors.peachDeep },
   { id: 'howmet', ja: '逢', label: 'How We Met', color: Colors.sageDeep },
 ];
 
-function HeadcanonsFeature({ shipId, shipName, setCustomBack }: { shipId: string; shipName: string; setCustomBack: (fn: (() => void) | null) => void }) {
-  const counts = useHeadcanonCounts(shipId);
-  const [openCat, setOpenCat] = useState<string | null>(null);
+function getHCCats(shipId: string) {
+  const raw = getGlobalSetting(`hc_cats_${shipId}`, '');
+  if (raw) { try { return JSON.parse(raw) as typeof DEFAULT_HC_CATS; } catch (_) {} }
+  return DEFAULT_HC_CATS;
+}
 
-  if (openCat) {
-    const cat = HC_CATS.find((c) => c.id === openCat)!;
-    return <HCList shipId={shipId} shipName={shipName} catId={openCat} catLabel={cat.label} catColor={cat.color} onBack={() => { setOpenCat(null); setCustomBack(null); }} />;
+function saveHCCats(shipId: string, cats: typeof DEFAULT_HC_CATS) {
+  saveGlobalSetting(`hc_cats_${shipId}`, JSON.stringify(cats));
+}
+
+// kept for CategoryBlock previews — fixed to current cats at render time
+const HC_CATS = DEFAULT_HC_CATS;
+
+function HeadcanonsFeature({ shipId, shipName: _shipName, setCustomBack: _setCustomBack }: { shipId: string; shipName: string; setCustomBack: (fn: (() => void) | null) => void }) {
+  const counts = useHeadcanonCounts(shipId);
+  const [editing, setEditing] = useState(false);
+  const [cats, setCats] = useState(() => getHCCats(shipId));
+
+  if (editing) {
+    return <HCEditor shipId={shipId} cats={cats} onDone={(updatedCats) => { setCats(updatedCats); setEditing(false); }} />;
   }
 
   return (
     <View style={hc.wrap}>
-      <TitleHeader title="HEADCANONS" subtitle="the things only I'd notice" />
+      <View style={hc.overviewHeader}>
+        <TitleHeader title="HEADCANONS" subtitle="the things only I'd notice" />
+        <Pressable style={hc.editBtn} onPress={() => setEditing(true)}>
+          <Text style={hc.editBtnText}>edit</Text>
+        </Pressable>
+      </View>
 
       <View style={hc.categories}>
-        {HC_CATS.map((c) => (
-          <CategoryBlock
-            key={c.id}
-            shipId={shipId}
-            cat={c}
-            count={counts[c.id] ?? 0}
-            onPress={() => {
-              setOpenCat(c.id);
-              setCustomBack(() => () => { setOpenCat(null); setCustomBack(null); });
-            }}
-          />
+        {cats.map((c) => (
+          <CategoryBlock key={c.id} shipId={shipId} cat={c} count={counts[c.id] ?? 0} />
         ))}
       </View>
     </View>
   );
 }
 
-function CategoryBlock({
-  shipId,
-  cat,
-  count,
-  onPress,
-}: {
+function CategoryBlock({ shipId, cat, count }: {
   shipId: string;
   cat: { id: string; ja: string; label: string; color: string };
   count: number;
-  onPress: () => void;
 }) {
   const hcs = useHeadcanons(shipId, cat.id);
   const previewHcs = hcs.slice(0, 2);
   const customLabel = getGlobalSetting(`hc_label_${shipId}_${cat.id}`, cat.label);
 
   return (
-    <Pressable style={hc.catCard} onPress={onPress}>
+    <View style={hc.catCard}>
       <View style={hc.catHeader}>
         <Text style={hc.catJa}>{cat.ja}</Text>
         <Text style={hc.catLabelText}>{customLabel.toUpperCase()}</Text>
@@ -310,190 +316,148 @@ function CategoryBlock({
       </View>
       <View style={hc.catContent}>
         {previewHcs.length === 0 ? (
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, opacity: 0.5, paddingVertical: 4 }}>
-            <Check on={false} size={11} />
-            <Text style={hc.emptyHint}>tap to add</Text>
-          </View>
+          <Text style={[hc.emptyHint, { opacity: 0.45, paddingVertical: 4 }]}>nothing yet</Text>
         ) : (
           previewHcs.map((h, j) => (
-            <View
-              key={h.id}
-              style={[
-                hc.catItemRow,
-                { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
-                j < previewHcs.length - 1 && hc.catItemRowBorder,
-              ]}
-            >
+            <View key={h.id} style={[hc.catItemRow, { flexDirection: 'row', alignItems: 'flex-start', gap: 8 }, j < previewHcs.length - 1 && hc.catItemRowBorder]}>
               <View style={{ marginTop: 4 }}>
                 <Heart size={10} color={INK} outline />
               </View>
-              <Text style={[hc.itemBody, { flex: 1 }]} numberOfLines={2}>
-                {h.body}
-              </Text>
+              <Text style={[hc.itemBody, { flex: 1 }]} numberOfLines={2}>{h.body}</Text>
             </View>
           ))
         )}
-        {hcs.length > 2 && (
-          <Text style={hc.moreText}>+ {hcs.length - 2} more...</Text>
-        )}
+        {hcs.length > 2 && <Text style={hc.moreText}>+ {hcs.length - 2} more...</Text>}
       </View>
-    </Pressable>
+    </View>
   );
 }
 
-function HCList({ shipId, shipName, catId, catLabel, catColor, onBack }: {
-  shipId: string; shipName: string; catId: string; catLabel: string; catColor: string; onBack: () => void;
-}) {
-  const hcs = useHeadcanons(shipId, catId);
-  const [draft, setDraft] = useState('');
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editDraft, setEditDraft] = useState('');
-  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
-  const labelKey = `hc_label_${shipId}_${catId}`;
-  const [editingTitle, setEditingTitle] = useState(false);
-  const [titleDraft, setTitleDraft] = useState(() => getGlobalSetting(labelKey, catLabel));
-  const [confirmClear, setConfirmClear] = useState(false);
+function HCEditor({ shipId, cats, onDone }: { shipId: string; cats: typeof DEFAULT_HC_CATS; onDone: (updatedCats: typeof DEFAULT_HC_CATS) => void }) {
+  const [sections, setSections] = useState(() =>
+    cats.map((cat) => ({
+      cat,
+      title: getGlobalSetting(`hc_label_${shipId}_${cat.id}`, cat.label),
+      items: getHeadcanons(shipId, cat.id).map((h) => ({ id: h.id, body: h.body })),
+      originalIds: getHeadcanons(shipId, cat.id).map((h) => h.id),
+    }))
+  );
 
-  function saveTitle() {
-    const trimmed = titleDraft.trim() || catLabel;
-    saveGlobalSetting(labelKey, trimmed);
-    setTitleDraft(trimmed);
-    setEditingTitle(false);
+  function update(catId: string, id: string, val: string) {
+    setSections((prev) => prev.map((s) =>
+      s.cat.id !== catId ? s : { ...s, items: s.items.map((h) => h.id === id ? { ...h, body: val } : h) }
+    ));
   }
 
-  function add() {
-    if (!draft.trim()) return;
-    addHeadcanon(shipId, catId, draft.trim());
-    setDraft('');
+  function remove(catId: string, id: string) {
+    setSections((prev) => prev.map((s) =>
+      s.cat.id !== catId ? s : { ...s, items: s.items.filter((h) => h.id !== id) }
+    ));
   }
 
-  const cat = HC_CATS.find((c) => c.id === catId)!;
+  function addItem(catId: string) {
+    setSections((prev) => prev.map((s) =>
+      s.cat.id !== catId ? s : { ...s, items: [...s.items, { id: `new-${Date.now()}`, body: '' }] }
+    ));
+  }
 
-  const placeholder = (() => {
-    switch (catId) {
-      case 'personality':
-        return `${shipName} personality...`;
-      case 'habits':
-        return `${shipName} habit...`;
-      case 'favorites':
-        return `${shipName} favorite...`;
-      case 'howmet':
-        return `how they met...`;
-      default:
-        return `${shipName} headcanon...`;
-    }
-  })();
+  function updateTitle(catId: string, val: string) {
+    setSections((prev) => prev.map((s) => s.cat.id !== catId ? s : { ...s, title: val }));
+  }
+
+  function addCategory() {
+    const idx = sections.length;
+    const newCat = {
+      id: `custom-${Date.now()}`,
+      ja: HC_CAT_JA[idx % HC_CAT_JA.length],
+      label: 'New Trait',
+      color: HC_CAT_COLORS[idx % HC_CAT_COLORS.length],
+    };
+    setSections((prev) => [...prev, { cat: newCat, title: newCat.label, items: [], originalIds: [] }]);
+  }
+
+  function removeCategory(catId: string) {
+    setSections((prev) => prev.filter((s) => s.cat.id !== catId));
+  }
+
+  function save() {
+    const updatedCats = sections.map(({ cat, title }) => ({ ...cat, label: title.trim() || cat.label }));
+    saveHCCats(shipId, updatedCats);
+
+    // delete headcanons for removed categories
+    const keptCatIds = new Set(updatedCats.map((c) => c.id));
+    cats.forEach((c) => { if (!keptCatIds.has(c.id)) clearCategoryHeadcanons(shipId, c.id); });
+
+    sections.forEach(({ cat, title, items, originalIds }) => {
+      saveGlobalSetting(`hc_label_${shipId}_${cat.id}`, title.trim() || cat.label);
+      const keptIds = new Set(items.map((h) => h.id));
+      originalIds.forEach((id) => { if (!keptIds.has(id)) deleteHeadcanon(id); });
+      items.forEach((h) => {
+        if (!h.body.trim()) return;
+        if (originalIds.includes(h.id)) { updateHeadcanon(h.id, h.body.trim()); }
+        else addHeadcanon(shipId, cat.id, h.body.trim());
+      });
+    });
+    onDone(updatedCats);
+  }
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={160}>
-      <CozyModal
-        visible={!!deleteTarget}
-        title="remove this?"
-        message={hcs.find((h) => h.id === deleteTarget)?.body.slice(0, 80)}
-        confirmText="Delete"
-        cancelText="keep it"
-        isDestructive
-        onConfirm={() => { if (deleteTarget) deleteHeadcanon(deleteTarget); setDeleteTarget(null); }}
-        onClose={() => setDeleteTarget(null)}
-      />
-      <CozyModal
-        visible={confirmClear}
-        title={`clear ${titleDraft}?`}
-        message="All headcanons in this category will be removed."
-        confirmText="Clear"
-        cancelText="keep them"
-        isDestructive
-        onConfirm={() => { clearCategoryHeadcanons(shipId, catId); setConfirmClear(false); }}
-        onClose={() => setConfirmClear(false)}
-      />
-      <View style={hc.listWrap}>
-        <View style={hc.catCardActive}>
-          <View style={hc.catHeader}>
-            <Text style={hc.catJa}>{cat.ja}</Text>
-            {editingTitle ? (
-              <TextInput
-                value={titleDraft}
-                onChangeText={setTitleDraft}
-                onBlur={saveTitle}
-                onSubmitEditing={saveTitle}
-                autoFocus
-                style={[hc.catLabelText, { flex: 1, borderBottomWidth: 1, borderBottomColor: catColor, paddingVertical: 2 }]}
-              />
-            ) : (
-              <Pressable style={{ flex: 1 }} onPress={() => setEditingTitle(true)}>
-                <Text style={hc.catLabelText}>{titleDraft.toUpperCase()}</Text>
-              </Pressable>
-            )}
-            <View style={hc.catCountBadge}>
-              <Text style={hc.catCountText}>{hcs.length}</Text>
-            </View>
-            <Pressable hitSlop={8} onPress={() => setConfirmClear(true)}>
-              <IconTrashSolid size={11} color={Colors.ink3} />
-            </Pressable>
-          </View>
-
-          <View style={hc.catContent}>
-            {hcs.length === 0 ? (
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, opacity: 0.5, paddingVertical: 4 }}>
-                <Check on={false} size={11} />
-                <Text style={hc.emptyHint}>tap to add</Text>
-              </View>
-            ) : (
-              hcs.map((h, j) => (
-                <View
-                  key={h.id}
-                  style={[hc.catItemRow, { flexDirection: 'row', alignItems: 'flex-start', gap: 8 }, j < hcs.length - 1 && hc.catItemRowBorder]}
-                >
-                  {editingId === h.id ? (
-                    <>
-                      <TextInput
-                        value={editDraft}
-                        onChangeText={setEditDraft}
-                        onSubmitEditing={() => { if (editDraft.trim()) { updateHeadcanon(h.id, editDraft.trim()); } setEditingId(null); }}
-                        autoFocus
-                        style={[hc.itemBody, { flex: 1, borderBottomWidth: 1, borderBottomColor: catColor, paddingVertical: 2 }]}
-                        multiline
-                      />
-                      <Pressable hitSlop={8} onPress={() => { setDeleteTarget(h.id); setEditingId(null); }}>
-                        <IconTrashSolid size={12} color={Colors.ink3} />
-                      </Pressable>
-                      <Pressable hitSlop={8} onPress={() => { if (editDraft.trim()) { updateHeadcanon(h.id, editDraft.trim()); } setEditingId(null); }}>
-                        <Text style={{ fontSize: sf(12), color: catColor, fontFamily: FontFamily.uiMedium }}>done</Text>
-                      </Pressable>
-                    </>
-                  ) : (
-                    <>
-                      <View style={{ marginTop: 4 }}>
-                        <Heart size={10} color={INK} outline />
-                      </View>
-                      <Pressable style={{ flex: 1 }} onPress={() => { setEditingId(h.id); setEditDraft(h.body); }}>
-                        <Text style={[hc.itemBody, { flex: 1 }]}>{h.body}</Text>
-                      </Pressable>
-                    </>
-                  )}
-                </View>
-              ))
-            )}
-          </View>
-        </View>
-      </View>
-
-      <View style={hc.addRow}>
-        <TextInput
-          value={draft}
-          onChangeText={setDraft}
-          placeholder={placeholder}
-          placeholderTextColor={Colors.ink3}
-          style={hc.input}
-          multiline
-        />
-        <Pressable style={[hc.addBtn, { backgroundColor: catColor }]} onPress={add}>
-          <IconPlus size={14} color={Colors.vellum} />
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }} keyboardVerticalOffset={120}>
+      <View style={hc.editorHeader}>
+        <Text style={hc.editorTitle}>headcanons</Text>
+        <Pressable style={hc.doneBtn} onPress={save}>
+          <Text style={hc.doneBtnText}>done</Text>
         </Pressable>
       </View>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={hc.editorList}>
+        {sections.map(({ cat, title, items }) => (
+          <View key={cat.id} style={hc.catCard}>
+            <View style={hc.catHeader}>
+              <Text style={hc.catJa}>{cat.ja}</Text>
+              <TextInput
+                value={title}
+                onChangeText={(v) => updateTitle(cat.id, v)}
+                style={[hc.catLabelText, { flex: 1 }]}
+                autoCapitalize="words"
+              />
+              <IconEdit size={11} color={Colors.ink3} />
+              <Pressable hitSlop={10} onPress={() => removeCategory(cat.id)}>
+                <IconTrashSolid size={11} color={Colors.ink3} />
+              </Pressable>
+            </View>
+            <View style={hc.catContent}>
+              {items.map((h, i) => (
+                <View key={h.id} style={[hc.editorRow, i < items.length - 1 && hc.catItemRowBorder]}>
+                  <Text style={hc.editorRowNum}>{String(i + 1).padStart(2, '0')}</Text>
+                  <TextInput
+                    value={h.body}
+                    onChangeText={(v) => update(cat.id, h.id, v)}
+                    placeholder="headcanon..."
+                    placeholderTextColor={Colors.ink3}
+                    style={hc.editorInput}
+                    multiline
+                  />
+                  <Pressable hitSlop={10} onPress={() => remove(cat.id, h.id)}>
+                    <IconTrashSolid size={13} color={Colors.ink3} />
+                  </Pressable>
+                </View>
+              ))}
+              <Pressable style={hc.editorAddRow} onPress={() => addItem(cat.id)}>
+                <IconPlus size={12} color={cat.color} />
+                <Text style={[hc.editorAddText, { color: cat.color }]}>add headcanon</Text>
+              </Pressable>
+            </View>
+          </View>
+        ))}
+        <Pressable style={hc.addCatRow} onPress={addCategory}>
+          <IconPlus size={13} color={Colors.sakuraDeep} />
+          <Text style={hc.addCatText}>add new trait</Text>
+        </Pressable>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
+
 
 // ─── Boundaries feature ───────────────────────────────────────────────────────
 
@@ -1778,7 +1742,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   subHeaderShipName: {
-    fontFamily: FontFamily.displayItalic,
+    fontFamily: FontFamily.uiMedium,
     fontSize: FontSize.h5,
     color: Colors.ink,
     maxWidth: 180,
@@ -1815,7 +1779,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    fontFamily: FontFamily.displayItalic,
+    fontFamily: FontFamily.uiMedium,
     fontSize: FontSize.h3,
     color: Colors.ink,
   },
@@ -1949,17 +1913,35 @@ const hc = StyleSheet.create({
   moreText: { fontFamily: FontFamily.uiMedium, fontSize: sf(11), color: Colors.sakuraDeep, marginTop: 4 },
   emptyHint: { fontFamily: FontFamily.ui, fontSize: sf(12), color: INK, fontStyle: 'italic', opacity: 0.45 },
 
-  listHeader: { paddingHorizontal: Spacing.s5, paddingVertical: Spacing.s3 },
-  back: { fontFamily: FontFamily.markerBold, fontSize: sf(11), color: Colors.ink2, letterSpacing: 0.8 },
-  listWrap: { paddingHorizontal: Spacing.s5, paddingBottom: Spacing.s2 },
-  itemBody: { fontFamily: FontFamily.ui, fontSize: sf(13), color: INK, lineHeight: 18 },
-  addRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, paddingHorizontal: Spacing.s5, paddingTop: Spacing.s2, paddingBottom: Spacing.s5 },
-  input: {
-    flex: 1, maxHeight: 80, paddingVertical: 9, paddingHorizontal: 14,
-    backgroundColor: Colors.vellum, borderWidth: 1, borderColor: Colors.line,
-    borderRadius: Radius.r3, fontFamily: FontFamily.ui, fontSize: sf(13), color: Colors.ink,
+  overviewHeader: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 4 },
+  editBtn: {
+    paddingHorizontal: 12, paddingVertical: 5, marginTop: 4,
+    borderRadius: Radius.pill, borderWidth: 1, borderColor: Colors.line, backgroundColor: Colors.vellum,
   },
-  addBtn: { width: 38, height: 38, borderRadius: Radius.pill, alignItems: 'center', justifyContent: 'center' },
+  editBtnText: { fontFamily: FontFamily.uiMedium, fontSize: sf(12), color: Colors.ink2 },
+  itemBody: { fontFamily: FontFamily.ui, fontSize: sf(13), color: INK, lineHeight: 18 },
+
+  editorHeader: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: Spacing.s5, paddingVertical: Spacing.s3,
+    borderBottomWidth: 1, borderBottomColor: Colors.line,
+  },
+  editorTitle: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(14), color: Colors.ink },
+  doneBtn: { paddingHorizontal: 16, paddingVertical: 6, borderRadius: Radius.pill, backgroundColor: Colors.sakuraDeep },
+  doneBtnText: { fontFamily: FontFamily.uiMedium, fontSize: sf(13), color: Colors.vellum },
+  editorList: { paddingHorizontal: Spacing.s5, paddingTop: Spacing.s3, paddingBottom: Spacing.s9, gap: 16 },
+  editorSection: { gap: 8 },
+  editorSectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 },
+  editorRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    paddingVertical: 6,
+  },
+  editorRowNum: { fontFamily: FontFamily.marker, fontSize: sf(9), color: Colors.ink3, width: 18 },
+  editorInput: { flex: 1, fontFamily: FontFamily.ui, fontSize: sf(13), color: Colors.ink, lineHeight: 18 },
+  editorAddRow: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 6 },
+  editorAddText: { fontFamily: FontFamily.uiMedium, fontSize: sf(13) },
+  addCatRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 14, marginTop: 4 },
+  addCatText: { fontFamily: FontFamily.uiMedium, fontSize: sf(13), color: Colors.sakuraDeep },
 });
 
 const sc = StyleSheet.create({

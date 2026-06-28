@@ -1,15 +1,15 @@
-import { useState } from 'react';
-import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
 import { TemplateScreenWrapper } from '@/components/templates/TemplateScreenWrapper';
 import {
-  MarkerCard, TitleHeader, Check, INK,
+  Check, INK,
+  TitleHeader
 } from '@/components/templates/primitives';
-import { CalloutBubble } from '@/components/ui/Callouts';
-import { FontFamily ,sf } from '@/constants/theme';
+import { Colors, FontFamily, Radius, sf } from '@/constants/theme';
 import { useTemplateCtx } from '@/store/templateData';
+import { useLocalSearchParams } from 'expo-router';
+import { useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-const PAIRS: [string, string][] = [
+export const DEFAULT_PAIRS: [string, string][] = [
   ['coffee', 'tea'],
   ['morning', 'night'],
   ['listener', 'talker'],
@@ -22,15 +22,22 @@ const PAIRS: [string, string][] = [
   ['roses', 'wildflowers'],
 ];
 
-const BLANK_CHOICES: ('left' | 'right' | null)[] = PAIRS.map(() => null);
-
-export function ThisOrThatContent({ editing = false }: { editing?: boolean }) {
+export function ThisOrThatContent({ editing = false, getPairs, onEdit }: { editing?: boolean; getPairs?: () => [string, string][]; onEdit?: () => void }) {
   const ctx = useTemplateCtx();
   const customBg = ctx.bgColor || ctx.bgImage;
 
+  const resolvePairs = (): [string, string][] => {
+    if (getPairs) return getPairs();
+    const raw = ctx.get('pairs');
+    if (raw) { try { return JSON.parse(raw); } catch (_) {} }
+    return DEFAULT_PAIRS;
+  };
+
+  const pairs = resolvePairs();
+
   const [vals, setVals] = useState<{ name: string; choices: ('left' | 'right' | null)[]; note: string }>(() => ({
     name: ctx.get('name'),
-    choices: JSON.parse(ctx.get('choices', 'null')) ?? BLANK_CHOICES,
+    choices: JSON.parse(ctx.get('choices', 'null')) ?? pairs.map(() => null),
     note: ctx.get('note'),
   }));
 
@@ -49,7 +56,14 @@ export function ThisOrThatContent({ editing = false }: { editing?: boolean }) {
 
   return (
     <View style={{ padding: 10, backgroundColor: customBg ? 'transparent' : undefined }}>
-      <TitleHeader title="THIS or THAT" subtitle="how do they choose?" />
+      <View style={s.titleRow}>
+        <TitleHeader title="THIS or THAT" subtitle="how do they choose?" />
+        {onEdit && (
+          <Pressable style={s.editBtn} onPress={onEdit}>
+            <Text style={s.editBtnText}>edit pairs</Text>
+          </Pressable>
+        )}
+      </View>
 
       <View style={s.nameRow}>
         <Text style={s.themLabel}>♡ THEM:</Text>
@@ -57,7 +71,7 @@ export function ThisOrThatContent({ editing = false }: { editing?: boolean }) {
       </View>
 
       <View style={s.grid}>
-        {PAIRS.map(([a, b], i) => (
+        {pairs.map(([a, b], i) => (
           <View key={i} style={s.pairCard}>
             <Text style={s.pairIndex}>0{i + 1}</Text>
             <View style={s.pairRow}>
@@ -74,21 +88,6 @@ export function ThisOrThatContent({ editing = false }: { editing?: boolean }) {
           </View>
         ))}
       </View>
-
-      <View style={s.noteWrap}>
-        <CalloutBubble tone="pink" raw>
-          <TextInput
-            value={note}
-            onChangeText={e ? setNote : undefined}
-            editable={e}
-            placeholder="she pretends to be the talker. she's not."
-            placeholderTextColor="#d77a8d88"
-            multiline
-            underlineColorAndroid="transparent"
-            style={s.noteText}
-          />
-        </CalloutBubble>
-      </View>
     </View>
   );
 }
@@ -103,6 +102,9 @@ export default function TemplateThisOrThat() {
 }
 
 const s = StyleSheet.create({
+  titleRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 4 },
+  editBtn: { paddingHorizontal: 12, paddingVertical: 5, marginTop: 4, borderRadius: Radius.pill, borderWidth: 1, borderColor: Colors.line, backgroundColor: Colors.vellum },
+  editBtnText: { fontFamily: FontFamily.uiMedium, fontSize: sf(12), color: Colors.ink2 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
   themLabel: { fontFamily: FontFamily.markerBold, fontWeight: '700', fontSize: sf(12), color: INK },
   themName: { fontFamily: FontFamily.ja, fontWeight: '600', fontSize: sf(12), color: INK },

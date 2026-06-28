@@ -1,6 +1,7 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { StickerWaxSeal } from '@/components/deco/Stickers';
 import { Colors, FontFamily, FontSize, Radius, Spacing ,sf } from '@/constants/theme';
 
 type Props = {
@@ -27,10 +28,8 @@ export class ErrorBoundary extends React.Component<Props, State> {
 
     return (
       <View style={styles.screen}>
+        <StickerWaxSeal size={88} />
         <Text style={styles.title}>something slipped</Text>
-        <Text style={styles.body}>
-          yumeship hit a soft snag. Your saved ships are still on this device.
-        </Text>
         <Pressable style={styles.button} onPress={() => this.setState({ error: null })}>
           <Text style={styles.buttonText}>try again</Text>
         </Pressable>
@@ -42,12 +41,15 @@ export class ErrorBoundary extends React.Component<Props, State> {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
+    alignItems: 'center',
     justifyContent: 'center',
+    gap: 12,
+    paddingTop: 40,
     padding: Spacing.s7,
     backgroundColor: Colors.paper,
   },
   title: {
-    fontFamily: FontFamily.displayItalic,
+    fontFamily: FontFamily.script,
     fontSize: sf(34),
     lineHeight: 36,
     color: Colors.ink,
