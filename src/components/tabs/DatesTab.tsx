@@ -69,13 +69,10 @@ export function DatesTab({ shipId, shipName }: { shipId: string; shipName?: stri
       </View>
 
       {dates.length === 0 ? (
-        <View style={[s.empty, { paddingVertical: 60, paddingHorizontal: 20, gap: 12 }]}>
+        <View style={[s.empty, { flex: 1, justifyContent: 'center', paddingTop: 40, paddingHorizontal: 20, gap: 12 }]}>
           <StickerTicket size={88} />
-          <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: sf(26), color: Colors.ink, textAlign: 'center', marginTop: 10 }}>
+          <Text style={{ fontFamily: FontFamily.script, fontSize: sf(26), color: Colors.ink, textAlign: 'center', marginTop: 10 }}>
             no dates saved
-          </Text>
-          <Text style={{ fontFamily: FontFamily.script, fontSize: sf(18), lineHeight: 22, color: Colors.ink2, textAlign: 'center', marginVertical: 8 }}>
-            anniversaries, character birthdays, release dates —{"\n"}anything worth remembering.
           </Text>
           <Pressable
             style={{
@@ -303,7 +300,7 @@ export function DatesTab({ shipId, shipName }: { shipId: string; shipName?: stri
 }
 
 const s = StyleSheet.create({
-  tab: { paddingHorizontal: Spacing.s5, paddingTop: Spacing.s2, paddingBottom: Spacing.s6, gap: 10 },
+  tab: { flex: 1, paddingHorizontal: Spacing.s5, paddingTop: Spacing.s2, paddingBottom: Spacing.s6, gap: 10 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
   label: { fontFamily: FontFamily.marker, fontSize: sf(9), color: Colors.ink3, letterSpacing: 1.4, textTransform: 'uppercase' },
   empty: { alignItems: 'center', gap: Spacing.s3, paddingVertical: Spacing.s7, paddingHorizontal: Spacing.s2 },

@@ -178,19 +178,16 @@ export default function VaultScreen() {
       )}
 
       {ships.length === 0 ? (
-        <View style={[styles.emptyShips, { paddingVertical: 60, paddingHorizontal: 20, gap: 12 }]}>
+        <View style={[styles.emptyShips, { flex: 1, justifyContent: 'center', paddingTop: 40, paddingHorizontal: 20, gap: 12 }]}>
           <StickerWaxSeal size={88} />
-          <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: sf(26), color: Colors.ink, textAlign: 'center', marginTop: 10 }}>
+          <Text style={{ fontFamily: FontFamily.script, fontSize: sf(26), color: Colors.ink, textAlign: 'center', marginTop: 10 }}>
             no ships yet
-          </Text>
-          <Text style={{ fontFamily: FontFamily.script, fontSize: sf(18), lineHeight: 22, color: Colors.ink2, textAlign: 'center', marginVertical: 8 }}>
-            pick a ship from the home tab{"\n"}to start filling the vault.
           </Text>
         </View>
       ) : activeFeature ? (
         <View style={styles.featureWrap}>
           {activeFeature === 'messages' ? renderFeature() : (
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={column}>
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[column, { flexGrow: 1 }]}>
               {renderFeature()}
             </ScrollView>
           )}
@@ -810,13 +807,10 @@ function ScenariosFeature({ shipId, shipName, setCustomBack }: { shipId: string;
       </View>
 
       {scenarios.length === 0 ? (
-        <View style={[sc.empty, { paddingVertical: 60, paddingHorizontal: 20, gap: 12 }]}>
+        <View style={[sc.empty, { flex: 1, justifyContent: 'center', paddingTop: 40, paddingHorizontal: 20, gap: 12 }]}>
           <StickerSakuraBranch size={88} />
-          <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: sf(26), color: Colors.ink, textAlign: 'center', marginTop: 10 }}>
+          <Text style={{ fontFamily: FontFamily.script, fontSize: sf(26), color: Colors.ink, textAlign: 'center', marginTop: 10 }}>
             no daydreams yet
-          </Text>
-          <Text style={{ fontFamily: FontFamily.script, fontSize: sf(18), lineHeight: 22, color: Colors.ink2, textAlign: 'center', marginVertical: 8 }}>
-            the rainy afternoons,{"\n"}the airport goodbyes —{"\n"}start somewhere.
           </Text>
           <Pressable
             style={{
@@ -1181,13 +1175,10 @@ function FoMessagesFeature({ shipId, shipName, setCustomBack }: { shipId: string
       </View>
 
       {messages.length === 0 ? (
-        <View style={[fo.emptyCard, { paddingVertical: 60, paddingHorizontal: 20, gap: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent', borderWidth: 0 }]}>
+        <View style={[fo.emptyCard, { flex: 1, justifyContent: 'center', paddingTop: 40, paddingHorizontal: 20, gap: 12, alignItems: 'center', backgroundColor: 'transparent', borderWidth: 0 }]}>
           <StickerEnvelope size={88} />
-          <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: sf(26), color: Colors.ink, textAlign: 'center', marginTop: 10 }}>
+          <Text style={{ fontFamily: FontFamily.script, fontSize: sf(26), color: Colors.ink, textAlign: 'center', marginTop: 10 }}>
             no notifications yet
-          </Text>
-          <Text style={{ fontFamily: FontFamily.script, fontSize: sf(18), lineHeight: 22, color: Colors.ink2, textAlign: 'center', marginVertical: 8 }}>
-            little notes from them —{"\n"}straight to your lock screen.
           </Text>
           <Pressable
             style={{
@@ -1972,7 +1963,7 @@ const hc = StyleSheet.create({
 });
 
 const sc = StyleSheet.create({
-  wrap: { paddingHorizontal: Spacing.s5, paddingTop: Spacing.s4, paddingBottom: Spacing.s6 },
+  wrap: { flex: 1, paddingHorizontal: Spacing.s5, paddingTop: Spacing.s4, paddingBottom: Spacing.s6 },
   topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: Spacing.s4 },
   eyebrow: { fontFamily: FontFamily.marker, fontSize: sf(9), color: Colors.ink3, letterSpacing: 1.4 },
   newBtn: {
@@ -2053,7 +2044,7 @@ const sc = StyleSheet.create({
 
 const fo = StyleSheet.create({
   // Hub
-  wrap: { paddingHorizontal: Spacing.s5, paddingTop: Spacing.s4, paddingBottom: Spacing.s6 },
+  wrap: { flex: 1, paddingHorizontal: Spacing.s5, paddingTop: Spacing.s4, paddingBottom: Spacing.s6 },
   hubHeader: {
     flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between',
     padding: Spacing.s4, backgroundColor: Colors.vellum,

@@ -239,13 +239,10 @@ function ThreadView({
           showsVerticalScrollIndicator={false}
         >
           {messages.length === 0 ? (
-            <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 60, paddingHorizontal: 20, gap: 12 }}>
+            <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 40, paddingHorizontal: 20, gap: 12 }}>
               <StickerEnvelope size={88} />
-              <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: sf(26), color: Colors.ink, textAlign: 'center', marginTop: 10 }}>
+              <Text style={{ fontFamily: FontFamily.script, fontSize: sf(26), color: Colors.ink, textAlign: 'center', marginTop: 10 }}>
                 your conversation starts here
-              </Text>
-              <Text style={{ fontFamily: FontFamily.script, fontSize: sf(18), lineHeight: 22, color: Colors.ink2, textAlign: 'center', marginVertical: 8 }}>
-                imagined texts —{"\n"}never sent, always read.
               </Text>
               <Pressable
                 style={{

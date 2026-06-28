@@ -85,9 +85,6 @@ export default function UpcomingScreen() {
         <View style={styles.emptyState}>
           <StickerEnvelope size={88} />
           <Text style={styles.emptyTitle}>nothing coming up</Text>
-          <Text style={styles.emptySub}>
-            add a ship and set an anniversary{"\n"}or birthday to see it here.
-          </Text>
           <Pressable
             style={styles.emptyBtn}
             onPress={() => router.push('/' as any)}
@@ -203,7 +200,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.s3,
-    paddingBottom: Spacing.s9,
+    paddingTop: 40,
   },
   emptyDeco: {
     flexDirection: 'row',
@@ -212,7 +209,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.s2,
   },
   emptyTitle: {
-    fontFamily: FontFamily.displayItalic,
+    fontFamily: FontFamily.script,
     fontSize: sf(26),
     color: Colors.ink,
     textAlign: 'center',
