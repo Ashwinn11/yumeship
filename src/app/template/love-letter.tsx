@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, TextInput, StyleSheet } from 'react-native';
+import { Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { TemplateScreenWrapper } from '@/components/templates/TemplateScreenWrapper';
 import {
@@ -25,8 +25,10 @@ export function LoveLetterContent({ editing = false, ship }: { editing?: boolean
     things: JSON.parse(ctx.get('things', 'null')) ?? [...BLANK_THINGS],
   }));
   const [decoItemsJson, setDecoItemsJson] = useState(() => ctx.get('decoItems', '[]'));
+  const [pickingTo, setPickingTo] = useState(false);
 
   const e = editing;
+  const polyRecipient = isPoly(ship) && getMembers(ship).some((m) => !m.isMe);
 
   const set = (key: 'dearName' | 'letterBody' | 'signName') => (v: string) => {
     setVals((p) => ({ ...p, [key]: v }));
@@ -52,22 +54,15 @@ export function LoveLetterContent({ editing = false, ship }: { editing?: boolean
 
       <TitleHeader title="A LOVE LETTER" subtitle="for the one i never got to send" />
 
-      {e && isPoly(ship) && getMembers(ship).some((m) => !m.isMe) && (
-        <View style={{ marginTop: 12 }}>
-          <MemberPicker
-            ship={ship}
-            label="who is this letter to?"
-            selectedId={getMembers(ship).find((m) => m.name === dearName)?.id}
-            onSelect={(_, name) => set('dearName')(name)}
-          />
-        </View>
-      )}
-
       <View style={s.letterBox}>
         <View style={s.dearLabel}>
           <View style={s.dearRow}>
             <Text style={s.dearText}>DEAR </Text>
-            {e ? (
+            {e && polyRecipient ? (
+              <Pressable onPress={() => setPickingTo(true)}>
+                <Text style={[s.dearName, s.dearNameTap]}>{dearName || 'tap to choose ▾'}</Text>
+              </Pressable>
+            ) : e ? (
               <TextInput
                 value={dearName}
                 onChangeText={set('dearName')}
@@ -174,6 +169,18 @@ export function LoveLetterContent({ editing = false, ship }: { editing?: boolean
         itemsJson={decoItemsJson}
         onItemsChange={(j) => { setDecoItemsJson(j); ctx.set('decoItems', j); }}
       />
+
+      <Modal visible={pickingTo} transparent animationType="fade" onRequestClose={() => setPickingTo(false)}>
+        <Pressable style={s.pickOverlay} onPress={() => setPickingTo(false)} />
+        <View style={s.pickSheet}>
+          <Text style={s.pickTitle}>who is this letter to?</Text>
+          <MemberPicker
+            ship={ship}
+            selectedId={getMembers(ship).find((m) => m.name === dearName)?.id}
+            onSelect={(_, name) => { set('dearName')(name); setPickingTo(false); }}
+          />
+        </View>
+      </Modal>
     </MarkerCard>
   );
 }
@@ -232,6 +239,16 @@ const s = StyleSheet.create({
     paddingHorizontal: 2,
     fontWeight: '600',
   },
+  dearNameTap: {
+    color: '#6e3a5a',
+    textDecorationLine: 'underline',
+  },
+  pickOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(43,26,38,0.4)' },
+  pickSheet: {
+    position: 'absolute', left: 24, right: 24, top: '38%',
+    backgroundColor: '#fff', borderWidth: 1.5, borderColor: INK, borderRadius: 16, padding: 16, gap: 10,
+  },
+  pickTitle: { fontFamily: FontFamily.markerBold, fontWeight: '700', fontSize: sf(13), color: '#6e3a5a', textAlign: 'center' },
   letterBody: {
     fontFamily: FontFamily.ja,
     fontSize: sf(12),

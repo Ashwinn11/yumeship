@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View, TextInput } from 'react-native';
+import { Keyboard, Pressable, ScrollView, StyleSheet, Text, View, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ShipCard } from '@/components/cards/ShipCard';
@@ -169,7 +169,7 @@ export default function HomeScreen() {
           </View>
         </Pressable>
       ) : (
-        <ScrollView contentContainerStyle={[styles.grid, column]} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={[styles.grid, column]} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" onScrollBeginDrag={() => Keyboard.dismiss()}>
           <Pressable
             style={styles.gridPressable}
             onPress={() => {

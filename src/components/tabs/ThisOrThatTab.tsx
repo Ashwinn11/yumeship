@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useIPad } from '@/hooks/use-ipad';
 
 import { ThisOrThatContent, DEFAULT_PAIRS } from '@/app/template/this-or-that';
@@ -58,7 +58,7 @@ export function ThisOrThatTab({ shipId }: { shipId: string }) {
 
   return (
     <TemplateDataCtx.Provider value={ctx}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[s.tab, column]}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[s.tab, column]} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" onScrollBeginDrag={() => Keyboard.dismiss()}>
         <ThisOrThatContent editing getPairs={getPairs} onEdit={() => setEditing(true)} ship={ship} />
       </ScrollView>
     </TemplateDataCtx.Provider>

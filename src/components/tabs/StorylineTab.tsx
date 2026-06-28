@@ -1,5 +1,5 @@
 import { useMemo, useRef } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Keyboard, StyleSheet, TouchableWithoutFeedback, View } from 'react-native';
 import { useIPad } from '@/hooks/use-ipad';
 
 import { StorylineContent } from '@/app/template/storyline';
@@ -35,9 +35,11 @@ export function StorylineTab({ shipId, shipName }: { shipId: string; shipName: s
 
   return (
     <TemplateDataCtx.Provider value={ctx}>
-      <View style={[s.tab, column]}>
-        <StorylineContent editing />
-      </View>
+      <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()} accessible={false}>
+        <View style={[s.tab, column]}>
+          <StorylineContent editing />
+        </View>
+      </TouchableWithoutFeedback>
     </TemplateDataCtx.Provider>
   );
 }

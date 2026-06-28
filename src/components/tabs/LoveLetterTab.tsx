@@ -1,5 +1,5 @@
 import { useMemo, useRef } from 'react';
-import { ScrollView, StyleSheet } from 'react-native';
+import { Keyboard, ScrollView, StyleSheet } from 'react-native';
 import { useIPad } from '@/hooks/use-ipad';
 
 import { LoveLetterContent } from '@/app/template/love-letter';
@@ -35,7 +35,7 @@ export function LoveLetterTab({ shipId }: { shipId: string }) {
 
   return (
     <TemplateDataCtx.Provider value={ctx}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[s.tab, column]}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[s.tab, column]} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" onScrollBeginDrag={() => Keyboard.dismiss()}>
         <LoveLetterContent editing ship={ship} />
       </ScrollView>
     </TemplateDataCtx.Provider>

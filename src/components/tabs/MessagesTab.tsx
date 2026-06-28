@@ -241,6 +241,9 @@ function ThreadView({
           style={s.bubbleScroll}
           contentContainerStyle={[s.bubbleContent, messages.length === 0 && { flexGrow: 1, justifyContent: 'center' }]}
           showsVerticalScrollIndicator={false}
+          keyboardDismissMode="on-drag"
+          keyboardShouldPersistTaps="handled"
+          onScrollBeginDrag={() => Keyboard.dismiss()}
         >
           {messages.length === 0 ? (
             <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 40, paddingHorizontal: 20, gap: 12 }}>

@@ -1,7 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useRef, useState } from 'react';
 import {
-  KeyboardAvoidingView, Modal, Platform, Pressable,
+  Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable,
   ScrollView, StyleSheet, Text, TextInput, TouchableWithoutFeedback, View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -114,7 +114,7 @@ export default function ShipDetail() {
         </Pressable>
       </View>
 
-      <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" onScrollBeginDrag={() => Keyboard.dismiss()}>
         <View style={column}>
         <GradientCover gradStart={ship.gradStart} gradEnd={ship.gradEnd} style={styles.hero}>
           <Text style={styles.heroInitial}>{ship.name.charAt(0).toUpperCase() || '♡'}</Text>

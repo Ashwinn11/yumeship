@@ -3,7 +3,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Bullets, Sparkle, StickerWaxSeal } from '@/components/deco';
@@ -40,7 +40,7 @@ export default function OnbFO() {
   const [paletteId, setPaletteId] = useState('sakura');
   const [coverUri, setCoverUri] = useState('');
   const [relType, setRelType] = useState<'romantic' | 'platonic' | 'familial'>('romantic');
-  const [shareType, setShareType] = useState<'ng' | 'welcome' | 'mirror'>('mirror');
+
   const [kind, setKind] = useState<'single' | 'poly'>('single');
 
   const handleFoName = (v: string) => { setFoName(v); setOnbField('foName', v); };
@@ -70,7 +70,7 @@ export default function OnbFO() {
 
   function goToRules() {
     setOnbField('relType', relType);
-    setOnbField('shareType', shareType);
+
     setOnbField('kind', kind);
     router.push({ pathname: '/onboarding/rules', params: isNew ? { mode: 'new' } : {} });
   }
@@ -96,7 +96,7 @@ export default function OnbFO() {
         </View>
       )}
 
-      <ScrollView style={styles.scroll} contentContainerStyle={[styles.scrollContent, scrollFill]} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.scroll} contentContainerStyle={[styles.scrollContent, scrollFill]} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" onScrollBeginDrag={() => Keyboard.dismiss()}>
         <View style={[column, { position: 'relative' }]}>
           <View style={styles.decoTR} pointerEvents="none">
             <StickerWaxSeal size={60} />
@@ -154,7 +154,7 @@ export default function OnbFO() {
                 onChangeText={handleShipName}
                 placeholder="e.g. kurotsuki"
                 placeholderTextColor={Colors.ink3}
-                style={{ flex: 1, paddingVertical: 0, fontFamily: FontFamily.ui, fontSize: sf(18), color: Colors.ink, height: 28 }}
+                style={{ flex: 1, paddingVertical: 4, fontFamily: FontFamily.ui, fontSize: sf(18), color: Colors.ink, lineHeight: sf(24) }}
               />
               <Bullets.Heart size={12} color={Colors.sakuraDeep} />
             </View>
@@ -183,7 +183,7 @@ export default function OnbFO() {
                   <Text style={{ color: '#fff', fontFamily: FontFamily.marker, fontSize: sf(9), letterSpacing: 0.6 }}>poly</Text>
                 </View>
               </LinearGradient>
-              <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: sf(16), color: Colors.ink, marginTop: 8 }}>
+              <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: sf(16), color: Colors.ink, marginTop: 8, lineHeight: sf(22) }}>
                 {shipName || 'your polyship'}
               </Text>
             </View>
@@ -227,7 +227,7 @@ export default function OnbFO() {
                   onChangeText={handleFoName}
                   placeholder="e.g. Kuroo Tetsurou"
                   placeholderTextColor={Colors.ink3}
-                  style={{ borderBottomWidth: 1, borderBottomColor: Colors.line, paddingVertical: 2, fontFamily: FontFamily.ui, fontSize: sf(15), color: Colors.ink }}
+                  style={{ borderBottomWidth: 1, borderBottomColor: Colors.line, paddingVertical: 4, fontFamily: FontFamily.ui, fontSize: sf(15), color: Colors.ink, lineHeight: sf(21) }}
                 />
               </View>
 
@@ -238,7 +238,7 @@ export default function OnbFO() {
                   onChangeText={handleFandom}
                   placeholder="e.g. Haikyuu!! · canon"
                   placeholderTextColor={Colors.ink3}
-                  style={{ borderBottomWidth: 1, borderBottomColor: Colors.line, paddingVertical: 2, fontFamily: FontFamily.ui, fontSize: sf(12), color: Colors.ink2 }}
+                  style={{ borderBottomWidth: 1, borderBottomColor: Colors.line, paddingVertical: 4, fontFamily: FontFamily.ui, fontSize: sf(12), color: Colors.ink2, lineHeight: sf(18) }}
                 />
               </View>
             </View>
@@ -279,44 +279,7 @@ export default function OnbFO() {
             </View>
           </View>
 
-          <View style={styles.cardDivider} />
 
-          {/* SHARING NG / welcome / mirror */}
-          <View>
-            <Text style={styles.fieldLabel}>DOUBLES / SHARING</Text>
-            <View style={{ flexDirection: 'row', gap: 6, marginTop: 6 }}>
-              {(['ng', 'welcome', 'mirror'] as const).map((s) => {
-                const isActive = shareType === s;
-                const label = s === 'ng' ? 'sharing NG' : s;
-                let activeColor: string = Colors.sakuraDeep;
-                let activeBg: string = Colors.sakuraSoft;
-                if (s === 'ng') { activeColor = Colors.ember; activeBg = '#fde0d4'; }
-                if (s === 'welcome') { activeColor = Colors.sageDeep; activeBg = Colors.sageSoft; }
-                if (s === 'mirror') { activeColor = Colors.lavenderDeep; activeBg = Colors.lavenderSoft; }
-
-                return (
-                  <Pressable
-                    key={s}
-                    onPress={() => setShareType(s)}
-                    style={{
-                      paddingVertical: 5,
-                      paddingHorizontal: 12,
-                      borderRadius: 14,
-                      borderWidth: 1,
-                      borderColor: isActive ? activeColor : Colors.line,
-                      backgroundColor: isActive ? activeBg : Colors.paperDeep,
-                    }}
-                  >
-                    <Text style={{ fontSize: sf(11), fontFamily: FontFamily.uiMedium, color: isActive ? activeColor : Colors.ink2 }}>
-                      {label}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-          </View>
-
-          <View style={styles.cardDivider} />
           </>)}
 
           {/* COLOR field */}

@@ -92,8 +92,12 @@ export function ShipCard({
         </View>
         <View style={styles.metaRow}>
           <Text style={styles.src} numberOfLines={1}>
-            <Text style={{ color: typeColor, fontFamily: FontFamily.uiMedium }}>{type}</Text>
-            {src ? ` · ${src}` : ''}
+            {polycule ? (src || '') : (
+              <>
+                <Text style={{ color: typeColor, fontFamily: FontFamily.uiMedium }}>{type}</Text>
+                {src ? ` · ${src}` : ''}
+              </>
+            )}
           </Text>
           <Text style={styles.days}>{days}</Text>
         </View>

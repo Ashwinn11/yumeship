@@ -1,7 +1,7 @@
 import { useNavigation } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
-  Image, KeyboardAvoidingView, Platform, Pressable,
+  Image, Keyboard, KeyboardAvoidingView, Platform, Pressable,
   ScrollView, StyleSheet, Text, TextInput, View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -20,6 +20,8 @@ import { LoveLetterTab } from '@/components/tabs/LoveLetterTab';
 import { MessagesTab } from '@/components/tabs/MessagesTab';
 import { StorylineTab } from '@/components/tabs/StorylineTab';
 import { ThisOrThatTab } from '@/components/tabs/ThisOrThatTab';
+import { PolycaleBingoTab } from '@/components/tabs/PolycaleBingoTab';
+import { IncorrectQuotesTab } from '@/components/tabs/IncorrectQuotesTab';
 import { INK, SquareCheck } from '@/components/templates/primitives';
 import { CozyModal } from '@/components/ui/CozyModal';
 import { IconChevronLeft, IconEdit, IconPlus, IconTrashSolid } from '@/components/ui/Icon';
@@ -56,10 +58,12 @@ type Feature =
   | 'dates'
   | 'fo-messages'
   | 'this-or-that'
-  | 'love-letter';
+  | 'love-letter'
+  | 'polycule-bingo'
+  | 'incorrect-quotes';
 
-const FEATURES: { id: Feature; ja: string; label: string; desc: string; color: string; bg: string }[] = [
-  { id: 'headcanons', ja: '想', label: 'Headcanons', desc: 'personality · habits · favorites', color: Colors.sakuraDeep, bg: Colors.sakuraSoft },
+const FEATURES: { id: Feature; ja: string; label: string; desc: string; color: string; bg: string; availableFor?: 'single' | 'poly' }[] = [
+  { id: 'headcanons', ja: '想', label: 'Headcanons', desc: 'personality · habits · favorites', color: Colors.sakuraDeep, bg: Colors.sakuraSoft, availableFor: 'single' },
   { id: 'scenarios', ja: '物', label: 'Scenarios', desc: 'write your stories', color: Colors.lavenderDeep, bg: Colors.lavenderSoft },
   { id: 'messages', ja: '話', label: 'Messages', desc: 'conversations & threads', color: Colors.peachDeep, bg: Colors.peachSoft },
   { id: 'albums', ja: '写', label: 'Albums', desc: 'photo collections', color: Colors.sageDeep, bg: Colors.sageSoft },
@@ -67,8 +71,10 @@ const FEATURES: { id: Feature; ja: string; label: string; desc: string; color: s
   { id: 'storyline', ja: '時', label: 'Storyline', desc: 'timeline of moments', color: Colors.ink2, bg: Colors.paperDeep },
   { id: 'dates', ja: '日', label: 'Dates', desc: 'anniversaries & events', color: Colors.peachDeep, bg: Colors.peachSoft },
   { id: 'fo-messages', ja: '通', label: 'F/O Notifications', desc: 'notes & nudges from them', color: Colors.sakuraInk, bg: Colors.sakuraSoft },
-  { id: 'this-or-that', ja: '択', label: 'This or That', desc: 'how do they choose?', color: Colors.lavenderDeep, bg: Colors.lavenderSoft },
+  { id: 'this-or-that', ja: '択', label: 'This or That', desc: 'how do they choose?', color: Colors.lavenderDeep, bg: Colors.lavenderSoft, availableFor: 'single' },
   { id: 'love-letter', ja: '文', label: 'Love Letters', desc: 'letters to & from them', color: Colors.sakuraDeep, bg: Colors.sakuraSoft },
+  { id: 'polycule-bingo', ja: '札', label: 'Polycule Bingo', desc: 'mark it when it happens ♡', color: Colors.plum, bg: Colors.lavenderSoft, availableFor: 'poly' },
+  { id: 'incorrect-quotes', ja: '劇', label: 'Incorrect Quotes', desc: 'cast your polycule in a bit', color: Colors.lavenderDeep, bg: Colors.lavenderSoft, availableFor: 'poly' },
 ];
 
 export default function VaultScreen() {
@@ -113,6 +119,8 @@ export default function VaultScreen() {
       case 'fo-messages': return <FoMessagesFeature shipId={ship.id} shipName={ship.name} setCustomBack={setCustomBack} />;
       case 'this-or-that': return <ThisOrThatTab shipId={ship.id} />;
       case 'love-letter': return <LoveLetterTab shipId={ship.id} />;
+      case 'polycule-bingo': return <PolycaleBingoTab shipId={ship.id} />;
+      case 'incorrect-quotes': return <IncorrectQuotesTab shipId={ship.id} />;
     }
   }
 
@@ -188,14 +196,14 @@ export default function VaultScreen() {
       ) : activeFeature ? (
         <View style={styles.featureWrap}>
           {activeFeature === 'messages' ? renderFeature() : (
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[column, { flexGrow: 1 }]}>
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[column, { flexGrow: 1 }]} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" onScrollBeginDrag={() => Keyboard.dismiss()}>
               {renderFeature()}
             </ScrollView>
           )}
         </View>
       ) : (
         <ScrollView contentContainerStyle={[styles.grid, column]} showsVerticalScrollIndicator={false}>
-          {FEATURES.map((f) => {
+          {FEATURES.filter((f) => !f.availableFor || f.availableFor === (isPoly(ship) ? 'poly' : 'single')).map((f) => {
             const locked = !premium && PREMIUM_FEATURES.includes(f.id);
             return (
               <Pressable
@@ -412,7 +420,7 @@ function HCEditor({ shipId, cats, onDone }: { shipId: string; cats: typeof DEFAU
           <Text style={hc.doneBtnText}>done</Text>
         </Pressable>
       </View>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={hc.editorList}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={hc.editorList} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" onScrollBeginDrag={() => Keyboard.dismiss()}>
         {sections.map(({ cat, title, items }) => (
           <View key={cat.id} style={hc.catCard}>
             <View style={hc.catHeader}>
@@ -867,24 +875,6 @@ function ScenariosFeature({ shipId, shipName, setCustomBack }: { shipId: string;
                 </View>
 
                 <View style={{ flex: 1, width: '100%', paddingVertical: 4 }}>
-                  {/* metadata row with Sakura flower bullet */}
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Text style={{ fontFamily: FontFamily.marker, fontSize: sf(9), color: Colors.sakuraDeep, fontWeight: '600', letterSpacing: 1 }}>
-                        {scDate}
-                      </Text>
-                      <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: Colors.lineStrong }} />
-                      <Text style={{ fontFamily: FontFamily.marker, fontSize: sf(9), color: Colors.ink3, letterSpacing: 0.8, textTransform: 'uppercase' }}>
-                        RAINY DAY
-                      </Text>
-                      <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: Colors.lineStrong }} />
-                      <Text style={{ fontFamily: FontFamily.marker, fontSize: sf(9), color: Colors.ink3, letterSpacing: 0.8 }}>
-                        {readTime}
-                      </Text>
-                    </View>
-                    <Bullets.Sakura size={11} color={Colors.sakuraDeep} />
-                  </View>
-
                   {/* title row */}
                   <View style={sc.cardTitleRow}>
                     <Text style={[sc.cardTitle, { fontFamily: FontFamily.displayItalic, fontSize: sf(20), textTransform: 'none', fontWeight: 'normal', color: Colors.ink }]} numberOfLines={1}>
@@ -904,15 +894,10 @@ function ScenariosFeature({ shipId, shipName, setCustomBack }: { shipId: string;
                     <Text style={[sc.cardEmpty, { fontFamily: FontFamily.script, fontSize: sf(16), color: Colors.ink3, marginTop: 4 }]}>tap to write...</Text>
                   )}
 
-                  {/* chip tags */}
-                  <View style={{ flexDirection: 'row', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
-                    <View style={{ paddingHorizontal: 8, paddingVertical: 3, backgroundColor: Colors.sakuraSoft, borderColor: Colors.sakura, borderWidth: 1, borderRadius: 999 }}>
-                      <Text style={{ fontSize: sf(10), fontFamily: FontFamily.ui, color: Colors.sakuraInk }}>♡ comfort</Text>
-                    </View>
-                    <View style={{ paddingHorizontal: 8, paddingVertical: 3, backgroundColor: Colors.lavenderSoft, borderColor: Colors.lavender, borderWidth: 1, borderRadius: 999 }}>
-                      <Text style={{ fontSize: sf(10), fontFamily: FontFamily.ui, color: Colors.lavenderDeep }}>✿ slowburn</Text>
-                    </View>
-                  </View>
+                  {/* date at bottom right */}
+                  <Text style={{ fontFamily: FontFamily.marker, fontSize: sf(9), color: Colors.sakuraDeep, fontWeight: '600', letterSpacing: 1, textAlign: 'right', marginTop: 10 }}>
+                    {scDate}
+                  </Text>
                 </View>
               </Pressable>
             );
@@ -1513,7 +1498,7 @@ function FoCompose({ shipName, ship, initialMessage, onQueue }: {
         onConfirm={() => { setNotifDenied(false); if (pendingQueue) { proceedWithQueue(pendingQueue); setPendingQueue(null); } }}
         onClose={() => { setNotifDenied(false); setPendingQueue(null); }}
       />
-      <ScrollView contentContainerStyle={fo.composeContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={fo.composeContent} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" onScrollBeginDrag={() => Keyboard.dismiss()} showsVerticalScrollIndicator={false}>
         <Text style={fo.sectionLabel}>START WITH</Text>
         <View style={fo.starterRow}>
           {STARTERS.map((s) => (

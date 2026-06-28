@@ -286,9 +286,8 @@ export default function PaywallScreen() {
         <View style={styles.featCard}>
           {[
             { icon: '♡', label: 'Unlimited ships — all your F/Os' },
-            { icon: '♡', label: 'Full vault for every ship' },
+            { icon: '♡', label: 'Polyships — love your whole polycule' },
             { icon: '♡', label: 'Scenarios, Albums & Love Letters' },
-            { icon: '♡', label: 'F/O notifications & date reminders' },
             { icon: '♡', label: 'Export & share templates to camera roll' },
           ].map((f, i, arr) => (
             <View key={f.label} style={[styles.featRow, i < arr.length - 1 && styles.featRowBorder]}>
