@@ -41,7 +41,7 @@ function CustomTabBar({ state, navigation, descriptors }: TabBarProps) {
 
   function handlePlus() {
     if (!premium && ships.length >= 1) {
-      router.push('/paywall');
+      router.push({ pathname: '/paywall', params: { reason: 'add-ship' } });
       return;
     }
     resetOnb();

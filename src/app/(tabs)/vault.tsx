@@ -32,6 +32,16 @@ import { useIPad } from '@/hooks/use-ipad';
 import { getGlobalSetting, saveGlobalSetting } from '@/store/onboarding';
 import { addScenario, deleteScenario, updateScenario, useScenarios } from '@/store/scenarios';
 import { useShips } from '@/store/ships';
+import { usePremium } from '@/store/premium';
+import { router } from 'expo-router';
+
+const PREMIUM_FEATURES: Feature[] = ['scenarios', 'albums', 'storyline', 'love-letter'];
+const FEATURE_REASON: Partial<Record<Feature, string>> = {
+  albums: 'albums',
+  scenarios: 'scenarios',
+  storyline: 'storyline',
+  'love-letter': 'love-letter',
+};
 import { loadTemplateData, saveTemplateData } from '@/store/templateData';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -65,6 +75,7 @@ export default function VaultScreen() {
   const { column } = useIPad();
   const navigation = useNavigation();
   const ships = useShips();
+  const premium = usePremium();
   const [selectedShipIdx, setSelectedShipIdx] = useState(0);
   const [activeFeature, setActiveFeature] = useState<Feature | null>(null);
   const [showShipPicker, setShowShipPicker] = useState(false);
@@ -186,17 +197,27 @@ export default function VaultScreen() {
         </View>
       ) : (
         <ScrollView contentContainerStyle={[styles.grid, column]} showsVerticalScrollIndicator={false}>
-          {FEATURES.map((f) => (
-            <Pressable
-              key={f.id}
-              style={[styles.featureCard, { backgroundColor: f.bg }]}
-              onPress={() => setActiveFeature(f.id)}
-            >
-              <Text style={[styles.featureJa, { color: f.color }]}>{f.ja}</Text>
-              <Text style={[styles.featureLabel, { color: f.color }]}>{f.label}</Text>
-              <Text style={styles.featureDesc}>{f.desc}</Text>
-            </Pressable>
-          ))}
+          {FEATURES.map((f) => {
+            const locked = !premium && PREMIUM_FEATURES.includes(f.id);
+            return (
+              <Pressable
+                key={f.id}
+                style={[styles.featureCard, { backgroundColor: f.bg }, locked && { opacity: 0.5 }]}
+                onPress={() => {
+                  if (locked) {
+                    router.push({ pathname: '/paywall', params: { reason: FEATURE_REASON[f.id] } });
+                    return;
+                  }
+                  setActiveFeature(f.id);
+                }}
+              >
+                <Text style={[styles.featureJa, { color: f.color }]}>{f.ja}</Text>
+                <Text style={[styles.featureLabel, { color: f.color }]}>{f.label}</Text>
+                <Text style={styles.featureDesc}>{f.desc}</Text>
+                {locked && <Text style={{ position: 'absolute', top: 6, right: 8, fontSize: 10 }}>🔒</Text>}
+              </Pressable>
+            );
+          })}
         </ScrollView>
       )}
 

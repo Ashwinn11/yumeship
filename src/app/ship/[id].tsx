@@ -30,6 +30,15 @@ import {
 import { addScenario, deleteScenario, useScenarios } from '@/store/scenarios';
 import { getGlobalSetting, saveGlobalSetting } from '@/store/onboarding';
 import { deleteShip, daysTogetherLabel, updateShip, useShip } from '@/store/ships';
+import { usePremium } from '@/store/premium';
+
+const PREMIUM_TABS: DetailTab[] = ['albums', 'scenarios', 'storyline', 'love-letter'];
+const TAB_REASON: Partial<Record<DetailTab, string>> = {
+  albums: 'albums',
+  scenarios: 'scenarios',
+  storyline: 'storyline',
+  'love-letter': 'love-letter',
+};
 
 const REL_CHIP_COLOR: Record<string, string> = {
   romantic: Colors.sakuraDeep,
@@ -63,7 +72,21 @@ export default function ShipDetail() {
   const { column } = useIPad();
   const { id } = useLocalSearchParams<{ id: string }>();
   const ship = useShip(id ?? '');
+  const premium = usePremium();
   const [activeTab, setActiveTab] = useState<DetailTab>('profile');
+
+  console.log('[ShipDetail] mounted/updated', { premium, activeTab, id, ship: ship?.name });
+
+  function handleTabPress(tab: DetailTab) {
+    console.log('[handleTabPress]', { tab, premium, isPremiumTab: PREMIUM_TABS.includes(tab), PREMIUM_TABS });
+    if (!premium && PREMIUM_TABS.includes(tab)) {
+      console.log('[handleTabPress] BLOCKING - pushing to paywall', { reason: TAB_REASON[tab] });
+      router.push({ pathname: '/paywall', params: { reason: TAB_REASON[tab] } });
+      return;
+    }
+    console.log('[handleTabPress] ALLOWING - setting active tab to', tab);
+    setActiveTab(tab);
+  }
 
   if (!ship) {
     return (
@@ -139,16 +162,16 @@ export default function ShipDetail() {
           </View>
         </View>
 
-        <SubTabBar active={activeTab} onPress={setActiveTab} />
+        <SubTabBar active={activeTab} onPress={handleTabPress} lockedTabs={premium ? [] : PREMIUM_TABS} />
 
         {activeTab === 'profile'      && <ProfileTab ship={ship} id={id!} />}
-        {activeTab === 'scenarios'    && <ScenariosTab shipId={id!} shipName={ship.name} />}
-        {activeTab === 'albums'       && <AlbumsTab shipId={id!} />}
-        {activeTab === 'storyline'    && <StorylineTab shipId={id!} shipName={ship.name} />}
+        {activeTab === 'scenarios'    && (premium ? <ScenariosTab shipId={id!} shipName={ship.name} /> : <PremiumGate reason="scenarios" />)}
+        {activeTab === 'albums'       && (premium ? <AlbumsTab shipId={id!} /> : <PremiumGate reason="albums" />)}
+        {activeTab === 'storyline'    && (premium ? <StorylineTab shipId={id!} shipName={ship.name} /> : <PremiumGate reason="storyline" />)}
         {activeTab === 'messages'     && <MessagesTab shipId={id!} shipName={ship.name} />}
         {activeTab === 'dates'        && <DatesTab shipId={id!} shipName={ship.name} />}
         {activeTab === 'this-or-that' && <ThisOrThatTab shipId={id!} />}
-        {activeTab === 'love-letter'  && <LoveLetterTab shipId={id!} />}
+        {activeTab === 'love-letter'  && (premium ? <LoveLetterTab shipId={id!} /> : <PremiumGate reason="love-letter" />)}
         </View>
       </ScrollView>
     </View>
@@ -708,6 +731,29 @@ function ScenariosTab({ shipId, shipName }: { shipId: string; shipName: string }
   );
 }
 
+function PremiumGate({ reason }: { reason: string }) {
+  const gateText: Record<string, { icon: string; title: string; desc: string }> = {
+    albums: { icon: '📷', title: 'Albums are premium', desc: 'unlock your photo vault with premium' },
+    scenarios: { icon: '💭', title: 'Scenarios are premium', desc: 'write unlimited stories with premium' },
+    storyline: { icon: '📖', title: 'Storyline is premium', desc: 'build your timeline with premium' },
+    'love-letter': { icon: '💌', title: 'Love Letters are premium', desc: 'write forever letters with premium' },
+  };
+  const text = gateText[reason] || { icon: '♡', title: 'Premium feature', desc: 'upgrade to unlock' };
+
+  return (
+    <View style={styles.premiumGate}>
+      <Text style={styles.premiumGateIcon}>{text.icon}</Text>
+      <Text style={styles.premiumGateTitle}>{text.title}</Text>
+      <Text style={styles.premiumGateDesc}>{text.desc}</Text>
+      <Pressable
+        style={styles.premiumGateBtn}
+        onPress={() => router.push({ pathname: '/paywall', params: { reason } })}
+      >
+        <Text style={styles.premiumGateBtnText}>upgrade ♡</Text>
+      </Pressable>
+    </View>
+  );
+}
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 
@@ -879,5 +925,41 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 140,
     left: 24,
+  },
+  premiumGate: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: Spacing.s7,
+    paddingHorizontal: Spacing.s5,
+    gap: 16,
+  },
+  premiumGateIcon: {
+    fontSize: 64,
+  },
+  premiumGateTitle: {
+    fontFamily: FontFamily.displayItalic,
+    fontSize: sf(22),
+    color: Colors.ink,
+    textAlign: 'center',
+  },
+  premiumGateDesc: {
+    fontFamily: FontFamily.ui,
+    fontSize: sf(14),
+    color: Colors.ink2,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  premiumGateBtn: {
+    marginTop: Spacing.s2,
+    backgroundColor: Colors.sakuraDeep,
+    paddingVertical: 12,
+    paddingHorizontal: 28,
+    borderRadius: Radius.pill,
+  },
+  premiumGateBtnText: {
+    fontFamily: FontFamily.uiSemiBold,
+    fontSize: sf(14),
+    color: Colors.vellum,
   },
 });

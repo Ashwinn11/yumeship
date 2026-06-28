@@ -21,9 +21,11 @@ const TABS: { id: DetailTab; ja: string; label: string }[] = [
 type Props = {
   active: DetailTab;
   onPress: (tab: DetailTab) => void;
+  lockedTabs?: DetailTab[];
 };
 
-export function SubTabBar({ active, onPress }: Props) {
+export function SubTabBar({ active, onPress, lockedTabs = [] }: Props) {
+  console.log('[SubTabBar] rendering', { active, lockedTabs });
   return (
     <View style={styles.wrap}>
       <ScrollView
@@ -33,19 +35,36 @@ export function SubTabBar({ active, onPress }: Props) {
       >
         {TABS.map((t) => {
           const on = t.id === active;
+          const locked = lockedTabs.includes(t.id);
+          if (locked) console.log('[SubTabBar] tab locked:', t.id);
           return (
-            <Pressable key={t.id} onPress={() => onPress(t.id)} style={[styles.tab, on && styles.tabActive]}>
+            <Pressable
+              key={t.id}
+              onPress={() => {
+                if (locked) {
+                  console.log('[SubTabBar] BLOCKED click on locked tab:', t.id);
+                  return null;
+                }
+                console.log('[SubTabBar] calling onPress for tab:', t.id);
+                onPress(t.id);
+              }}
+              disabled={locked}
+              style={[styles.tab, on && styles.tabActive, locked && styles.tabLocked]}
+            >
               {on && (
                 <View style={styles.sparkle}>
                   <Sparkle size={8} color={Colors.butter} />
                 </View>
               )}
-              <Text style={[styles.ja, { opacity: on ? 1 : 0.6, color: on ? Colors.vellum : Colors.ink2 }]}>
+              <Text style={[styles.ja, { opacity: on ? 1 : locked ? 0.4 : 0.6, color: on ? Colors.vellum : Colors.ink2 }]}>
                 {t.ja}
               </Text>
-              <Text style={[styles.label, { color: on ? Colors.vellum : Colors.ink2, fontWeight: on ? '600' : '500' }]}>
+              <Text style={[styles.label, { color: on ? Colors.vellum : Colors.ink2, fontWeight: on ? '600' : '500', opacity: locked ? 0.4 : 1 }]}>
                 {t.label}
               </Text>
+              {locked && (
+                <Text style={styles.lockDot}>🔒</Text>
+              )}
             </Pressable>
           );
         })}
@@ -82,6 +101,9 @@ const styles = StyleSheet.create({
   tabActive: {
     backgroundColor: Colors.sakuraDeep,
   },
+  tabLocked: {
+    opacity: 0.5,
+  },
   sparkle: {
     position: 'absolute',
     left: -2,
@@ -94,5 +116,12 @@ const styles = StyleSheet.create({
   label: {
     fontFamily: FontFamily.ui,
     fontSize: FontSize.caption,
+  },
+  lockDot: {
+    fontSize: 9,
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    lineHeight: 10,
   },
 });

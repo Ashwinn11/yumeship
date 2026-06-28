@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -115,15 +115,33 @@ function getWeeklyEquivalentOnly(pkg: PurchasesPackage): string | null {
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
+const REASON_COPY: Record<string, { title: string; sub: string }> = {
+  'add-ship':   { title: 'ship more than one\nF/O at a time ♡',     sub: 'unlimited ships, every story, no limits.' },
+  'albums':     { title: 'their photos deserve\na real home ♡',      sub: 'unlock albums for every ship.' },
+  'scenarios':  { title: 'your stories deserve\nto be told ♡',       sub: 'write unlimited scenarios, no limits.' },
+  'love-letter':{ title: 'write them something\nbeautiful ♡',        sub: 'love letters, yours to keep forever.' },
+  'storyline':  { title: 'every chapter of\nyour story ♡',           sub: 'your full timeline, always with you.' },
+};
+
 export default function PaywallScreen() {
   const { column } = useIPad();
   const insets = useSafeAreaInsets();
+  const { reason } = useLocalSearchParams<{ reason?: string }>();
+  const copy = REASON_COPY[reason ?? ''] ?? REASON_COPY['add-ship'];
   const [packages, setPackages] = useState<PurchasesPackage[]>([]);
   const [selected, setSelected] = useState<PurchasesPackage | null>(null);
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState(false);
   const [restoring, setRestoring] = useState(false);
+  const [showClose, setShowClose] = useState(false);
   const [alertModal, setAlertModal] = useState<{ title: string; message: string; onClose?: () => void } | null>(null);
+
+  console.log('[PaywallScreen] loaded', { reason, copy });
+
+  useEffect(() => {
+    const t = setTimeout(() => setShowClose(true), 3000);
+    return () => clearTimeout(t);
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -143,8 +161,9 @@ export default function PaywallScreen() {
         return getOrder(a) - getOrder(b);
       });
       setPackages(sorted);
-      // pre-select the lifetime (first) package if available
-      if (sorted.length > 0) setSelected(sorted[0]);
+      // pre-select monthly — lower commitment, better conversion than lifetime default
+      const monthlyDefault = sorted.find(isMonthlyPkg) ?? sorted[0];
+      setSelected(monthlyDefault);
       setLoading(false);
     })();
   }, []);
@@ -195,18 +214,20 @@ export default function PaywallScreen() {
 
   return (
     <View style={styles.screen}>
-      {/* Close button */}
-      <Pressable
-        style={[styles.closeBtn, { top: insets.top + 10 }]}
-        onPress={() => router.back()}
-        id="paywall-close"
-      >
-        <Text style={styles.closeTxt}>✕</Text>
-      </Pressable>
+      {/* Close button — delayed so users read the value prop first */}
+      {showClose && (
+        <Pressable
+          style={[styles.closeBtn, { top: insets.top + 10 }]}
+          onPress={() => router.back()}
+          id="paywall-close"
+        >
+          <Text style={styles.closeTxt}>✕</Text>
+        </Pressable>
+      )}
 
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={[styles.content, column, { paddingTop: insets.top + 50 }]}
+        contentContainerStyle={[styles.content, column, { paddingTop: 0 }]}
         showsVerticalScrollIndicator={false}
       >
         {/* ── Hero ─────────────────────────────────────────────────── */}
@@ -238,7 +259,7 @@ export default function PaywallScreen() {
           </View>
 
           {/* wax seal — top-right */}
-          <View style={[styles.abs, { top: 34, right: 6, transform: [{ rotate: '12deg' }] }]} pointerEvents="none">
+          <View style={[styles.abs, { top: 220, right: 10, transform: [{ rotate: '12deg' }], zIndex: 5 }]} pointerEvents="none">
             <StickerWaxSeal size={36} />
           </View>
 
@@ -257,10 +278,8 @@ export default function PaywallScreen() {
         </View>
 
         {/* Title */}
-        <Text style={styles.heroTitle}>{'ship more than one\nF/O at a time ♡'}</Text>
-        <Text style={styles.heroSub}>
-          unlimited ships, every story, no limits.
-        </Text>
+        <Text style={styles.heroTitle}>{copy.title}</Text>
+        <Text style={styles.heroSub}>{copy.sub}</Text>
 
         {/* Features card */}
         <View style={styles.featCard}>
@@ -473,8 +492,8 @@ const styles = StyleSheet.create({
     height: 30,
     borderRadius: 15,
     backgroundColor: Colors.vellum,
-    borderWidth: 1,
-    borderColor: Colors.line,
+    borderWidth: 2.5,
+    borderColor: Colors.ink2,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -484,12 +503,12 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: Spacing.s5, paddingBottom: Spacing.s9 + 20 },
 
   heroSection: {
-    height: 220,
+    height: 180,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
-    marginBottom: 20,
-    marginTop: 4,
+    marginBottom: 8,
+    marginTop: 0,
   },
   abs: { position: 'absolute' },
   iconCard: {
