@@ -52,6 +52,7 @@ export async function scheduleDailyNotification(
   hour: number,
   foName: string,
   isImmediate = false,
+  minute = 0,
 ): Promise<string | null> {
   try {
     const { status } = await Notifications.getPermissionsAsync();
@@ -67,7 +68,7 @@ export async function scheduleDailyNotification(
       : {
           type: Notifications.SchedulableTriggerInputTypes.DAILY,
           hour,
-          minute: 0,
+          minute,
         };
 
     const identifier = await Notifications.scheduleNotificationAsync({

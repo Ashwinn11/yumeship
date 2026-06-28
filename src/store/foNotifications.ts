@@ -8,6 +8,7 @@ export type FoMessage = {
   body: string;
   senderName: string;
   scheduledHour: number;
+  scheduledMinute: number;
   active: boolean;
   notifId: string;
   currentIndex: number;
@@ -24,6 +25,7 @@ function rowToMsg(r: Record<string, unknown>): FoMessage {
     body: r.body as string,
     senderName: (r.sender_name as string) ?? '',
     scheduledHour: r.scheduled_hour as number,
+    scheduledMinute: (r.scheduled_minute as number) ?? 0,
     active: !!(r.active as number),
     notifId: (r.notif_id as string) ?? '',
     currentIndex: (r.current_index as number) ?? 0,
@@ -43,11 +45,12 @@ export async function addFoMessage(
   body: string,
   scheduledHour = 9,
   senderName = '',
+  scheduledMinute = 0,
 ): Promise<string> {
   const id = newId();
   getDb().runSync(
-    'INSERT INTO fo_messages (id, ship_id, body, sender_name, scheduled_hour, active, notif_id, current_index, created_at) VALUES (?, ?, ?, ?, ?, 1, ?, 0, ?)',
-    id, shipId, body, senderName, scheduledHour, '', Date.now(),
+    'INSERT INTO fo_messages (id, ship_id, body, sender_name, scheduled_hour, scheduled_minute, active, notif_id, current_index, created_at) VALUES (?, ?, ?, ?, ?, ?, 1, ?, 0, ?)',
+    id, shipId, body, senderName, scheduledHour, scheduledMinute, '', Date.now(),
   );
 
   let triggerBody = body;
@@ -66,8 +69,9 @@ export async function addFoMessage(
   const targetHour = scheduledHour === -1
     ? [6, 8, 10, 12, 14, 16, 18, 20, 22][Math.floor(Math.random() * 9)]
     : isImmediate ? 0 : scheduledHour;
+  const targetMinute = (scheduledHour === -1 || isImmediate) ? 0 : scheduledMinute;
 
-  const notifId = await scheduleDailyNotification(triggerBody, targetHour, senderName, isImmediate);
+  const notifId = await scheduleDailyNotification(triggerBody, targetHour, senderName, isImmediate, targetMinute);
   if (notifId) {
     const nextIndex = parsedLength > 1 ? 1 : 0;
     getDb().runSync('UPDATE fo_messages SET notif_id = ?, current_index = ? WHERE id = ?', notifId, nextIndex, id);
@@ -102,8 +106,9 @@ export async function toggleFoMessage(id: string, active: boolean, foName = ''):
     const targetHour = msg.scheduledHour === -1
       ? [6, 8, 10, 12, 14, 16, 18, 20, 22][Math.floor(Math.random() * 9)]
       : isImmediate ? 0 : msg.scheduledHour;
+    const targetMinute = (msg.scheduledHour === -1 || isImmediate) ? 0 : msg.scheduledMinute;
 
-    const newId = await scheduleDailyNotification(triggerBody, targetHour, msg.senderName || foName, isImmediate);
+    const newId = await scheduleDailyNotification(triggerBody, targetHour, msg.senderName || foName, isImmediate, targetMinute);
     const nextIndex = parsedLength > 1 ? (msg.currentIndex + 1) % parsedLength : 0;
     getDb().runSync(
       'UPDATE fo_messages SET active = 1, notif_id = ?, current_index = ? WHERE id = ?',
@@ -120,6 +125,7 @@ export async function updateFoMessage(
   scheduledHour: number,
   senderName: string,
   foName = '',
+  scheduledMinute = 0,
 ): Promise<void> {
   const row = getDb().getFirstSync('SELECT * FROM fo_messages WHERE id = ?', id) as Record<string, unknown> | null;
   if (!row) return;
@@ -148,14 +154,15 @@ export async function updateFoMessage(
     const targetHour = scheduledHour === -1
       ? [6, 8, 10, 12, 14, 16, 18, 20, 22][Math.floor(Math.random() * 9)]
       : isImmediate ? 0 : scheduledHour;
+    const targetMinute = (scheduledHour === -1 || isImmediate) ? 0 : scheduledMinute;
 
-    notifId = await scheduleDailyNotification(triggerBody, targetHour, senderName, isImmediate) ?? '';
+    notifId = await scheduleDailyNotification(triggerBody, targetHour, senderName, isImmediate, targetMinute) ?? '';
     newIndex = parsedLength > 1 ? 1 : 0;
   }
 
   getDb().runSync(
-    'UPDATE fo_messages SET body = ?, sender_name = ?, scheduled_hour = ?, notif_id = ?, current_index = ? WHERE id = ?',
-    body, senderName, scheduledHour, notifId, newIndex, id,
+    'UPDATE fo_messages SET body = ?, sender_name = ?, scheduled_hour = ?, scheduled_minute = ?, notif_id = ?, current_index = ? WHERE id = ?',
+    body, senderName, scheduledHour, scheduledMinute, notifId, newIndex, id,
   );
 
   notify();

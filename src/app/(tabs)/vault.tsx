@@ -1140,11 +1140,11 @@ function FoMessagesFeature({ shipId, shipName, setCustomBack }: { shipId: string
       <FoCompose
         shipName={shipName}
         initialMessage={composingMsg === 'new' ? undefined : composingMsg}
-        onQueue={async (body, hour, senderName) => {
+        onQueue={async (body, hour, senderName, minute) => {
           if (composingMsg === 'new') {
-            await addFoMessage(shipId, body, hour, senderName);
+            await addFoMessage(shipId, body, hour, senderName, minute);
           } else {
-            await updateFoMessage(composingMsg.id, body, hour, senderName, shipName);
+            await updateFoMessage(composingMsg.id, body, hour, senderName, shipName, minute);
           }
           setComposingMsg(null);
           setCustomBack(null);
@@ -1386,7 +1386,7 @@ import { FoMessage } from '@/store/foNotifications';
 function FoCompose({ shipName, initialMessage, onQueue }: {
   shipName: string;
   initialMessage?: FoMessage;
-  onQueue: (body: string, hour: number, senderName: string) => void;
+  onQueue: (body: string, hour: number, senderName: string, minute: number) => void;
 }) {
   const [notifDenied, setNotifDenied] = useState(false);
   const [pendingQueue, setPendingQueue] = useState<string[] | null>(null);
@@ -1467,6 +1467,7 @@ function FoCompose({ shipName, initialMessage, onQueue }: {
 
   function proceedWithQueue(filtered: string[]) {
     let resolvedHour = 9;
+    let resolvedMinute = 0;
     if (arrivalDay === 'now') {
       resolvedHour = -2;
     } else if (arrivalDay === 'random') {
@@ -1474,7 +1475,7 @@ function FoCompose({ shipName, initialMessage, onQueue }: {
     } else if (aroundTime === 'custom') {
       const h = customHour % 12;
       resolvedHour = customAmPm === 'PM' ? h + 12 : h;
-      // minutes stored separately but scheduledHour only supports whole hours for now
+      resolvedMinute = customMinute;
     } else {
       const match = AROUND_TIMES.find(t => t.id === aroundTime);
       resolvedHour = match ? match.hour : 9;
@@ -1482,7 +1483,7 @@ function FoCompose({ shipName, initialMessage, onQueue }: {
 
     // Save as JSON string if multiple options, else save plain string
     const finalBody = filtered.length > 1 ? JSON.stringify(filtered) : filtered[0];
-    onQueue(finalBody, resolvedHour, senderName.trim() || shipName);
+    onQueue(finalBody, resolvedHour, senderName.trim() || shipName, resolvedMinute);
   }
 
   const showAround = arrivalDay !== 'now' && arrivalDay !== 'random';
@@ -1495,7 +1496,7 @@ function FoCompose({ shipName, initialMessage, onQueue }: {
   } else {
     const dayLabel = arrivalDay === 'today' ? 'later today' : arrivalDay === 'tomorrow' ? 'tomorrow' : 'every day';
     if (aroundTime === 'custom') {
-      previewText = `arrives ${dayLabel} at ${customHour}:00 ${customAmPm}`;
+      previewText = `arrives ${dayLabel} at ${customHour}:${String(customMinute).padStart(2, '0')} ${customAmPm}`;
     } else {
       const timeLabel = AROUND_TIMES.find(t => t.id === aroundTime)?.label.toLowerCase();
       const matchHour = AROUND_TIMES.find(t => t.id === aroundTime)?.hour ?? 9;
