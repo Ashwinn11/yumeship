@@ -35,8 +35,9 @@ const TEMPLATES = [
 
 // Polyship ships use their own dedicated templates.
 const POLY_TEMPLATES = [
-  { key: 'poly-chart',   title: 'Poly Ship Chart',    tapePattern: 'heart'  as const, color: Colors.plum,        bg: Colors.lavenderSoft },
-  { key: 'poly-quick',   title: 'In 5 Minutes',       tapePattern: 'dot'    as const, color: Colors.lavenderDeep, bg: Colors.lavenderSoft },
+  { key: 'poly-chart',    title: 'Poly Ship Chart',    tapePattern: 'heart'  as const, color: Colors.plum,        bg: Colors.lavenderSoft },
+  { key: 'poly-quick',    title: 'In 5 Minutes',       tapePattern: 'dot'    as const, color: Colors.lavenderDeep, bg: Colors.lavenderSoft },
+  { key: 'poly-dynamics', title: 'Polycule Dynamics',  tapePattern: 'check'  as const, color: Colors.sageDeep,    bg: Colors.sageSoft },
 ];
 
 const REL_CHIP_COLOR: Record<string, string> = {
@@ -339,7 +340,7 @@ function HCSheet({
       <TouchableWithoutFeedback onPress={onClose}>
         <View style={styles.sheetOverlay} />
       </TouchableWithoutFeedback>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.sheetWrap}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.sheetWrap}>
         <View style={styles.sheet}>
           <View style={styles.sheetHandle} />
           <View style={styles.sheetHeader}>

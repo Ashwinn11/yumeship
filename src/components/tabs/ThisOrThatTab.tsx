@@ -84,7 +84,7 @@ function PairsEditor({ initialPairs, onDone }: {
   }
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }} keyboardVerticalOffset={120}>
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }} keyboardVerticalOffset={120}>
       <View style={e.header}>
         <Text style={e.headerTitle}>edit pairs</Text>
         <Pressable style={e.doneBtn} onPress={() => onDone(pairs.filter(([a, b]) => a.trim() || b.trim()))}>

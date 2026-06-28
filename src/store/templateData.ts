@@ -53,8 +53,10 @@ const FIELD_MAP: Record<string, Record<string, string>> = {
   'talking-about': { foName: 'foName', myName: 'meName', sharing: 'sharing', mainPhoto: 'photoL', myPhoto: 'photoR' },
   'flip-phone':  { foName: 'name', sharing: 'sharing', song: 'song' },
   'bond-banner': { myName: 'meName', foName: 'foName' },
-  // poly-chart stores its roster on the ship and its viz data in dedicated keys; no shared logical fields.
-  'poly-chart':  {},
+  // poly templates store their roster on the ship and their viz data in dedicated keys; no shared logical fields.
+  'poly-chart':    {},
+  'poly-quick':    {},
+  'poly-dynamics': {},
 };
 
 // Migrate compatible fields from old template data into the new template (only fills gaps)

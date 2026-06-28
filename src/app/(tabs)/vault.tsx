@@ -413,7 +413,7 @@ function HCEditor({ shipId, cats, onDone }: { shipId: string; cats: typeof DEFAU
   }
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }} keyboardVerticalOffset={120}>
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }} keyboardVerticalOffset={120}>
       <View style={hc.editorHeader}>
         <Text style={hc.editorTitle}>headcanons</Text>
         <Pressable style={hc.doneBtn} onPress={save}>
@@ -921,7 +921,7 @@ function ScenarioEditor({ initial, shipName, onSave, onDelete }: {
   const wordCount = body.trim() ? body.trim().split(/\s+/).filter(Boolean).length : 0;
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={[sc.editor, { backgroundColor: Colors.paper }]} keyboardVerticalOffset={120}>
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={[sc.editor, { backgroundColor: Colors.paper }]} keyboardVerticalOffset={120}>
       <CozyModal
         visible={confirmDelete}
         title="delete this scene?"
@@ -1488,7 +1488,7 @@ function FoCompose({ shipName, ship, initialMessage, onQueue }: {
   const hasContent = options.some(o => o.trim().length > 0);
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={fo.compose} keyboardVerticalOffset={120}>
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={fo.compose} keyboardVerticalOffset={120}>
       <CozyModal
         visible={notifDenied}
         title="notifications off"

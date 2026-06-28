@@ -29,6 +29,7 @@ const VISUAL_TEMPLATES = [
 const POLY_VISUAL = [
   { key: 'poly-chart', label: 'Poly Ship Chart', desc: 'the whole polycule · roster · map', color: Colors.plum, bg: Colors.lavenderSoft, tape: 'heart' },
   { key: 'poly-quick', label: 'In 5 Minutes', desc: 'quick · roles · meters · facts', color: Colors.lavenderDeep, bg: Colors.lavenderSoft, tape: 'dot' },
+  { key: 'poly-dynamics', label: 'Polycule Dynamics', desc: 'charts · differences · who\'s the one', color: Colors.sageDeep, bg: Colors.sageSoft, tape: 'check' },
 ] as const;
 
 const TAPE_BY_REL: Record<string, { color: string; pattern: 'stripe' | 'dot' | 'heart' | 'check' }> = {

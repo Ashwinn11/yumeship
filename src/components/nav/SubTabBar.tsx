@@ -25,7 +25,6 @@ type Props = {
 };
 
 export function SubTabBar({ active, onPress, lockedTabs = [] }: Props) {
-  console.log('[SubTabBar] rendering', { active, lockedTabs });
   return (
     <View style={styles.wrap}>
       <ScrollView
@@ -36,16 +35,13 @@ export function SubTabBar({ active, onPress, lockedTabs = [] }: Props) {
         {TABS.map((t) => {
           const on = t.id === active;
           const locked = lockedTabs.includes(t.id);
-          if (locked) console.log('[SubTabBar] tab locked:', t.id);
           return (
             <Pressable
               key={t.id}
               onPress={() => {
                 if (locked) {
-                  console.log('[SubTabBar] BLOCKED click on locked tab:', t.id);
                   return null;
                 }
-                console.log('[SubTabBar] calling onPress for tab:', t.id);
                 onPress(t.id);
               }}
               disabled={locked}

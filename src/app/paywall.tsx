@@ -137,8 +137,6 @@ export default function PaywallScreen() {
   const [showClose, setShowClose] = useState(false);
   const [alertModal, setAlertModal] = useState<{ title: string; message: string; onClose?: () => void } | null>(null);
 
-  console.log('[PaywallScreen] loaded', { reason, copy });
-
   useEffect(() => {
     const t = setTimeout(() => setShowClose(true), 3000);
     return () => clearTimeout(t);
