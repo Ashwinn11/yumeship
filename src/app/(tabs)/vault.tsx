@@ -31,7 +31,8 @@ import { requestPermission } from '@/store/notifications';
 import { useIPad } from '@/hooks/use-ipad';
 import { getGlobalSetting, saveGlobalSetting } from '@/store/onboarding';
 import { addScenario, deleteScenario, updateScenario, useScenarios } from '@/store/scenarios';
-import { useShips } from '@/store/ships';
+import { getMembers, isPoly, membersLabel, shipPartners, Ship, useShip, useShips } from '@/store/ships';
+import { MemberPicker } from '@/components/nav/MemberPicker';
 import { usePremium } from '@/store/premium';
 import { router } from 'expo-router';
 
@@ -232,7 +233,9 @@ export default function VaultScreen() {
                 <View style={[styles.pickerDot, { backgroundColor: s.gradStart }]} />
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.pickerName, i === selectedShipIdx && { color: Colors.sakuraDeep }]}>{s.shipName || s.name}</Text>
-                  {s.myName && s.name ? <Text style={styles.pickerFandom}>{s.myName} × {s.name}</Text> : s.fandom ? <Text style={styles.pickerFandom}>{s.fandom}</Text> : null}
+                  {isPoly(s)
+                    ? (membersLabel(s) ? <Text style={styles.pickerFandom}>{membersLabel(s)}</Text> : null)
+                    : s.myName && s.name ? <Text style={styles.pickerFandom}>{s.myName} × {s.name}</Text> : s.fandom ? <Text style={styles.pickerFandom}>{s.fandom}</Text> : null}
                 </View>
                 {i === selectedShipIdx && <Text style={styles.pickerCheck}>✓</Text>}
               </Pressable>
@@ -1030,7 +1033,7 @@ function ScenarioEditor({ initial, shipName, onSave, onDelete }: {
         <TextInput
           value={body}
           onChangeText={setBody}
-          placeholder={`what happens with ${shipName}...`}
+          placeholder="what happens in this scene..."
           placeholderTextColor={Colors.ink3}
           style={{
             fontFamily: FontFamily.script,
@@ -1089,6 +1092,7 @@ const STARTERS = [
 
 function FoMessagesFeature({ shipId, shipName, setCustomBack }: { shipId: string; shipName: string; setCustomBack: (fn: (() => void) | null) => void }) {
   const messages = useFoMessages(shipId);
+  const composeShip = useShip(shipId);
   const [composingMsg, setComposingMsg] = useState<FoMessage | 'new' | null>(null);
   const [msgDeleteTarget, setMsgDeleteTarget] = useState<string | null>(null);
   const activeCount = messages.filter((m) => m.active).length;
@@ -1097,6 +1101,7 @@ function FoMessagesFeature({ shipId, shipName, setCustomBack }: { shipId: string
     return (
       <FoCompose
         shipName={shipName}
+        ship={composeShip}
         initialMessage={composingMsg === 'new' ? undefined : composingMsg}
         onQueue={async (body, hour, senderName, minute) => {
           if (composingMsg === 'new') {
@@ -1338,8 +1343,9 @@ const OpenLockIcon = ({ size = 13, color = '#ffffff' }: { size?: number; color?:
 
 import { FoMessage } from '@/store/foNotifications';
 
-function FoCompose({ shipName, initialMessage, onQueue }: {
+function FoCompose({ shipName, ship, initialMessage, onQueue }: {
   shipName: string;
+  ship?: Ship;
   initialMessage?: FoMessage;
   onQueue: (body: string, hour: number, senderName: string, minute: number) => void;
 }) {
@@ -1357,7 +1363,9 @@ function FoCompose({ shipName, initialMessage, onQueue }: {
     }
     return [''];
   });
-  const [senderName, setSenderName] = useState(initialMessage?.senderName || shipName);
+  const [senderName, setSenderName] = useState(
+    initialMessage?.senderName || (isPoly(ship) ? (shipPartners(ship)[0]?.name || '') : shipName),
+  );
   const [arrivalDay, setArrivalDay] = useState<'now' | 'today' | 'tomorrow' | 'everyday' | 'random'>(() => {
     if (!initialMessage) return 'everyday';
     const hr = initialMessage.scheduledHour;
@@ -1521,15 +1529,25 @@ function FoCompose({ shipName, initialMessage, onQueue }: {
         </View>
 
         <Text style={fo.sectionLabel}>FROM</Text>
-        <View style={fo.fromInputWrap}>
-          <TextInput
-            value={senderName}
-            onChangeText={setSenderName}
-            placeholder={shipName}
-            placeholderTextColor={Colors.ink3}
-            style={fo.fromInput}
-          />
-        </View>
+        {isPoly(ship) && shipPartners(ship).length > 0 ? (
+          <View style={{ marginBottom: 8 }}>
+            <MemberPicker
+              ship={ship}
+              selectedId={getMembers(ship).find((m) => m.name === senderName)?.id}
+              onSelect={(_, name) => setSenderName(name)}
+            />
+          </View>
+        ) : (
+          <View style={fo.fromInputWrap}>
+            <TextInput
+              value={senderName}
+              onChangeText={setSenderName}
+              placeholder={shipName}
+              placeholderTextColor={Colors.ink3}
+              style={fo.fromInput}
+            />
+          </View>
+        )}
 
         <Text style={fo.sectionLabel}>WHAT THEY MIGHT SEND</Text>
         {options.map((opt, index) => (

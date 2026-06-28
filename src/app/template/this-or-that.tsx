@@ -5,6 +5,8 @@ import {
 } from '@/components/templates/primitives';
 import { Colors, FontFamily, Radius, sf } from '@/constants/theme';
 import { useTemplateCtx } from '@/store/templateData';
+import { getMembers, isPoly, Ship, useShip } from '@/store/ships';
+import { MemberPicker } from '@/components/nav/MemberPicker';
 import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -22,7 +24,7 @@ export const DEFAULT_PAIRS: [string, string][] = [
   ['roses', 'wildflowers'],
 ];
 
-export function ThisOrThatContent({ editing = false, getPairs, onEdit }: { editing?: boolean; getPairs?: () => [string, string][]; onEdit?: () => void }) {
+export function ThisOrThatContent({ editing = false, getPairs, onEdit, ship }: { editing?: boolean; getPairs?: () => [string, string][]; onEdit?: () => void; ship?: Ship }) {
   const ctx = useTemplateCtx();
   const customBg = ctx.bgColor || ctx.bgImage;
 
@@ -44,6 +46,7 @@ export function ThisOrThatContent({ editing = false, getPairs, onEdit }: { editi
   const e = editing;
 
   const setNote = (v: string) => { setVals((p) => ({ ...p, note: v })); ctx.set('note', v); };
+  const setName = (v: string) => { setVals((p) => ({ ...p, name: v })); ctx.set('name', v); };
   const pick = (i: number, side: 'left' | 'right') => {
     setVals((prev) => {
       const next = prev.choices.map((c, j) => (j === i ? side : c)) as ('left' | 'right' | null)[];
@@ -64,6 +67,17 @@ export function ThisOrThatContent({ editing = false, getPairs, onEdit }: { editi
           </Pressable>
         )}
       </View>
+
+      {e && isPoly(ship) && getMembers(ship).some((m) => !m.isMe) && (
+        <View style={{ marginBottom: 10 }}>
+          <MemberPicker
+            ship={ship}
+            label="whose picks are these?"
+            selectedId={getMembers(ship).find((m) => m.name === name)?.id}
+            onSelect={(_, n) => setName(n)}
+          />
+        </View>
+      )}
 
       <View style={s.nameRow}>
         <Text style={s.themLabel}>♡ THEM:</Text>
@@ -94,9 +108,10 @@ export function ThisOrThatContent({ editing = false, getPairs, onEdit }: { editi
 
 export default function TemplateThisOrThat() {
   const { shipId } = useLocalSearchParams<{ shipId?: string }>();
+  const ship = useShip(shipId);
   return (
     <TemplateScreenWrapper templateKey="this-or-that" shipId={shipId}>
-      <ThisOrThatContent editing />
+      <ThisOrThatContent editing ship={ship} />
     </TemplateScreenWrapper>
   );
 }

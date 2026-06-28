@@ -14,7 +14,8 @@ export type Thread = {
 export type Message = {
   id: string;
   threadId: string;
-  sender: 'me' | 'them';
+  // 'me' / 'them' for single ships (legacy); a member id for polyship group chats.
+  sender: string;
   body: string;
   createdAt: number;
 };
@@ -62,13 +63,13 @@ export function getMessages(threadId: string): Message[] {
   ) as Record<string, unknown>[]).map((r) => ({
     id: r.id as string,
     threadId: r.thread_id as string,
-    sender: r.sender as 'me' | 'them',
+    sender: r.sender as string,
     body: r.body as string,
     createdAt: r.created_at as number,
   }));
 }
 
-export function addMessage(threadId: string, sender: 'me' | 'them', body: string): string {
+export function addMessage(threadId: string, sender: string, body: string): string {
   const id = newId();
   getDb().runSync(
     'INSERT INTO messages (id, thread_id, sender, body, created_at) VALUES (?, ?, ?, ?, ?)',

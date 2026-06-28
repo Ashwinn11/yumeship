@@ -10,7 +10,7 @@ import { CozyModal } from '@/components/ui/CozyModal';
 import { IconExport } from '@/components/ui/Icon';
 import { Colors, FontFamily, Radius, Shadow, Spacing ,sf } from '@/constants/theme';
 import { askForReview } from '@/store/review';
-import { getShip, updateShip } from '@/store/ships';
+import { getShip, isPoly, updateShip } from '@/store/ships';
 import { TemplateDataCtx, buildPreFill, loadTemplateData, migrateTemplateData, saveTemplateData } from '@/store/templateData';
 import { router } from 'expo-router';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
@@ -54,6 +54,12 @@ const VISUAL_TEMPLATES = [
   { key: 'bond-banner', label: 'Bond Banner', desc: 'heart shield · personality bars', color: Colors.plum, bg: Colors.lavenderSoft, tape: 'heart' },
 ] as const;
 
+// Polyship ships switch among their own dedicated templates.
+const POLY_VISUAL = [
+  { key: 'poly-chart', label: 'Poly Ship Chart', desc: 'the whole polycule · roster · map', color: Colors.plum, bg: Colors.lavenderSoft, tape: 'heart' },
+  { key: 'poly-quick', label: 'In 5 Minutes', desc: 'quick · roles · meters · facts', color: Colors.lavenderDeep, bg: Colors.lavenderSoft, tape: 'dot' },
+] as const;
+
 type Props = {
   templateKey: string;
   shipId?: string;
@@ -64,6 +70,7 @@ export function TemplateScreenWrapper({ templateKey, shipId, children }: Props) 
   const insets = useSafeAreaInsets();
   const { column } = useIPad();
   const ship = shipId ? getShip(shipId) : undefined;
+  const pickerTemplates = isPoly(ship) ? POLY_VISUAL : VISUAL_TEMPLATES;
   const [showPicker, setShowPicker] = useState(false);
   const [selected, setSelected] = useState(templateKey);
   const [confirming, setConfirming] = useState(false);
@@ -226,7 +233,7 @@ export function TemplateScreenWrapper({ templateKey, shipId, children }: Props) 
 
           <View style={s.nameArea}>
             {shipId && (() => {
-              const tpl = VISUAL_TEMPLATES.find(t => t.key === templateKey);
+              const tpl = pickerTemplates.find(t => t.key === templateKey);
               return (
                 <Pressable style={s.styleChip} onPress={() => setShowPicker(true)}>
                   <View style={[s.styleChipDot, { backgroundColor: tpl?.color ?? Colors.sakuraDeep }]} />
@@ -355,7 +362,7 @@ export function TemplateScreenWrapper({ templateKey, shipId, children }: Props) 
             <Text style={s.sheetSub}>common info and photos carry over automatically</Text>
 
             <ScrollView contentContainerStyle={s.grid} showsVerticalScrollIndicator={false}>
-              {VISUAL_TEMPLATES.map((t) => (
+              {pickerTemplates.map((t) => (
                 <Pressable
                   key={t.key}
                   style={[s.tplCard, { backgroundColor: t.bg }, selected === t.key && { borderColor: t.color, borderWidth: 2 }]}
@@ -391,7 +398,7 @@ export function TemplateScreenWrapper({ templateKey, shipId, children }: Props) 
                 onPress={() => selected !== templateKey ? setConfirming(true) : setShowPicker(false)}
               >
                 <Text style={s.applyBtnText}>
-                  {selected === templateKey ? 'no changes' : `switch to ${VISUAL_TEMPLATES.find(t => t.key === selected)?.label}`}
+                  {selected === templateKey ? 'no changes' : `switch to ${pickerTemplates.find(t => t.key === selected)?.label}`}
                 </Text>
               </Pressable>
             </View>

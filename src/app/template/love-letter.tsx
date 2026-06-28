@@ -9,10 +9,12 @@ import { Heart } from '@/components/deco/Heart';
 import { FontFamily ,sf } from '@/constants/theme';
 import { useTemplateCtx } from '@/store/templateData';
 import { DecoBar } from '@/components/templates/DecoBar';
+import { getMembers, isPoly, Ship, useShip } from '@/store/ships';
+import { MemberPicker } from '@/components/nav/MemberPicker';
 
 const BLANK_THINGS = ['', '', '', '', ''];
 
-export function LoveLetterContent({ editing = false }: { editing?: boolean }) {
+export function LoveLetterContent({ editing = false, ship }: { editing?: boolean; ship?: Ship }) {
   const ctx = useTemplateCtx();
   const customBg = ctx.bgColor || ctx.bgImage;
 
@@ -49,6 +51,17 @@ export function LoveLetterContent({ editing = false }: { editing?: boolean }) {
       </View>
 
       <TitleHeader title="A LOVE LETTER" subtitle="for the one i never got to send" />
+
+      {e && isPoly(ship) && getMembers(ship).some((m) => !m.isMe) && (
+        <View style={{ marginTop: 12 }}>
+          <MemberPicker
+            ship={ship}
+            label="who is this letter to?"
+            selectedId={getMembers(ship).find((m) => m.name === dearName)?.id}
+            onSelect={(_, name) => set('dearName')(name)}
+          />
+        </View>
+      )}
 
       <View style={s.letterBox}>
         <View style={s.dearLabel}>
@@ -167,9 +180,10 @@ export function LoveLetterContent({ editing = false }: { editing?: boolean }) {
 
 export default function TemplateLoveLetter() {
   const { shipId } = useLocalSearchParams<{ shipId?: string }>();
+  const ship = useShip(shipId);
   return (
     <TemplateScreenWrapper templateKey="love-letter" shipId={shipId}>
-      <LoveLetterContent editing />
+      <LoveLetterContent editing ship={ship} />
     </TemplateScreenWrapper>
   );
 }

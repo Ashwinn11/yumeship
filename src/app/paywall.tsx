@@ -121,6 +121,7 @@ const REASON_COPY: Record<string, { title: string; sub: string }> = {
   'scenarios':  { title: 'your stories deserve\nto be told ♡',       sub: 'write unlimited scenarios, no limits.' },
   'love-letter':{ title: 'write them something\nbeautiful ♡',        sub: 'love letters, yours to keep forever.' },
   'storyline':  { title: 'every chapter of\nyour story ♡',           sub: 'your full timeline, always with you.' },
+  'polyship':   { title: 'love more than one,\nall at once ♡',        sub: 'build your whole polycule — unlimited members.' },
 };
 
 export default function PaywallScreen() {

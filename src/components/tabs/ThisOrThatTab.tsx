@@ -59,7 +59,7 @@ export function ThisOrThatTab({ shipId }: { shipId: string }) {
   return (
     <TemplateDataCtx.Provider value={ctx}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[s.tab, column]}>
-        <ThisOrThatContent editing getPairs={getPairs} onEdit={() => setEditing(true)} />
+        <ThisOrThatContent editing getPairs={getPairs} onEdit={() => setEditing(true)} ship={ship} />
       </ScrollView>
     </TemplateDataCtx.Provider>
   );

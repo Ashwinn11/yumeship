@@ -12,14 +12,15 @@ import { CozyModal } from '@/components/ui/CozyModal';
 import { IconSend } from '@/components/ui/Icon';
 import { Colors, FontFamily, Radius, Spacing ,sf } from '@/constants/theme';
 import { addMessage, addThread, deleteMessage, useMessages, useThreads } from '@/store/messages';
-import { useShip } from '@/store/ships';
+import { getMembers, isPoly, memberColor, membersLabel, shipMe, useShip } from '@/store/ships';
+import { MemberPicker } from '@/components/nav/MemberPicker';
 import { StickerEnvelope } from '@/components/deco';
 
 export function MessagesTab({ shipId, shipName, sender: externalSender, onSenderChange, onBack }: {
   shipId: string;
   shipName: string;
-  sender?: 'me' | 'them';
-  onSenderChange?: (s: 'me' | 'them') => void;
+  sender?: string;
+  onSenderChange?: (s: string) => void;
   onBack?: () => void;
 }) {
   const threads = useThreads(shipId);
@@ -63,20 +64,26 @@ function ThreadView({
   threadId: string;
   shipName: string;
   shipId: string;
-  externalSender?: 'me' | 'them';
-  onSenderChange?: (s: 'me' | 'them') => void;
+  externalSender?: string;
+  onSenderChange?: (s: string) => void;
   onBack?: () => void;
 }) {
   const insets = useSafeAreaInsets();
   const { isIPad } = useIPad();
   const ship = useShip(shipId);
+  const poly = isPoly(ship);
+  const members = getMembers(ship);
+  const meId = shipMe(ship)?.id ?? 'me';
   const gradStart = ship?.gradStart ?? Colors.sakura;
   const gradEnd = ship?.gradEnd ?? Colors.sakuraDeep;
   // foName = the F/O character name, shipName = the ship title label
   const foName = ship?.name || shipName;
   const shipTitle = ship?.shipName || '';
+  // For poly the chat is a group — the header shows the polycule, not one partner.
+  const headerName = poly ? (shipTitle || foName) : foName;
+  const headerSub = poly ? membersLabel(ship) : (shipTitle || 'imagined ♡');
   const messages = useMessages(threadId);
-  const [internalSender, setInternalSender] = useState<'me' | 'them'>('me');
+  const [internalSender, setInternalSender] = useState<string>(poly ? meId : 'me');
   const sender = externalSender ?? internalSender;
   const setSender = onSenderChange ?? setInternalSender;
   const showToggle = !externalSender;
@@ -164,21 +171,22 @@ function ThreadView({
           }}
         >
           <Text style={{ color: '#fff', fontFamily: FontFamily.displayItalic, fontSize: sf(21) }}>
-            {foName.charAt(0).toUpperCase()}
+            {(headerName || '♡').charAt(0).toUpperCase()}
           </Text>
         </LinearGradient>
 
         {/* Name + subtitle */}
         <View style={{ flex: 1 }}>
           <Text style={{ fontFamily: FontFamily.uiMedium, fontSize: sf(19), color: Colors.ink, lineHeight: 21 }}>
-            {foName}
+            {headerName}
           </Text>
           <Text style={{ fontFamily: FontFamily.ui, fontSize: sf(13), color: Colors.sakuraInk, marginTop: 1 }}>
-            {shipTitle || 'imagined ♡'}
+            {headerSub || 'imagined ♡'}
           </Text>
         </View>
 
-        {/* Segmented sender control — single rounded track */}
+        {/* Segmented sender control — single ships only (poly uses "speaking as" below) */}
+        {!poly && (
         <View style={{
           flexDirection: 'row',
           backgroundColor: Colors.vellum,
@@ -223,6 +231,7 @@ function ThreadView({
             </Text>
           </Pressable>
         </View>
+        )}
       </View>
 
       {/* Message Container Area */}
@@ -281,16 +290,23 @@ function ThreadView({
                   );
                 }
                 lastTime = m.createdAt;
+                const mine = poly ? (m.sender === meId || m.sender === 'me') : (m.sender === 'me');
+                const sIdx = members.findIndex((x) => x.id === m.sender);
+                const sColor = sIdx >= 0 ? memberColor(sIdx) : Colors.sakuraDeep;
+                const sLabel = poly && !mine ? (members[sIdx]?.name || foName) : '';
                 list.push(
                   <Pressable
                     key={m.id}
-                    style={[s.bubbleRow, m.sender === 'me' ? s.bubbleRowMe : s.bubbleRowThem]}
+                    style={[s.bubbleRow, mine ? s.bubbleRowMe : s.bubbleRowThem]}
                     onLongPress={() => setMsgToDelete(m.id)}
                   >
-                    <View style={[s.bubble, m.sender === 'me' ? s.bubbleMe : s.bubbleThem]}>
-                      <Text style={[s.bubbleText, m.sender === 'me' ? s.bubbleTextMe : s.bubbleTextThem]}>
-                        {m.body}
-                      </Text>
+                    <View style={{ maxWidth: '78%', alignItems: mine ? 'flex-end' : 'flex-start' }}>
+                      {sLabel ? <Text style={s.senderLabel}>{sLabel}</Text> : null}
+                      <View style={[s.bubble, { maxWidth: '100%' }, mine ? s.bubbleMe : (poly ? { backgroundColor: sColor, borderBottomLeftRadius: 4 } : s.bubbleThem)]}>
+                        <Text style={[s.bubbleText, (mine || poly) ? s.bubbleTextMe : s.bubbleTextThem]}>
+                          {m.body}
+                        </Text>
+                      </View>
                     </View>
                   </Pressable>
                 );
@@ -301,12 +317,21 @@ function ThreadView({
         </ScrollView>
       </View>
 
+      {poly && members.length > 0 && (
+        <View style={s.speakingAs}>
+          <Text style={s.speakingLabel}>speaking as</Text>
+          <MemberPicker ship={ship} includeMe selectedId={sender} onSelect={(id) => setSender(id)} />
+        </View>
+      )}
+
       <View style={[s.inputRow, { paddingBottom: keyboardOpen ? Spacing.s3 : Math.max(insets.bottom, Spacing.s3) }]}>
         <TextInput
           ref={inputRef}
           value={draft}
           onChangeText={setDraft}
-          placeholder={sender === 'me' ? 'write to them...' : `${foName} says...`}
+          placeholder={poly
+            ? (sender === meId ? 'write to the group…' : `${members.find((x) => x.id === sender)?.name || ''} says…`)
+            : (sender === 'me' ? 'write to them...' : `${foName} says...`)}
           placeholderTextColor={Colors.ink3}
           style={s.input}
           multiline
@@ -371,6 +396,14 @@ const s = StyleSheet.create({
   bubbleText: { fontFamily: FontFamily.ui, fontSize: sf(13), lineHeight: 18 },
   bubbleTextMe: { color: Colors.vellum },
   bubbleTextThem: { color: Colors.ink },
+  senderLabel: { fontFamily: FontFamily.uiMedium, fontSize: sf(10), color: Colors.ink3, marginBottom: 2, marginLeft: 4 },
+
+  speakingAs: {
+    flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap',
+    paddingHorizontal: Spacing.s5, paddingTop: Spacing.s2,
+    backgroundColor: Colors.paperDeep,
+  },
+  speakingLabel: { fontFamily: FontFamily.marker, fontSize: sf(9), letterSpacing: 1.2, textTransform: 'uppercase', color: Colors.ink3 },
 
   inputRow: {
     flexDirection: 'row', alignItems: 'flex-end', gap: 8,

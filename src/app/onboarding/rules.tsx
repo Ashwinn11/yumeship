@@ -14,6 +14,7 @@ import { Colors, FontFamily, FontSize, Radius, Spacing ,sf } from '@/constants/t
 import { useIPad } from '@/hooks/use-ipad';
 import { getOnbState, resetOnb } from '@/store/onboarding';
 import { addShip, REL_GRADS } from '@/store/ships';
+import { newId } from '@/db/client';
 
 const VISUAL_TEMPLATES = [
   { key: 'get-to-know', label: 'All About Us', desc: 'popular · fill out their info', color: Colors.sakuraDeep, bg: Colors.sakuraSoft, tape: 'floral' },
@@ -23,6 +24,11 @@ const VISUAL_TEMPLATES = [
   { key: 'flip-phone', label: 'Flip Phone', desc: 'Y2K windows · chat · music', color: Colors.sakuraDeep, bg: Colors.sakura, tape: 'floral' },
   { key: 'talking-about', label: 'Talking About', desc: 'dual portrait · sliders · tropes', color: Colors.sageDeep, bg: Colors.sageSoft, tape: 'dot' },
   { key: 'bond-banner', label: 'Bond Banner', desc: 'heart shield · personality bars', color: Colors.plum, bg: Colors.lavenderSoft, tape: 'heart' },
+] as const;
+
+const POLY_VISUAL = [
+  { key: 'poly-chart', label: 'Poly Ship Chart', desc: 'the whole polycule · roster · map', color: Colors.plum, bg: Colors.lavenderSoft, tape: 'heart' },
+  { key: 'poly-quick', label: 'In 5 Minutes', desc: 'quick · roles · meters · facts', color: Colors.lavenderDeep, bg: Colors.lavenderSoft, tape: 'dot' },
 ] as const;
 
 const TAPE_BY_REL: Record<string, { color: string; pattern: 'stripe' | 'dot' | 'heart' | 'check' }> = {
@@ -36,11 +42,34 @@ export default function OnbRules() {
   const { scrollFill, column } = useIPad();
   const { mode } = useLocalSearchParams<{ mode?: string }>();
   const isNew = mode === 'new';
+  const isPolyFlow = getOnbState().kind === 'poly';
 
-  const [templateKey, setTemplateKey] = useState<string>('get-to-know');
+  const [templateKey, setTemplateKey] = useState<string>(isPolyFlow ? 'poly-chart' : 'get-to-know');
 
   function finish() {
     const state = getOnbState();
+
+    if (state.kind === 'poly') {
+      const name = (state.shipName || 'untitled').trim();
+      const shipId = addShip({
+        name,
+        shipName: name,
+        myName: state.userName || '',
+        relType: 'romantic',
+        gradStart: state.gradStart || REL_GRADS.romantic[0],
+        gradEnd: state.gradEnd || REL_GRADS.romantic[1],
+        tapePattern: 'heart',
+        tapeColor: 'rgba(255,255,255,0.9)',
+        coverUri: state.coverUri,
+        templateKey,
+        kind: 'poly',
+        members: [{ id: newId(), name: state.userName || 'me ♡', isMe: true }],
+      });
+      resetOnb();
+      router.replace(`/template/${templateKey}?shipId=${shipId}` as any);
+      return;
+    }
+
     const relType = state.relType || 'romantic';
     const shareType = state.shareType || 'mirror';
     const relGrad = REL_GRADS[relType] ?? REL_GRADS.romantic;
@@ -101,7 +130,7 @@ export default function OnbRules() {
         <View style={styles.section}>
           <Field label="VISUAL THEME">
             <View style={styles.templateGrid}>
-              {VISUAL_TEMPLATES.map((t) => (
+              {(isPolyFlow ? POLY_VISUAL : VISUAL_TEMPLATES).map((t) => (
                 <Pressable
                   key={t.key}
                   style={[styles.templateCard, { backgroundColor: t.bg }, templateKey === t.key && { borderColor: t.color, borderWidth: 2 }]}

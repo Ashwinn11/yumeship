@@ -14,6 +14,7 @@ import { StepDots } from '@/components/ui/StepDots';
 import { Colors, FontFamily, FontSize, Radius, Spacing ,sf } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
 import { resetOnb, setOnbField } from '@/store/onboarding';
+import { usePremium } from '@/store/premium';
 
 export const COVER_PALETTES: { id: string; start: string; end: string }[] = [
   { id: 'sakura', start: '#f3b6c4', end: '#9b4f6e' },
@@ -31,6 +32,7 @@ export default function OnbFO() {
   const { scrollFill, column } = useIPad();
   const { mode } = useLocalSearchParams<{ mode?: string }>();
   const isNew = mode === 'new';
+  const premium = usePremium();
 
   const [foName, setFoName] = useState('');
   const [shipName, setShipName] = useState('');
@@ -39,6 +41,7 @@ export default function OnbFO() {
   const [coverUri, setCoverUri] = useState('');
   const [relType, setRelType] = useState<'romantic' | 'platonic' | 'familial'>('romantic');
   const [shareType, setShareType] = useState<'ng' | 'welcome' | 'mirror'>('mirror');
+  const [kind, setKind] = useState<'single' | 'poly'>('single');
 
   const handleFoName = (v: string) => { setFoName(v); setOnbField('foName', v); };
   const handleShipName = (v: string) => { setShipName(v); setOnbField('shipName', v); };
@@ -68,6 +71,7 @@ export default function OnbFO() {
   function goToRules() {
     setOnbField('relType', relType);
     setOnbField('shareType', shareType);
+    setOnbField('kind', kind);
     router.push({ pathname: '/onboarding/rules', params: isNew ? { mode: 'new' } : {} });
   }
 
@@ -102,11 +106,45 @@ export default function OnbFO() {
           </View>
         {!isNew && <Text style={styles.eyebrow}>step four · them</Text>}
         <Text style={[styles.heading, isNew && styles.headingNew]}>
-          Meet them,{"\n"}your forever-someone.
+          {kind === 'poly'
+            ? <>Your polycule,{"\n"}all in one place.</>
+            : <>Meet them,{"\n"}your forever-someone.</>}
         </Text>
 
         {/* Premium redesign card containing all fields in step two */}
         <View style={styles.card}>
+          <View style={{ marginBottom: 18 }}>
+            <Text style={styles.fieldLabel}>SHIP TYPE</Text>
+            <View style={{ flexDirection: 'row', gap: 6, marginTop: 6 }}>
+              {(['single', 'poly'] as const).map((k) => {
+                const on = kind === k;
+                const locked = k === 'poly' && !premium;
+                return (
+                  <Pressable
+                    key={k}
+                    onPress={() => {
+                      if (locked) {
+                        router.push({ pathname: '/paywall', params: { reason: 'polyship' } });
+                        return;
+                      }
+                      setKind(k);
+                      setOnbField('kind', k);
+                    }}
+                    style={{
+                      flex: 1, paddingVertical: 8, borderRadius: 14, borderWidth: 1, alignItems: 'center',
+                      borderColor: on ? Colors.plum : Colors.line,
+                      backgroundColor: on ? Colors.lavenderSoft : Colors.paperDeep,
+                    }}
+                  >
+                    <Text style={{ fontSize: sf(12), fontFamily: FontFamily.uiMedium, color: on ? Colors.plum : Colors.ink2 }}>
+                      {k === 'single' ? 'single ship' : (locked ? 'polyship 🔒' : 'polyship ♡')}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+
           {/* SHIP NAME field */}
           <View style={{ marginBottom: 20 }}>
             <Text style={styles.fieldLabel}>SHIP NAME · what you call this</Text>
@@ -122,6 +160,36 @@ export default function OnbFO() {
             </View>
           </View>
 
+          {kind === 'poly' && (
+            <View style={{ alignItems: 'center', marginBottom: 20 }}>
+              <LinearGradient
+                colors={[selectedPalette.start, selectedPalette.end]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{
+                  width: 92, height: 116, borderRadius: 12, alignItems: 'center', justifyContent: 'center',
+                  position: 'relative', overflow: 'hidden',
+                  shadowColor: 'rgba(110, 58, 90, 0.18)', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 1, shadowRadius: 8, elevation: 3,
+                }}
+              >
+                {coverUri ? (
+                  <Image source={{ uri: coverUri }} style={{ width: 92, height: 116 }} contentFit="cover" />
+                ) : (
+                  <Text style={{ color: '#fff', fontFamily: FontFamily.displayItalic, fontSize: sf(40) }}>
+                    {shipName.charAt(0).toUpperCase() || '♡'}
+                  </Text>
+                )}
+                <View style={{ position: 'absolute', bottom: 6, right: 6, backgroundColor: 'rgba(110,58,90,0.92)', borderRadius: Radius.pill, paddingVertical: 2, paddingHorizontal: 7 }}>
+                  <Text style={{ color: '#fff', fontFamily: FontFamily.marker, fontSize: sf(9), letterSpacing: 0.6 }}>poly</Text>
+                </View>
+              </LinearGradient>
+              <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: sf(16), color: Colors.ink, marginTop: 8 }}>
+                {shipName || 'your polyship'}
+              </Text>
+            </View>
+          )}
+
+          {kind === 'single' && (<>
           {/* Avatar Preview Tile & inputs */}
           <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
             <LinearGradient
@@ -249,10 +317,11 @@ export default function OnbFO() {
           </View>
 
           <View style={styles.cardDivider} />
+          </>)}
 
-          {/* THEIR COLOR field */}
+          {/* COLOR field */}
           <View>
-            <Text style={styles.fieldLabel}>THEIR COLOR</Text>
+            <Text style={styles.fieldLabel}>{kind === 'poly' ? 'SHIP COLOR' : 'THEIR COLOR'}</Text>
             <View style={styles.paletteRow}>
               {COVER_PALETTES.map((p) => (
                 <Pressable
@@ -314,14 +383,18 @@ export default function OnbFO() {
           variant="primary"
           size="lg"
           full
-          disabled={foName.trim().length === 0 || shipName.trim().length === 0}
+          disabled={kind === 'poly'
+            ? shipName.trim().length === 0
+            : (foName.trim().length === 0 || shipName.trim().length === 0)}
           onPress={goToRules}
         >
-          {!foName.trim()
-            ? 'enter their name first'
-            : !shipName.trim()
-              ? 'enter ship name first'
-              : 'continue · style'}
+          {kind === 'poly'
+            ? (!shipName.trim() ? 'enter ship name first' : 'continue · style')
+            : !foName.trim()
+              ? 'enter their name first'
+              : !shipName.trim()
+                ? 'enter ship name first'
+                : 'continue · style'}
         </Button>
       </View>
     </View>

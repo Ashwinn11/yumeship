@@ -21,7 +21,7 @@ import {
   addHeadcanon, deleteHeadcanon, updateHeadcanon, useHeadcanonCounts, useHeadcanons,
 } from '@/store/headcanons';
 import { getGlobalSetting, saveGlobalSetting } from '@/store/onboarding';
-import { deleteShip, daysTogetherLabel, updateShip, useShip } from '@/store/ships';
+import { deleteShip, daysTogetherLabel, isPoly, membersLabel, shipTitle, updateShip, useShip } from '@/store/ships';
 
 const TEMPLATES = [
   { key: 'get-to-know',  title: 'All About Us',     tapePattern: 'heart'  as const, color: Colors.sakuraDeep,   bg: Colors.sakuraSoft },
@@ -31,6 +31,12 @@ const TEMPLATES = [
   { key: 'bond-banner',  title: 'Bond Banner',        tapePattern: 'floral' as const, color: Colors.sageDeep,    bg: Colors.sageSoft },
   { key: 'flip-phone',   title: 'Flip Phone',         tapePattern: 'dot'    as const, color: Colors.ink2,        bg: Colors.paperDeep },
   { key: 'talking-about',title: 'Talking About',      tapePattern: 'heart'  as const, color: Colors.plum,        bg: Colors.lavenderSoft },
+];
+
+// Polyship ships use their own dedicated templates.
+const POLY_TEMPLATES = [
+  { key: 'poly-chart',   title: 'Poly Ship Chart',    tapePattern: 'heart'  as const, color: Colors.plum,        bg: Colors.lavenderSoft },
+  { key: 'poly-quick',   title: 'In 5 Minutes',       tapePattern: 'dot'    as const, color: Colors.lavenderDeep, bg: Colors.lavenderSoft },
 ];
 
 const REL_CHIP_COLOR: Record<string, string> = {
@@ -130,8 +136,9 @@ export default function ShipDetail() {
 
         <View style={styles.nameBlock}>
           <View style={styles.nameRow}>
-            <Text style={styles.name}>{ship.name}</Text>
+            <Text style={styles.name}>{isPoly(ship) ? shipTitle(ship) : ship.name}</Text>
           </View>
+          {isPoly(ship) && membersLabel(ship) ? <Text style={styles.polyMembers}>{membersLabel(ship)}</Text> : null}
         </View>
 
         <ProfileTab ship={ship} id={id!} />
@@ -140,7 +147,7 @@ export default function ShipDetail() {
         <View style={styles.templatesSection}>
           <Text style={styles.templatesSectionLabel}>TEMPLATES</Text>
           <View style={styles.templatesGrid}>
-            {TEMPLATES.map((t) => (
+            {(isPoly(ship) ? POLY_TEMPLATES : TEMPLATES).map((t) => (
               <Pressable
                 key={t.key}
                 style={[styles.templateCard, { backgroundColor: t.bg }]}
@@ -447,6 +454,7 @@ const styles = StyleSheet.create({
   nameBlock: { paddingHorizontal: Spacing.s5, paddingTop: 12, paddingBottom: Spacing.s1 },
   nameRow: { flexDirection: 'row', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' },
   name: { fontFamily: FontFamily.displayItalic, fontSize: sf(32), lineHeight: 33, color: Colors.ink },
+  polyMembers: { fontFamily: FontFamily.uiMedium, fontSize: sf(13), color: Colors.plum, marginTop: 2 },
   // Profile tab
   profileContent: { paddingHorizontal: Spacing.s5, paddingTop: Spacing.s1, paddingBottom: Spacing.s6, gap: 14 },
   anniversary: {

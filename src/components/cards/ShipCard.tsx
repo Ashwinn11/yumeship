@@ -57,7 +57,6 @@ export function ShipCard({
   style,
 }: Props) {
   const displayTitle = shipName || name;
-  const pairingLine = myName ? `${myName} × ${name}` : '';
   const typeColor = TYPE_COLORS[type];
 
   return (

@@ -12,7 +12,7 @@ import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing ,sf } from '@/con
 import { useIPad } from '@/hooks/use-ipad';
 import { getOnbState, resetOnb } from '@/store/onboarding';
 import { requestPermission } from '@/store/notifications';
-import { daysAgo, getShip } from '@/store/ships';
+import { daysAgo, getShip, isPoly, membersLabel } from '@/store/ships';
 
 const CREATION_LABEL: Record<string, string> = {
   letter: 'your first love letter',
@@ -91,7 +91,7 @@ export default function OnbReady() {
             name={ship.name}
             shipName={ship.shipName}
             myName={ship.myName}
-            src={ship.fandom || '—'}
+            src={isPoly(ship) ? (membersLabel(ship) || '—') : (ship.fandom || '—')}
             initial={(ship.shipName || ship.name).charAt(0).toUpperCase() || '♡'}
             gradStart={ship.gradStart}
             gradEnd={ship.gradEnd}
@@ -100,6 +100,7 @@ export default function OnbReady() {
             days={daysAgo(ship.createdAt)}
             tapePattern={ship.tapePattern as any}
             tapeColor={ship.tapeColor}
+            polycule={isPoly(ship)}
           />
         </View>
 

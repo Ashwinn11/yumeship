@@ -15,7 +15,7 @@ import { Colors, FontFamily, FontSize, Radius, Spacing ,sf } from '@/constants/t
 import { useIPad } from '@/hooks/use-ipad';
 import { resetOnb } from '@/store/onboarding';
 import { usePremium } from '@/store/premium';
-import { daysTogetherLabel, daysAgo, deleteShip, useShips } from '@/store/ships';
+import { daysTogetherLabel, daysAgo, deleteShip, getMembers, isPoly, membersLabel, useShips } from '@/store/ships';
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
@@ -42,7 +42,8 @@ export default function HomeScreen() {
       (ship.name && ship.name.toLowerCase().includes(q)) ||
       (ship.shipName && ship.shipName.toLowerCase().includes(q)) ||
       (ship.myName && ship.myName.toLowerCase().includes(q)) ||
-      (ship.fandom && ship.fandom.toLowerCase().includes(q))
+      (ship.fandom && ship.fandom.toLowerCase().includes(q)) ||
+      getMembers(ship).some((m) => m.name && m.name.toLowerCase().includes(q))
     );
   });
 
@@ -185,7 +186,7 @@ export default function HomeScreen() {
                 name={ship.name}
                 shipName={ship.shipName}
                 myName={ship.myName}
-                src={ship.fandom || '—'}
+                src={isPoly(ship) ? (membersLabel(ship) || '—') : (ship.fandom || '—')}
                 initial={(ship.shipName || ship.name).charAt(0).toUpperCase() || '♡'}
                 gradStart={ship.gradStart}
                 gradEnd={ship.gradEnd}
@@ -195,6 +196,7 @@ export default function HomeScreen() {
                 tapePattern={ship.tapePattern as any}
                 tapeColor={ship.tapeColor}
                 pinned={ship.pinned}
+                polycule={isPoly(ship)}
                 onPress={() => router.push(`/template/${ship.templateKey ?? 'get-to-know'}?shipId=${ship.id}` as any)}
                 onLongPress={() => setShipToDelete(ship.id)}
               />

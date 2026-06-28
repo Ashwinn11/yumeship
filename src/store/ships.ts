@@ -2,6 +2,17 @@ import { useEffect, useState } from 'react';
 import { getDb, newId } from '@/db/client';
 import { notifyDates } from './dates';
 
+export type ShipMember = {
+  id: string;
+  name: string;
+  pronouns?: string;
+  sex?: string;
+  word?: string;
+  photoUri?: string;
+  /** true for the user's own member in a polyship roster */
+  isMe?: boolean;
+};
+
 export type Ship = {
   id: string;
   name: string;
@@ -19,8 +30,48 @@ export type Ship = {
   pinned: boolean;
   startDate: string;
   templateKey: string;
+  kind: 'single' | 'poly';
+  members: ShipMember[];
   createdAt: number;
 };
+
+// Accent palette for polyship members — index-based, matches the poly-chart design.
+export const MEMBER_PAL = ['#d77a8d', '#8b6fc4', '#6e8762', '#b8902a', '#b76b48', '#4f8a9e', '#c25b7a', '#7a9b54'];
+export function memberColor(index: number): string {
+  return MEMBER_PAL[index % MEMBER_PAL.length];
+}
+export function isPoly(ship: Ship | undefined): boolean {
+  return ship?.kind === 'poly';
+}
+export function getMembers(ship: Ship | undefined): ShipMember[] {
+  return ship?.members ?? [];
+}
+// ─── Poly-aware name resolution ───────────────────────────────────────────────
+// The ship title (works for both kinds — poly sets name = shipName).
+export function shipTitle(ship: Ship | undefined): string {
+  return ship?.shipName || ship?.name || '';
+}
+// Joined roster names for a polyship, e.g. "Kael × Rin × me".
+export function membersLabel(ship: Ship | undefined): string {
+  return getMembers(ship).map((m) => m.name).filter(Boolean).join(' × ');
+}
+// The non-"me" members — i.e. the F/O(s) of a polyship.
+export function shipPartners(ship: Ship | undefined): ShipMember[] {
+  return getMembers(ship).filter((m) => !m.isMe);
+}
+// The user's own member in a polyship roster, if marked.
+export function shipMe(ship: Ship | undefined): ShipMember | undefined {
+  return getMembers(ship).find((m) => m.isMe);
+}
+function parseMembers(raw: unknown): ShipMember[] {
+  if (typeof raw !== 'string' || !raw) return [];
+  try {
+    const v = JSON.parse(raw);
+    return Array.isArray(v) ? v : [];
+  } catch {
+    return [];
+  }
+}
 
 const listeners = new Set<() => void>();
 function notify() { listeners.forEach((fn) => fn()); }
@@ -43,6 +94,8 @@ function rowToShip(row: Record<string, unknown>): Ship {
     pinned: !!(row.pinned as number),
     startDate: row.start_date as string,
     templateKey: (row.template_key as string) ?? 'get-to-know',
+    kind: (row.kind as Ship['kind']) ?? 'single',
+    members: parseMembers(row.members),
     createdAt: row.created_at as number,
   };
 }
@@ -70,11 +123,13 @@ export function addShip(d: {
   tapeColor?: string;
   coverUri?: string;
   templateKey?: string;
+  kind?: string;
+  members?: ShipMember[];
 }): string {
   const id = newId();
   getDb().runSync(
-    `INSERT INTO ships (id, name, ship_name, my_name, fandom, rel_type, share_type, nickname, grad_start, grad_end, tape_pattern, tape_color, cover_uri, template_key, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO ships (id, name, ship_name, my_name, fandom, rel_type, share_type, nickname, grad_start, grad_end, tape_pattern, tape_color, cover_uri, template_key, kind, members, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     id,
     d.name,
     d.shipName ?? '',
@@ -89,6 +144,8 @@ export function addShip(d: {
     d.tapeColor ?? 'rgba(255,255,255,0.9)',
     d.coverUri ?? '',
     d.templateKey ?? 'get-to-know',
+    d.kind ?? 'single',
+    JSON.stringify(d.members ?? []),
     Date.now(),
   );
   notify();
@@ -114,6 +171,8 @@ export function updateShip(id: string, d: Partial<Omit<Ship, 'id' | 'createdAt'>
   if (d.pinned !== undefined)      { fields.push('pinned = ?');        values.push(d.pinned ? 1 : 0); }
   if (d.startDate !== undefined)    { fields.push('start_date = ?');     values.push(d.startDate); }
   if (d.templateKey !== undefined)  { fields.push('template_key = ?');   values.push(d.templateKey); }
+  if (d.kind !== undefined)         { fields.push('kind = ?');           values.push(d.kind); }
+  if (d.members !== undefined)      { fields.push('members = ?');        values.push(JSON.stringify(d.members)); }
 
   if (!fields.length) return;
   getDb().runSync(

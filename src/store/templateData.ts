@@ -1,6 +1,7 @@
 import { createContext, useContext } from 'react';
 import { getDb } from '@/db/client';
 import type { Ship } from './ships';
+import { isPoly } from './ships';
 import { getGlobalSetting } from './onboarding';
 
 type TemplateCtx = {
@@ -52,6 +53,8 @@ const FIELD_MAP: Record<string, Record<string, string>> = {
   'talking-about': { foName: 'foName', myName: 'meName', sharing: 'sharing', mainPhoto: 'photoL', myPhoto: 'photoR' },
   'flip-phone':  { foName: 'name', sharing: 'sharing', song: 'song' },
   'bond-banner': { myName: 'meName', foName: 'foName' },
+  // poly-chart stores its roster on the ship and its viz data in dedicated keys; no shared logical fields.
+  'poly-chart':  {},
 };
 
 // Migrate compatible fields from old template data into the new template (only fills gaps)
@@ -87,44 +90,46 @@ export function buildPreFill(ship: Ship, templateKey: string): Record<string, st
   const base: Record<string, string> = {};
   const shareMap: Record<string, string> = { ng: 'No', welcome: 'Yes', mirror: 'Selective' };
   const userName = ship.myName || getGlobalSetting('user_name');
+  // For polyship, `ship.name` is the ship label, not an F/O — never seed it as a character name.
+  const foSeed = isPoly(ship) ? '' : ship.name;
 
   switch (templateKey) {
     case 'get-to-know':
-      if (ship.name)      base['themName'] = ship.name;
+      if (foSeed)         base['themName'] = foSeed;
       if (ship.shareType) base['sharing'] = shareMap[ship.shareType] ?? '';
       if (userName)       base['meName'] = userName;
       break;
     case 'kawaii-ui':
-      if (ship.name)      base['name'] = ship.name;
+      if (foSeed)         base['name'] = foSeed;
       if (ship.fandom)    base['from'] = ship.fandom;
       if (ship.relType)   base['type'] = ship.relType;
       break;
     case 'heart-frame':
-      if (ship.name)      base['themName'] = ship.name;
+      if (foSeed)         base['themName'] = foSeed;
       if (userName)       base['meName'] = userName;
       break;
     case 'love-letter':
-      if (ship.name)      base['dearName'] = ship.name;
+      if (foSeed)         base['dearName'] = foSeed;
       if (userName)       base['signName'] = userName;
       break;
     case 'this-or-that':
-      if (ship.name)      base['name'] = ship.name;
+      if (foSeed)         base['name'] = foSeed;
       break;
     case 'headcanons':
-      if (ship.name)      base['fo'] = ship.name;
+      if (foSeed)         base['fo'] = foSeed;
       if (ship.fandom)    base['source'] = ship.fandom;
       break;
     case 'talking-about':
-      if (ship.name)      base['foName'] = ship.name;
+      if (foSeed)         base['foName'] = foSeed;
       if (userName)       base['meName'] = userName;
       if (ship.shareType) base['sharing'] = shareMap[ship.shareType] ?? '';
       break;
     case 'flip-phone':
-      if (ship.name)      base['name'] = ship.name;
+      if (foSeed)         base['name'] = foSeed;
       if (ship.shareType) base['sharing'] = shareMap[ship.shareType] ?? '';
       break;
     case 'bond-banner':
-      if (ship.name)      base['foName'] = ship.name;
+      if (foSeed)         base['foName'] = foSeed;
       if (userName)       base['meName'] = userName;
       break;
   }

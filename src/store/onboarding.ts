@@ -11,6 +11,7 @@ export type OnbState = {
   gradStart: string;
   gradEnd: string;
   coverUri: string;
+  kind: 'single' | 'poly';
 };
 
 import { getDb } from '@/db/client';
@@ -48,6 +49,7 @@ let state: OnbState = {
   gradStart: '',
   gradEnd: '',
   coverUri: '',
+  kind: 'single',
 };
 
 export function getOnbState(): OnbState {
@@ -78,6 +80,7 @@ export function resetOnb() {
     gradStart: '',
     gradEnd: '',
     coverUri: '',
+    kind: 'single',
   };
 }
 

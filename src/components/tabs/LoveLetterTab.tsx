@@ -36,7 +36,7 @@ export function LoveLetterTab({ shipId }: { shipId: string }) {
   return (
     <TemplateDataCtx.Provider value={ctx}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[s.tab, column]}>
-        <LoveLetterContent editing />
+        <LoveLetterContent editing ship={ship} />
       </ScrollView>
     </TemplateDataCtx.Provider>
   );
