@@ -13,7 +13,7 @@ import { IconSend } from '@/components/ui/Icon';
 import { Colors, FontFamily, Radius, Spacing ,sf } from '@/constants/theme';
 import { addMessage, addThread, deleteMessage, useMessages, useThreads } from '@/store/messages';
 import { useShip } from '@/store/ships';
-import { StickerEnvelope, WashiTape } from '@/components/deco';
+import { StickerEnvelope } from '@/components/deco';
 
 export function MessagesTab({ shipId, shipName, sender: externalSender, onSenderChange, onBack }: {
   shipId: string;
@@ -136,11 +136,6 @@ function ThreadView({
           overflow: 'visible',
         }}
       >
-        {/* Washi tape strip across top edge of header */}
-        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 20 }} pointerEvents="none">
-          <WashiTape pattern="floral" width={110} height={11} rotate={-1} color={Colors.sakura} />
-        </View>
-
         {/* Back chevron */}
         {onBack && (
           <Pressable onPress={onBack} hitSlop={8} style={{ marginRight: 2 }}>
@@ -175,10 +170,10 @@ function ThreadView({
 
         {/* Name + subtitle */}
         <View style={{ flex: 1 }}>
-          <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: sf(19), color: Colors.ink, lineHeight: 21 }}>
+          <Text style={{ fontFamily: FontFamily.uiMedium, fontSize: sf(19), color: Colors.ink, lineHeight: 21 }}>
             {foName}
           </Text>
-          <Text style={{ fontFamily: FontFamily.script, fontSize: sf(13), color: Colors.sakuraInk, marginTop: 1 }}>
+          <Text style={{ fontFamily: FontFamily.ui, fontSize: sf(13), color: Colors.sakuraInk, marginTop: 1 }}>
             {shipTitle || 'imagined ♡'}
           </Text>
         </View>
