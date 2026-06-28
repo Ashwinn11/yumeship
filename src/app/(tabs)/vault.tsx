@@ -181,7 +181,7 @@ export default function VaultScreen() {
         <View style={[styles.emptyShips, { flex: 1, justifyContent: 'center', paddingTop: 40, paddingHorizontal: 20, gap: 12 }]}>
           <StickerWaxSeal size={88} />
           <Text style={{ fontFamily: FontFamily.script, fontSize: sf(26), color: Colors.ink, textAlign: 'center', marginTop: 10 }}>
-            no ships yet
+            create a ship to fill the vault
           </Text>
         </View>
       ) : activeFeature ? (

@@ -123,13 +123,10 @@ export default function HomeScreen() {
       </View>
 
       {ships.length === 0 ? (
-        <View style={[styles.emptyState, { paddingVertical: 60, paddingHorizontal: 20, gap: 12 }]}>
+        <View style={[styles.emptyState, { paddingTop: 40, paddingHorizontal: 20, gap: 12 }]}>
           <StickerSakuraFlower size={88} />
-          <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: sf(26), color: Colors.ink, textAlign: 'center', marginTop: 10 }}>
-            no ships yet
-          </Text>
-          <Text style={{ fontFamily: FontFamily.script, fontSize: sf(18), lineHeight: 22, color: Colors.ink2, textAlign: 'center', marginVertical: 8 }}>
-            your first F/O is waiting —{"\n"}let's build your notebook.
+          <Text style={{ fontFamily: FontFamily.script, fontSize: sf(26), color: Colors.ink, textAlign: 'center', marginTop: 10 }}>
+            your first F/O is waiting
           </Text>
           <Pressable
             style={{
@@ -163,13 +160,10 @@ export default function HomeScreen() {
             }
           }}
         >
-          <View style={[styles.emptyState, { paddingVertical: 60, paddingHorizontal: 20, gap: 12 }]}>
+          <View style={[styles.emptyState, { paddingTop: 40, paddingHorizontal: 20, gap: 12 }]}>
             <StickerSakuraFlower size={88} />
-            <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: sf(26), color: Colors.ink, textAlign: 'center', marginTop: 10 }}>
+            <Text style={{ fontFamily: FontFamily.script, fontSize: sf(26), color: Colors.ink, textAlign: 'center', marginTop: 10 }}>
               no ships found
-            </Text>
-            <Text style={{ fontFamily: FontFamily.script, fontSize: sf(18), lineHeight: 22, color: Colors.ink2, textAlign: 'center', marginVertical: 8 }}>
-              try adjusting your search term —{"\n"}they are out there.
             </Text>
           </View>
         </Pressable>
