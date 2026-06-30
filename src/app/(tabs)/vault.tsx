@@ -1,8 +1,8 @@
 import { useNavigation } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
-  Image, Keyboard, KeyboardAvoidingView, Platform, Pressable,
-  ScrollView, StyleSheet, Text, TextInput, View,
+  Image, Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable,
+  ScrollView, StyleSheet, Text, TextInput, TouchableWithoutFeedback, View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
@@ -10,32 +10,34 @@ import Svg, { Circle, Path, Rect } from 'react-native-svg';
 import { Cloud } from '@/components/deco/Cloud';
 import { Heart } from '@/components/deco/Heart';
 import { Star } from '@/components/deco/Star';
-import { Check, FILL_GRAY, TitleHeader } from '@/components/templates/primitives';
+import { FILL_GRAY, TitleHeader } from '@/components/templates/primitives';
 
-import { Bullets, StickerEnvelope, StickerSakuraBranch, StickerWaxSeal, WashiTape } from '@/components/deco';
-import { Sparkle } from '@/components/deco/Sparkle';
+import { StickerEnvelope, StickerSakuraBranch, StickerWaxSeal, WashiTape } from '@/components/deco';
+import { MemberPicker } from '@/components/nav/MemberPicker';
 import { AlbumsTab } from '@/components/tabs/AlbumsTab';
 import { DatesTab } from '@/components/tabs/DatesTab';
+import { IncorrectQuotesTab } from '@/components/tabs/IncorrectQuotesTab';
 import { LoveLetterTab } from '@/components/tabs/LoveLetterTab';
 import { MessagesTab } from '@/components/tabs/MessagesTab';
+import { PolycaleBingoTab } from '@/components/tabs/PolycaleBingoTab';
 import { StorylineTab } from '@/components/tabs/StorylineTab';
 import { ThisOrThatTab } from '@/components/tabs/ThisOrThatTab';
-import { PolycaleBingoTab } from '@/components/tabs/PolycaleBingoTab';
-import { IncorrectQuotesTab } from '@/components/tabs/IncorrectQuotesTab';
 import { INK, SquareCheck } from '@/components/templates/primitives';
 import { CozyModal } from '@/components/ui/CozyModal';
 import { IconChevronLeft, IconEdit, IconPlus, IconTrashSolid } from '@/components/ui/Icon';
 import { Mark } from '@/components/ui/Mark';
-import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing ,sf } from '@/constants/theme';
+import { Colors, FontFamily, FontSize, Radius, sf, Shadow, Spacing } from '@/constants/theme';
+import { useIPad } from '@/hooks/use-ipad';
 import { addFoMessage, deleteFoMessage, toggleFoMessage, updateFoMessage, useFoMessages } from '@/store/foNotifications';
 import { addHeadcanon, clearCategoryHeadcanons, deleteHeadcanon, getHeadcanons, updateHeadcanon, useHeadcanonCounts, useHeadcanons } from '@/store/headcanons';
 import { requestPermission } from '@/store/notifications';
-import { useIPad } from '@/hooks/use-ipad';
 import { getGlobalSetting, saveGlobalSetting } from '@/store/onboarding';
-import { addScenario, deleteScenario, updateScenario, useScenarios } from '@/store/scenarios';
-import { getMembers, isPoly, membersLabel, shipPartners, Ship, useShip, useShips } from '@/store/ships';
-import { MemberPicker } from '@/components/nav/MemberPicker';
 import { usePremium } from '@/store/premium';
+import { addCustomPrompt, CustomPrompt, deleteCustomPrompt, getBuiltinDeck, useCustomPrompts } from '@/store/scenarioPrompts';
+import { addScenario, deleteScenario, updateScenario, useScenarios } from '@/store/scenarios';
+import { getMembers, isPoly, membersLabel, Ship, shipPartners, useShip, useShips } from '@/store/ships';
+import { loadTemplateData, saveTemplateData } from '@/store/templateData';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 
 const PREMIUM_FEATURES: Feature[] = ['scenarios', 'albums', 'storyline', 'love-letter'];
@@ -45,8 +47,6 @@ const FEATURE_REASON: Partial<Record<Feature, string>> = {
   storyline: 'storyline',
   'love-letter': 'love-letter',
 };
-import { loadTemplateData, saveTemplateData } from '@/store/templateData';
-import { LinearGradient } from 'expo-linear-gradient';
 
 type Feature =
   | 'headcanons'
@@ -269,7 +269,7 @@ const DEFAULT_HC_CATS: { id: string; ja: string; label: string; color: string }[
 
 function getHCCats(shipId: string) {
   const raw = getGlobalSetting(`hc_cats_${shipId}`, '');
-  if (raw) { try { return JSON.parse(raw) as typeof DEFAULT_HC_CATS; } catch (_) {} }
+  if (raw) { try { return JSON.parse(raw) as typeof DEFAULT_HC_CATS; } catch (_) { } }
   return DEFAULT_HC_CATS;
 }
 
@@ -711,21 +711,46 @@ function BoundariesFeature({ shipId }: { shipId: string }) {
 
 // ─── Scenarios feature ────────────────────────────────────────────────────────
 
-const SC_PROMPTS: { ja: string; label: string }[] = [
-  { ja: '雨', label: 'rainy day' },
-  { ja: '夜', label: 'late call' },
-  { ja: '朝', label: 'morning after' },
-  { ja: '初', label: 'first meeting' },
-];
 
 function ScenariosFeature({ shipId, shipName, setCustomBack }: { shipId: string; shipName: string; setCustomBack: (fn: (() => void) | null) => void }) {
   const scenarios = useScenarios(shipId);
-  const [editing, setEditing] = useState<{ id: string | null; title: string; body: string } | null>(null);
+  const ship = useShip(shipId);
+  const customPrompts = useCustomPrompts();
+  const [editing, setEditing] = useState<{ id: string | null; title: string; body: string; prompt?: string } | null>(null);
   const [scDeleteTarget, setScDeleteTarget] = useState<string | null>(null);
+  const [showIdeas, setShowIdeas] = useState(false);
+  const [newPromptText, setNewPromptText] = useState('');
+  const [shuffleN, setShuffleN] = useState(0);
 
-  function handleNewScenario(title = '', body = '') {
-    setEditing({ id: null, title, body });
+  // Relationship type drives the whole screen's accent — keeps the design tied
+  // to the ship and consistent with the relationship-aware prompts.
+  const relType = ship?.relType;
+  const accent = relType === 'platonic' ? Colors.sageDeep : relType === 'familial' ? Colors.peachDeep : Colors.sakuraDeep;
+  const accentSoft = relType === 'platonic' ? Colors.sageSoft : relType === 'familial' ? Colors.peachSoft : Colors.sakuraSoft;
+  const accentLight = relType === 'platonic' ? Colors.sage : relType === 'familial' ? Colors.peach : Colors.sakura;
+
+  const builtinDeck = getBuiltinDeck(ship?.relType);
+  // Built-in (relationship-aware) + the user's own prompts, shuffled for serendipity.
+  const ideaDeck = useMemo(() => {
+    const all = [...builtinDeck, ...customPrompts];
+    for (let i = all.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [all[i], all[j]] = [all[j], all[i]];
+    }
+    return all;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shuffleN, customPrompts.length, ship?.relType]);
+
+  function handleNewScenario(title = '', body = '', prompt = '') {
+    setEditing({ id: null, title, body, prompt });
     setCustomBack(() => () => { setEditing(null); setCustomBack(null); });
+  }
+
+  function addPrompt() {
+    const t = newPromptText.trim();
+    if (!t) return;
+    addCustomPrompt(t);
+    setNewPromptText('');
   }
 
   if (editing) {
@@ -733,6 +758,8 @@ function ScenariosFeature({ shipId, shipName, setCustomBack }: { shipId: string;
       <ScenarioEditor
         initial={editing}
         shipName={shipName}
+        accent={accent}
+        accentLight={accentLight}
         onSave={(title, body) => {
           if (!editing.id) addScenario(shipId, title, body);
           else updateScenario(editing.id, { title, body });
@@ -749,80 +776,91 @@ function ScenariosFeature({ shipId, shipName, setCustomBack }: { shipId: string;
       {/* Redesigned Scenarios Header */}
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 14, paddingHorizontal: 4 }}>
         <View>
-          <Text style={{ fontFamily: FontFamily.marker, fontSize: sf(9), color: Colors.sakuraDeep, letterSpacing: 1.4, textTransform: 'uppercase', marginBottom: 2 }}>
+          <Text style={{ fontFamily: FontFamily.marker, fontSize: sf(9), color: accent, letterSpacing: 1.4, textTransform: 'uppercase', marginBottom: 2 }}>
             SCENARIOS · {scenarios.length} SAVED
           </Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: sf(34), color: Colors.ink, lineHeight: 36 }}>
-              what-ifs
-            </Text>
-            <Bullets.Sakura size={12} color={Colors.sakuraDeep} />
-          </View>
         </View>
-        <Pressable
-          onPress={() => handleNewScenario()}
-          style={{
-            width: 32,
-            height: 32,
-            borderRadius: 16,
-            backgroundColor: Colors.vellum,
-            borderWidth: 1,
-            borderColor: Colors.line,
-            alignItems: 'center',
-            justifyContent: 'center',
-            shadowColor: 'rgba(110, 58, 90, 0.05)',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 1,
-            shadowRadius: 3,
-            elevation: 1,
-          }}
-        >
-          <IconPlus size={12} color={Colors.sakuraDeep} />
-        </Pressable>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <Pressable
+            onPress={() => setShowIdeas(true)}
+            style={{
+              flexDirection: 'row', alignItems: 'center', gap: 4,
+              height: 32, paddingHorizontal: 12, borderRadius: 16,
+              backgroundColor: accentSoft, borderWidth: 1, borderColor: accentLight,
+            }}
+          >
+            <Text style={{ fontSize: sf(12) }}>✨</Text>
+            <Text style={{ fontFamily: FontFamily.uiMedium, fontSize: sf(12), color: accent }}>prompts</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => handleNewScenario()}
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: 16,
+              backgroundColor: accent,
+              alignItems: 'center',
+              justifyContent: 'center',
+              shadowColor: 'rgba(110, 58, 90, 0.18)',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 1,
+              shadowRadius: 4,
+              elevation: 2,
+            }}
+          >
+            <IconPlus size={13} color={Colors.vellum} />
+          </Pressable>
+        </View>
       </View>
 
       {scenarios.length === 0 ? (
-        <View style={[sc.empty, { flex: 1, justifyContent: 'center', paddingTop: 40, paddingHorizontal: 20, gap: 12 }]}>
-          <StickerSakuraBranch size={88} />
-          <Text style={{ fontFamily: FontFamily.script, fontSize: sf(26), color: Colors.ink, textAlign: 'center', marginTop: 10 }}>
-            no daydreams yet
-          </Text>
-          <Pressable
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 6,
-              backgroundColor: Colors.sakuraDeep,
-              paddingHorizontal: 20,
-              paddingVertical: 10,
-              borderRadius: 99,
-              shadowColor: 'rgba(110, 58, 90, 0.12)',
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 1,
-              shadowRadius: 3,
-              elevation: 1,
-              marginTop: 10,
-              marginBottom: 14,
-            }}
-            onPress={() => handleNewScenario()}
-          >
-            <IconPlus size={12} color={Colors.vellum} />
-            <Text style={{ fontFamily: FontFamily.uiMedium, fontSize: sf(14), color: Colors.vellum }}>write a scenario</Text>
-          </Pressable>
+        <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingTop: 28, paddingHorizontal: 20, paddingBottom: Spacing.s9 }} showsVerticalScrollIndicator={false}>
+          <View style={{ alignItems: 'center', gap: 4 }}>
+            <StickerSakuraBranch size={76} />
+            <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: sf(30), color: Colors.ink, textAlign: 'center', marginTop: 8 }}>
+              no daydreams yet
+            </Text>
+            <Text style={{ fontFamily: FontFamily.ui, fontSize: sf(13), color: Colors.ink3, textAlign: 'center' }}>
+              pick a moment to write about, or start blank
+            </Text>
+          </View>
 
-          <View style={sc.prompts}>
-            {SC_PROMPTS.map((p) => (
+          {/* Prompt starters — tapping one names the new moment */}
+          <View style={{ width: '100%', gap: 8, marginTop: Spacing.s5 }}>
+            {builtinDeck.slice(0, 3).map((p) => (
               <Pressable
-                key={p.ja}
-                style={[sc.prompt, { paddingVertical: 6, paddingHorizontal: 12 }]}
-                onPress={() => handleNewScenario(p.label)}
+                key={p.text}
+                style={{
+                  flexDirection: 'row', alignItems: 'center', gap: 10,
+                  backgroundColor: Colors.vellum, borderWidth: 1, borderColor: Colors.line,
+                  borderLeftWidth: 3, borderLeftColor: accent,
+                  borderRadius: Radius.r3, paddingVertical: 12, paddingHorizontal: 14,
+                }}
+                onPress={() => handleNewScenario(p.text)}
               >
-                <Text style={sc.promptJa}>{p.ja}</Text>
-                <Text style={sc.promptLabel}>{p.label}</Text>
+                <Text style={{ fontSize: sf(13), color: accent }}>♡</Text>
+                <Text style={{ flex: 1, fontFamily: FontFamily.ui, fontSize: sf(13), lineHeight: 19, color: Colors.ink2 }}>{p.text}</Text>
               </Pressable>
             ))}
           </View>
-        </View>
+
+          <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 10, marginTop: Spacing.s4 }}>
+            <Pressable
+              onPress={() => handleNewScenario()}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: accent, paddingHorizontal: 18, paddingVertical: 10, borderRadius: Radius.pill }}
+            >
+              <IconPlus size={12} color={Colors.vellum} />
+              <Text style={{ fontFamily: FontFamily.uiMedium, fontSize: sf(13), color: Colors.vellum }}>start blank</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => setShowIdeas(true)}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 14, paddingVertical: 10, borderRadius: Radius.pill, borderWidth: 1, borderColor: accentLight, backgroundColor: accentSoft }}
+            >
+              <Text style={{ fontSize: sf(12) }}>✨</Text>
+              <Text style={{ fontFamily: FontFamily.uiMedium, fontSize: sf(13), color: accent }}>more prompts</Text>
+            </Pressable>
+          </View>
+        </ScrollView>
       ) : (
         <View style={sc.list}>
           <CozyModal
@@ -877,7 +915,7 @@ function ScenariosFeature({ shipId, shipName, setCustomBack }: { shipId: string;
                 <View style={{ flex: 1, width: '100%', paddingVertical: 4 }}>
                   {/* title row */}
                   <View style={sc.cardTitleRow}>
-                    <Text style={[sc.cardTitle, { fontFamily: FontFamily.displayItalic, fontSize: sf(20), textTransform: 'none', fontWeight: 'normal', color: Colors.ink }]} numberOfLines={1}>
+                    <Text style={[sc.cardTitle, { fontFamily: FontFamily.uiSemiBold, fontSize: sf(16), textTransform: 'none', color: Colors.ink }]} numberOfLines={2}>
                       {s.title || 'untitled'}
                     </Text>
                     <Pressable hitSlop={8} onPress={() => setScDeleteTarget(s.id)}>
@@ -885,17 +923,17 @@ function ScenariosFeature({ shipId, shipName, setCustomBack }: { shipId: string;
                     </Pressable>
                   </View>
 
-                  {/* body in Caveat script font */}
+                  {/* body preview — Fredoka, matches the editor */}
                   {s.body ? (
-                    <Text style={[sc.cardPreview, { fontFamily: FontFamily.script, fontSize: sf(16), lineHeight: 20, color: Colors.ink2, marginTop: 4 }]} numberOfLines={4}>
-                      “{s.body}”
+                    <Text style={[sc.cardPreview, { fontFamily: FontFamily.ui, fontSize: sf(13), lineHeight: 19, color: Colors.ink2, marginTop: 4 }]} numberOfLines={3}>
+                      {s.body}
                     </Text>
                   ) : (
-                    <Text style={[sc.cardEmpty, { fontFamily: FontFamily.script, fontSize: sf(16), color: Colors.ink3, marginTop: 4 }]}>tap to write...</Text>
+                    <Text style={[sc.cardEmpty, { fontFamily: FontFamily.ui, fontSize: sf(13), color: Colors.ink3, marginTop: 4 }]}>tap to write...</Text>
                   )}
 
                   {/* date at bottom right */}
-                  <Text style={{ fontFamily: FontFamily.marker, fontSize: sf(9), color: Colors.sakuraDeep, fontWeight: '600', letterSpacing: 1, textAlign: 'right', marginTop: 10 }}>
+                  <Text style={{ fontFamily: FontFamily.marker, fontSize: sf(9), color: accent, fontWeight: '600', letterSpacing: 1, textAlign: 'right', marginTop: 10 }}>
                     {scDate}
                   </Text>
                 </View>
@@ -905,13 +943,92 @@ function ScenariosFeature({ shipId, shipName, setCustomBack }: { shipId: string;
           <View style={{ height: Spacing.s9 }} />
         </View>
       )}
+
+      {/* Ideas — browsable, relationship-aware prompt deck + your own */}
+      <Modal visible={showIdeas} transparent animationType="slide" onRequestClose={() => setShowIdeas(false)}>
+        <TouchableWithoutFeedback onPress={() => setShowIdeas(false)}>
+          <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.3)' }} />
+        </TouchableWithoutFeedback>
+        <View style={{ backgroundColor: Colors.paper, borderTopLeftRadius: Radius.r5, borderTopRightRadius: Radius.r5, paddingBottom: 34, maxHeight: '80%' }}>
+          <View style={{ width: 40, height: 4, backgroundColor: Colors.line, borderRadius: 2, alignSelf: 'center', marginTop: 10 }} />
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: Spacing.s5, paddingTop: Spacing.s3 }}>
+            <Text style={{ fontFamily: FontFamily.uiSemiBold, fontSize: sf(18), color: Colors.ink }}>prompts</Text>
+            <Pressable onPress={() => setShowIdeas(false)} hitSlop={8}>
+              <Text style={{ fontSize: sf(13), color: Colors.ink3 }}>✕</Text>
+            </Pressable>
+          </View>
+          <Text style={{ fontFamily: FontFamily.ui, fontSize: sf(12), color: Colors.ink3, paddingHorizontal: Spacing.s5, marginTop: 2 }}>
+            tap one to name a new moment · {shipName}
+          </Text>
+
+          {/* add your own — so you never run out */}
+          <View style={{ flexDirection: 'row', gap: 8, paddingHorizontal: Spacing.s5, marginTop: Spacing.s3 }}>
+            <TextInput
+              value={newPromptText}
+              onChangeText={setNewPromptText}
+              placeholder="add your own prompt…"
+              placeholderTextColor={Colors.ink3}
+              style={{ flex: 1, height: 40, borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.pill, paddingHorizontal: 14, fontFamily: FontFamily.ui, fontSize: sf(13), color: Colors.ink, backgroundColor: Colors.vellum }}
+              onSubmitEditing={addPrompt}
+              returnKeyType="done"
+            />
+            <Pressable
+              onPress={addPrompt}
+              style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: accent, alignItems: 'center', justifyContent: 'center' }}
+            >
+              <IconPlus size={14} color={Colors.vellum} />
+            </Pressable>
+          </View>
+
+          <ScrollView contentContainerStyle={{ gap: 8, padding: Spacing.s5 }} showsVerticalScrollIndicator={false}>
+            {ideaDeck.map((p, i) => {
+              const isCustom = 'id' in p;
+              return (
+                <View
+                  key={(isCustom ? (p as CustomPrompt).id : 'b') + i}
+                  style={{
+                    flexDirection: 'row', alignItems: 'center', gap: 10,
+                    backgroundColor: isCustom ? Colors.lavenderSoft : Colors.vellum,
+                    borderWidth: 1, borderColor: isCustom ? Colors.lavender : Colors.line,
+                    borderLeftWidth: 3, borderLeftColor: isCustom ? Colors.lavenderDeep : accent,
+                    borderRadius: Radius.r3, paddingVertical: 12, paddingHorizontal: 14,
+                  }}
+                >
+                  <Pressable
+                    onPress={() => { handleNewScenario(p.text); setShowIdeas(false); }}
+                    style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 }}
+                  >
+                    <Text style={{ fontSize: sf(13), color: isCustom ? Colors.lavenderDeep : accent }}>{isCustom ? '✎' : '♡'}</Text>
+                    <Text style={{ flex: 1, fontFamily: FontFamily.ui, fontSize: sf(13), lineHeight: 19, color: Colors.ink }}>{p.text}</Text>
+                  </Pressable>
+                  {isCustom && (
+                    <Pressable hitSlop={8} onPress={() => deleteCustomPrompt((p as CustomPrompt).id)}>
+                      <Text style={{ fontSize: sf(12), color: Colors.ink3 }}>✕</Text>
+                    </Pressable>
+                  )}
+                </View>
+              );
+            })}
+          </ScrollView>
+
+          <Pressable
+            onPress={() => setShuffleN((n) => n + 1)}
+            style={{ alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, paddingHorizontal: 16, marginTop: 2 }}
+          >
+            <Text style={{ fontSize: sf(13), color: accent }}>↻</Text>
+            <Text style={{ fontFamily: FontFamily.uiMedium, fontSize: sf(13), color: accent }}>shuffle prompts</Text>
+          </Pressable>
+        </View>
+      </Modal>
     </View>
   );
 }
 
-function ScenarioEditor({ initial, shipName, onSave, onDelete }: {
-  initial: { id: string | null; title: string; body: string };
+function ScenarioEditor({ initial, shipName, accent, accentLight, onSave, onDelete }: {
+  initial: { id: string | null; title: string; body: string; prompt?: string };
   shipName: string;
+  accent: string;
+  accentLight: string;
   onSave: (title: string, body: string) => void;
   onDelete?: () => void;
 }) {
@@ -958,14 +1075,14 @@ function ScenarioEditor({ initial, shipName, onSave, onDelete }: {
             onPress={() => onSave(title, body)}
             style={{
               paddingVertical: 6,
-              paddingHorizontal: 16,
-              backgroundColor: Colors.sakuraDeep,
+              paddingHorizontal: 18,
+              backgroundColor: accent,
               borderRadius: 99,
-              shadowColor: 'rgba(110, 58, 90, 0.1)',
+              shadowColor: 'rgba(110, 58, 90, 0.18)',
               shadowOffset: { width: 0, height: 2 },
               shadowOpacity: 1,
-              shadowRadius: 3,
-              elevation: 1,
+              shadowRadius: 4,
+              elevation: 2,
             }}
           >
             <Text style={{ fontFamily: FontFamily.uiMedium, fontSize: sf(13), color: Colors.vellum }}>save</Text>
@@ -994,21 +1111,22 @@ function ScenarioEditor({ initial, shipName, onSave, onDelete }: {
       >
         {/* Horizontal washi tape overlapping top edge */}
         <View style={{ position: 'absolute', top: -7, left: '50%', transform: [{ translateX: -35 }], zIndex: 10 }}>
-          <WashiTape width={70} height={14} pattern="dot" color={Colors.sakura} rotate={0} />
+          <WashiTape width={70} height={14} pattern="dot" color={accentLight} rotate={0} />
         </View>
 
-        {/* Title Input — Elegant Display Italic */}
+        {/* Moment name — Fredoka (matches body, easier on the eyes) */}
         <TextInput
           value={title}
           onChangeText={setTitle}
           placeholder="give this moment a name..."
           placeholderTextColor={Colors.ink3}
+          multiline
           style={{
-            fontFamily: FontFamily.displayItalic,
-            fontSize: sf(22),
+            fontFamily: FontFamily.uiSemiBold,
+            fontSize: sf(18),
             color: Colors.ink,
             borderBottomWidth: 1,
-            borderBottomColor: Colors.line,
+            borderBottomColor: accentLight,
             paddingVertical: 8,
             marginBottom: 12,
           }}
@@ -1021,10 +1139,10 @@ function ScenarioEditor({ initial, shipName, onSave, onDelete }: {
           placeholder="what happens in this scene..."
           placeholderTextColor={Colors.ink3}
           style={{
-            fontFamily: FontFamily.script,
-            fontSize: sf(18),
+            fontFamily: FontFamily.ui,
+            fontSize: sf(15),
             color: Colors.ink2,
-            lineHeight: 26,
+            lineHeight: 24,
             flex: 1,
             textAlignVertical: 'top',
           }}
