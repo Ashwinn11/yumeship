@@ -116,12 +116,12 @@ function getWeeklyEquivalentOnly(pkg: PurchasesPackage): string | null {
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
 const REASON_COPY: Record<string, { title: string; sub: string }> = {
-  'add-ship':   { title: 'ship more than one\nF/O at a time ♡',     sub: 'unlimited ships, every story, no limits.' },
-  'albums':     { title: 'their photos deserve\na real home ♡',      sub: 'unlock albums for every ship.' },
-  'scenarios':  { title: 'your stories deserve\nto be told ♡',       sub: 'write unlimited scenarios, no limits.' },
+  'add-ship':   { title: 'ship more than one\nF/O at a time ♡',     sub: 'keep every F/O you love, all in one vault.' },
+  'albums':     { title: 'their photos deserve\na real home ♡',      sub: 'a gallery for every face you adore.' },
+  'scenarios':  { title: 'your stories deserve\nto be told ♡',       sub: 'write every what-if and soft little moment.' },
   'love-letter':{ title: 'write them something\nbeautiful ♡',        sub: 'love letters, yours to keep forever.' },
-  'storyline':  { title: 'every chapter of\nyour story ♡',           sub: 'your full timeline, always with you.' },
-  'polyship':   { title: 'love more than one,\nall at once ♡',        sub: 'build your whole polycule — unlimited members.' },
+  'storyline':  { title: 'every chapter of\nyour story ♡',           sub: 'your whole timeline, always with you.' },
+  'polyship':   { title: 'love more than one,\nall at once ♡',        sub: 'everyone you love, side by side.' },
 };
 
 export default function PaywallScreen() {
