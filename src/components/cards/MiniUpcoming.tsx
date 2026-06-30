@@ -78,7 +78,7 @@ export function MiniUpcoming({ days, title, fo, tint, featured, muted, dateStr, 
           justifyContent: 'center',
         }}
       >
-        <Text style={{ fontFamily: FontFamily.marker, fontSize: sf(9), fontWeight: '600', color: tint, letterSpacing: 1.4, textAlign: 'center' }}>
+        <Text style={{ fontFamily: FontFamily.marker, fontSize: sf(9), color: tint, letterSpacing: 1.4, textAlign: 'center' }}>
           {monthStr}
         </Text>
         <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: sf(28), lineHeight: 28, color: tint, marginTop: -1, textAlign: 'center' }}>

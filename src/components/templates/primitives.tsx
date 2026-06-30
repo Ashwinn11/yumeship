@@ -108,7 +108,7 @@ export function BlankPill({ width = '100%' as number | string, value, onChangeTe
       style
     ]}>
       {value ? (
-        <Text style={[{ fontFamily: FontFamily.ja, fontSize: sf(11), color: INK, fontWeight: '600' }, style && { fontSize: style.fontSize }]}>{value}</Text>
+        <Text style={[{ fontFamily: FontFamily.ja, fontSize: sf(11), color: INK }, style && { fontSize: style.fontSize }]}>{value}</Text>
       ) : null}
     </View>
   );
@@ -650,7 +650,6 @@ const s = StyleSheet.create({
   },
   markerHeader: {
     fontFamily: FontFamily.markerBold,
-    fontWeight: '700',
     letterSpacing: -0.3,
     color: INK,
     textTransform: 'uppercase',
@@ -663,7 +662,6 @@ const s = StyleSheet.create({
     fontFamily: FontFamily.script,
     fontSize: sf(13),
     color: INK,
-    fontStyle: 'italic',
     marginTop: 3,
   },
   blankPill: {
@@ -680,7 +678,6 @@ const s = StyleSheet.create({
     fontFamily: FontFamily.ja,
     fontSize: sf(11),
     color: INK,
-    fontWeight: '600',
     textAlignVertical: 'center',
     includeFontPadding: false,
   },
@@ -691,7 +688,6 @@ const s = StyleSheet.create({
   },
   fieldLabel: {
     fontFamily: FontFamily.markerBold,
-    fontWeight: '600',
     fontSize: sf(11),
     color: INK,
     textTransform: 'uppercase',
@@ -712,7 +708,6 @@ const s = StyleSheet.create({
     fontSize: sf(11),
     color: INK,
     textAlign: 'center',
-    fontWeight: '600',
     paddingVertical: 0,
     textAlignVertical: 'center',
     includeFontPadding: false,
@@ -722,7 +717,6 @@ const s = StyleSheet.create({
     fontSize: sf(11),
     color: INK,
     textAlign: 'center',
-    fontWeight: '600',
   },
   dichotomyRow: {
     flexDirection: 'row',
@@ -732,7 +726,6 @@ const s = StyleSheet.create({
   dichotomyText: {
     fontFamily: FontFamily.marker,
     fontSize: sf(11),
-    fontWeight: '500',
     color: INK,
   },
   dichotomyRight: {
@@ -740,7 +733,6 @@ const s = StyleSheet.create({
   },
   dichotomyChosen: {
     fontFamily: FontFamily.markerBold,
-    fontWeight: '700',
     textDecorationLine: 'underline',
   },
   dichotomySlash: {
@@ -757,7 +749,6 @@ const s = StyleSheet.create({
   },
   sharingLabel: {
     fontFamily: FontFamily.markerBold,
-    fontWeight: '700',
     fontSize: sf(13),
     color: INK,
     textTransform: 'uppercase',
@@ -770,12 +761,10 @@ const s = StyleSheet.create({
   sharingText: {
     fontFamily: FontFamily.marker,
     fontSize: sf(12),
-    fontWeight: '500',
     color: INK,
   },
   sharingActive: {
     fontFamily: FontFamily.markerBold,
-    fontWeight: '700',
   },
   sliderCol: {
     gap: 4,
@@ -783,7 +772,6 @@ const s = StyleSheet.create({
   },
   sliderLabel: {
     fontFamily: FontFamily.markerBold,
-    fontWeight: '600',
     fontSize: sf(9),
     color: INK,
     letterSpacing: 0.8,
@@ -899,7 +887,6 @@ const s = StyleSheet.create({
   },
   windowTitle: {
     fontFamily: FontFamily.markerBold,
-    fontWeight: '700',
     fontSize: sf(12),
     color: INK,
     textTransform: 'uppercase',
@@ -1015,7 +1002,6 @@ const s = StyleSheet.create({
   profileWhoText: {
     fontFamily: FontFamily.markerBold,
     fontSize: sf(10),
-    fontWeight: '700',
     color: INK,
     letterSpacing: 0.8,
   },
@@ -1032,7 +1018,6 @@ const s = StyleSheet.create({
   profileGoodLabel: {
     fontFamily: FontFamily.markerBold,
     fontSize: sf(9),
-    fontWeight: '600',
     color: INK,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -1079,7 +1064,6 @@ const s = StyleSheet.create({
   twinProfileWho: {
     fontFamily: FontFamily.markerBold,
     fontSize: sf(10),
-    fontWeight: '700',
     color: INK,
     letterSpacing: 0.8,
   },
@@ -1094,7 +1078,6 @@ const s = StyleSheet.create({
   },
   twinProfileKey: {
     fontFamily: FontFamily.markerBold,
-    fontWeight: '600',
     fontSize: sf(8),
     letterSpacing: 0.5,
     textTransform: 'uppercase',
@@ -1107,7 +1090,6 @@ const s = StyleSheet.create({
     fontSize: sf(11),
     color: INK,
     flex: 1,
-    fontWeight: '600',
   },
   twinProfileInput: {
     height: 16,
@@ -1117,6 +1099,5 @@ const s = StyleSheet.create({
     borderWidth: 1,
     borderColor: INK + '55',
     borderRadius: 3,
-    fontWeight: '600',
   },
 });

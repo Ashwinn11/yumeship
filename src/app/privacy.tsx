@@ -75,7 +75,7 @@ const s = StyleSheet.create({
   section: { marginBottom: Spacing.s4 },
   heading: {
     fontFamily: FontFamily.uiSemiBold, fontSize: sf(13), color: Colors.ink,
-    marginBottom: 6, fontWeight: '600',
+    marginBottom: 6,
   },
   body: {
     fontFamily: FontFamily.ui, fontSize: FontSize.caption,

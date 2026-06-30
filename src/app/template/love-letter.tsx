@@ -135,7 +135,7 @@ export function LoveLetterContent({ editing = false, ship }: { editing?: boolean
                     placeholder=""
                     underlineColorAndroid="transparent"
                     style={[
-                      { fontFamily: FontFamily.ja, fontSize: sf(11), color: INK, padding: 0, minHeight: 18, fontWeight: '600' },
+                      { fontFamily: FontFamily.ja, fontSize: sf(11), color: INK, padding: 0, minHeight: 18 },
                       !things[i] && {
                         height: 14,
                         backgroundColor: '#e9d8cb',
@@ -218,7 +218,6 @@ const s = StyleSheet.create({
   dearRow: { flexDirection: 'row', alignItems: 'center' },
   dearText: {
     fontFamily: FontFamily.markerBold,
-    fontWeight: '700',
     fontSize: sf(11),
     color: INK,
     letterSpacing: 0.6,
@@ -226,7 +225,6 @@ const s = StyleSheet.create({
   },
   dearName: {
     fontFamily: FontFamily.ja,
-    fontWeight: '600',
     fontSize: sf(11),
     color: INK,
   },
@@ -237,7 +235,6 @@ const s = StyleSheet.create({
     minWidth: 60,
     padding: 0,
     paddingHorizontal: 2,
-    fontWeight: '600',
   },
   dearNameTap: {
     color: '#6e3a5a',
@@ -248,7 +245,7 @@ const s = StyleSheet.create({
     position: 'absolute', left: 24, right: 24, top: '38%',
     backgroundColor: '#fff', borderWidth: 1.5, borderColor: INK, borderRadius: 16, padding: 16, gap: 10,
   },
-  pickTitle: { fontFamily: FontFamily.markerBold, fontWeight: '700', fontSize: sf(13), color: '#6e3a5a', textAlign: 'center' },
+  pickTitle: { fontFamily: FontFamily.markerBold, fontSize: sf(13), color: '#6e3a5a', textAlign: 'center' },
   letterBody: {
     fontFamily: FontFamily.ja,
     fontSize: sf(12),
@@ -257,7 +254,6 @@ const s = StyleSheet.create({
     marginTop: 4,
     minHeight: 120,
     textAlignVertical: 'top',
-    fontWeight: '600',
   },
   signoff: {
     fontFamily: FontFamily.ui,

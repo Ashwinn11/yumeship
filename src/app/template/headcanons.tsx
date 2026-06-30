@@ -100,11 +100,11 @@ export function HeadcanonsContent({ editing = false }: { editing?: boolean }) {
                         placeholder="something you know..."
                         placeholderTextColor={INK + '88'}
                         underlineColorAndroid="transparent"
-                        style={{ fontFamily: FontFamily.ja, fontSize: sf(11), color: INK, padding: 0, minHeight: 18, fontWeight: '600' }}
+                        style={{ fontFamily: FontFamily.ja, fontSize: sf(11), color: INK, padding: 0, minHeight: 18 }}
                       />
                     ) : (
                       item ? (
-                        <Text style={{ fontFamily: FontFamily.ja, fontSize: sf(11), color: INK, fontWeight: '600' }}>{item}</Text>
+                        <Text style={{ fontFamily: FontFamily.ja, fontSize: sf(11), color: INK }}>{item}</Text>
                       ) : (
                         <Text style={{ fontFamily: FontFamily.ja, fontSize: sf(11), color: INK + '44' }}>——</Text>
                       )
@@ -143,7 +143,7 @@ const s = StyleSheet.create({
     borderBottomWidth: 1.5,
     borderBottomColor: INK,
   },
-  catJa: { fontFamily: FontFamily.ja, fontSize: sf(18), fontWeight: '600', color: INK },
+  catJa: { fontFamily: FontFamily.ja, fontSize: sf(18), color: INK },
   countBadge: {
     marginLeft: 'auto',
     paddingHorizontal: 8,

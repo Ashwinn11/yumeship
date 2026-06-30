@@ -66,14 +66,13 @@ function SettingGroup({
 const group = StyleSheet.create({
   wrap: { gap: 5 },
   labelRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  ja: { fontFamily: FontFamily.ja, fontSize: sf(11), color: Colors.sakuraDeep, fontWeight: '600' },
+  ja: { fontFamily: FontFamily.ja, fontSize: sf(11), color: Colors.sakuraDeep },
   name: {
     fontFamily: FontFamily.marker,
     fontSize: sf(9),
     color: Colors.ink3,
     letterSpacing: 1.4,
     textTransform: 'uppercase',
-    fontWeight: '600',
   },
   card: {
     backgroundColor: Colors.vellum,
@@ -135,7 +134,6 @@ const row = StyleSheet.create({
     flex: 1,
     fontSize: FontSize.caption,
     color: Colors.ink,
-    fontWeight: '500',
     fontFamily: FontFamily.ui,
   },
 });

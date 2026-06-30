@@ -182,12 +182,10 @@ const styles = StyleSheet.create({
     fontSize: sf(10),
     fontFamily: FontFamily.ui,
     color: Colors.ink2,
-    fontWeight: '500',
     letterSpacing: 0.2,
   },
   filterTextActive: {
     color: Colors.vellum,
-    fontWeight: '600',
   },
   listContainer: {
     paddingHorizontal: Spacing.s5,

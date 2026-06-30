@@ -188,11 +188,9 @@ const styles = StyleSheet.create({
     fontSize: sf(10),
     fontFamily: FontFamily.ui,
     color: Colors.ink2,
-    fontWeight: '500',
   },
   sideChipTextActive: {
     color: Colors.vellum,
-    fontWeight: '600',
   },
   inputRow: {
     flexDirection: 'row',

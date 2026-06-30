@@ -203,7 +203,6 @@ const s = StyleSheet.create({
   },
   metLabel: {
     fontFamily: FontFamily.markerBold,
-    fontWeight: '700',
     fontSize: sf(9),
     letterSpacing: 1,
     textTransform: 'uppercase',
@@ -218,7 +217,6 @@ const s = StyleSheet.create({
     lineHeight: 18,
     minHeight: 60,
     textAlignVertical: 'top',
-    fontWeight: '600',
   },
   anniversaryPill: {
     marginTop: 10,
@@ -233,10 +231,9 @@ const s = StyleSheet.create({
     borderRadius: 999,
     gap: 10,
   },
-  anniversaryLabel: { fontFamily: FontFamily.markerBold, fontWeight: '700', fontSize: sf(10), color: INK, letterSpacing: 0.8, textTransform: 'uppercase' },
+  anniversaryLabel: { fontFamily: FontFamily.markerBold, fontSize: sf(10), color: INK, letterSpacing: 0.8, textTransform: 'uppercase' },
   nameLabel: {
     fontFamily: FontFamily.markerBold,
-    fontWeight: '700',
     fontSize: sf(12),
     color: INK,
     textTransform: 'uppercase',

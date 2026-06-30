@@ -525,7 +525,7 @@ const styles = StyleSheet.create({
   heroEyebrow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 6 },
   eyebrowTxt: {
     fontFamily: FontFamily.marker, fontSize: sf(9), color: Colors.sakuraDeep,
-    letterSpacing: 1.4, textTransform: 'uppercase', fontWeight: '600',
+    letterSpacing: 1.4, textTransform: 'uppercase',
   },
   heroTitle: {
     fontFamily: FontFamily.displayItalic, fontSize: sf(34), lineHeight: 38,
@@ -653,7 +653,6 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.uiSemiBold,
     fontSize: sf(9),
     color: '#fff',
-    fontWeight: '900',
   },
   planLabelBadge: {
     paddingHorizontal: 6,
@@ -673,7 +672,6 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.uiSemiBold,
     fontSize: sf(8),
     color: Colors.sakuraDeep,
-    fontWeight: '800',
     letterSpacing: 0.3,
   },
 

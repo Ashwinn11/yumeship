@@ -436,6 +436,5 @@ const s = StyleSheet.create({
     padding: 0,
     flex: 1,
     textAlignVertical: 'top',
-    fontWeight: '600',
   },
 });

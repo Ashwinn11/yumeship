@@ -933,7 +933,7 @@ function ScenariosFeature({ shipId, shipName, setCustomBack }: { shipId: string;
                   )}
 
                   {/* date at bottom right */}
-                  <Text style={{ fontFamily: FontFamily.marker, fontSize: sf(9), color: accent, fontWeight: '600', letterSpacing: 1, textAlign: 'right', marginTop: 10 }}>
+                  <Text style={{ fontFamily: FontFamily.marker, fontSize: sf(9), color: accent, letterSpacing: 1, textAlign: 'right', marginTop: 10 }}>
                     {scDate}
                   </Text>
                 </View>
@@ -2015,8 +2015,8 @@ const hc = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
-  catJa: { fontFamily: FontFamily.ja, fontSize: sf(18), fontWeight: '600', color: INK },
-  catLabelText: { fontFamily: FontFamily.markerBold, fontSize: sf(13), color: INK, fontWeight: '700', letterSpacing: 0.5 },
+  catJa: { fontFamily: FontFamily.ja, fontSize: sf(18), color: INK },
+  catLabelText: { fontFamily: FontFamily.markerBold, fontSize: sf(13), color: INK, letterSpacing: 0.5 },
   catCountBadge: {
     marginLeft: 'auto',
     backgroundColor: '#fff',
@@ -2026,13 +2026,13 @@ const hc = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 1,
   },
-  catCountText: { fontFamily: FontFamily.markerBold, fontSize: sf(10), color: INK, fontWeight: '600' },
+  catCountText: { fontFamily: FontFamily.markerBold, fontSize: sf(10), color: INK },
   catContent: { padding: 10 },
-  catEmptyText: { fontFamily: FontFamily.ui, fontSize: sf(12), color: Colors.ink3, fontStyle: 'italic', paddingVertical: 4 },
+  catEmptyText: { fontFamily: FontFamily.ui, fontSize: sf(12), color: Colors.ink3, paddingVertical: 4 },
   catItemRow: { paddingVertical: 6 },
   catItemRowBorder: { borderBottomWidth: 1, borderBottomColor: INK + '22' },
   moreText: { fontFamily: FontFamily.uiMedium, fontSize: sf(11), color: Colors.sakuraDeep, marginTop: 4 },
-  emptyHint: { fontFamily: FontFamily.ui, fontSize: sf(12), color: INK, fontStyle: 'italic', opacity: 0.45 },
+  emptyHint: { fontFamily: FontFamily.ui, fontSize: sf(12), color: INK, opacity: 0.45 },
 
   overviewHeader: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 4 },
   editBtn: {
@@ -2101,7 +2101,7 @@ const sc = StyleSheet.create({
   cardTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6 },
   cardTitle: { fontFamily: FontFamily.displayItalic, fontSize: sf(16), color: Colors.ink, flex: 1 },
   cardPreview: { fontFamily: FontFamily.script, fontSize: sf(14), color: Colors.ink2, lineHeight: 20 },
-  cardEmpty: { fontFamily: FontFamily.displayItalic, fontSize: sf(13), color: Colors.ink3, fontStyle: 'italic' },
+  cardEmpty: { fontFamily: FontFamily.displayItalic, fontSize: sf(13), color: Colors.ink3 },
   cardDate: { fontFamily: FontFamily.marker, fontSize: sf(9), color: Colors.ink3, letterSpacing: 0.5, marginTop: 4 },
 
   editor: { flex: 1, backgroundColor: Colors.paper },
@@ -2306,7 +2306,6 @@ const fo = StyleSheet.create({
     fontFamily: FontFamily.uiSemiBold,
     fontSize: sf(11),
     color: '#ffffff',
-    fontWeight: '600',
   },
   notifTime: {
     fontFamily: FontFamily.ui,
@@ -2341,7 +2340,6 @@ const fo = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.75)',
     fontSize: sf(13),
     fontFamily: FontFamily.ui,
-    fontWeight: '400',
     textTransform: 'uppercase',
     letterSpacing: 1.2,
   },
@@ -2349,7 +2347,6 @@ const fo = StyleSheet.create({
     color: '#ffffff',
     fontSize: sf(64),
     fontFamily: FontFamily.ui,
-    fontWeight: '100',
     marginTop: 0,
     letterSpacing: -3,
   },
@@ -2447,8 +2444,8 @@ const bn = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 10,
     backgroundColor: INK, paddingHorizontal: 18, paddingVertical: 6, borderRadius: 999,
   },
-  titleJa: { fontFamily: FontFamily.ja, fontWeight: '600', fontSize: sf(18), color: '#fff' },
-  titleText: { fontFamily: FontFamily.markerBold, fontWeight: '700', fontSize: sf(16), color: '#fff', letterSpacing: 0.8 },
+  titleJa: { fontFamily: FontFamily.ja, fontSize: sf(18), color: '#fff' },
+  titleText: { fontFamily: FontFamily.markerBold, fontSize: sf(16), color: '#fff', letterSpacing: 0.8 },
   titleSub: { fontFamily: FontFamily.ui, fontSize: sf(12), color: INK, opacity: 0.7 },
 
   states: { marginTop: 14, gap: 10 },
@@ -2460,13 +2457,13 @@ const bn = StyleSheet.create({
     width: 44, height: 44, borderRadius: 999, borderWidth: 2,
     backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
   },
-  sealJa: { fontFamily: FontFamily.ja, fontWeight: '600', fontSize: sf(22), textAlign: 'center' },
+  sealJa: { fontFamily: FontFamily.ja, fontSize: sf(22), textAlign: 'center' },
   stateContent: { flex: 1, minWidth: 0 },
-  stateTitle: { fontFamily: FontFamily.markerBold, fontWeight: '700', fontSize: sf(14), letterSpacing: 0.5 },
+  stateTitle: { fontFamily: FontFamily.markerBold, fontSize: sf(14), letterSpacing: 0.5 },
   stateDesc: { fontFamily: FontFamily.ui, fontSize: sf(11), color: INK, marginTop: 2 },
   checkGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 6 },
   checkRow: { flexDirection: 'row', alignItems: 'center', gap: 4, width: '48%', minWidth: 0 },
-  checkText: { fontFamily: FontFamily.marker, fontSize: sf(9), fontWeight: '500', color: INK, flex: 1 },
+  checkText: { fontFamily: FontFamily.marker, fontSize: sf(9), color: INK, flex: 1 },
   checkInput: { fontFamily: FontFamily.ui, fontSize: sf(9), color: INK, flex: 1, padding: 0 },
   removeCheck: { fontSize: sf(9), color: INK, opacity: 0.4 },
   addCheckBtn: { paddingVertical: 2, paddingHorizontal: 4 },

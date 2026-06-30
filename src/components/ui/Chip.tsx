@@ -33,7 +33,6 @@ export function Chip({ children, color = Colors.ink, bg = Colors.paperDeep, acti
           fontFamily: FontFamily.ui,
           fontSize: FontSize.caption,
           color,
-          fontWeight: active ? '600' : '500',
           letterSpacing: 0.01 * FontSize.caption,
         }}
       >

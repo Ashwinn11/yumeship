@@ -117,7 +117,6 @@ const styles = StyleSheet.create({
     color: Colors.plum,
     letterSpacing: 1.6,
     textTransform: 'uppercase',
-    fontWeight: '600',
   },
   heading: {
     fontFamily: FontFamily.displayItalic,

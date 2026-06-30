@@ -249,7 +249,7 @@ export default function OnbFO() {
               {coverUri ? (
                 <Image source={{ uri: coverUri }} style={{ width: 60, height: 76, borderRadius: 10 }} contentFit="cover" />
               ) : (
-                <Text style={{ color: '#ffffff', fontFamily: FontFamily.displayItalic, fontSize: sf(36), fontWeight: 'bold' }}>
+                <Text style={{ color: '#ffffff', fontFamily: FontFamily.displayItalic, fontSize: sf(36) }}>
                   {foName.charAt(0).toUpperCase() || '♡'}
                 </Text>
               )}
@@ -418,7 +418,7 @@ const styles = StyleSheet.create({
   scrollContent: { paddingHorizontal: Spacing.s6, paddingTop: Spacing.s5, paddingBottom: Spacing.s4 },
   eyebrow: {
     fontFamily: FontFamily.marker, fontSize: sf(10), color: Colors.plum,
-    letterSpacing: 1.6, textTransform: 'uppercase', fontWeight: '600',
+    letterSpacing: 1.6, textTransform: 'uppercase',
   },
   heading: {
     fontFamily: FontFamily.displayItalic, fontSize: sf(26), lineHeight: 28,
@@ -431,7 +431,7 @@ const styles = StyleSheet.create({
     shadowColor: 'rgba(110, 58, 90, 0.05)', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 1, shadowRadius: 4, elevation: 1,
   },
   cardDivider: { height: 1.2, backgroundColor: Colors.line, marginVertical: 14, opacity: 0.6 },
-  fieldLabel: { fontFamily: FontFamily.marker, fontSize: sf(8), color: Colors.ink3, letterSpacing: 1.4, fontWeight: '600' },
+  fieldLabel: { fontFamily: FontFamily.marker, fontSize: sf(8), color: Colors.ink3, letterSpacing: 1.4 },
   paletteRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap', marginTop: 6 },
   swatch: {
     width: 24, height: 24, borderRadius: Radius.pill,

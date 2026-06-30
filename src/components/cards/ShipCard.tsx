@@ -155,7 +155,6 @@ const styles = StyleSheet.create({
   polyculeText: {
     color: Colors.vellum,
     fontSize: sf(9),
-    fontWeight: '600',
     fontFamily: FontFamily.marker,
     letterSpacing: 0.6,
   },

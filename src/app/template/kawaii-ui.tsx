@@ -127,10 +127,10 @@ export function KawaiiUIContent({ editing = false }: { editing?: boolean }) {
                   placeholder="——"
                   placeholderTextColor={PINK_INK + '88'}
                   underlineColorAndroid="transparent"
-                  style={{ fontFamily: FontFamily.ja, fontSize: sf(13), color: PINK_INK, padding: 0, flex: 1, fontWeight: '600' }}
+                  style={{ fontFamily: FontFamily.ja, fontSize: sf(13), color: PINK_INK, padding: 0, flex: 1 }}
                 />
               ) : (
-                <Text style={{ fontFamily: FontFamily.ja, fontSize: sf(13), color: PINK_INK, fontWeight: '600' }}>
+                <Text style={{ fontFamily: FontFamily.ja, fontSize: sf(13), color: PINK_INK }}>
                   {vals[label] || '——'}
                 </Text>
               )}
@@ -176,7 +176,6 @@ export function KawaiiUIContent({ editing = false }: { editing?: boolean }) {
                       fontFamily: FontFamily.ja,
                       fontSize: k === 'love language' ? 8.5 : 11,
                       color: INK,
-                      fontWeight: '600',
                     }}>{vals[k]}</Text>
                   </View>
                 )}
@@ -221,10 +220,10 @@ export function KawaiiUIContent({ editing = false }: { editing?: boolean }) {
                   placeholder="song title"
                   placeholderTextColor={PINK_INK + '88'}
                   underlineColorAndroid="transparent"
-                  style={{ fontFamily: FontFamily.ja, fontSize: sf(13), color: PINK_INK, padding: 0, flex: 1, fontWeight: '600' }}
+                  style={{ fontFamily: FontFamily.ja, fontSize: sf(13), color: PINK_INK, padding: 0, flex: 1 }}
                 />
               ) : (
-                <Text style={{ fontFamily: FontFamily.ja, fontSize: sf(13), color: PINK_INK, fontWeight: '600' }}>
+                <Text style={{ fontFamily: FontFamily.ja, fontSize: sf(13), color: PINK_INK }}>
                   {vals.song || '——'}
                 </Text>
               )}
@@ -247,10 +246,10 @@ export function KawaiiUIContent({ editing = false }: { editing?: boolean }) {
                     placeholder="trope"
                     placeholderTextColor={PINK_INK + '88'}
                     underlineColorAndroid="transparent"
-                    style={{ fontFamily: FontFamily.markerBold, fontSize: sf(9), color: PINK_INK, padding: 0, flex: 1, fontWeight: '700' }}
+                    style={{ fontFamily: FontFamily.markerBold, fontSize: sf(9), color: PINK_INK, padding: 0, flex: 1 }}
                   />
                 ) : (
-                  <Text style={{ fontFamily: FontFamily.markerBold, fontSize: sf(9), color: PINK_INK, fontWeight: '700' }}>
+                  <Text style={{ fontFamily: FontFamily.markerBold, fontSize: sf(9), color: PINK_INK }}>
                     {vals[`trope${i}`] || '——'}
                   </Text>
                 )}
@@ -340,18 +339,18 @@ const s = StyleSheet.create({
     zIndex: 10,
   },
   titlePill: { backgroundColor: '#9c2d5a', paddingHorizontal: 18, paddingVertical: 5, borderRadius: 999 },
-  titlePillText: { fontFamily: FontFamily.markerBold, fontWeight: '700', fontSize: sf(18), color: '#fff', letterSpacing: 0.5 },
+  titlePillText: { fontFamily: FontFamily.markerBold, fontSize: sf(18), color: '#fff', letterSpacing: 0.5 },
   statRow: { flexDirection: 'row', gap: 8, marginTop: 58 },
   statPanel: { flex: 1 },
-  kawaiiLabel: { fontFamily: FontFamily.markerBold, fontSize: sf(8), fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', opacity: 0.7 },
+  kawaiiLabel: { fontFamily: FontFamily.markerBold, fontSize: sf(8), letterSpacing: 1, textTransform: 'uppercase', opacity: 0.7 },
   mainPanel: { marginTop: 10 },
   mainRow: { flexDirection: 'row', gap: 10 },
   portraitStyle: { borderRadius: 8, borderWidth: 1.5, borderColor: PANEL_EDGE },
   infoCol: { flex: 1, gap: 5 },
   infoRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  infoKey: { fontFamily: FontFamily.markerBold, fontSize: sf(8), fontWeight: '700', letterSpacing: 0.6, textTransform: 'uppercase', opacity: 0.7, width: 84 },
+  infoKey: { fontFamily: FontFamily.markerBold, fontSize: sf(8), letterSpacing: 0.6, textTransform: 'uppercase', opacity: 0.7, width: 84 },
   infoVal: { flex: 1, height: 20, borderWidth: 1, borderRadius: 4, paddingHorizontal: 6, alignItems: 'center', justifyContent: 'center' },
-  infoValInput: { fontFamily: FontFamily.ja, fontSize: sf(11), color: INK, padding: 0, fontWeight: '600' },
+  infoValInput: { fontFamily: FontFamily.ja, fontSize: sf(11), color: INK, padding: 0 },
   mt10: { marginTop: 10 },
   sharingRow: { flexDirection: 'row', justifyContent: 'center', gap: 14 },
   sharingOpt: { flexDirection: 'row', alignItems: 'center', gap: 5 },

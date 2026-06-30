@@ -35,17 +35,14 @@ const styles = StyleSheet.create({
   ja: {
     fontFamily: FontFamily.ja,
     fontSize: FontSize.caption,
-    fontWeight: '600',
   },
   label: {
     fontSize: sf(10),
     color: Colors.ink2,
-    fontWeight: '500',
     fontFamily: FontFamily.ui,
   },
   count: {
     fontFamily: FontFamily.marker,
     fontSize: sf(9),
-    fontWeight: '600',
   },
 });

@@ -100,7 +100,6 @@ export function StorylineContent({ editing = false }: { editing?: boolean }) {
                         fontSize: sf(10),
                         color: INK,
                         textAlign: 'center',
-                        fontWeight: '600',
                       }}
                       displayValue={ev.d || undefined}
                     />
@@ -188,7 +187,6 @@ const s = StyleSheet.create({
   },
   eventTitle: {
     fontFamily: FontFamily.markerBold,
-    fontWeight: '800',
     fontSize: sf(14),
     color: INK,
     textTransform: 'uppercase',

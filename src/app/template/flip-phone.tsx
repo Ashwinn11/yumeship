@@ -96,7 +96,7 @@ export function FlipPhoneContent({ editing = false }: { editing?: boolean }) {
             {e ? (
               <BlankPill value={vals.valentine} onChangeText={v => setVal('valentine', v)} placeholder="My Valentine ♡" style={[s.aboutVal, { marginTop: 4 }]} />
             ) : (
-              <Text style={[s.windowText, { marginTop: 4, fontWeight: '700' }]}>{vals.valentine || 'My Valentine ♡'}</Text>
+              <Text style={[s.windowText, { marginTop: 4 }]}>{vals.valentine || 'My Valentine ♡'}</Text>
             )}
           </Y2KWindow>
         </View>
@@ -225,11 +225,11 @@ const s = StyleSheet.create({
   titlePill: { alignSelf: 'stretch' },
   hearts: { fontFamily: FontFamily.script, fontSize: sf(14), color: '#fff', opacity: 0.85, marginTop: 2 },
   row2: { flexDirection: 'row', gap: 8 },
-  windowText: { fontFamily: FontFamily.ja, fontSize: sf(9), color: '#fff', lineHeight: 12, fontWeight: '600' },
+  windowText: { fontFamily: FontFamily.ja, fontSize: sf(9), color: '#fff', lineHeight: 12 },
   chatInput: { height: 54, textAlignVertical: 'top', fontFamily: FontFamily.ja, fontSize: sf(9), color: '#fff', backgroundColor: 'transparent', borderColor: 'transparent' },
   chatBar: { marginTop: 4, height: 12, backgroundColor: '#fff', borderRadius: 6, borderWidth: 1, borderColor: Colors.sakuraInk },
   aboutRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'nowrap' },
-  aboutKey: { fontFamily: FontFamily.ja, fontSize: sf(9), color: '#fff', fontWeight: '700' },
+  aboutKey: { fontFamily: FontFamily.ja, fontSize: sf(9), color: '#fff' },
   aboutVal: { flex: 1, height: 14, backgroundColor: 'transparent', borderColor: 'transparent', fontSize: sf(9), color: '#fff' },
   aboutVal2: { fontFamily: FontFamily.ja, fontSize: sf(9), color: '#fff' },
   phoneWrap: { alignItems: 'center' },
@@ -242,11 +242,11 @@ const s = StyleSheet.create({
   sharingWarn: { fontSize: sf(12), fontWeight: '700', color: '#fff' },
   sharingLabel: { fontFamily: FontFamily.markerBold, fontSize: sf(9), color: '#fff', letterSpacing: 0.4 },
   sharingBox: { backgroundColor: '#fff', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2, alignSelf: 'center', borderWidth: 1, borderColor: Colors.sakuraInk },
-  sharingBoxText: { fontFamily: FontFamily.ja, fontSize: sf(9), color: Colors.sakuraInk, fontWeight: '700' },
+  sharingBoxText: { fontFamily: FontFamily.ja, fontSize: sf(9), color: Colors.sakuraInk },
   sharingPills: { flexDirection: 'row', flexWrap: 'wrap', gap: 3, marginTop: 3 },
   sPill: { paddingHorizontal: 4, paddingVertical: 1, borderRadius: 4, borderWidth: 1, borderColor: '#fff' },
   sPillOn: { backgroundColor: '#fff' },
-  sPillText: { fontFamily: FontFamily.ja, fontSize: sf(7), color: '#fff', fontWeight: '700' },
+  sPillText: { fontFamily: FontFamily.ja, fontSize: sf(7), color: '#fff' },
   sPillTextOn: { color: Colors.sakuraInk },
   freeInput: { height: 50, textAlignVertical: 'top', fontFamily: FontFamily.script, fontSize: sf(11), backgroundColor: 'transparent', borderColor: 'transparent', color: '#fff' },
   freeText: { fontFamily: FontFamily.script, fontSize: sf(13), color: '#fff', lineHeight: 15 },

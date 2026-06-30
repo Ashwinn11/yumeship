@@ -48,7 +48,7 @@ export function MemberPicker({ ship, selectedId, onSelect, includeMe = false, la
 
 const s = StyleSheet.create({
   wrap: { gap: 6 },
-  label: { fontFamily: FontFamily.marker, fontSize: sf(8), letterSpacing: 1.4, textTransform: 'uppercase', color: Colors.ink3, fontWeight: '600' },
+  label: { fontFamily: FontFamily.marker, fontSize: sf(8), letterSpacing: 1.4, textTransform: 'uppercase', color: Colors.ink3 },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   chip: { flexDirection: 'row', alignItems: 'center', gap: 5, borderWidth: 1.5, borderRadius: Radius.pill, paddingVertical: 4, paddingHorizontal: 10 },
   dot: { width: 9, height: 9, borderRadius: Radius.pill },

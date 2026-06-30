@@ -325,7 +325,7 @@ export function TalkingAboutContent({ editing = false }: { editing?: boolean }) 
             <View key={key} style={{ marginTop: 6 }}>
               <View style={s.checkRow}>
                 <Checkbox on={vals.yumeCat === key} onPress={e ? () => setVal('yumeCat', vals.yumeCat === key ? '' : key) : undefined} />
-                <Text style={[s.checkLabel, vals.yumeCat === key && { fontWeight: '700' }]}>{key}</Text>
+                <Text style={s.checkLabel}>{key}</Text>
               </View>
               <Text style={s.subItems}>{subs}</Text>
             </View>
@@ -514,7 +514,7 @@ const cb = StyleSheet.create({
 
 const sl = StyleSheet.create({
   wrap:    { gap: 2 },
-  label:   { fontFamily: FontFamily.markerBold, fontWeight: '600', fontSize: sf(10), color: INK, textAlign: 'center' },
+  label:   { fontFamily: FontFamily.markerBold, fontSize: sf(10), color: INK, textAlign: 'center' },
   track:   { height: 9, flexDirection: 'row', borderWidth: 1.2, borderColor: INK, borderRadius: 999, overflow: 'hidden', position: 'relative' },
   left:    { height: '100%', backgroundColor: Colors.sakura + 'cc' },
   right:   { flex: 1, height: '100%', backgroundColor: Colors.lavenderDeep + 'cc' },
@@ -536,13 +536,13 @@ const s = StyleSheet.create({
   header:    { alignItems: 'center', paddingVertical: 4, position: 'relative', paddingHorizontal: 50 },
   headerStL: { position: 'absolute', top: 0, left: 0 },
   headerStR: { position: 'absolute', top: 0, right: 0 },
-  eyebrow:   { fontFamily: FontFamily.marker, fontWeight: '600', fontSize: sf(9), color: INK + '88', letterSpacing: 1.6 },
+  eyebrow:   { fontFamily: FontFamily.marker, fontSize: sf(9), color: INK + '88', letterSpacing: 1.6 },
   title:     { fontFamily: FontFamily.displayItalic, fontSize: sf(32), color: INK, letterSpacing: -1, lineHeight: 34, marginTop: 2 },
   rule:      { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2, width: '100%' },
   ruleLine:  { flex: 1, height: 1, backgroundColor: INK + '55' },
   row2:      { flexDirection: 'row', gap: 10 },
   col:       { flex: 1, alignItems: 'center' },
-  colTitle:  { fontFamily: FontFamily.markerBold, fontWeight: '700', fontSize: sf(11), color: INK },
+  colTitle:  { fontFamily: FontFamily.markerBold, fontSize: sf(11), color: INK },
   checkRow:  { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 4 },
   checkLabel:{ fontFamily: FontFamily.marker, fontSize: sf(10), color: INK },
   subItems:  { marginLeft: 16, fontFamily: FontFamily.script, fontSize: sf(13), color: INK + '88', lineHeight: 14, marginTop: 2 },
@@ -555,7 +555,7 @@ const s = StyleSheet.create({
   sharingRow: { flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 4 },
   sharingOpt: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   sharingText: { fontFamily: FontFamily.marker, fontSize: sf(10), color: INK },
-  sharingOn:  { color: Colors.sakuraInk, fontWeight: '700' },
+  sharingOn:  { color: Colors.sakuraInk },
   sharingDot:   { borderRadius: 999 },
   sharingDotOff: { width: 8, height: 8, borderWidth: 1.2, borderColor: INK },
   sharingDotOn:  { width: 13, height: 13, backgroundColor: Colors.sakuraInk },
@@ -565,15 +565,15 @@ const s = StyleSheet.create({
   emojiLabel:{ fontFamily: FontFamily.marker, fontSize: sf(9), color: INK + '88' },
   avatar:    { width: 60, height: 60, borderRadius: 30, borderWidth: 2, borderColor: INK, alignItems: 'center', justifyContent: 'center', marginVertical: 6 },
   avatarLetter:{ fontFamily: FontFamily.displayItalic, fontSize: sf(24), color: '#fff' },
-  ageRange:  { fontFamily: FontFamily.marker, fontWeight: '600', fontSize: sf(9), color: INK + '88', letterSpacing: 1.4 },
+  ageRange:  { fontFamily: FontFamily.marker, fontSize: sf(9), color: INK + '88', letterSpacing: 1.4 },
   charName:  { fontFamily: FontFamily.script, fontSize: sf(18), lineHeight: 20, marginTop: 2 },
   charField: { flexDirection: 'row', alignItems: 'center' },
-  charFieldKey:{ fontFamily: FontFamily.marker, fontSize: sf(9), color: INK, fontWeight: '700' },
+  charFieldKey:{ fontFamily: FontFamily.marker, fontSize: sf(9), color: INK },
   charFieldVal:{ fontFamily: FontFamily.script, fontSize: sf(13) },
   paletteRow:{ flexDirection: 'row', gap: 3, justifyContent: 'center', marginTop: 2 },
   palHint:   { fontFamily: FontFamily.marker, fontSize: sf(8), color: INK + '60', marginTop: 2 },
   tropesBox: { borderWidth: 1.2, borderStyle: 'dashed', borderColor: INK, borderRadius: 6, padding: 8, backgroundColor: '#fff', alignItems: 'center' },
-  tropesLabel:{ fontFamily: FontFamily.markerBold, fontWeight: '600', fontSize: sf(10), color: INK + '88' },
+  tropesLabel:{ fontFamily: FontFamily.markerBold, fontSize: sf(10), color: INK + '88' },
   tropesInput:{ fontFamily: FontFamily.script, fontSize: sf(13), color: INK, lineHeight: 15, textAlign: 'center', width: '100%' },
   tropesText: { fontFamily: FontFamily.script, fontSize: sf(13), color: INK, lineHeight: 15, textAlign: 'center' },
   sliderBlock:{ gap: 8 },

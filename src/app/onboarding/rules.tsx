@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
   scrollContent: { paddingHorizontal: Spacing.s6, paddingTop: Spacing.s5, paddingBottom: Spacing.s4 },
   eyebrow: {
     fontFamily: FontFamily.marker, fontSize: sf(10), color: Colors.plum,
-    letterSpacing: 1.6, textTransform: 'uppercase', fontWeight: '600',
+    letterSpacing: 1.6, textTransform: 'uppercase',
   },
   heading: {
     fontFamily: FontFamily.displayItalic, fontSize: sf(26), lineHeight: 28,

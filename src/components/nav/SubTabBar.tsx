@@ -55,7 +55,7 @@ export function SubTabBar({ active, onPress, lockedTabs = [] }: Props) {
               <Text style={[styles.ja, { opacity: on ? 1 : locked ? 0.4 : 0.6, color: on ? Colors.vellum : Colors.ink2 }]}>
                 {t.ja}
               </Text>
-              <Text style={[styles.label, { color: on ? Colors.vellum : Colors.ink2, fontWeight: on ? '600' : '500', opacity: locked ? 0.4 : 1 }]}>
+              <Text style={[styles.label, { color: on ? Colors.vellum : Colors.ink2, opacity: locked ? 0.4 : 1 }]}>
                 {t.label}
               </Text>
               {locked && (

@@ -141,7 +141,6 @@ const styles = StyleSheet.create({
     color: Colors.sakuraDeep,
     letterSpacing: 1.6,
     textTransform: 'uppercase',
-    fontWeight: '600',
   },
   heading: {
     fontFamily: FontFamily.displayItalic,

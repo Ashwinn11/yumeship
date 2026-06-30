@@ -297,7 +297,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.sakuraSoft, alignItems: 'center', justifyContent: 'center',
   },
   addText: {
-    fontFamily: FontFamily.displayItalic, fontSize: sf(14), fontStyle: 'italic',
+    fontFamily: FontFamily.displayItalic, fontSize: sf(14),
     color: Colors.ink2, textAlign: 'center', paddingHorizontal: 8, lineHeight: 18,
   },
   emptyState: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: Spacing.s3, paddingBottom: Spacing.s9 },

@@ -498,7 +498,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 8,
     padding: Spacing.s4, paddingBottom: Spacing.s3, borderBottomWidth: 1, borderBottomColor: Colors.line,
   },
-  sheetJa: { fontFamily: FontFamily.ja, fontSize: sf(18), fontWeight: '600' },
+  sheetJa: { fontFamily: FontFamily.ja, fontSize: sf(18) },
   sheetTitle: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(15), color: Colors.ink, flex: 1 },
   sheetClose: { fontSize: sf(13), color: Colors.ink3, fontFamily: FontFamily.ui },
   sheetList: { flex: 0, maxHeight: 280, paddingHorizontal: Spacing.s4 },

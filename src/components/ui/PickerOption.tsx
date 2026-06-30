@@ -33,7 +33,7 @@ export function PickerOption({ ja, name, tint, tintBg, active, onPress }: Props)
       <Text
         style={[
           styles.name,
-          { color: active ? tint : Colors.ink2, fontWeight: active ? '600' : '500' },
+          { color: active ? tint : Colors.ink2 },
         ]}
       >
         {name}
@@ -61,7 +61,6 @@ const styles = StyleSheet.create({
   ja: {
     fontFamily: FontFamily.ja,
     fontSize: FontSize.h6,
-    fontWeight: '600',
   },
   name: {
     fontSize: sf(10),
