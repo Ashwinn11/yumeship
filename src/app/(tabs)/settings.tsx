@@ -24,7 +24,7 @@ import { Toggle } from '@/components/ui/Toggle';
 import { Colors, FontFamily, FontSize, Radius, Spacing ,sf } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
 import {
-  getNotifEnabled, requestPermission, setNotifEnabled,
+  cancelAllNotifications, getNotifEnabled, requestPermission, setNotifEnabled,
 } from '@/store/notifications';
 import { manageSubscriptions, restorePurchases } from '@/store/purchases';
 import { openWriteReview } from '@/store/review';
@@ -332,6 +332,7 @@ export default function SettingsScreen() {
         cancelText="Cancel"
         onConfirm={() => {
           setShowDeleteModal(false);
+          cancelAllNotifications();
           deleteAllData();
           router.replace('/onboarding');
         }}

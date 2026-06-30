@@ -212,9 +212,14 @@ export function deleteAllData() {
     DELETE FROM messages;
     DELETE FROM albums;
     DELETE FROM album_photos;
+    DELETE FROM outfits;
     DELETE FROM storyline_events;
     DELETE FROM fo_messages;
     DELETE FROM template_data;
+    DELETE FROM this_or_that_pairs;
+    DELETE FROM love_letters;
+    DELETE FROM scenario_prompts;
+    DELETE FROM settings;
   `);
   notify();
   notifyDates();

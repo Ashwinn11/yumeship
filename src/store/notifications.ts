@@ -99,6 +99,14 @@ export async function getScheduledNotifications() {
   return await Notifications.getAllScheduledNotificationsAsync();
 }
 
+export async function cancelAllNotifications(): Promise<void> {
+  try {
+    await Notifications.cancelAllScheduledNotificationsAsync();
+  } catch {
+    // ignore — nothing scheduled, or OS rejected the call
+  }
+}
+
 // Schedules a yearly calendar notification for anniversaries/dates.
 // dateStr must be YYYY-MM-DD. Returns the notification ID or null on failure.
 export async function scheduleAnniversaryNotification(

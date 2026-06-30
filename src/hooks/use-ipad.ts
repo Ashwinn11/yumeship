@@ -1,7 +1,7 @@
 import { useWindowDimensions } from 'react-native';
 
 const IPAD_BREAKPOINT = 768;
-const MAX_CONTENT_WIDTH = 600;
+const MAX_CONTENT_WIDTH = 760;
 
 export function useIPad() {
   const { width } = useWindowDimensions();
