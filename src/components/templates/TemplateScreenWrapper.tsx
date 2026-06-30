@@ -8,7 +8,7 @@ import { Star } from '@/components/deco/Star';
 import { WashiTape } from '@/components/deco/WashiTape';
 import { CozyModal } from '@/components/ui/CozyModal';
 import { IconEdit, IconExport, IconTrashSolid } from '@/components/ui/Icon';
-import { Colors, FontFamily, Radius, Shadow, Spacing ,sf } from '@/constants/theme';
+import { Colors, FontFamily, Radius, Shadow, SheetColumn, Spacing ,sf } from '@/constants/theme';
 import { askForReview } from '@/store/review';
 import { deleteShip, getShip, isPoly, updateShip } from '@/store/ships';
 import { TemplateDataCtx, buildPreFill, loadTemplateData, migrateTemplateData, saveTemplateData } from '@/store/templateData';
@@ -323,7 +323,7 @@ export function TemplateScreenWrapper({ templateKey, shipId, children }: Props) 
           <TouchableWithoutFeedback onPress={() => setShowBgPicker(false)}>
             <View style={s.overlay} />
           </TouchableWithoutFeedback>
-          <View style={s.sheet}>
+          <View style={[s.sheet, SheetColumn]}>
             <View style={s.sheetHandle} />
             <View style={s.sheetHeader}>
               <Text style={s.sheetTitle}>background</Text>
@@ -384,7 +384,7 @@ export function TemplateScreenWrapper({ templateKey, shipId, children }: Props) 
           <TouchableWithoutFeedback onPress={() => setShowPicker(false)}>
             <View style={s.overlay} />
           </TouchableWithoutFeedback>
-          <View style={s.sheet}>
+          <View style={[s.sheet, SheetColumn]}>
             <View style={s.sheetHandle} />
             <View style={s.sheetHeader}>
               <Text style={s.sheetTitle}>change style</Text>

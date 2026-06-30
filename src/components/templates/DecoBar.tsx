@@ -12,7 +12,7 @@ import {
   StickerTicket, StickerWaxSeal, StickerHeartPatch, StickerSakuraFlower,
 } from '@/components/deco/Stickers';
 import { WashiTape } from '@/components/deco/WashiTape';
-import { FontFamily ,sf } from '@/constants/theme';
+import { FontFamily, SheetColumn ,sf } from '@/constants/theme';
 import { INK, Polaroid } from './primitives';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -268,7 +268,7 @@ export function DecoBar({ editing, itemsJson, onItemsChange }: Props) {
           <View style={s.overlay} />
         </TouchableWithoutFeedback>
 
-        <View style={s.sheet}>
+        <View style={[s.sheet, SheetColumn]}>
           <View style={s.sheetHandle} />
 
           <View style={s.sheetTabs}>

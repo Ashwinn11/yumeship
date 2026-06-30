@@ -1,7 +1,7 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useState } from 'react';
 import { Modal, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
-import { Colors, FontFamily, Radius ,sf } from '@/constants/theme';
+import { Colors, FontFamily, Radius, SheetColumn ,sf } from '@/constants/theme';
 
 type Props = {
   value: string;           // stored as "YYYY-MM-DD"
@@ -101,7 +101,7 @@ export function DateField({ value, onChange, editing, placeholder = 'pick a date
       {open && Platform.OS === 'ios' && (
         <Modal transparent animationType="fade">
           <Pressable style={styles.backdrop} onPress={() => setOpen(false)}>
-            <View style={styles.sheet} onStartShouldSetResponder={() => true}>
+            <View style={[styles.sheet, SheetColumn]} onStartShouldSetResponder={() => true}>
               <DateTimePicker
                 value={draft ?? date}
                 mode="date"

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Modal, StyleSheet, Text, View, TouchableWithoutFeedback } from 'react-native';
 import { Button } from './Button';
-import { Colors, FontFamily, Radius, Spacing, Shadow ,sf } from '@/constants/theme';
+import { Colors, FontFamily, Radius, Spacing, Shadow, SheetColumn ,sf } from '@/constants/theme';
 
 type Props = {
   visible: boolean;
@@ -40,7 +40,7 @@ export function CozyModal({
       <TouchableWithoutFeedback onPress={handleCancel}>
         <View style={styles.overlay}>
           <TouchableWithoutFeedback>
-            <View style={styles.card}>
+            <View style={[styles.card, SheetColumn]}>
               {title && <Text style={styles.title}>{title}</Text>}
               
               {message && <Text style={styles.description}>{message}</Text>}

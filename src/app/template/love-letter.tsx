@@ -6,7 +6,7 @@ import {
   MarkerCard, TitleHeader, MarkerHeader, BlankPill, INK,
 } from '@/components/templates/primitives';
 import { Heart } from '@/components/deco/Heart';
-import { FontFamily ,sf } from '@/constants/theme';
+import { FontFamily, SheetColumn ,sf } from '@/constants/theme';
 import { useTemplateCtx } from '@/store/templateData';
 import { DecoBar } from '@/components/templates/DecoBar';
 import { getMembers, isPoly, Ship, useShip } from '@/store/ships';
@@ -173,12 +173,14 @@ export function LoveLetterContent({ editing = false, ship }: { editing?: boolean
       <Modal visible={pickingTo} transparent animationType="fade" onRequestClose={() => setPickingTo(false)}>
         <Pressable style={s.pickOverlay} onPress={() => setPickingTo(false)} />
         <View style={s.pickSheet}>
+         <View style={[s.pickCard, SheetColumn]}>
           <Text style={s.pickTitle}>who is this letter to?</Text>
           <MemberPicker
             ship={ship}
             selectedId={getMembers(ship).find((m) => m.name === dearName)?.id}
             onSelect={(_, name) => { set('dearName')(name); setPickingTo(false); }}
           />
+         </View>
         </View>
       </Modal>
     </MarkerCard>
@@ -242,7 +244,11 @@ const s = StyleSheet.create({
   },
   pickOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(43,26,38,0.4)' },
   pickSheet: {
-    position: 'absolute', left: 24, right: 24, top: '38%',
+    position: 'absolute', left: 0, right: 0, top: '38%',
+    alignItems: 'center', paddingHorizontal: 24,
+  },
+  pickCard: {
+    width: '100%',
     backgroundColor: '#fff', borderWidth: 1.5, borderColor: INK, borderRadius: 16, padding: 16, gap: 10,
   },
   pickTitle: { fontFamily: FontFamily.markerBold, fontSize: sf(13), color: '#6e3a5a', textAlign: 'center' },

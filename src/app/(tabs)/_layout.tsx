@@ -1,6 +1,7 @@
 import { Tabs, router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { View } from 'react-native';
+import { Colors } from '@/constants/theme';
 
 import { RootTabBar, type RootTab } from '@/components/nav/RootTabBar';
 import { resetOnb } from '@/store/onboarding';
@@ -49,7 +50,7 @@ function CustomTabBar({ state, navigation, descriptors }: TabBarProps) {
   }
 
   return (
-    <View style={{ paddingBottom: insets.bottom }}>
+    <View style={{ paddingBottom: insets.bottom, backgroundColor: Colors.paper }}>
       <RootTabBar
         active={active}
         onPress={(tab) => navigation.navigate(TAB_TO_ROUTE[tab])}

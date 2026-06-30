@@ -192,6 +192,13 @@ export const Shadow = {
   }),
 } as const;
 
+// iPad: constrain bottom-sheets / pickers / popovers to the same centered
+// column the page content uses (useIPad → maxWidth 600). Add to a sheet's
+// container style; null on phones so it's a no-op.
+export const SheetColumn = _w >= 768
+  ? ({ maxWidth: 600, width: '100%' as const, alignSelf: 'center' as const })
+  : null;
+
 // ─── Backward-compat shims (Expo starter files — remove when replaced) ───────
 export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
 export const MaxContentWidth = 800;

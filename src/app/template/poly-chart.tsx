@@ -8,7 +8,7 @@ import { AttrSlider, INK, PhotoBox } from '@/components/templates/primitives';
 import { useTemplateCtx } from '@/store/templateData';
 import { getMembers, memberColor, ShipMember, updateShip, useShip } from '@/store/ships';
 import { newId } from '@/db/client';
-import { Colors, FontFamily, Radius, sf } from '@/constants/theme';
+import { Colors, FontFamily, Radius, SheetColumn, sf } from '@/constants/theme';
 
 // ─── Static config (ported from the Canvas design) ────────────────────────────
 
@@ -533,6 +533,7 @@ function PolyChartContent({ editing, shipId }: { editing?: boolean; shipId?: str
       <Modal visible={!!bondEdit} transparent animationType="fade" onRequestClose={() => setBondEdit(null)}>
         <Pressable style={ps.modalOverlay} onPress={() => setBondEdit(null)} />
         <View style={ps.modalSheet}>
+         <View style={[ps.modalCard, SheetColumn]}>
           <Text style={ps.modalTitle}>{bondNames}</Text>
           <View style={ps.modalChips}>
             {BOND_TYPE_ORDER.map((t) => {
@@ -560,6 +561,7 @@ function PolyChartContent({ editing, shipId }: { editing?: boolean; shipId?: str
             <Pressable onPress={() => bondEdit && removeBond(bondEdit)}><Text style={ps.modalRemove}>✕ remove bond</Text></Pressable>
             <Pressable onPress={() => setBondEdit(null)}><Text style={ps.modalDone}>done</Text></Pressable>
           </View>
+         </View>
         </View>
       </Modal>
     </View>
@@ -672,7 +674,8 @@ const ps = StyleSheet.create({
 
   // modal
   modalOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(43,26,38,0.4)' },
-  modalSheet: { position: 'absolute', left: 20, right: 20, top: '32%', backgroundColor: Colors.vellum, borderWidth: 1.5, borderColor: INK, borderRadius: 16, padding: 16, gap: 10 },
+  modalSheet: { position: 'absolute', left: 0, right: 0, top: '32%', alignItems: 'center', paddingHorizontal: 20 },
+  modalCard: { width: '100%', backgroundColor: Colors.vellum, borderWidth: 1.5, borderColor: INK, borderRadius: 16, padding: 16, gap: 10 },
   modalTitle: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(15), color: PLUM, textAlign: 'center' },
   modalChips: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 6 },
   modalChip: { borderWidth: 1, borderRadius: 999, paddingVertical: 3, paddingHorizontal: 9 },

@@ -6,7 +6,7 @@ import { TemplateScreenWrapper } from '@/components/templates/TemplateScreenWrap
 import { PhotoBox, MarkerCard, INK, useSliderTrack } from '@/components/templates/primitives';
 import { Sparkle } from '@/components/deco';
 import { useTemplateCtx } from '@/store/templateData';
-import { Colors, FontFamily, Radius, Spacing ,sf } from '@/constants/theme';
+import { Colors, FontFamily, Radius, SheetColumn, Spacing ,sf } from '@/constants/theme';
 
 // ─── Palette options (same as aesthetic template) ──────────────
 const PALETTE_OPTIONS = [
@@ -104,7 +104,7 @@ function DoodleModal({ paths, onSave, onClose }: {
       </TouchableWithoutFeedback>
 
       {/* Bottom sheet */}
-      <View style={[dd.sheet, { paddingBottom: insets.bottom + 8 }]}>
+      <View style={[dd.sheet, { paddingBottom: insets.bottom + 8 }, SheetColumn]}>
         {/* Handle */}
         <View style={dd.handle} />
 
@@ -471,7 +471,7 @@ export function TalkingAboutContent({ editing = false }: { editing?: boolean }) 
         <TouchableWithoutFeedback onPress={() => setPicking(null)}>
           <View style={m.overlay} />
         </TouchableWithoutFeedback>
-        <View style={m.sheet}>
+        <View style={[m.sheet, SheetColumn]}>
           <View style={m.handle} />
           <Text style={m.title}>pick a color</Text>
           <View style={m.grid}>

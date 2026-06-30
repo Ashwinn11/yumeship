@@ -6,7 +6,7 @@ import {
 } from '@/components/templates/primitives';
 import { TemplateScreenWrapper } from '@/components/templates/TemplateScreenWrapper';
 import { Heart } from '@/components/deco/Heart';
-import { Colors, FontFamily, Radius, Spacing ,sf } from '@/constants/theme';
+import { Colors, FontFamily, Radius, SheetColumn, Spacing ,sf } from '@/constants/theme';
 import { useTemplateCtx } from '@/store/templateData';
 import { getShip } from '@/store/ships';
 
@@ -121,7 +121,7 @@ export function AestheticContent({ editing = false }: { editing?: boolean }) {
         <TouchableWithoutFeedback onPress={() => setPickingIdx(null)}>
           <View style={s.pickerOverlay} />
         </TouchableWithoutFeedback>
-        <View style={s.pickerSheet}>
+        <View style={[s.pickerSheet, SheetColumn]}>
           <View style={s.pickerHandle} />
           <Text style={s.pickerTitle}>pick a color</Text>
           <View style={s.pickerGrid}>

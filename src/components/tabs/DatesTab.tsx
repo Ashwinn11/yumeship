@@ -9,7 +9,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { StickerTicket, WashiTape, Bullets, Sparkle } from '@/components/deco';
 import { CozyModal } from '@/components/ui/CozyModal';
 import { IconPlus } from '@/components/ui/Icon';
-import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing ,sf } from '@/constants/theme';
+import { Colors, FontFamily, FontSize, Radius, Shadow, SheetColumn, Spacing ,sf } from '@/constants/theme';
 import { addDate, deleteDate, daysUntil, parseLocalDate, useDates } from '@/store/dates';
 import { requestPermission } from '@/store/notifications';
 import { DateField } from '@/components/ui/DateField';
@@ -208,7 +208,7 @@ export function DatesTab({ shipId, shipName }: { shipId: string; shipName?: stri
         <TouchableWithoutFeedback onPress={() => setComposing(false)}>
           <View style={s.overlay} />
         </TouchableWithoutFeedback>
-        <View style={s.sheet}>
+        <View style={[s.sheet, SheetColumn]}>
           <View style={s.sheetHandle} />
           <View style={s.sheetHeader}>
             <Text style={s.sheetTitle}>add a date</Text>

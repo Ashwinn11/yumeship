@@ -26,7 +26,7 @@ import { INK, SquareCheck } from '@/components/templates/primitives';
 import { CozyModal } from '@/components/ui/CozyModal';
 import { IconChevronLeft, IconEdit, IconPlus, IconTrashSolid } from '@/components/ui/Icon';
 import { Mark } from '@/components/ui/Mark';
-import { Colors, FontFamily, FontSize, Radius, sf, Shadow, Spacing } from '@/constants/theme';
+import { Colors, FontFamily, FontSize, Radius, sf, Shadow, SheetColumn, Spacing } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
 import { addFoMessage, deleteFoMessage, toggleFoMessage, updateFoMessage, useFoMessages } from '@/store/foNotifications';
 import { addHeadcanon, clearCategoryHeadcanons, deleteHeadcanon, getHeadcanons, updateHeadcanon, useHeadcanonCounts, useHeadcanons } from '@/store/headcanons';
@@ -228,9 +228,9 @@ export default function VaultScreen() {
       )}
 
       {/* Ship picker sheet */}
-      {showShipPicker && (
+      <Modal visible={showShipPicker} transparent animationType="slide" onRequestClose={() => setShowShipPicker(false)}>
         <Pressable style={styles.overlay} onPress={() => setShowShipPicker(false)}>
-          <Pressable style={styles.pickerSheet} onPress={(e) => e.stopPropagation()}>
+          <Pressable style={[styles.pickerSheet, SheetColumn]} onPress={(e) => e.stopPropagation()}>
             <Text style={styles.pickerTitle}>switch ship</Text>
             {ships.map((s, i) => (
               <Pressable
@@ -250,7 +250,7 @@ export default function VaultScreen() {
             ))}
           </Pressable>
         </Pressable>
-      )}
+      </Modal>
     </View>
   );
 }
@@ -949,7 +949,7 @@ function ScenariosFeature({ shipId, shipName, setCustomBack }: { shipId: string;
         <TouchableWithoutFeedback onPress={() => setShowIdeas(false)}>
           <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.3)' }} />
         </TouchableWithoutFeedback>
-        <View style={{ backgroundColor: Colors.paper, borderTopLeftRadius: Radius.r5, borderTopRightRadius: Radius.r5, paddingBottom: 34, maxHeight: '80%' }}>
+        <View style={[{ backgroundColor: Colors.paper, borderTopLeftRadius: Radius.r5, borderTopRightRadius: Radius.r5, paddingBottom: 34, maxHeight: '80%' }, SheetColumn]}>
           <View style={{ width: 40, height: 4, backgroundColor: Colors.line, borderRadius: 2, alignSelf: 'center', marginTop: 10 }} />
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: Spacing.s5, paddingTop: Spacing.s3 }}>
             <Text style={{ fontFamily: FontFamily.uiSemiBold, fontSize: sf(18), color: Colors.ink }}>prompts</Text>

@@ -15,7 +15,7 @@ import { Chip } from '@/components/ui/Chip';
 import { CozyModal } from '@/components/ui/CozyModal';
 import { GradientCover } from '@/components/ui/GradientCover';
 import { IconEdit, IconPlus, IconTrashSolid } from '@/components/ui/Icon';
-import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing, sf } from '@/constants/theme';
+import { Colors, FontFamily, FontSize, Radius, Shadow, SheetColumn, Spacing, sf } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
 import {
   addHeadcanon, deleteHeadcanon, updateHeadcanon, useHeadcanonCounts, useHeadcanons,
@@ -341,7 +341,7 @@ function HCSheet({
         <View style={styles.sheetOverlay} />
       </TouchableWithoutFeedback>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.sheetWrap}>
-        <View style={styles.sheet}>
+        <View style={[styles.sheet, SheetColumn]}>
           <View style={styles.sheetHandle} />
           <View style={styles.sheetHeader}>
             <Text style={[styles.sheetJa, { color: cat.color }]}>{cat.ja}</Text>
