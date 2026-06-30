@@ -15,6 +15,7 @@ import { Colors, FontFamily, FontSize, Radius, Spacing ,sf } from '@/constants/t
 import { useIPad } from '@/hooks/use-ipad';
 import { resetOnb, setOnbField } from '@/store/onboarding';
 import { usePremium } from '@/store/premium';
+import { getShip, updateShip } from '@/store/ships';
 
 export const COVER_PALETTES: { id: string; start: string; end: string }[] = [
   { id: 'sakura', start: '#f3b6c4', end: '#9b4f6e' },
@@ -30,29 +31,36 @@ export const COVER_PALETTES: { id: string; start: string; end: string }[] = [
 export default function OnbFO() {
   const insets = useSafeAreaInsets();
   const { scrollFill, column } = useIPad();
-  const { mode } = useLocalSearchParams<{ mode?: string }>();
+  const { mode, shipId } = useLocalSearchParams<{ mode?: string; shipId?: string }>();
   const isNew = mode === 'new';
+  const isEdit = mode === 'edit';
+  const editingShip = isEdit && shipId ? getShip(shipId) : undefined;
   const premium = usePremium();
 
-  const [foName, setFoName] = useState('');
-  const [shipName, setShipName] = useState('');
-  const [fandom, setFandom] = useState('');
-  const [paletteId, setPaletteId] = useState('sakura');
-  const [coverUri, setCoverUri] = useState('');
-  const [relType, setRelType] = useState<'romantic' | 'platonic' | 'familial'>('romantic');
+  const [foName, setFoName] = useState(editingShip?.name ?? '');
+  const [shipName, setShipName] = useState(editingShip?.shipName ?? '');
+  const [fandom, setFandom] = useState(editingShip?.fandom ?? '');
+  const [paletteId, setPaletteId] = useState(() => {
+    const m = editingShip && COVER_PALETTES.find((p) => p.start === editingShip.gradStart && p.end === editingShip.gradEnd);
+    return m ? m.id : 'sakura';
+  });
+  const [coverUri, setCoverUri] = useState(editingShip?.coverUri ?? '');
+  const [relType, setRelType] = useState<'romantic' | 'platonic' | 'familial'>(editingShip?.relType ?? 'romantic');
 
-  const [kind, setKind] = useState<'single' | 'poly'>('single');
+  const [kind, setKind] = useState<'single' | 'poly'>(editingShip?.kind ?? 'single');
 
-  const handleFoName = (v: string) => { setFoName(v); setOnbField('foName', v); };
-  const handleShipName = (v: string) => { setShipName(v); setOnbField('shipName', v); };
-  const handleFandom = (v: string) => { setFandom(v); setOnbField('fandom', v); };
+  const handleFoName = (v: string) => { setFoName(v); if (!isEdit) setOnbField('foName', v); };
+  const handleShipName = (v: string) => { setShipName(v); if (!isEdit) setOnbField('shipName', v); };
+  const handleFandom = (v: string) => { setFandom(v); if (!isEdit) setOnbField('fandom', v); };
 
   function selectPalette(p: typeof COVER_PALETTES[0]) {
     setPaletteId(p.id);
-    setOnbField('gradStart', p.start);
-    setOnbField('gradEnd', p.end);
     setCoverUri('');
-    setOnbField('coverUri', '');
+    if (!isEdit) {
+      setOnbField('gradStart', p.start);
+      setOnbField('gradEnd', p.end);
+      setOnbField('coverUri', '');
+    }
   }
 
   async function pickCoverImage() {
@@ -64,11 +72,35 @@ export default function OnbFO() {
     });
     if (!res.canceled && res.assets[0]) {
       setCoverUri(res.assets[0].uri);
-      setOnbField('coverUri', res.assets[0].uri);
+      if (!isEdit) setOnbField('coverUri', res.assets[0].uri);
     }
   }
 
   function goToRules() {
+    if (isEdit && shipId) {
+      const pal = COVER_PALETTES.find((p) => p.id === paletteId) || COVER_PALETTES[0];
+      if (kind === 'poly') {
+        updateShip(shipId, {
+          shipName: shipName.trim(),
+          name: shipName.trim(),
+          coverUri,
+          gradStart: pal.start,
+          gradEnd: pal.end,
+        });
+      } else {
+        updateShip(shipId, {
+          name: foName.trim(),
+          shipName: shipName.trim(),
+          fandom: fandom.trim(),
+          relType,
+          coverUri,
+          gradStart: pal.start,
+          gradEnd: pal.end,
+        });
+      }
+      router.back();
+      return;
+    }
     setOnbField('relType', relType);
 
     setOnbField('kind', kind);
@@ -79,14 +111,14 @@ export default function OnbFO() {
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top + Spacing.s1, paddingBottom: insets.bottom + Spacing.s1 }]}>
-      {isNew ? (
+      {(isNew || isEdit) ? (
         <View style={styles.header}>
-          <Pressable onPress={() => { resetOnb(); router.back(); }} style={styles.closeBtn}>
+          <Pressable onPress={() => { if (!isEdit) resetOnb(); router.back(); }} style={styles.closeBtn}>
             <Text style={styles.closeBtnText}>✕</Text>
           </Pressable>
           <View style={styles.headerCenter}>
             <Mark size={22} />
-            <Text style={styles.headerTitle}>new ship</Text>
+            <Text style={styles.headerTitle}>{isEdit ? 'edit ship' : 'new ship'}</Text>
           </View>
           <View style={{ width: 32 }} />
         </View>
@@ -104,15 +136,18 @@ export default function OnbFO() {
           <View style={styles.decoBR} pointerEvents="none">
             <Sparkle size={18} color={Colors.lavenderDeep} />
           </View>
-        {!isNew && <Text style={styles.eyebrow}>step four · them</Text>}
-        <Text style={[styles.heading, isNew && styles.headingNew]}>
-          {kind === 'poly'
-            ? <>Your polycule,{"\n"}all in one place.</>
-            : <>Meet them,{"\n"}your forever-someone.</>}
+        {!isNew && !isEdit && <Text style={styles.eyebrow}>step four · them</Text>}
+        <Text style={[styles.heading, (isNew || isEdit) && styles.headingNew]}>
+          {isEdit
+            ? <>Edit their details.</>
+            : kind === 'poly'
+              ? <>Your polycule,{"\n"}all in one place.</>
+              : <>Meet them,{"\n"}your forever-someone.</>}
         </Text>
 
         {/* Premium redesign card containing all fields in step two */}
         <View style={styles.card}>
+          {!isEdit && (
           <View style={{ marginBottom: 18 }}>
             <Text style={styles.fieldLabel}>SHIP TYPE</Text>
             <View style={{ flexDirection: 'row', gap: 6, marginTop: 6 }}>
@@ -144,6 +179,7 @@ export default function OnbFO() {
               })}
             </View>
           </View>
+          )}
 
           {/* SHIP NAME field */}
           <View style={{ marginBottom: 20 }}>
@@ -352,12 +388,12 @@ export default function OnbFO() {
           onPress={goToRules}
         >
           {kind === 'poly'
-            ? (!shipName.trim() ? 'enter ship name first' : 'continue · style')
+            ? (!shipName.trim() ? 'enter ship name first' : (isEdit ? 'save changes' : 'continue · style'))
             : !foName.trim()
               ? 'enter their name first'
               : !shipName.trim()
                 ? 'enter ship name first'
-                : 'continue · style'}
+                : (isEdit ? 'save changes' : 'continue · style')}
         </Button>
       </View>
     </View>

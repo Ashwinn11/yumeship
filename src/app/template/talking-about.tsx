@@ -30,7 +30,7 @@ function Checkbox({ on = false, onPress }: { on?: boolean; onPress?: () => void 
 }
 
 // ─── DualSlider ────────────────────────────────────────────────
-function DualSlider({ label, value = 0.5, onValueChange }: { label: string; value?: number; onValueChange?: (v: number) => void }) {
+function DualSlider({ label, value = 0.5, onValueChange, leftColor, rightColor }: { label: string; value?: number; onValueChange?: (v: number) => void; leftColor?: string; rightColor?: string }) {
   const { trackRef, responder } = useSliderTrack(onValueChange);
   const pct = `${Math.round(value * 100)}%` as any;
   const rest = `${Math.round((1 - value) * 100)}%` as any;
@@ -39,8 +39,8 @@ function DualSlider({ label, value = 0.5, onValueChange }: { label: string; valu
       <Text style={sl.label}>{label}</Text>
       <View ref={trackRef} style={sl.track}
         {...responder}>
-        <View style={[sl.left, { width: pct }]} />
-        <View style={[sl.right, { width: rest }]} />
+        <View style={[sl.left, { width: pct }, leftColor ? { backgroundColor: leftColor + 'cc' } : null]} />
+        <View style={[sl.right, { width: rest }, rightColor ? { backgroundColor: rightColor + 'cc' } : null]} />
         <View style={[sl.divider, { left: pct }]} />
       </View>
     </View>
@@ -252,6 +252,8 @@ export function TalkingAboutContent({ editing = false }: { editing?: boolean }) 
     foPal2:    ctx.get('foPal2',   FO_DEFAULT_PAL[2]),
     foPal3:    ctx.get('foPal3',   FO_DEFAULT_PAL[3]),
     foPal4:    ctx.get('foPal4',   FO_DEFAULT_PAL[4]),
+    meColor:   ctx.get('meColor',  Colors.sakura),
+    foColor:   ctx.get('foColor',  Colors.lavenderDeep),
     doodle:    ctx.get('doodle',   '[]'),
     tropes:    ctx.get('tropes',   ''),
     sliders:   ctx.get('sliders',  '[0.7,0.55,0.35]'),
@@ -270,11 +272,13 @@ export function TalkingAboutContent({ editing = false }: { editing?: boolean }) 
   const relTypes: string[] = JSON.parse(vals.relTypes || '[]');
   const endings:  string[] = JSON.parse(vals.endings  || '[]');
   const sliders = JSON.parse(vals.sliders) as [number, number, number];
+  const meColor = vals.meColor || Colors.sakura;
+  const foColor = vals.foColor || Colors.lavenderDeep;
   const e = editing;
 
   const chars = [
-    { pfx: 'me', label: 'ME / MY OC', color: Colors.sakura },
-    { pfx: 'fo', label: 'MY F/O',     color: Colors.lavenderDeep },
+    { pfx: 'me', label: 'ME / MY OC', defColor: Colors.sakura },
+    { pfx: 'fo', label: 'MY F/O',     defColor: Colors.lavenderDeep },
   ];
 
   return (
@@ -348,10 +352,9 @@ export function TalkingAboutContent({ editing = false }: { editing?: boolean }) 
           {(['Ok','Non-sharing','Selective'] as const).map(opt => {
             const on = vals.sharing === opt;
             return (
-              <Pressable key={opt} onPress={() => e && setVal('sharing', opt)}>
-                <Text style={[s.sharingText, on && s.sharingOn]}>
-                  {opt} {on ? '●' : '○'}
-                </Text>
+              <Pressable key={opt} onPress={() => e && setVal('sharing', opt)} style={s.sharingOpt}>
+                <Text style={[s.sharingText, on && s.sharingOn]}>{opt}</Text>
+                <View style={[s.sharingDot, on ? s.sharingDotOn : s.sharingDotOff]} />
               </Pressable>
             );
           })}
@@ -360,8 +363,9 @@ export function TalkingAboutContent({ editing = false }: { editing?: boolean }) 
 
       {/* Character columns */}
       <View style={s.row2}>
-        {chars.map(({ pfx, color }) => {
+        {chars.map(({ pfx, defColor }) => {
           const name  = vals[`${pfx}Name`];
+          const color = vals[`${pfx}Color`] || defColor;
           const pal   = [0,1,2,3,4].map(i => vals[`${pfx}Pal${i}`]);
           return (
             <View key={pfx} style={s.charCol}>
@@ -379,10 +383,13 @@ export function TalkingAboutContent({ editing = false }: { editing?: boolean }) 
               </View>
               <Text style={s.emojiLabel}>Emoji</Text>
 
-              {/* Avatar circle */}
-              <View style={[s.avatar, { backgroundColor: color }]}>
+              {/* Avatar circle — tap to recolor */}
+              <Pressable
+                onPress={e ? () => setPicking({ pfx, idx: -1 }) : undefined}
+                style={[s.avatar, { backgroundColor: color }]}
+              >
                 <Text style={s.avatarLetter}>{(name || '?')[0]}</Text>
-              </View>
+              </Pressable>
 
 
 
@@ -440,6 +447,7 @@ export function TalkingAboutContent({ editing = false }: { editing?: boolean }) 
       <View style={s.sliderBlock}>
         {(['Level of affection','Libido level','Level of confidence'] as const).map((label, i) => (
           <DualSlider key={label} label={label} value={sliders[i] ?? 0.5}
+            leftColor={meColor} rightColor={foColor}
             onValueChange={e ? (v) => {
               const next = [...sliders] as [number, number, number];
               next[i] = v;
@@ -468,11 +476,16 @@ export function TalkingAboutContent({ editing = false }: { editing?: boolean }) 
           <Text style={m.title}>pick a color</Text>
           <View style={m.grid}>
             {PALETTE_OPTIONS.map(c => {
-              const currentVal = picking ? vals[`${picking.pfx}Pal${picking.idx}`] : '';
+              const currentVal = picking
+                ? (picking.idx === -1 ? vals[`${picking.pfx}Color`] : vals[`${picking.pfx}Pal${picking.idx}`])
+                : '';
               return (
                 <Pressable key={c} style={[m.swatch, { backgroundColor: c }, c === currentVal && m.swatchActive]}
                   onPress={() => {
-                    if (picking) setVal(`${picking.pfx}Pal${picking.idx}`, c);
+                    if (picking) {
+                      if (picking.idx === -1) setVal(`${picking.pfx}Color`, c);
+                      else setVal(`${picking.pfx}Pal${picking.idx}`, c);
+                    }
                     setPicking(null);
                   }} />
               );
@@ -539,9 +552,13 @@ const s = StyleSheet.create({
   sparkTR:   { position: 'absolute', top: -8, right: -4 },
   sharingWrap:{ alignItems: 'center', marginVertical: 2 },
   sharingTitle:{ fontFamily: FontFamily.script, fontSize: sf(16), color: INK },
-  sharingRow: { flexDirection: 'row', gap: 14, marginTop: 4 },
+  sharingRow: { flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 4 },
+  sharingOpt: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   sharingText: { fontFamily: FontFamily.marker, fontSize: sf(10), color: INK },
-  sharingOn:  { color: Colors.sakura, fontWeight: '700' },
+  sharingOn:  { color: Colors.sakuraInk, fontWeight: '700' },
+  sharingDot:   { borderRadius: 999 },
+  sharingDotOff: { width: 8, height: 8, borderWidth: 1.2, borderColor: INK },
+  sharingDotOn:  { width: 13, height: 13, backgroundColor: Colors.sakuraInk },
   charCol:   { flex: 1, alignItems: 'center', gap: 2 },
   emojiBox:  { paddingHorizontal: 8, paddingVertical: 2, borderWidth: 1.2, borderStyle: 'dashed', borderColor: INK, borderRadius: 4, backgroundColor: '#fff' },
   emojiInput:{ fontFamily: FontFamily.ja, fontSize: sf(12), color: INK, minWidth: 60 },

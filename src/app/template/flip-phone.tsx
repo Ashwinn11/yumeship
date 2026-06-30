@@ -230,7 +230,7 @@ const s = StyleSheet.create({
   chatBar: { marginTop: 4, height: 12, backgroundColor: '#fff', borderRadius: 6, borderWidth: 1, borderColor: Colors.sakuraInk },
   aboutRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'nowrap' },
   aboutKey: { fontFamily: FontFamily.ja, fontSize: sf(9), color: '#fff', fontWeight: '700' },
-  aboutVal: { flex: 1, height: 14, backgroundColor: 'transparent', borderColor: 'transparent', fontSize: sf(9) },
+  aboutVal: { flex: 1, height: 14, backgroundColor: 'transparent', borderColor: 'transparent', fontSize: sf(9), color: '#fff' },
   aboutVal2: { fontFamily: FontFamily.ja, fontSize: sf(9), color: '#fff' },
   phoneWrap: { alignItems: 'center' },
   phoneOuter: { width: 100, alignItems: 'center', backgroundColor: Colors.sakuraSoft, borderWidth: 2, borderColor: Colors.sakuraInk, borderRadius: 14, padding: 6, position: 'relative' },

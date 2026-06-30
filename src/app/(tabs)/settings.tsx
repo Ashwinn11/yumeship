@@ -1,6 +1,7 @@
 import * as FileSystem from 'expo-file-system/legacy';
-import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { Image } from 'expo-image';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -17,6 +18,7 @@ import {
   IconTicketSolid,
   IconTrashSolid,
 } from '@/components/ui';
+import { IconEdit } from '@/components/ui/Icon';
 import { Mark } from '@/components/ui/Mark';
 import { Toggle } from '@/components/ui/Toggle';
 import { Colors, FontFamily, FontSize, Radius, Spacing ,sf } from '@/constants/theme';
@@ -27,7 +29,17 @@ import {
 import { manageSubscriptions, restorePurchases } from '@/store/purchases';
 import { openWriteReview } from '@/store/review';
 import { usePremium } from '@/store/premium';
+import { getGlobalSetting } from '@/store/onboarding';
 import { deleteAllData } from '@/store/ships';
+
+function readProfile() {
+  return {
+    name: getGlobalSetting('user_name'),
+    pronouns: getGlobalSetting('user_pronouns'),
+    color: getGlobalSetting('user_color') || Colors.sakura,
+    avatar: getGlobalSetting('user_avatar'),
+  };
+}
 
 // ─── Shared sub-components ────────────────────────────────────────────────────
 
@@ -143,6 +155,8 @@ export default function SettingsScreen() {
   const [notifEnabled, setNotifEnabledState] = useState(() => getNotifEnabled());
   const [storageLabel, setStorageLabel] = useState('—');
   const premium = usePremium();
+  const [profile, setProfile] = useState(readProfile);
+  useFocusEffect(useCallback(() => { setProfile(readProfile()); }, []));
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [alertModal, setAlertModal] = useState<{ title: string; message: string } | null>(null);
 
@@ -214,6 +228,27 @@ export default function SettingsScreen() {
         contentContainerStyle={[styles.list, column]}
         showsVerticalScrollIndicator={false}
       >
+        {/* Profile */}
+        <Pressable
+          style={styles.profileCard}
+          onPress={() => router.push('/onboarding/persona?mode=edit' as any)}
+        >
+          <View style={[styles.profileAvatar, { backgroundColor: profile.color }]}>
+            {profile.avatar ? (
+              <Image source={{ uri: profile.avatar }} style={styles.profileAvatarImg} contentFit="cover" />
+            ) : (
+              <Text style={styles.profileAvatarInitial}>{profile.name.trim().charAt(0).toUpperCase() || '♡'}</Text>
+            )}
+          </View>
+          <View style={styles.profileInfo}>
+            <Text style={styles.profileName}>{profile.name || 'set up your profile'}</Text>
+            {!!profile.pronouns && <Text style={styles.profilePronouns}>{profile.pronouns}</Text>}
+          </View>
+          <View style={styles.profileEdit}>
+            <IconEdit size={13} color={Colors.ink3} />
+          </View>
+        </Pressable>
+
         {/* Pro area */}
         {premium ? (
           <View style={styles.premiumBadge}>
@@ -356,6 +391,26 @@ const styles = StyleSheet.create({
   list: {
     padding: Spacing.s4,
     gap: 12,
+  },
+  profileCard: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    padding: Spacing.s4,
+    backgroundColor: Colors.vellum,
+    borderWidth: 1, borderColor: Colors.line,
+    borderRadius: Radius.r4,
+  },
+  profileAvatar: {
+    width: 52, height: 52, borderRadius: Radius.pill,
+    alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+  },
+  profileAvatarImg: { width: 52, height: 52, borderRadius: Radius.pill },
+  profileAvatarInitial: { fontFamily: FontFamily.displayItalic, fontSize: sf(24), color: '#fff' },
+  profileInfo: { flex: 1, gap: 2 },
+  profileName: { fontFamily: FontFamily.displayItalic, fontSize: sf(18), color: Colors.ink },
+  profilePronouns: { fontFamily: FontFamily.ui, fontSize: sf(11), color: Colors.ink3 },
+  profileEdit: {
+    width: 28, height: 28, borderRadius: Radius.pill,
+    backgroundColor: Colors.paperDeep, alignItems: 'center', justifyContent: 'center',
   },
   premiumBadge: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,

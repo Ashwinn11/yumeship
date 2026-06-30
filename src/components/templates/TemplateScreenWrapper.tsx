@@ -7,10 +7,10 @@ import { Sparkle } from '@/components/deco/Sparkle';
 import { Star } from '@/components/deco/Star';
 import { WashiTape } from '@/components/deco/WashiTape';
 import { CozyModal } from '@/components/ui/CozyModal';
-import { IconExport } from '@/components/ui/Icon';
+import { IconEdit, IconExport, IconTrashSolid } from '@/components/ui/Icon';
 import { Colors, FontFamily, Radius, Shadow, Spacing ,sf } from '@/constants/theme';
 import { askForReview } from '@/store/review';
-import { getShip, isPoly, updateShip } from '@/store/ships';
+import { deleteShip, getShip, isPoly, updateShip } from '@/store/ships';
 import { TemplateDataCtx, buildPreFill, loadTemplateData, migrateTemplateData, saveTemplateData } from '@/store/templateData';
 import { router } from 'expo-router';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
@@ -77,6 +77,7 @@ export function TemplateScreenWrapper({ templateKey, shipId, children }: Props) 
   const [confirming, setConfirming] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [showBgPicker, setShowBgPicker] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const exportRef = useRef<View>(null);
 
   const initBg = () => {
@@ -250,6 +251,20 @@ export function TemplateScreenWrapper({ templateKey, shipId, children }: Props) 
             })()}
           </View>
 
+          {shipId && (
+            <>
+              <Pressable
+                style={s.exportBtn}
+                onPress={() => router.push(`/onboarding/fo?mode=edit&shipId=${shipId}` as any)}
+              >
+                <IconEdit size={14} color={Colors.ink2} />
+              </Pressable>
+              <Pressable style={s.exportBtn} onPress={() => setConfirmDelete(true)}>
+                <IconTrashSolid size={14} color={Colors.ink2} />
+              </Pressable>
+            </>
+          )}
+
           <Pressable style={s.exportBtn} onPress={exportImage} disabled={exporting}>
             {exporting
               ? <ActivityIndicator size="small" color={Colors.ink2} />
@@ -266,6 +281,21 @@ export function TemplateScreenWrapper({ templateKey, shipId, children }: Props) 
           </Pressable>
 
         </View>
+
+        <CozyModal
+          visible={confirmDelete}
+          title="let them go?"
+          message={`Remove ${ship?.shipName || ship?.name || 'this ship'} and all their memories. This can't be undone.`}
+          confirmText="Delete"
+          cancelText="keep them"
+          isDestructive
+          onConfirm={() => {
+            setConfirmDelete(false);
+            if (shipId) deleteShip(shipId);
+            router.replace('/(tabs)' as any);
+          }}
+          onClose={() => setConfirmDelete(false)}
+        />
 
         <ScrollView
           contentContainerStyle={[s.scroll, column]}
