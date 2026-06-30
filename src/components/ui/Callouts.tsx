@@ -22,17 +22,18 @@ export function CalloutBubble({ children, tone = 'pink', notch = true, raw = fal
   const t = TONE_MAP[tone];
 
   return (
-    <View style={[{ position: 'relative', alignSelf: 'flex-start' }, style]}>
+    <View style={[{ position: 'relative', alignSelf: 'center' }, style]}>
       <View
         style={{
           backgroundColor: t.bg,
           borderWidth: 1.6,
           borderColor: t.border,
           borderRadius: 22,
-          paddingHorizontal: 22,
-          paddingTop: 14,
-          paddingBottom: 18,
-          minWidth: 180,
+          paddingHorizontal: 28,
+          paddingTop: 24,
+          paddingBottom: 28,
+          minWidth: 200,
+          maxWidth: 340,
         }}
       >
         {/* opening quote */}
@@ -55,8 +56,8 @@ export function CalloutBubble({ children, tone = 'pink', notch = true, raw = fal
           <Text
             style={{
               fontFamily: FontFamily.script,
-              fontSize: sf(16),
-              lineHeight: 18,
+              fontSize: sf(17),
+              lineHeight: 24,
               color: t.color,
               textAlign: 'center',
             }}

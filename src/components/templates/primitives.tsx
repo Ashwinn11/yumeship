@@ -825,6 +825,7 @@ const s = StyleSheet.create({
     opacity: 0.55,
     textTransform: 'uppercase',
     letterSpacing: 1,
+    textAlign: 'center',
   },
   polaroid: {
     backgroundColor: '#fff',

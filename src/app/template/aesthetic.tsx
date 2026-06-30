@@ -118,6 +118,7 @@ export function AestheticContent({ editing = false }: { editing?: boolean }) {
 
       {/* Color picker modal */}
       <Modal visible={pickingIdx !== null} transparent animationType="fade" onRequestClose={() => setPickingIdx(null)}>
+        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'flex-end' }}>
         <TouchableWithoutFeedback onPress={() => setPickingIdx(null)}>
           <View style={s.pickerOverlay} />
         </TouchableWithoutFeedback>
@@ -142,6 +143,7 @@ export function AestheticContent({ editing = false }: { editing?: boolean }) {
               />
             ))}
           </View>
+        </View>
         </View>
       </Modal>
     </MarkerCard>
@@ -173,7 +175,7 @@ const s = StyleSheet.create({
   footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 14 },
 
   // Picker
-  pickerOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)' },
+  pickerOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.4)' },
   pickerSheet: {
     backgroundColor: Colors.paper, borderTopLeftRadius: Radius.r5, borderTopRightRadius: Radius.r5,
     padding: Spacing.s5, paddingBottom: 40,

@@ -205,6 +205,7 @@ export function DatesTab({ shipId, shipName }: { shipId: string; shipName?: stri
       )}
 
       <Modal visible={composing} transparent animationType="slide" onRequestClose={() => setComposing(false)}>
+        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'flex-end' }}>
         <TouchableWithoutFeedback onPress={() => setComposing(false)}>
           <View style={s.overlay} />
         </TouchableWithoutFeedback>
@@ -294,6 +295,7 @@ export function DatesTab({ shipId, shipName }: { shipId: string; shipName?: stri
             </Pressable>
           </ScrollView>
         </View>
+        </View>
       </Modal>
     </View>
   );
@@ -328,7 +330,7 @@ const s = StyleSheet.create({
   cardSub: { fontFamily: FontFamily.ui, fontSize: sf(11), color: Colors.ink3 },
 
   // Sheet
-  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.3)' },
+  overlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.3)' },
   sheet: { backgroundColor: Colors.paper, borderTopLeftRadius: Radius.r5, borderTopRightRadius: Radius.r5, paddingBottom: 40 },
   sheetHandle: { width: 40, height: 4, backgroundColor: Colors.line, borderRadius: 2, alignSelf: 'center', marginTop: 10 },
   sheetHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: Spacing.s4, borderBottomWidth: 1, borderBottomColor: Colors.line },

@@ -337,6 +337,7 @@ function HCSheet({
         onConfirm={() => { if (deleteTarget) deleteHeadcanon(deleteTarget); setDeleteTarget(null); }}
         onClose={() => setDeleteTarget(null)}
       />
+      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'flex-end' }}>
       <TouchableWithoutFeedback onPress={onClose}>
         <View style={styles.sheetOverlay} />
       </TouchableWithoutFeedback>
@@ -418,6 +419,7 @@ function HCSheet({
           </View>
         </View>
       </KeyboardAvoidingView>
+      </View>
     </Modal>
   );
 }
@@ -487,7 +489,7 @@ const styles = StyleSheet.create({
   hcRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
 
   // HC Sheet
-  sheetOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.3)' },
+  sheetOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.3)' },
   sheetWrap: { justifyContent: 'flex-end' },
   sheet: {
     backgroundColor: Colors.paper, borderTopLeftRadius: Radius.r5, borderTopRightRadius: Radius.r5,

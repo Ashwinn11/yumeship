@@ -98,6 +98,7 @@ function DoodleModal({ paths, onSave, onClose }: {
 
   return (
     <Modal visible transparent animationType="slide" onRequestClose={onClose}>
+      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'flex-end' }}>
       {/* Tap-outside to cancel */}
       <TouchableWithoutFeedback onPress={onClose}>
         <View style={dd.overlay} />
@@ -173,6 +174,7 @@ function DoodleModal({ paths, onSave, onClose }: {
             <Text style={dd.iconText}>✕ clear</Text>
           </Pressable>
         </View>
+      </View>
       </View>
     </Modal>
   );
@@ -252,7 +254,7 @@ export function TalkingAboutContent({ editing = false }: { editing?: boolean }) 
     foPal2:    ctx.get('foPal2',   FO_DEFAULT_PAL[2]),
     foPal3:    ctx.get('foPal3',   FO_DEFAULT_PAL[3]),
     foPal4:    ctx.get('foPal4',   FO_DEFAULT_PAL[4]),
-    meColor:   ctx.get('meColor',  Colors.sakura),
+    meColor:   ctx.get('meColor',  Colors.sakuraInk),
     foColor:   ctx.get('foColor',  Colors.lavenderDeep),
     doodle:    ctx.get('doodle',   '[]'),
     tropes:    ctx.get('tropes',   ''),
@@ -272,12 +274,12 @@ export function TalkingAboutContent({ editing = false }: { editing?: boolean }) 
   const relTypes: string[] = JSON.parse(vals.relTypes || '[]');
   const endings:  string[] = JSON.parse(vals.endings  || '[]');
   const sliders = JSON.parse(vals.sliders) as [number, number, number];
-  const meColor = vals.meColor || Colors.sakura;
+  const meColor = vals.meColor || Colors.sakuraInk;
   const foColor = vals.foColor || Colors.lavenderDeep;
   const e = editing;
 
   const chars = [
-    { pfx: 'me', label: 'ME / MY OC', defColor: Colors.sakura },
+    { pfx: 'me', label: 'ME / MY OC', defColor: Colors.sakuraInk },
     { pfx: 'fo', label: 'MY F/O',     defColor: Colors.lavenderDeep },
   ];
 
@@ -468,6 +470,7 @@ export function TalkingAboutContent({ editing = false }: { editing?: boolean }) 
       {/* Color picker modal */}
       <Modal visible={picking !== null} transparent animationType="fade"
         onRequestClose={() => setPicking(null)}>
+        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'flex-end' }}>
         <TouchableWithoutFeedback onPress={() => setPicking(null)}>
           <View style={m.overlay} />
         </TouchableWithoutFeedback>
@@ -491,6 +494,7 @@ export function TalkingAboutContent({ editing = false }: { editing?: boolean }) 
               );
             })}
           </View>
+        </View>
         </View>
       </Modal>
     </MarkerCard>
@@ -580,7 +584,7 @@ const s = StyleSheet.create({
 });
 
 const m = StyleSheet.create({
-  overlay:     { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)' },
+  overlay:     { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.4)' },
   sheet:       { backgroundColor: Colors.paper ?? '#fffbf6', borderTopLeftRadius: Radius.r5, borderTopRightRadius: Radius.r5, padding: Spacing.s5, paddingBottom: 40 },
   handle:      { width: 40, height: 4, backgroundColor: Colors.line ?? '#e0d4cc', borderRadius: 2, alignSelf: 'center', marginBottom: Spacing.s4 },
   title:       { fontFamily: FontFamily.displayItalic, fontSize: sf(16), color: INK, marginBottom: Spacing.s4 },
@@ -590,7 +594,7 @@ const m = StyleSheet.create({
 });
 
 const dd = StyleSheet.create({
-  overlay:         { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)' },
+  overlay:         { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.45)' },
   sheet:           { backgroundColor: CANVAS_BG, borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingHorizontal: 16, paddingTop: 8, gap: 12 },
   handle:          { width: 36, height: 4, backgroundColor: INK + '33', borderRadius: 2, alignSelf: 'center', marginBottom: 4 },
   topBar:          { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },

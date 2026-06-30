@@ -946,8 +946,9 @@ function ScenariosFeature({ shipId, shipName, setCustomBack }: { shipId: string;
 
       {/* Ideas — browsable, relationship-aware prompt deck + your own */}
       <Modal visible={showIdeas} transparent animationType="slide" onRequestClose={() => setShowIdeas(false)}>
+        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'flex-end' }}>
         <TouchableWithoutFeedback onPress={() => setShowIdeas(false)}>
-          <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.3)' }} />
+          <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.3)' }} />
         </TouchableWithoutFeedback>
         <View style={[{ backgroundColor: Colors.paper, borderTopLeftRadius: Radius.r5, borderTopRightRadius: Radius.r5, paddingBottom: 34, maxHeight: '80%' }, SheetColumn]}>
           <View style={{ width: 40, height: 4, backgroundColor: Colors.line, borderRadius: 2, alignSelf: 'center', marginTop: 10 }} />
@@ -1018,6 +1019,7 @@ function ScenariosFeature({ shipId, shipName, setCustomBack }: { shipId: string;
             <Text style={{ fontSize: sf(13), color: accent }}>↻</Text>
             <Text style={{ fontFamily: FontFamily.uiMedium, fontSize: sf(13), color: accent }}>shuffle prompts</Text>
           </Pressable>
+        </View>
         </View>
       </Modal>
     </View>

@@ -320,6 +320,7 @@ export function TemplateScreenWrapper({ templateKey, shipId, children }: Props) 
 
         {/* Background customizer */}
         <Modal visible={showBgPicker} transparent animationType="slide" onRequestClose={() => setShowBgPicker(false)}>
+          <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'flex-end' }}>
           <TouchableWithoutFeedback onPress={() => setShowBgPicker(false)}>
             <View style={s.overlay} />
           </TouchableWithoutFeedback>
@@ -377,10 +378,12 @@ export function TemplateScreenWrapper({ templateKey, shipId, children }: Props) 
               </View>
             </ScrollView>
           </View>
+          </View>
         </Modal>
 
         {/* Change template picker */}
         <Modal visible={showPicker} transparent animationType="slide" onRequestClose={() => setShowPicker(false)}>
+          <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'flex-end' }}>
           <TouchableWithoutFeedback onPress={() => setShowPicker(false)}>
             <View style={s.overlay} />
           </TouchableWithoutFeedback>
@@ -436,6 +439,7 @@ export function TemplateScreenWrapper({ templateKey, shipId, children }: Props) 
               </Pressable>
             </View>
           </View>
+          </View>
         </Modal>
       </View>
       </KeyboardAvoidingView>
@@ -474,7 +478,7 @@ const s = StyleSheet.create({
   decoBR: { position: 'absolute', bottom: 120, right: 30 },
 
   // Picker sheet
-  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.3)' },
+  overlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.3)' },
   sheet: { backgroundColor: Colors.paper, borderTopLeftRadius: Radius.r5, borderTopRightRadius: Radius.r5, paddingBottom: 34 },
   sheetHandle: { width: 40, height: 4, backgroundColor: Colors.line, borderRadius: 2, alignSelf: 'center', marginTop: 10 },
   sheetHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: Spacing.s4, borderBottomWidth: 1, borderBottomColor: Colors.line },
