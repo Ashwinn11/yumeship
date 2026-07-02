@@ -8,6 +8,9 @@ import { AttrSlider, INK, PhotoBox } from '@/components/templates/primitives';
 import { useTemplateCtx } from '@/store/templateData';
 import { getMembers, memberColor, ShipMember, updateShip, useShip } from '@/store/ships';
 import { newId } from '@/db/client';
+import { AKI_XML } from '@/components/deco/akiXml';
+import { RIN_XML } from '@/components/deco/rinXml';
+import { ME_XML } from '@/components/deco/meXml';
 import { Colors, FontFamily, Radius, SheetColumn, sf } from '@/constants/theme';
 
 // ─── Static config (ported from the Canvas design) ────────────────────────────
@@ -47,7 +50,7 @@ const PREFS = [
   { id: 'ily', label: 'They say "I love you"' },
 ];
 
-type Roster = (ShipMember & { color: string })[];
+type Roster = (ShipMember & { color: string; svgXml?: string })[];
 const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
 const pairKey = (a: string, b: string) => [a, b].sort().join('|');
 
@@ -76,7 +79,7 @@ function RosterStrip({ roster, editing, onAdd, onRemove, onField }: {
       {roster.map((m) => (
         <View key={m.id} style={ps.memberCard}>
           <View>
-            <PhotoBox width={118} height={120} editing={editing} uri={m.photoUri}
+            <PhotoBox width={118} height={120} editing={editing} uri={m.photoUri} svgXml={m.svgXml}
               onUriChange={editing ? (u) => onField(m.id, 'photoUri', u) : undefined} style={ps.cardPhoto} />
             <View style={[ps.colorDot, { backgroundColor: m.color }]} />
             {editing && roster.length > 2 && (
@@ -359,10 +362,18 @@ function Section({ title, hint }: { title: string; hint?: string }) {
 
 // ─── Content ──────────────────────────────────────────────────────────────────
 
-function PolyChartContent({ editing, shipId }: { editing?: boolean; shipId?: string }) {
+// Sample roster shown when there's no ship yet (onboarding preview thumbnails).
+const PREVIEW_SHIP = { shipName: 'the moonrise trio', fandom: 'my favorite story' };
+const PREVIEW_MEMBERS: (ShipMember & { svgXml?: string })[] = [
+  { id: 'pv1', name: 'aki', pronouns: 'he/him', sex: 'bisexual', word: 'steady', svgXml: AKI_XML },
+  { id: 'pv2', name: 'rin', pronouns: 'she/her', sex: 'pansexual', word: 'chaos', svgXml: RIN_XML },
+  { id: 'pv3', name: 'me ♡', pronouns: 'she/her', sex: 'queer', word: 'soft', svgXml: ME_XML },
+];
+
+export function PolyChartContent({ editing, shipId }: { editing?: boolean; shipId?: string }) {
   const e = !!editing;
   const ship = useShip(shipId);
-  const members = getMembers(ship);
+  const members = ship ? getMembers(ship) : PREVIEW_MEMBERS;
   const roster: Roster = useMemo(() => members.map((m, i) => ({ ...m, color: memberColor(i) })), [members]);
 
   const [spec, setSpec] = useJsonState<Record<string, Record<string, number>>>('spec', {});
@@ -437,8 +448,8 @@ function PolyChartContent({ editing, shipId }: { editing?: boolean; shipId?: str
 
       {/* ship + media */}
       <View style={ps.shipRow}>
-        <Field label="Ship" value={ship?.shipName ?? ''} editing={e} accent onChange={(v) => shipId && updateShip(shipId, { shipName: v })} />
-        <Field label="Media" value={ship?.fandom ?? ''} editing={e} onChange={(v) => shipId && updateShip(shipId, { fandom: v })} />
+        <Field label="Ship" value={ship ? ship.shipName ?? '' : PREVIEW_SHIP.shipName} editing={e} accent onChange={(v) => shipId && updateShip(shipId, { shipName: v })} />
+        <Field label="Media" value={ship ? ship.fandom ?? '' : PREVIEW_SHIP.fandom} editing={e} onChange={(v) => shipId && updateShip(shipId, { fandom: v })} />
       </View>
 
       {/* roster */}

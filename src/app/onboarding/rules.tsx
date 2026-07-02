@@ -45,7 +45,13 @@ export default function OnbRules() {
   const isNew = mode === 'new';
   const isPolyFlow = getOnbState().kind === 'poly';
 
-  const [templateKey, setTemplateKey] = useState<string>(isPolyFlow ? 'poly-chart' : 'get-to-know');
+  // Preselect the template the user lingered on in the showcase carousel, if it fits this flow.
+  const [templateKey, setTemplateKey] = useState<string>(() => {
+    const fromShowcase = getOnbState().templateKey;
+    const options = isPolyFlow ? POLY_VISUAL : VISUAL_TEMPLATES;
+    if (options.some((t) => t.key === fromShowcase)) return fromShowcase;
+    return isPolyFlow ? 'poly-chart' : 'get-to-know';
+  });
 
   function finish() {
     const state = getOnbState();
@@ -111,7 +117,7 @@ export default function OnbRules() {
         </View>
       ) : (
         <View style={styles.dotsRow}>
-          <StepDots step={4} total={5} />
+          <StepDots step={3} total={4} />
         </View>
       )}
 
@@ -123,7 +129,7 @@ export default function OnbRules() {
           <View style={styles.decoBL} pointerEvents="none">
             <StickerHeartPatch size={48} />
           </View>
-        {!isNew && <Text style={styles.eyebrow}>step five · style</Text>}
+        {!isNew && <Text style={styles.eyebrow}>step four · style</Text>}
         <Text style={[styles.heading, isNew && styles.headingNew]}>
           A style that feels{"\n"}like your world.
         </Text>

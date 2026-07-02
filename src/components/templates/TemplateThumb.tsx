@@ -13,16 +13,30 @@ import { HeadcanonsContent } from '@/app/template/headcanons';
 import { FlipPhoneContent } from '@/app/template/flip-phone';
 import { TalkingAboutContent } from '@/app/template/talking-about';
 import { BondBannerContent } from '@/app/template/bond-banner';
+import { PolyChartContent } from '@/app/template/poly-chart';
+import { PolycaleBingoTab } from '@/components/tabs/PolycaleBingoTab';
+import { ScenariosPreview } from '@/components/templates/ScenariosPreview';
+import { TemplateDataCtx } from '@/store/templateData';
 
 // Natural render width of templates (matches scroll padding on a ~390px screen)
 const FULL_W = 360;
-// Approximate natural height — used to compute the Y translate so the top of the
-// content aligns with the top of the thumbnail. 680 works for all 9 templates.
+// Bounded height for tab-style previews that render their own ScrollView.
 const APPROX_H = 680;
 
 type ContentFC = React.FC<{ editing?: boolean }>;
 
+// Bingo is a tab (renders its own ScrollView), so it needs a bounded height to
+// lay out inside the thumb's unconstrained clip view.
+const BingoPreview: ContentFC = () => (
+  <View style={{ height: APPROX_H }}>
+    <PolycaleBingoTab shipId="preview" />
+  </View>
+);
+
 const CONTENT_MAP: Record<string, ContentFC> = {
+  'poly-chart': PolyChartContent,
+  'polycule-bingo': BingoPreview,
+  'scenarios': ScenariosPreview,
   'get-to-know': GetToKnowContent,
   'kawaii-ui': KawaiiUIContent,
   'heart-frame': HeartFrameContent,
@@ -37,21 +51,33 @@ const CONTENT_MAP: Record<string, ContentFC> = {
   'bond-banner': BondBannerContent,
 };
 
-type Props = { templateKey: string; width: number; height: number };
+type Props = {
+  templateKey: string;
+  width: number;
+  height: number;
+  /** sample values served to the template's data context, so the preview renders filled */
+  data?: Record<string, string>;
+};
 
-export function TemplateThumb({ templateKey, width, height }: Props) {
+export function TemplateThumb({ templateKey, width, height, data }: Props) {
   const Content = CONTENT_MAP[templateKey];
   if (!Content) return null;
 
   const scale = width / FULL_W;
-  // Translate before scale so the top-left of the content aligns with (0,0) of the clip view.
-  const tx = -(FULL_W * (1 - scale)) / 2;
-  const ty = -(APPROX_H * (1 - scale)) / 2;
+
+  let content = <Content editing={false} />;
+  if (data) {
+    content = (
+      <TemplateDataCtx.Provider value={{ get: (k, fb = '') => data[k] ?? fb, set: () => {}, bgColor: '', bgImage: '' }}>
+        {content}
+      </TemplateDataCtx.Provider>
+    );
+  }
 
   return (
     <View style={{ width, height, overflow: 'hidden' }} pointerEvents="none">
-      <View style={{ width: FULL_W, transform: [{ translateX: tx }, { translateY: ty }, { scale }] }}>
-        <Content editing={false} />
+      <View style={{ width: FULL_W, transformOrigin: 'top left', transform: [{ scale }] }}>
+        {content}
       </View>
     </View>
   );

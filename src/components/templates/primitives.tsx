@@ -6,6 +6,7 @@ import Svg, {
   Image as SvgImage,
   LinearGradient as SvgLinearGradient, Stop,
   Pattern as SvgPattern,
+  SvgXml,
 } from 'react-native-svg';
 import { FontFamily ,sf } from '@/constants/theme';
 
@@ -260,10 +261,14 @@ type PhotoBoxProps = {
   editing?: boolean;
   uri?: string;
   onUriChange?: (uri: string) => void;
+  /** inline SVG source rendered when no image is set (preview portraits) */
+  svgXml?: string;
 };
-export function PhotoBox({ size, round, label, style, width, height, onPress, editing, uri: controlledUri, onUriChange }: PhotoBoxProps) {
+export function PhotoBox({ size, round, label, style, width, height, onPress, editing, uri: controlledUri, onUriChange, svgXml }: PhotoBoxProps) {
   const [localUri, setLocalUri] = useState<string | null>(null);
   const imageUri = controlledUri !== undefined ? (controlledUri || null) : localUri;
+  // preview data can pass raw SVG markup where a picked-photo uri normally lives
+  const inlineSvg = svgXml ?? (imageUri?.trimStart().startsWith('<') ? imageUri : undefined);
 
   const handlePress = async () => {
     if (onPress) { onPress(); return; }
@@ -290,7 +295,11 @@ export function PhotoBox({ size, round, label, style, width, height, onPress, ed
 
   const content = (
     <>
-      {imageUri ? (
+      {inlineSvg ? (
+        <View style={[StyleSheet.absoluteFill, { borderRadius: round ? 999 : 6, overflow: 'hidden' }]}>
+          <SvgXml xml={inlineSvg} width="100%" height="100%" />
+        </View>
+      ) : imageUri ? (
         <Image
           source={{ uri: imageUri }}
           style={[StyleSheet.absoluteFill, { borderRadius: round ? 999 : 6 }]}

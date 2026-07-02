@@ -10,31 +10,22 @@ import { IconBell, IconJournalOutline } from '@/components/ui/Icon';
 import { StepDots } from '@/components/ui/StepDots';
 import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing ,sf } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
-import { getOnbState, resetOnb } from '@/store/onboarding';
+import { resetOnb } from '@/store/onboarding';
 import { requestPermission } from '@/store/notifications';
 import { daysAgo, getShip, isPoly, membersLabel } from '@/store/ships';
-
-const CREATION_LABEL: Record<string, string> = {
-  letter: 'your first love letter',
-  scene: 'your first scene',
-  messages: 'your first message thread',
-  profile: 'your ship profile',
-  vault: 'your private vault',
-};
-
+import { TEMPLATE_CONFIG } from '@/constants/templateConfig';
 
 export default function OnbReady() {
   const insets = useSafeAreaInsets();
   const { scrollFill, column } = useIPad();
   const { shipId } = useLocalSearchParams<{ shipId?: string }>();
   const ship = shipId ? getShip(shipId) : undefined;
-  const state = getOnbState();
 
-  const creationLabel = CREATION_LABEL[state.firstCreation] ?? 'the first page';
-  const primaryLabel = useMemo(() => {
-    if (state.firstCreation === 'vault') return 'enter my vault';
-    return `open ${creationLabel}`;
-  }, [creationLabel, state.firstCreation]);
+  const creationLabel = useMemo(() => {
+    const title = ship?.templateKey ? TEMPLATE_CONFIG[ship.templateKey]?.title : undefined;
+    return title ? `your ${title.toLowerCase()} page` : 'your first page';
+  }, [ship?.templateKey]);
+  const primaryLabel = `open ${creationLabel}`;
 
   async function openFirstPiece() {
     await requestPermission();
@@ -68,7 +59,7 @@ export default function OnbReady() {
   return (
     <View style={[styles.screen, { paddingTop: insets.top + Spacing.s1, paddingBottom: insets.bottom + Spacing.s1 }]}>
       <View style={styles.dotsRow}>
-        <StepDots step={4} total={5} />
+        <StepDots step={3} total={4} />
       </View>
 
       <ScrollView style={styles.scroll} contentContainerStyle={[styles.content, scrollFill]} showsVerticalScrollIndicator={false}>

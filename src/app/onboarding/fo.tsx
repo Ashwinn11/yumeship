@@ -124,7 +124,7 @@ export default function OnbFO() {
         </View>
       ) : (
         <View style={styles.dotsRow}>
-          <StepDots step={3} total={5} />
+          <StepDots step={2} total={4} />
         </View>
       )}
 
@@ -136,7 +136,7 @@ export default function OnbFO() {
           <View style={styles.decoBR} pointerEvents="none">
             <Sparkle size={18} color={Colors.lavenderDeep} />
           </View>
-        {!isNew && !isEdit && <Text style={styles.eyebrow}>step four · them</Text>}
+        {!isNew && !isEdit && <Text style={styles.eyebrow}>step three · them</Text>}
         <Text style={[styles.heading, (isNew || isEdit) && styles.headingNew]}>
           {isEdit
             ? <>Edit their details.</>

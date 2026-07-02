@@ -26,6 +26,7 @@ import { INK, SquareCheck } from '@/components/templates/primitives';
 import { CozyModal } from '@/components/ui/CozyModal';
 import { IconChevronLeft, IconEdit, IconPlus, IconTrashSolid } from '@/components/ui/Icon';
 import { Mark } from '@/components/ui/Mark';
+import { MockPhoneTop } from '@/components/ui/MockPhone';
 import { Colors, FontFamily, FontSize, Radius, sf, Shadow, SheetColumn, Spacing } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
 import { addFoMessage, deleteFoMessage, toggleFoMessage, updateFoMessage, useFoMessages } from '@/store/foNotifications';
@@ -1386,55 +1387,6 @@ const AROUND_TIMES = [
   { id: 'custom', label: 'Custom', hour: -1 },
 ] as const;
 
-
-function MockPhoneTop({ children }: { children: React.ReactNode }) {
-  const W = 256;
-  const s = W / 377;
-  const r = (n: number) => Math.round(n * s);
-  const btnStyle = {
-    position: 'absolute' as const,
-    borderRadius: r(2),
-    backgroundColor: '#E0DDB8',
-    borderWidth: 0.5,
-    borderColor: 'rgba(82,74,51,0.8)',
-  };
-  return (
-    <View style={{ alignSelf: 'center', marginBottom: Spacing.s4 }}>
-      {/* Power button */}
-      <View style={[btnStyle, { right: -r(4), top: r(151), width: r(5), height: r(96) }]} />
-      {/* Mute + volume */}
-      {([{ t: 165, h: 31 }, { t: 237, h: 56 }, { t: 310, h: 56 }] as const).map((b, i) => (
-        <View key={i} style={[btnStyle, { left: -r(4), top: r(b.t), width: r(5), height: r(b.h) }]} />
-      ))}
-      {/* Titanium frame */}
-      <View style={{
-        width: W,
-        borderTopLeftRadius: r(62), borderTopRightRadius: r(62),
-        backgroundColor: '#E8E4C1',
-        borderWidth: 1, borderColor: 'rgba(120,112,80,0.5)',
-        overflow: 'hidden',
-        shadowColor: '#C0C0C0', shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.9, shadowRadius: 3, elevation: 4,
-      }}>
-        {/* Bezel */}
-        <View style={{
-          margin: r(4), marginBottom: 0,
-          borderTopLeftRadius: r(58), borderTopRightRadius: r(58),
-          backgroundColor: '#0D0D0D', overflow: 'hidden',
-        }}>
-          {/* Screen */}
-          <View style={{
-            margin: r(4), marginBottom: 0,
-            borderTopLeftRadius: r(52), borderTopRightRadius: r(52),
-            overflow: 'hidden',
-          }}>
-            {children}
-          </View>
-        </View>
-      </View>
-    </View>
-  );
-}
 
 const OpenLockIcon = ({ size = 13, color = '#ffffff' }: { size?: number; color?: string }) => (
   <Svg width={size} height={size} viewBox="0 0 14 14" fill="none">

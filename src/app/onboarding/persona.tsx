@@ -84,7 +84,7 @@ export default function OnbPersona() {
         </View>
       ) : (
         <View style={styles.dotsRow}>
-          <StepDots step={2} total={5} />
+          <StepDots step={1} total={4} />
         </View>
       )}
 
@@ -96,7 +96,7 @@ export default function OnbPersona() {
           <View style={styles.decoBL} pointerEvents="none">
             <Sparkle size={18} color={Colors.lavenderDeep} />
           </View>
-        {!isEdit && <Text style={styles.eyebrow}>step three · you</Text>}
+        {!isEdit && <Text style={styles.eyebrow}>step two · you</Text>}
         <Text style={styles.heading}>{isEdit ? 'Your profile.' : <>Who are you,{'\n'}in their world?</>}</Text>
 
         {/* Persona card */}

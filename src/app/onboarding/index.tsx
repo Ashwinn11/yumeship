@@ -69,7 +69,7 @@ export default function OnbWelcome() {
           variant="primary"
           size="lg"
           full
-          onPress={() => router.push('/onboarding/intent')}
+          onPress={() => router.push('/onboarding/showcase')}
           icon={<Heart size={14} color={Colors.vellum} />}
           iconPosition="right"
         >

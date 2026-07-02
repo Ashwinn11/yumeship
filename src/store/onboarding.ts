@@ -1,6 +1,6 @@
 export type OnbState = {
-  firstCreation: string;
-  painPoints: string[];
+  /** template the user lingered on in the showcase carousel — preselects the style step */
+  templateKey: string;
   userName: string;
   pronouns: string;
   foName: string;
@@ -37,8 +37,7 @@ export function getGlobalSetting(key: string, fallback = ''): string {
 }
 
 let state: OnbState = {
-  firstCreation: '',
-  painPoints: [],
+  templateKey: '',
   userName: getGlobalSetting('user_name'),
   pronouns: 'she/her',
   foName: '',
@@ -68,8 +67,7 @@ export function setOnbField<K extends keyof OnbState>(key: K, value: OnbState[K]
 
 export function resetOnb() {
   state = {
-    firstCreation: '',
-    painPoints: [],
+    templateKey: '',
     userName: getGlobalSetting('user_name'),
     pronouns: 'she/her',
     foName: '',
