@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react';
 import { getDb, newId } from '@/db/client';
 
 // ─── Prompt = an evocative scenario seed you write *from* ────────────────────
-// Modelled on real selfship/yumeship "imagine your f/o…" writing prompts:
-// full, vivid scene starters — not titles.
+// 30 prompts modelled on the community's favorite shapes: soft "your f/o…"
+// fragments, reaction prompts, ask-game questions, AU/destiny, seasonal
+// domestic, and care-taking. No "imagine…" frame — the writer already knows.
 export type Prompt = { text: string };
 export type CustomPrompt = Prompt & { id: string; createdAt: number };
 
@@ -13,39 +14,42 @@ type RelType = 'romantic' | 'platonic' | 'familial';
 // relationship type so a familial F/O never gets a romantic prompt, etc.
 const BUILTIN: { any: Prompt[] } & Record<RelType, Prompt[]> = {
   any: [
-    { text: 'Imagine a thunderstorm knocks the power out — how do the two of you spend the evening?' },
-    { text: 'Imagine you fall asleep on their shoulder during a long ride, and they don’t move so they won’t wake you.' },
-    { text: 'Imagine getting caught in the rain together with no umbrella, and just laughing about it.' },
-    { text: 'Imagine they make your favorite comfort food after they can tell you’ve had a rough day.' },
-    { text: 'Imagine a lazy morning where neither of you wants to be the first to get out of bed.' },
-    { text: 'Imagine catching them quietly humming a song you love when they think no one’s listening.' },
-    { text: 'Imagine the exact moment you first realized how much they meant to you.' },
-    { text: 'Imagine you’re both lost in a new city and just decide to wander until you find something.' },
-    { text: 'Imagine building a blanket fort and watching old movies until you both drift off.' },
-    { text: 'Imagine them noticing the small thing you were too tired to mention, and quietly fixing it.' },
+    { text: 'Destined to find each other in every universe. What does it look like in this one?' },
+    { text: 'You show them your favorite movie, mostly to watch their face during the good parts.' },
+    { text: 'They’re sick in bed for once, and it’s your turn to take care of them.' },
+    { text: 'What’s their contact name in your phone — and yours in theirs?' },
+    { text: 'You teach them the game you’re best at. They’re terrible. It’s perfect.' },
+    { text: 'The first snow of the season, and they call you to the window to watch.' },
+    { text: 'What do they think about you when you’re not around?' },
+    { text: 'They’re not from your world — you hand them your phone and wait for the reaction.' },
+    { text: 'A thunderstorm knocks the power out. How do the two of you spend the evening?' },
+    { text: 'They can tell you’ve had a rough day — your favorite comfort food is already waiting.' },
+    { text: 'Caught in the rain, no umbrella, and neither of you even minds.' },
+    { text: 'They notice the small thing you were too tired to mention — and quietly fix it.' },
   ],
   romantic: [
-    { text: 'Imagine them walking up behind you, wrapping their arms around your waist, and resting their chin on your shoulder.' },
-    { text: 'Imagine the quiet moment right before your first kiss.' },
-    { text: 'Imagine them catching you staring — and this time, not looking away.' },
-    { text: 'Imagine slow dancing in the kitchen at midnight with no music playing.' },
-    { text: 'Imagine them tucking a loose strand of hair behind your ear, mid-sentence, like it’s nothing.' },
-    { text: 'Imagine the night they finally said “I love you,” and how they said it.' },
-    { text: 'Imagine waking up first and getting to watch them sleep for a while.' },
+    { text: 'They walk up behind you, wrap their arms around your waist, and rest their chin on your shoulder.' },
+    { text: 'The quiet moment right before your first kiss.' },
+    { text: 'They catch you staring — and this time, neither of you looks away.' },
+    { text: 'Slow dancing in the kitchen at midnight, no music playing.' },
+    { text: 'Hot chocolate on a cold evening, sharing one blanket that’s too small on purpose.' },
+    { text: 'Mid-sentence, they tuck a loose strand of hair behind your ear like it’s nothing.' },
+    { text: 'The night they finally said “I love you” — and exactly how they said it.' },
+    { text: 'You wake up first, and get to watch them sleep for a while.' },
   ],
   platonic: [
-    { text: 'Imagine an inside joke that makes you both crack up at the worst possible moment.' },
-    { text: 'Imagine staying up all night gaming and ordering far too much food.' },
-    { text: 'Imagine them showing up at your door the second you admitted you were having a bad day.' },
-    { text: 'Imagine a road trip where the playlist is the entire point of the trip.' },
-    { text: 'Imagine the two of you against the world — partners in crime who always have a plan.' },
+    { text: 'An inside joke sets you both off at the worst possible moment.' },
+    { text: 'Up all night gaming, with far too much food ordered.' },
+    { text: 'You admit you’re having a bad day. They’re at your door before you finish typing the next message.' },
+    { text: 'A road trip where the playlist is the entire point of the trip.' },
+    { text: 'The two of you get dropped into a horror movie. What roles do you each end up with?' },
   ],
   familial: [
-    { text: 'Imagine them patching you up and gently lecturing you after you got yourself hurt.' },
-    { text: 'Imagine cooking a big, messy meal together and arguing over the recipe.' },
-    { text: 'Imagine coming home completely worn out, and they just know exactly what you need.' },
-    { text: 'Imagine them patiently teaching you something they’re really good at.' },
-    { text: 'Imagine a quiet evening where they remind you, without making it a big deal, that you’re safe.' },
+    { text: 'They patch you up, gently lecturing you the whole time about getting yourself hurt.' },
+    { text: 'A big, messy meal cooked together, arguing over the recipe the whole way.' },
+    { text: 'You come home completely worn out, and they just know exactly what you need.' },
+    { text: 'They patiently teach you something they’re really good at.' },
+    { text: 'A quiet evening where they remind you, without making it a big deal, that you’re safe.' },
   ],
 };
 
