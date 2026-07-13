@@ -200,6 +200,8 @@ export default function SettingsScreen() {
     }
   }
 
+
+
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]}>
       {/* Background accents */}
@@ -226,6 +228,18 @@ export default function SettingsScreen() {
         contentContainerStyle={[styles.list, column]}
         showsVerticalScrollIndicator={false}
       >
+        {/* Pro area */}
+        {!premium && (
+          <Pressable
+            style={styles.proCard}
+            onPress={() => router.push('/paywall' as any)}
+            id="settings-upgrade"
+          >
+            <Text style={styles.proTitle}>Go Premium</Text>
+            <Text style={styles.proSub}>unlock unlimited ships, templates & more</Text>
+          </Pressable>
+        )}
+
         {/* Profile */}
         <Pressable
           style={styles.profileCard}
@@ -246,23 +260,6 @@ export default function SettingsScreen() {
             <IconEdit size={13} color={Colors.ink3} />
           </View>
         </Pressable>
-
-        {/* Pro area */}
-        {premium ? (
-          <View style={styles.premiumBadge}>
-            <Heart size={14} color={Colors.vellum} />
-            <Text style={styles.premiumBadgeText}>you're a premium member</Text>
-          </View>
-        ) : (
-          <Pressable
-            style={styles.proCard}
-            onPress={() => router.push('/paywall' as any)}
-            id="settings-upgrade"
-          >
-            <Text style={styles.proTitle}>Go Premium</Text>
-            <Text style={styles.proSub}>unlock unlimited ships, templates & more</Text>
-          </Pressable>
-        )}
 
         <SettingGroup ja="便" name="Notifications">
           <SettingRow
@@ -449,3 +446,4 @@ const styles = StyleSheet.create({
     right: 30,
   },
 });
+

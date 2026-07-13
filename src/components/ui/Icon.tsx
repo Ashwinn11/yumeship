@@ -198,6 +198,41 @@ export function IconProfileOutline({ size = 20, color = Colors.ink }: IconProps)
   );
 }
 
+export function IconCommunityOutline({ size = 20, color = Colors.ink }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 16 16" fill="none">
+      <Path
+        d="M5 13.5a4 4 0 0 1 8 0"
+        stroke={color}
+        strokeWidth="1.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Circle
+        cx="9"
+        cy="5.5"
+        r="2.2"
+        stroke={color}
+        strokeWidth="1.4"
+      />
+      <Path
+        d="M2 13.5a3 3 0 0 1 4.5-2.6"
+        stroke={color}
+        strokeWidth="1.4"
+        strokeLinecap="round"
+      />
+      <Circle
+        cx="5"
+        cy="6.2"
+        r="1.8"
+        stroke={color}
+        strokeWidth="1.4"
+      />
+    </Svg>
+  );
+}
+
+
 // ─── Custom Solid Pink Icons ──────────────────────────────────────────────────
 
 export function IconBellSolid({ size = 14, color = Colors.sakuraDeep }: IconProps) {

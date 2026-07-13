@@ -2,7 +2,7 @@
   "expo": {
     "name": "Yumeship",
     "slug": "yumeship",
-    "version": "1.1.0",
+    "version": "1.2",
     "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "yumeship",
@@ -63,7 +63,9 @@
       "@react-native-community/datetimepicker",
       "expo-sqlite",
       "expo-sharing",
-      "expo-image"
+      "expo-image",
+      "expo-apple-authentication",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,

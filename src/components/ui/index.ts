@@ -16,6 +16,7 @@ export {
   IconJournalOutline,
   IconMailOutline,
   IconProfileOutline,
+  IconCommunityOutline,
   IconBellSolid,
   IconTicketSolid,
   IconRestoreSolid,

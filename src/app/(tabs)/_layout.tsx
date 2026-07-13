@@ -9,17 +9,19 @@ import { usePremium } from '@/store/premium';
 import { useShips } from '@/store/ships';
 
 const ROUTE_TO_TAB: Record<string, RootTab> = {
-  index:    'home',
-  vault:    'vault',
-  upcoming: 'upcoming',
-  settings: 'settings',
+  index:     'home',
+  vault:     'vault',
+  community: 'community',
+  upcoming:  'upcoming',
+  settings:  'settings',
 };
 
 const TAB_TO_ROUTE: Record<RootTab, string> = {
-  home:     'index',
-  vault:    'vault',
-  upcoming: 'upcoming',
-  settings: 'settings',
+  home:      'index',
+  vault:     'vault',
+  community: 'community',
+  upcoming:  'upcoming',
+  settings:  'settings',
 };
 
 type TabBarProps = {
@@ -30,8 +32,6 @@ type TabBarProps = {
 
 function CustomTabBar({ state, navigation, descriptors }: TabBarProps) {
   const insets = useSafeAreaInsets();
-  const ships = useShips();
-  const premium = usePremium();
   const activeRoute = state.routes[state.index];
   const activeOptions = descriptors[activeRoute?.key ?? '']?.options ?? {};
   const tabBarStyle = activeOptions.tabBarStyle as { display?: string } | undefined;
@@ -40,21 +40,11 @@ function CustomTabBar({ state, navigation, descriptors }: TabBarProps) {
 
   const active = ROUTE_TO_TAB[activeRoute?.name ?? 'index'] ?? 'home';
 
-  function handlePlus() {
-    if (!premium && ships.length >= 1) {
-      router.push({ pathname: '/paywall', params: { reason: 'add-ship' } });
-      return;
-    }
-    resetOnb();
-    router.push({ pathname: '/onboarding/fo', params: { mode: 'new' } });
-  }
-
   return (
     <View style={{ paddingBottom: insets.bottom, backgroundColor: Colors.paper }}>
       <RootTabBar
         active={active}
         onPress={(tab) => navigation.navigate(TAB_TO_ROUTE[tab])}
-        onPlusPress={handlePlus}
       />
     </View>
   );
@@ -68,6 +58,7 @@ export default function TabsLayout() {
     >
       <Tabs.Screen name="index" />
       <Tabs.Screen name="vault" />
+      <Tabs.Screen name="community" />
       <Tabs.Screen name="upcoming" />
       <Tabs.Screen name="settings" />
     </Tabs>

@@ -6,22 +6,22 @@ import {
   IconJournalOutline,
   IconMailOutline,
   IconProfileOutline,
-  IconPlus,
+  IconCommunityOutline,
 } from '@/components/ui';
 
-export type RootTab = 'home' | 'vault' | 'upcoming' | 'settings';
+export type RootTab = 'home' | 'vault' | 'community' | 'upcoming' | 'settings';
 
 type Props = {
   active: RootTab;
   onPress: (tab: RootTab) => void;
-  onPlusPress?: () => void;
 };
 
-export function RootTabBar({ active, onPress, onPlusPress }: Props) {
+export function RootTabBar({ active, onPress }: Props) {
   const { column } = useIPad();
   const tabsList: { id: RootTab; label: string; icon: (color: string) => React.ReactNode }[] = [
     { id: 'home', label: 'home', icon: (color) => <IconHomeOutline color={color} /> },
     { id: 'vault', label: 'vault', icon: (color) => <IconJournalOutline color={color} /> },
+    { id: 'community', label: 'community', icon: (color) => <IconCommunityOutline color={color} /> },
     { id: 'upcoming', label: 'upcoming', icon: (color) => <IconMailOutline color={color} /> },
     { id: 'settings', label: 'settings', icon: (color) => <IconProfileOutline color={color} /> },
   ];
@@ -29,32 +29,7 @@ export function RootTabBar({ active, onPress, onPlusPress }: Props) {
   return (
     <View style={[styles.wrap, column]}>
       <View style={styles.track}>
-        {/* Left two tabs: home and vault */}
-        {tabsList.slice(0, 2).map((t) => {
-          const on = t.id === active;
-          const activeColor = Colors.ink;
-          const inactiveColor = Colors.ink3;
-          return (
-            <Pressable
-              key={t.id}
-              onPress={() => onPress(t.id)}
-              style={[styles.tab, on && styles.tabActive]}
-            >
-              {t.icon(on ? activeColor : inactiveColor)}
-              <Text style={[styles.label, { color: on ? activeColor : inactiveColor, fontFamily: on ? FontFamily.uiSemiBold : FontFamily.ui }]}>
-                {t.label}
-              </Text>
-            </Pressable>
-          );
-        })}
-
-        {/* Center floating add button */}
-        <Pressable style={styles.plusBtn} onPress={onPlusPress} id="tab-add-ship">
-          <IconPlus color={Colors.vellum} size={18} />
-        </Pressable>
-
-        {/* Right two tabs: upcoming and settings */}
-        {tabsList.slice(2).map((t) => {
+        {tabsList.map((t) => {
           const on = t.id === active;
           const activeColor = Colors.ink;
           const inactiveColor = Colors.ink3;
@@ -97,26 +72,16 @@ const styles = StyleSheet.create({
     ...Shadow.s2,
   },
   tab: {
+    flex: 1,
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 4,
     paddingVertical: 6,
-    paddingHorizontal: 10,
     borderRadius: Radius.r3,
-    minWidth: 64,
   },
   tabActive: {
     backgroundColor: Colors.sakuraSoft,
-  },
-  plusBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: Radius.pill,
-    backgroundColor: Colors.sakuraDeep,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...Shadow.s2,
   },
   label: {
     fontSize: sf(9),

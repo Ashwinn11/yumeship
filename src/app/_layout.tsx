@@ -11,6 +11,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { initDb } from '@/db/init';
 import { configureRevenueCat } from '@/store/purchases';
 import { refreshPremium } from '@/store/premium';
+import { bootstrapAuth } from '@/store/auth';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -28,6 +29,9 @@ export default function RootLayout() {
     } catch (err) {
       console.warn('Premium initialization failed:', err);
     }
+
+    // Non-blocking — restores Supabase session in background
+    bootstrapAuth();
   }, []);
 
   const [loaded] = useFonts({
@@ -91,6 +95,7 @@ export default function RootLayout() {
             <Stack.Screen name="paywall" options={{ animation: 'slide_from_bottom', presentation: 'modal' }} />
             <Stack.Screen name="terms" options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="privacy" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="auth" options={{ animation: 'fade' }} />
           </Stack>
         </SafeAreaProvider>
       </ErrorBoundary>
