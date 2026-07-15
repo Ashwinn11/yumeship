@@ -2,7 +2,7 @@
   "expo": {
     "name": "Yumeship",
     "slug": "yumeship",
-    "version": "1.2",
+    "version": "2.0",
     "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "yumeship",
@@ -65,7 +65,8 @@
       "expo-sharing",
       "expo-image",
       "expo-apple-authentication",
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-video"
     ],
     "experiments": {
       "typedRoutes": true,
