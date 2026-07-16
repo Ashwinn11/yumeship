@@ -231,7 +231,7 @@ export function TalkingAboutContent({ editing = false }: { editing?: boolean }) 
     relTypes:  ctx.get('relTypes', '["Married"]'),
     endings:   ctx.get('endings',  '["Happy ending"]'),
     yumeCat:   ctx.get('yumeCat',  'OC × canon'),
-    sharing:   ctx.get('sharing',  'Non-sharing'),
+    sharing:   ctx.get('sharing',  'No'),
     photoL:    ctx.get('photoL',   ''),
     photoR:    ctx.get('photoR',   ''),
     meName:    ctx.get('meName',   ''),
@@ -351,7 +351,7 @@ export function TalkingAboutContent({ editing = false }: { editing?: boolean }) 
       <View style={s.sharingWrap}>
         <Text style={s.sharingTitle}>Sharing status</Text>
         <View style={s.sharingRow}>
-          {(['Ok','Non-sharing','Selective'] as const).map(opt => {
+          {(['Yes','No','Selective'] as const).map(opt => {
             const on = vals.sharing === opt;
             return (
               <Pressable key={opt} onPress={() => e && setVal('sharing', opt)} style={s.sharingOpt}>

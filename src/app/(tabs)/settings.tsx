@@ -35,7 +35,7 @@ import { deleteAllData } from '@/store/ships';
 function readProfile() {
   return {
     name: getGlobalSetting('user_name'),
-    pronouns: getGlobalSetting('user_pronouns'),
+    pronouns: getGlobalSetting('user_pronouns', 'she/her'),
     color: getGlobalSetting('user_color') || Colors.sakura,
     avatar: getGlobalSetting('user_avatar'),
   };
@@ -243,7 +243,7 @@ export default function SettingsScreen() {
         {/* Profile */}
         <Pressable
           style={styles.profileCard}
-          onPress={() => router.push('/onboarding/persona?mode=edit' as any)}
+          onPress={() => router.push('/profile' as any)}
         >
           <View style={[styles.profileAvatar, { backgroundColor: profile.color }]}>
             {profile.avatar ? (
@@ -260,6 +260,15 @@ export default function SettingsScreen() {
             <IconEdit size={13} color={Colors.ink3} />
           </View>
         </Pressable>
+
+        <SettingGroup ja="推" name="F/O profiles">
+          <SettingRow
+            label="Manage F/Os"
+            icon={<Heart size={14} color={Colors.sakuraDeep} />}
+            onPress={() => router.push('/fo' as any)}
+            trailing={<MetaText>›</MetaText>}
+          />
+        </SettingGroup>
 
         <SettingGroup ja="便" name="Notifications">
           <SettingRow

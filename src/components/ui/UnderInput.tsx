@@ -1,13 +1,16 @@
-import { TextInput, StyleSheet } from 'react-native';
+import { TextInput, TextInputProps, StyleSheet } from 'react-native';
 import { Colors, FontFamily, FontSize } from '@/constants/theme';
 
 type Props = {
   value?: string;
   onChangeText?: (text: string) => void;
   placeholder?: string;
+  autoCapitalize?: TextInputProps['autoCapitalize'];
+  autoCorrect?: boolean;
+  keyboardType?: TextInputProps['keyboardType'];
 };
 
-export function UnderInput({ value, onChangeText, placeholder }: Props) {
+export function UnderInput({ value, onChangeText, placeholder, autoCapitalize, autoCorrect, keyboardType }: Props) {
   return (
     <TextInput
       style={styles.input}
@@ -15,6 +18,9 @@ export function UnderInput({ value, onChangeText, placeholder }: Props) {
       onChangeText={onChangeText}
       placeholder={placeholder}
       placeholderTextColor={Colors.ink3}
+      autoCapitalize={autoCapitalize}
+      autoCorrect={autoCorrect}
+      keyboardType={keyboardType}
     />
   );
 }

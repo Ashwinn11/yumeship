@@ -17,6 +17,22 @@ export function IconPlus({ size = 14, color = Colors.ink }: IconProps) {
   );
 }
 
+export function IconPalette({ size = 14, color = Colors.ink }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 14 14" fill="none">
+      <Path
+        d="M7 1.5a5.5 5.5 0 1 0 0 11c.7 0 1.2-.6 1.2-1.2 0-.3-.15-.6-.35-.8-.2-.2-.35-.5-.35-.8 0-.66.55-1.2 1.2-1.2h1.4A2.9 2.9 0 0 0 13 5.6c0-2.3-2.7-4.1-6-4.1Z"
+        stroke={color}
+        strokeWidth="1.3"
+        strokeLinejoin="round"
+      />
+      <Circle cx="4.3" cy="5.6" r="0.85" fill={color} />
+      <Circle cx="7" cy="4" r="0.85" fill={color} />
+      <Circle cx="9.7" cy="5.6" r="0.85" fill={color} />
+    </Svg>
+  );
+}
+
 export function IconChevronLeft({ size = 14, color = Colors.ink }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 14 14" fill="none">

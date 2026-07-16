@@ -17,7 +17,7 @@ const PANEL_BG = '#ffffff';
 const TRANSPARENT = 'transparent';
 
 const INFO_KEYS = ['age', 'birthday', 'pronouns', 'love language', 'mbti'] as const;
-const SHARING_OPTS = ['No sharing', 'Selective', 'Ok with sharing'] as const;
+const SHARING_OPTS = ['Yes', 'No', 'Selective'] as const;
 
 function calculateTimeSince(dateStr: string) {
   if (!dateStr) return '——';

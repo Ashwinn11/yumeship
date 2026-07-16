@@ -1,0 +1,195 @@
+import { useEffect, useState } from 'react';
+import { getDb, newId } from '@/db/client';
+import { notifyShips } from './ships';
+
+export type GalleryPhoto = { uri: string; caption: string };
+
+export type Fo = {
+  id: string;
+  name: string;
+  pronouns: string;
+  fandom: string;
+  relStatus: 'romantic' | 'platonic' | 'familial';
+  shareStatus: 'yes' | 'no' | 'selective';
+  bio: string;
+  height: string;
+  weight: string;
+  photoUri: string;
+  /** profile-card presentation customization */
+  pageBgColor: string;
+  pageBgImage: string;
+  cardBgColor: string;
+  cardBgImage: string;
+  textColor: string;
+  song: string;
+  /** optional Spotify/YouTube/etc link for the theme song */
+  songLink: string;
+  /** extra photos shown in a strip on the profile card, beyond the main portrait */
+  gallery: GalleryPhoto[];
+  createdAt: number;
+};
+
+const listeners = new Set<() => void>();
+function notify() { listeners.forEach((fn) => fn()); }
+
+export function parseGallery(raw: unknown): GalleryPhoto[] {
+  if (typeof raw !== 'string' || !raw) return [];
+  try {
+    const v = JSON.parse(raw);
+    if (!Array.isArray(v)) return [];
+    // tolerate the earlier string[]-only shape from before captions existed
+    return v
+      .map((x) => (typeof x === 'string' ? { uri: x, caption: '' } : x))
+      .filter((x): x is GalleryPhoto => x && typeof x.uri === 'string');
+  } catch {
+    return [];
+  }
+}
+
+function rowToFo(row: Record<string, unknown>): Fo {
+  return {
+    id: row.id as string,
+    name: (row.name as string) ?? '',
+    pronouns: (row.pronouns as string) ?? '',
+    fandom: (row.fandom as string) ?? '',
+    relStatus: (row.rel_status as Fo['relStatus']) ?? 'romantic',
+    shareStatus: (row.share_status as Fo['shareStatus']) ?? 'selective',
+    bio: (row.bio as string) ?? '',
+    height: (row.height as string) ?? '',
+    weight: (row.weight as string) ?? '',
+    photoUri: (row.photo_uri as string) ?? '',
+    pageBgColor: (row.page_bg_color as string) ?? '',
+    pageBgImage: (row.page_bg_image as string) ?? '',
+    cardBgColor: (row.card_bg_color as string) ?? '',
+    cardBgImage: (row.card_bg_image as string) ?? '',
+    textColor: (row.text_color as string) ?? '',
+    song: (row.song as string) ?? '',
+    songLink: (row.song_link as string) ?? '',
+    gallery: parseGallery(row.gallery),
+    createdAt: row.created_at as number,
+  };
+}
+
+export function getAllFos(): Fo[] {
+  return (getDb().getAllSync('SELECT * FROM fo ORDER BY created_at DESC') as Record<string, unknown>[])
+    .map(rowToFo);
+}
+
+export function getFo(id: string): Fo | undefined {
+  if (!id) return undefined;
+  const row = getDb().getFirstSync('SELECT * FROM fo WHERE id = ?', id) as Record<string, unknown> | null;
+  return row ? rowToFo(row) : undefined;
+}
+
+export function addFo(d: {
+  name: string;
+  pronouns?: string;
+  fandom?: string;
+  relStatus?: string;
+  shareStatus?: string;
+  bio?: string;
+  height?: string;
+  weight?: string;
+  photoUri?: string;
+  song?: string;
+  songLink?: string;
+  gallery?: GalleryPhoto[];
+}): string {
+  const id = newId();
+  getDb().runSync(
+    `INSERT INTO fo (id, name, pronouns, fandom, rel_status, share_status, bio, height, weight, photo_uri, song, song_link, gallery, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    id,
+    d.name,
+    d.pronouns ?? '',
+    d.fandom ?? '',
+    d.relStatus ?? 'romantic',
+    d.shareStatus ?? 'selective',
+    d.bio ?? '',
+    d.height ?? '',
+    d.weight ?? '',
+    d.photoUri ?? '',
+    d.song ?? '',
+    d.songLink ?? '',
+    JSON.stringify(d.gallery ?? []),
+    Date.now(),
+  );
+  notify();
+  return id;
+}
+
+export function updateFo(id: string, d: Partial<Omit<Fo, 'id' | 'createdAt'>>) {
+  const fields: string[] = [];
+  const values: unknown[] = [];
+
+  if (d.name !== undefined)        { fields.push('name = ?');         values.push(d.name); }
+  if (d.pronouns !== undefined)    { fields.push('pronouns = ?');     values.push(d.pronouns); }
+  if (d.fandom !== undefined)      { fields.push('fandom = ?');       values.push(d.fandom); }
+  if (d.relStatus !== undefined)   { fields.push('rel_status = ?');   values.push(d.relStatus); }
+  if (d.shareStatus !== undefined) { fields.push('share_status = ?'); values.push(d.shareStatus); }
+  if (d.bio !== undefined)         { fields.push('bio = ?');          values.push(d.bio); }
+  if (d.height !== undefined)      { fields.push('height = ?');       values.push(d.height); }
+  if (d.weight !== undefined)      { fields.push('weight = ?');       values.push(d.weight); }
+  if (d.photoUri !== undefined)    { fields.push('photo_uri = ?');    values.push(d.photoUri); }
+  if (d.pageBgColor !== undefined) { fields.push('page_bg_color = ?'); values.push(d.pageBgColor); }
+  if (d.pageBgImage !== undefined) { fields.push('page_bg_image = ?'); values.push(d.pageBgImage); }
+  if (d.cardBgColor !== undefined) { fields.push('card_bg_color = ?'); values.push(d.cardBgColor); }
+  if (d.cardBgImage !== undefined) { fields.push('card_bg_image = ?'); values.push(d.cardBgImage); }
+  if (d.textColor !== undefined)   { fields.push('text_color = ?');   values.push(d.textColor); }
+  if (d.song !== undefined)        { fields.push('song = ?');         values.push(d.song); }
+  if (d.songLink !== undefined)    { fields.push('song_link = ?');    values.push(d.songLink); }
+  if (d.gallery !== undefined)     { fields.push('gallery = ?');      values.push(JSON.stringify(d.gallery)); }
+
+  if (!fields.length) return;
+  getDb().runSync(
+    `UPDATE fo SET ${fields.join(', ')} WHERE id = ?`,
+    ...([...values, id] as import('expo-sqlite').SQLiteBindValue[]),
+  );
+
+  // sync-on-write: ships keep denormalized copies of F/O identity fields so the
+  // many existing ship read sites don't need to resolve the fo link
+  const shipFields: string[] = [];
+  const shipValues: unknown[] = [];
+  if (d.name !== undefined)        { shipFields.push('name = ?');       shipValues.push(d.name); }
+  if (d.fandom !== undefined)      { shipFields.push('fandom = ?');     shipValues.push(d.fandom); }
+  if (d.relStatus !== undefined)   { shipFields.push('rel_type = ?');   shipValues.push(d.relStatus); }
+  if (d.shareStatus !== undefined) { shipFields.push('share_type = ?'); shipValues.push(d.shareStatus); }
+  if (d.bio !== undefined)         { shipFields.push('about_text = ?'); shipValues.push(d.bio); }
+  if (shipFields.length) {
+    getDb().runSync(
+      `UPDATE ships SET ${shipFields.join(', ')} WHERE fo_id = ?`,
+      ...([...shipValues, id] as import('expo-sqlite').SQLiteBindValue[]),
+    );
+    notifyShips();
+  }
+
+  notify();
+}
+
+export function deleteFo(id: string) {
+  // unlink, never cascade — the ship survives with its cached identity fields frozen
+  getDb().runSync(`UPDATE ships SET fo_id = '' WHERE fo_id = ?`, id);
+  getDb().runSync('DELETE FROM fo WHERE id = ?', id);
+  notify();
+  notifyShips();
+}
+
+export function useFos(): Fo[] {
+  const [fos, setFos] = useState<Fo[]>(() => getAllFos());
+  useEffect(() => {
+    const fn = () => setFos(getAllFos());
+    listeners.add(fn);
+    return () => { listeners.delete(fn); };
+  }, []);
+  return fos;
+}
+
+export function useFo(id: string | undefined): Fo | undefined {
+  const [fo, setFo] = useState<Fo | undefined>(() => id ? getFo(id) : undefined);
+  useEffect(() => {
+    const fn = () => setFo(id ? getFo(id) : undefined);
+    listeners.add(fn);
+    return () => { listeners.delete(fn); };
+  }, [id]);
+  return fo;
+}

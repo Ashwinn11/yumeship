@@ -32,6 +32,8 @@ export type Ship = {
   templateKey: string;
   kind: 'single' | 'poly';
   members: ShipMember[];
+  /** soft link to the fo table for single-kind ships; '' when unlinked */
+  foId: string;
   createdAt: number;
 };
 
@@ -75,6 +77,8 @@ function parseMembers(raw: unknown): ShipMember[] {
 
 const listeners = new Set<() => void>();
 function notify() { listeners.forEach((fn) => fn()); }
+/** Lets other stores (fo.ts sync-on-write) refresh mounted ship views. */
+export function notifyShips() { notify(); }
 
 function rowToShip(row: Record<string, unknown>): Ship {
   return {
@@ -96,6 +100,7 @@ function rowToShip(row: Record<string, unknown>): Ship {
     templateKey: (row.template_key as string) ?? 'get-to-know',
     kind: (row.kind as Ship['kind']) ?? 'single',
     members: parseMembers(row.members),
+    foId: (row.fo_id as string) ?? '',
     createdAt: row.created_at as number,
   };
 }
@@ -125,11 +130,12 @@ export function addShip(d: {
   templateKey?: string;
   kind?: string;
   members?: ShipMember[];
+  foId?: string;
 }): string {
   const id = newId();
   getDb().runSync(
-    `INSERT INTO ships (id, name, ship_name, my_name, fandom, rel_type, share_type, nickname, grad_start, grad_end, tape_pattern, tape_color, cover_uri, template_key, kind, members, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO ships (id, name, ship_name, my_name, fandom, rel_type, share_type, nickname, grad_start, grad_end, tape_pattern, tape_color, cover_uri, template_key, kind, members, fo_id, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     id,
     d.name,
     d.shipName ?? '',
@@ -146,6 +152,7 @@ export function addShip(d: {
     d.templateKey ?? 'get-to-know',
     d.kind ?? 'single',
     JSON.stringify(d.members ?? []),
+    d.foId ?? '',
     Date.now(),
   );
   notify();
@@ -173,6 +180,7 @@ export function updateShip(id: string, d: Partial<Omit<Ship, 'id' | 'createdAt'>
   if (d.templateKey !== undefined)  { fields.push('template_key = ?');   values.push(d.templateKey); }
   if (d.kind !== undefined)         { fields.push('kind = ?');           values.push(d.kind); }
   if (d.members !== undefined)      { fields.push('members = ?');        values.push(JSON.stringify(d.members)); }
+  if (d.foId !== undefined)         { fields.push('fo_id = ?');          values.push(d.foId); }
 
   if (!fields.length) return;
   getDb().runSync(
@@ -205,6 +213,7 @@ export function deleteAllData() {
   const db = getDb();
   db.execSync(`
     DELETE FROM ships;
+    DELETE FROM fo;
     DELETE FROM headcanons;
     DELETE FROM scenarios;
     DELETE FROM dates;

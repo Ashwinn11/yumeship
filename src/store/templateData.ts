@@ -3,6 +3,7 @@ import { getDb } from '@/db/client';
 import type { Ship } from './ships';
 import { isPoly } from './ships';
 import { getGlobalSetting } from './onboarding';
+import { getFo } from './fo';
 
 type TemplateCtx = {
   get: (key: string, fallback?: string) => string;
@@ -87,28 +88,46 @@ export function migrateTemplateData(shipId: string, fromKey: string, toKey: stri
   }
 }
 
-// Pre-fill fields from ship data when no saved data exists for this ship+template
+// Pre-fill fields from ship + F/O + me profile data when no saved data exists
+// for this ship+template. Runs once per ship+template (see TemplateScreenWrapper's
+// initData merge — prefill only ever fills gaps, never overwrites saved edits).
 export function buildPreFill(ship: Ship, templateKey: string): Record<string, string> {
   const base: Record<string, string> = {};
-  const shareMap: Record<string, string> = { ng: 'No', welcome: 'Yes', mirror: 'Selective' };
+  // Templates store the same yes/no/selective vocabulary, just capitalized for display.
+  const shareMap: Record<string, string> = { yes: 'Yes', no: 'No', selective: 'Selective' };
   const userName = ship.myName || getGlobalSetting('user_name');
+  const userPronouns = getGlobalSetting('user_pronouns');
+  const userHeight = getGlobalSetting('user_height');
+  const userPhoto = getGlobalSetting('user_avatar');
   // For polyship, `ship.name` is the ship label, not an F/O — never seed it as a character name.
   const foSeed = isPoly(ship) ? '' : ship.name;
+  const fo = !isPoly(ship) && ship.foId ? getFo(ship.foId) : undefined;
 
   switch (templateKey) {
     case 'get-to-know':
       if (foSeed)         base['themName'] = foSeed;
       if (ship.shareType) base['sharing'] = shareMap[ship.shareType] ?? '';
       if (userName)       base['meName'] = userName;
+      if (fo?.photoUri)   base['themPhoto'] = fo.photoUri;
+      if (fo?.height)     base['themFilled'] = JSON.stringify({ height: fo.height });
+      if (userHeight)     base['meFilled'] = JSON.stringify({ height: userHeight });
       break;
     case 'kawaii-ui':
       if (foSeed)         base['name'] = foSeed;
       if (ship.fandom)    base['from'] = ship.fandom;
       if (ship.relType)   base['type'] = ship.relType;
+      if (fo?.pronouns)   base['pronouns'] = fo.pronouns;
+      if (fo?.photoUri)   base['portrait'] = fo.photoUri;
       break;
     case 'heart-frame':
       if (foSeed)         base['themName'] = foSeed;
       if (userName)       base['meName'] = userName;
+      if (fo?.photoUri)   base['themPhoto'] = fo.photoUri;
+      if (userPhoto)      base['mePhoto'] = userPhoto;
+      if (fo?.pronouns || userPronouns) {
+        base['themInfo'] = JSON.stringify(['', fo?.pronouns ?? '', '', '']);
+        base['meInfo'] = JSON.stringify(['', userPronouns, '', '']);
+      }
       break;
     case 'love-letter':
       if (foSeed)         base['dearName'] = foSeed;
@@ -125,6 +144,12 @@ export function buildPreFill(ship: Ship, templateKey: string): Record<string, st
       if (foSeed)         base['foName'] = foSeed;
       if (userName)       base['meName'] = userName;
       if (ship.shareType) base['sharing'] = shareMap[ship.shareType] ?? '';
+      if (fo?.photoUri)   base['photoL'] = fo.photoUri;
+      if (userPhoto)      base['photoR'] = userPhoto;
+      if (fo?.pronouns)   base['foPron'] = fo.pronouns;
+      if (userPronouns)   base['mePron'] = userPronouns;
+      if (fo?.height)     base['foH'] = fo.height;
+      if (userHeight)     base['meH'] = userHeight;
       break;
     case 'flip-phone':
       if (foSeed)         base['name'] = foSeed;

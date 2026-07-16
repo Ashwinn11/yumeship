@@ -21,6 +21,7 @@ import {
   addHeadcanon, deleteHeadcanon, updateHeadcanon, useHeadcanonCounts, useHeadcanons,
 } from '@/store/headcanons';
 import { getGlobalSetting, saveGlobalSetting } from '@/store/onboarding';
+import { getFo, updateFo } from '@/store/fo';
 import { deleteShip, daysTogetherLabel, isPoly, membersLabel, shipTitle, updateShip, useShip } from '@/store/ships';
 
 const TEMPLATES = [
@@ -47,9 +48,9 @@ const REL_CHIP_COLOR: Record<string, string> = {
 };
 
 const SHARE_CHIP: Record<string, { label: string; color: string }> = {
-  ng:      { label: '禁 NG',    color: Colors.ember },
-  welcome: { label: '可 open',  color: Colors.sageDeep },
-  mirror:  { label: '鏡 mirror', color: Colors.lavenderDeep },
+  yes:       { label: 'Yes',       color: Colors.sageDeep },
+  no:        { label: 'No',        color: Colors.ember },
+  selective: { label: 'Selective', color: Colors.lavenderDeep },
 };
 
 const HC_CATS = [
@@ -183,7 +184,12 @@ function ProfileTab({ ship, id }: { ship: NonNullable<ReturnType<typeof useShip>
 const daysLabel = daysTogetherLabel(ship!.startDate);
 
   function saveAbout() {
-    updateShip(id, { aboutText: aboutDraft });
+    // single ships mirror their linked F/O's bio; the ship's about_text is just the read cache
+    if (ship!.foId && getFo(ship!.foId)) {
+      updateFo(ship!.foId, { bio: aboutDraft });
+    } else {
+      updateShip(id, { aboutText: aboutDraft });
+    }
     setEditingAbout(false);
   }
 
@@ -224,9 +230,16 @@ const daysLabel = daysTogetherLabel(ship!.startDate);
       <View style={styles.aboutSection}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionLabel}>about</Text>
-          <Pressable onPress={() => setEditingAbout(true)} hitSlop={8}>
-            <IconEdit size={11} color={Colors.ink3} />
-          </Pressable>
+          <View style={styles.sectionHeaderActions}>
+            {!!ship!.foId && (
+              <Pressable onPress={() => router.push(`/fo/${ship!.foId}` as any)} hitSlop={8}>
+                <Text style={styles.foProfileLink}>full profile ↗</Text>
+              </Pressable>
+            )}
+            <Pressable onPress={() => setEditingAbout(true)} hitSlop={8}>
+              <IconEdit size={11} color={Colors.ink3} />
+            </Pressable>
+          </View>
         </View>
         {editingAbout ? (
           <View style={styles.aboutEditBox}>
@@ -469,6 +482,8 @@ const styles = StyleSheet.create({
   anniversaryText: { fontFamily: FontFamily.displayItalic, fontSize: sf(14), color: Colors.sakuraDeep },
   anniversaryDate: { fontFamily: FontFamily.marker, fontSize: sf(9), color: Colors.sakuraDeep },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
+  sectionHeaderActions: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  foProfileLink: { fontFamily: FontFamily.ui, fontSize: sf(10), color: Colors.sakuraDeep, textDecorationLine: 'underline' },
   sectionLabel: { fontFamily: FontFamily.marker, fontSize: sf(9), color: Colors.ink3, letterSpacing: 1.4, textTransform: 'uppercase' },
   aboutSection: { gap: 2 },
   aboutEditBox: {
