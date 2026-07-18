@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { ImageBackground, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ImageBackground, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { FoForm, FoFormValue } from '@/components/fo/FoForm';
@@ -10,8 +10,9 @@ import { ProfileCard } from '@/components/profile/ProfileCard';
 import { CozyModal } from '@/components/ui/CozyModal';
 import { IconEdit, IconPalette } from '@/components/ui/Icon';
 import { Mark } from '@/components/ui/Mark';
-import { Colors, FontFamily, FontSize, RelationshipColors, SharingColors, Radius, Spacing, sf } from '@/constants/theme';
+import { Colors, FontFamily, FontSize, RelationshipColors, SharingColors, Radius, Shadow, Spacing, sf } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
+import { pushFoProfile, unpublishFoProfile } from '@/store/community';
 import { deleteFo, updateFo, useFo } from '@/store/fo';
 import { shipTitle, useShips } from '@/store/ships';
 
@@ -28,6 +29,8 @@ export default function FoDetailScreen() {
   const [draft, setDraft] = useState<FoFormValue | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [showCustomize, setShowCustomize] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+  const [publishError, setPublishError] = useState('');
 
   if (!fo) {
     return (
@@ -68,6 +71,23 @@ export default function FoDetailScreen() {
 
   function handleThemeChange(patch: Partial<CardTheme>) {
     updateFo(fo!.id, patch);
+  }
+
+  async function handleTogglePublic(next: boolean) {
+    if (fo!.shareStatus === 'no') return;
+    setPublishing(true);
+    setPublishError('');
+    try {
+      if (next) {
+        await pushFoProfile(fo!.id);
+      } else {
+        await unpublishFoProfile(fo!.id);
+      }
+    } catch (e: any) {
+      setPublishError(e?.message ?? 'something went wrong — try again');
+    } finally {
+      setPublishing(false);
+    }
   }
 
   const pageBg = fo.pageBgImage || fo.pageBgColor;
@@ -123,6 +143,25 @@ export default function FoDetailScreen() {
             cardBgImage={fo.cardBgImage}
             textColor={fo.textColor}
           />
+
+          <View style={styles.publicRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.publicRowTitle}>Make public</Text>
+              <Text style={styles.publicRowHint}>
+                {fo.shareStatus === 'no'
+                  ? 'set their sharing status to yes or selective to make them public'
+                  : 'lets others see their profile in community, and lets you post together'}
+              </Text>
+              {!!publishError && <Text style={styles.publicRowError}>{publishError}</Text>}
+            </View>
+            <Switch
+              value={fo.isPublic}
+              onValueChange={handleTogglePublic}
+              disabled={fo.shareStatus === 'no' || publishing}
+              trackColor={{ false: Colors.line, true: Colors.sakuraDeep }}
+              thumbColor="#fff"
+            />
+          </View>
         </ScrollView>
       )}
 
@@ -180,4 +219,16 @@ const styles = StyleSheet.create({
   headerTitle: { fontFamily: FontFamily.displayItalic, fontSize: FontSize.h6, color: Colors.ink },
   scroll: { flex: 1 },
   content: { paddingHorizontal: Spacing.s6, paddingTop: Spacing.s5, paddingBottom: Spacing.s5 },
+  publicRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    marginTop: Spacing.s5,
+    padding: Spacing.s4,
+    backgroundColor: Colors.vellum,
+    borderWidth: 1, borderColor: Colors.line,
+    borderRadius: Radius.r4,
+    ...Shadow.s1,
+  },
+  publicRowTitle: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(13), color: Colors.ink },
+  publicRowHint: { fontFamily: FontFamily.ui, fontSize: sf(11), color: Colors.ink3, lineHeight: 15, marginTop: 2 },
+  publicRowError: { fontFamily: FontFamily.ui, fontSize: sf(11), color: Colors.ember, marginTop: 4 },
 });

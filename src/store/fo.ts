@@ -26,6 +26,12 @@ export type Fo = {
   songLink: string;
   /** extra photos shown in a strip on the profile card, beyond the main portrait */
   gallery: GalleryPhoto[];
+  /** whether this F/O has an opt-in public profile in community (gated by shareStatus !== 'no') */
+  isPublic: boolean;
+  /** local avatar uri last uploaded to the public fo_profiles row — skip re-upload when unchanged */
+  avatarSyncedUri: string;
+  /** {localUri: remoteUrl} map for gallery photos already uploaded to the public fo_profiles row */
+  gallerySyncMap: Record<string, string>;
   createdAt: number;
 };
 
@@ -66,8 +72,21 @@ function rowToFo(row: Record<string, unknown>): Fo {
     song: (row.song as string) ?? '',
     songLink: (row.song_link as string) ?? '',
     gallery: parseGallery(row.gallery),
+    isPublic: !!(row.is_public as number),
+    avatarSyncedUri: (row.avatar_synced_uri as string) ?? '',
+    gallerySyncMap: parseSyncMap(row.gallery_sync_map),
     createdAt: row.created_at as number,
   };
+}
+
+function parseSyncMap(raw: unknown): Record<string, string> {
+  if (typeof raw !== 'string' || !raw) return {};
+  try {
+    const v = JSON.parse(raw);
+    return v && typeof v === 'object' && !Array.isArray(v) ? v : {};
+  } catch {
+    return {};
+  }
 }
 
 export function getAllFos(): Fo[] {
@@ -139,6 +158,9 @@ export function updateFo(id: string, d: Partial<Omit<Fo, 'id' | 'createdAt'>>) {
   if (d.song !== undefined)        { fields.push('song = ?');         values.push(d.song); }
   if (d.songLink !== undefined)    { fields.push('song_link = ?');    values.push(d.songLink); }
   if (d.gallery !== undefined)     { fields.push('gallery = ?');      values.push(JSON.stringify(d.gallery)); }
+  if (d.isPublic !== undefined)       { fields.push('is_public = ?');         values.push(d.isPublic ? 1 : 0); }
+  if (d.avatarSyncedUri !== undefined) { fields.push('avatar_synced_uri = ?'); values.push(d.avatarSyncedUri); }
+  if (d.gallerySyncMap !== undefined)  { fields.push('gallery_sync_map = ?');  values.push(JSON.stringify(d.gallerySyncMap)); }
 
   if (!fields.length) return;
   getDb().runSync(

@@ -20,6 +20,7 @@ import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing ,sf } from '@/con
 import { useIPad } from '@/hooks/use-ipad';
 import { getGlobalSetting, saveGlobalSetting, setOnbField } from '@/store/onboarding';
 import { parseGallery, type GalleryPhoto } from '@/store/fo';
+import { pushOwnProfile } from '@/store/community';
 
 const PRONOUNS = ['she/her', 'he/him', 'they/them', '+'];
 const COLOR_OPTIONS = [
@@ -80,6 +81,7 @@ export default function OnbPersona() {
     if (!res.canceled && res.assets[0]) {
       setAvatar(res.assets[0].uri);
       saveGlobalSetting('user_avatar', res.assets[0].uri);
+      pushOwnProfile().catch(() => {}); // fire-and-forget — no-op while signed out
     }
   }
 
@@ -279,7 +281,7 @@ export default function OnbPersona() {
           size="lg"
           full
           disabled={name.trim().length === 0}
-          onPress={isEdit ? () => router.back() : () => router.push('/onboarding/fo')}
+          onPress={isEdit ? () => { pushOwnProfile().catch(() => {}); router.back(); } : () => router.push('/onboarding/fo')}
         >
           {!name.trim() ? 'enter your name first' : (isEdit ? 'save changes' : 'continue · meet them')}
         </Button>

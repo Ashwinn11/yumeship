@@ -18,6 +18,9 @@ export function initDb() {
   try { db.execSync(`ALTER TABLE fo ADD COLUMN song TEXT NOT NULL DEFAULT ''`); } catch (_) {}
   try { db.execSync(`ALTER TABLE fo ADD COLUMN song_link TEXT NOT NULL DEFAULT ''`); } catch (_) {}
   try { db.execSync(`ALTER TABLE fo ADD COLUMN gallery TEXT NOT NULL DEFAULT '[]'`); } catch (_) {}
+  try { db.execSync(`ALTER TABLE fo ADD COLUMN is_public INTEGER NOT NULL DEFAULT 0`); } catch (_) {}
+  try { db.execSync(`ALTER TABLE fo ADD COLUMN avatar_synced_uri TEXT NOT NULL DEFAULT ''`); } catch (_) {}
+  try { db.execSync(`ALTER TABLE fo ADD COLUMN gallery_sync_map TEXT NOT NULL DEFAULT '{}'`); } catch (_) {}
   try { db.execSync(`ALTER TABLE fo_messages ADD COLUMN notif_id TEXT NOT NULL DEFAULT ''`); } catch (_) {}
   try { db.execSync(`ALTER TABLE fo_messages ADD COLUMN sender_name TEXT NOT NULL DEFAULT ''`); } catch (_) {}
   try { db.execSync(`ALTER TABLE fo_messages ADD COLUMN current_index INTEGER NOT NULL DEFAULT 0`); } catch (_) {}
@@ -67,6 +70,9 @@ export function initDb() {
       song TEXT NOT NULL DEFAULT '',
       song_link TEXT NOT NULL DEFAULT '',
       gallery TEXT NOT NULL DEFAULT '[]',
+      is_public INTEGER NOT NULL DEFAULT 0,
+      avatar_synced_uri TEXT NOT NULL DEFAULT '',
+      gallery_sync_map TEXT NOT NULL DEFAULT '{}',
       created_at INTEGER NOT NULL
     );
     CREATE TABLE IF NOT EXISTS headcanons (

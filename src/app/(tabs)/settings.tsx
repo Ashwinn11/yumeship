@@ -18,7 +18,7 @@ import {
   IconTicketSolid,
   IconTrashSolid,
 } from '@/components/ui';
-import { IconEdit } from '@/components/ui/Icon';
+import { IconEdit, IconLock } from '@/components/ui/Icon';
 import { Mark } from '@/components/ui/Mark';
 import { Toggle } from '@/components/ui/Toggle';
 import { Colors, FontFamily, FontSize, Radius, Spacing ,sf } from '@/constants/theme';
@@ -36,6 +36,7 @@ function readProfile() {
   return {
     name: getGlobalSetting('user_name'),
     pronouns: getGlobalSetting('user_pronouns', 'she/her'),
+    username: getGlobalSetting('user_username'),
     color: getGlobalSetting('user_color') || Colors.sakura,
     avatar: getGlobalSetting('user_avatar'),
   };
@@ -253,7 +254,10 @@ export default function SettingsScreen() {
             )}
           </View>
           <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>{profile.name || 'set up your profile'}</Text>
+            <View style={styles.profileNameRow}>
+              <Text style={styles.profileName} numberOfLines={1}>{profile.name || 'set up your profile'}</Text>
+              {!!profile.username && <Text style={styles.profileUsername}>@{profile.username}</Text>}
+            </View>
             {!!profile.pronouns && <Text style={styles.profilePronouns}>{profile.pronouns}</Text>}
           </View>
           <View style={styles.profileEdit}>
@@ -266,6 +270,15 @@ export default function SettingsScreen() {
             label="Manage F/Os"
             icon={<Heart size={14} color={Colors.sakuraDeep} />}
             onPress={() => router.push('/fo' as any)}
+            trailing={<MetaText>›</MetaText>}
+          />
+        </SettingGroup>
+
+        <SettingGroup ja="輪" name="Community">
+          <SettingRow
+            label="Blocked users"
+            icon={<IconLock size={14} />}
+            onPress={() => router.push('/social/blocked' as any)}
             trailing={<MetaText>›</MetaText>}
           />
         </SettingGroup>
@@ -411,7 +424,9 @@ const styles = StyleSheet.create({
   profileAvatarImg: { width: 52, height: 52, borderRadius: Radius.pill },
   profileAvatarInitial: { fontFamily: FontFamily.displayItalic, fontSize: sf(24), color: '#fff' },
   profileInfo: { flex: 1, gap: 2 },
-  profileName: { fontFamily: FontFamily.displayItalic, fontSize: sf(18), color: Colors.ink },
+  profileNameRow: { flexDirection: 'row', alignItems: 'baseline', gap: 6 },
+  profileName: { fontFamily: FontFamily.displayItalic, fontSize: sf(18), color: Colors.ink, flexShrink: 1 },
+  profileUsername: { fontFamily: FontFamily.uiMedium, fontSize: sf(12), color: Colors.sakuraDeep },
   profilePronouns: { fontFamily: FontFamily.ui, fontSize: sf(11), color: Colors.ink3 },
   profileEdit: {
     width: 28, height: 28, borderRadius: Radius.pill,

@@ -18,6 +18,7 @@ function readMe() {
   return {
     name: getGlobalSetting('user_name'),
     pronouns: getGlobalSetting('user_pronouns', 'she/her'),
+    username: getGlobalSetting('user_username'),
     color: getGlobalSetting('user_color') || Colors.sakura,
     avatar: getGlobalSetting('user_avatar'),
     bio: getGlobalSetting('user_bio'),
@@ -95,6 +96,7 @@ export default function MyProfileScreen() {
         <ProfileCard
           name={me.name || 'someone soft'}
           pronouns={me.pronouns}
+          username={me.username}
           bio={me.bio}
           photoUri={me.avatar}
           fallbackColor={me.color}

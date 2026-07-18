@@ -16,6 +16,8 @@ export type ProfileStatus = { label: string; color: string };
 type Props = {
   name: string;
   pronouns?: string;
+  /** unique public handle, e.g. "ashwin" — rendered as "@ashwin" near pronouns */
+  username?: string;
   /** small line under the name, e.g. the F/O's source/fandom */
   subtitle?: string;
   bio?: string;
@@ -52,6 +54,7 @@ function SectionLabel({ children }: { children: string }) {
 export function ProfileCard({
   name,
   pronouns,
+  username,
   subtitle,
   bio,
   photoUri,
@@ -99,7 +102,10 @@ export function ProfileCard({
         </View>
       </View>
 
-      <Text style={[styles.name, textStyle]}>{name || '—'}</Text>
+      <View style={styles.nameRow}>
+        <Text style={[styles.name, textStyle]} numberOfLines={1}>{name || '—'}</Text>
+        {!!username && <Text style={[styles.username, textStyle]}>@{username}</Text>}
+      </View>
       {!!pronouns && <Text style={[styles.pronouns, textStyle]}>{pronouns}</Text>}
       {!!subtitle && <Text style={[styles.subtitle, textStyle]}>{subtitle}</Text>}
     </>
@@ -226,14 +232,22 @@ const styles = StyleSheet.create({
   },
   avatarImg: { width: 96, height: 96, borderRadius: Radius.pill },
   avatarInitial: { fontFamily: FontFamily.displayItalic, fontSize: sf(40), color: '#fff' },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: Spacing.s3,
+    maxWidth: '100%',
+  },
   name: {
     fontFamily: FontFamily.displayItalic,
     fontSize: sf(28),
     lineHeight: sf(34),
     color: Colors.ink,
-    marginTop: Spacing.s3,
-    textAlign: 'center',
+    flexShrink: 1,
   },
+  username: { fontFamily: FontFamily.uiMedium, fontSize: sf(13), color: Colors.sakuraDeep, flexShrink: 0 },
   pronouns: { fontFamily: FontFamily.ui, fontSize: sf(12), color: Colors.ink2, marginTop: 2 },
   subtitle: { fontFamily: FontFamily.marker, fontSize: sf(10), color: Colors.ink3, letterSpacing: 1.2, marginTop: 5, textTransform: 'uppercase' },
 
