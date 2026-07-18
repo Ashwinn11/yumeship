@@ -49,10 +49,6 @@ export default function FoDetailScreen() {
   const linked = ships.find((s) => s.foId === fo.id);
 
   function startEdit() {
-    if (!premium) {
-      router.push('/paywall?reason=edit-profile' as any);
-      return;
-    }
     setDraft({
       name: fo!.name, pronouns: fo!.pronouns, fandom: fo!.fandom,
       relStatus: fo!.relStatus, shareStatus: fo!.shareStatus,
@@ -77,6 +73,14 @@ export default function FoDetailScreen() {
 
   function handleThemeChange(patch: Partial<CardTheme>) {
     updateFo(fo!.id, patch);
+  }
+
+  function handleCustomize() {
+    if (!premium) {
+      router.push('/paywall?reason=customize-theme' as any);
+      return;
+    }
+    setShowCustomize(true);
   }
 
   async function handleTogglePublic(next: boolean) {
@@ -112,7 +116,7 @@ export default function FoDetailScreen() {
           <View style={{ width: 32 }} />
         ) : (
           <View style={styles.headerActions}>
-            <Pressable onPress={() => setShowCustomize(true)} style={styles.headerBtn}>
+            <Pressable onPress={handleCustomize} style={styles.headerBtn}>
               <IconPalette size={13} color={Colors.ink2} />
             </Pressable>
             <Pressable onPress={startEdit} style={styles.headerBtn}>

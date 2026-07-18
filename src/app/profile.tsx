@@ -42,15 +42,15 @@ export default function MyProfileScreen() {
   const [me, setMe] = useState(readMe);
   useFocusEffect(useCallback(() => { setMe(readMe()); }, []));
   const premium = usePremium();
+  const [showCustomize, setShowCustomize] = useState(false);
 
-  function handleEdit() {
+  function handleCustomize() {
     if (!premium) {
-      router.push('/paywall?reason=edit-profile' as any);
+      router.push('/paywall?reason=customize-theme' as any);
       return;
     }
-    router.push('/onboarding/persona?mode=edit' as any);
+    setShowCustomize(true);
   }
-  const [showCustomize, setShowCustomize] = useState(false);
 
   function handleThemeChange(patch: Partial<{
     pageBgColor: string; pageBgImage: string; cardBgColor: string; cardBgImage: string; textColor: string;
@@ -86,10 +86,10 @@ export default function MyProfileScreen() {
           <Text style={styles.headerTitle}>my profile</Text>
         </View>
         <View style={styles.headerActions}>
-          <Pressable onPress={() => setShowCustomize(true)} style={styles.headerBtn}>
+          <Pressable onPress={handleCustomize} style={styles.headerBtn}>
             <IconPalette size={13} color={Colors.ink2} />
           </Pressable>
-          <Pressable onPress={handleEdit} style={styles.headerBtn}>
+          <Pressable onPress={() => router.push('/onboarding/persona?mode=edit' as any)} style={styles.headerBtn}>
             <IconEdit size={13} color={Colors.ink2} />
           </Pressable>
         </View>
