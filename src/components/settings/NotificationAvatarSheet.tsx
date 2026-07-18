@@ -10,12 +10,14 @@ type Props = {
   visible: boolean;
   onClose: () => void;
   currentUri: string;
-  myAvatarUri: string;
   onSelect: (uri: string) => void;
 };
 
-export function NotificationAvatarSheet({ visible, onClose, currentUri, myAvatarUri, onSelect }: Props) {
-  const fos = useFos();
+// F/O message notifications are meant to look like they're from that F/O —
+// there's deliberately no "use my own photo" option here, only F/O photos,
+// the app icon default, or a manual pick from the library.
+export function NotificationAvatarSheet({ visible, onClose, currentUri, onSelect }: Props) {
+  const fos = useFos().filter((f) => !!f.photoUri);
 
   async function pickFromLibrary() {
     const res = await ImagePicker.launchImageLibraryAsync({
@@ -38,11 +40,13 @@ export function NotificationAvatarSheet({ visible, onClose, currentUri, myAvatar
   return (
     <CozyModal visible={visible} title="Notification photo" onClose={onClose} confirmText="Cancel">
       <View style={styles.list}>
-        <Row label="App icon (default)" active={!currentUri} onPress={() => choose('')} />
-        {!!myAvatarUri && (
-          <Row label="My photo" uri={myAvatarUri} active={currentUri === myAvatarUri} onPress={() => choose(myAvatarUri)} />
-        )}
-        {fos.filter((f) => !!f.photoUri).map((f) => (
+        <Row
+          label="App icon (default)"
+          source={require('@/assets/images/icon.png')}
+          active={!currentUri}
+          onPress={() => choose('')}
+        />
+        {fos.map((f) => (
           <Row
             key={f.id}
             label={`${f.name || 'their'} photo`}
@@ -57,10 +61,20 @@ export function NotificationAvatarSheet({ visible, onClose, currentUri, myAvatar
   );
 }
 
-function Row({ label, uri, active, onPress }: { label: string; uri?: string; active?: boolean; onPress: () => void }) {
+function Row({
+  label, uri, source, active, onPress,
+}: {
+  label: string; uri?: string; source?: number; active?: boolean; onPress: () => void;
+}) {
   return (
     <Pressable style={styles.row} onPress={onPress}>
-      {uri ? <Image source={{ uri }} style={styles.thumb} contentFit="cover" /> : <View style={styles.thumbPlaceholder} />}
+      {uri ? (
+        <Image source={{ uri }} style={styles.thumb} contentFit="cover" />
+      ) : source ? (
+        <Image source={source} style={styles.thumb} contentFit="cover" />
+      ) : (
+        <View style={styles.thumbPlaceholder} />
+      )}
       <Text style={[styles.label, active && styles.labelActive]} numberOfLines={1}>{label}</Text>
       {active && <Text style={styles.check}>✓</Text>}
     </Pressable>

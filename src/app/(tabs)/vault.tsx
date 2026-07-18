@@ -1545,7 +1545,6 @@ function FoCompose({ shipName, ship, initialMessage, onQueue }: {
         visible={showAvatarPicker}
         onClose={() => setShowAvatarPicker(false)}
         currentUri={photoUri}
-        myAvatarUri={getGlobalSetting('user_avatar')}
         onSelect={setPhotoUri}
       />
       <ScrollView contentContainerStyle={fo.composeContent} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" onScrollBeginDrag={() => Keyboard.dismiss()} showsVerticalScrollIndicator={false}>
