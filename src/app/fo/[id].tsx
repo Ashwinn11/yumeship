@@ -123,7 +123,13 @@ export default function FoDetailScreen() {
             gallery={fo.gallery}
             cardBgColor={fo.cardBgColor}
             cardBgImage={fo.cardBgImage}
+            cardBgGradient={fo.cardBgGradient}
+            cardTransparent={fo.cardTransparent}
             textColor={fo.textColor}
+            borderStyle={fo.borderStyle}
+            decoration={fo.decoration}
+            nameFont={fo.nameFont}
+            statusLabel={fo.statusLabel}
           />
         </ScrollView>
       )}
@@ -149,7 +155,10 @@ export default function FoDetailScreen() {
         theme={{
           pageBgColor: fo.pageBgColor, pageBgImage: fo.pageBgImage,
           cardBgColor: fo.cardBgColor, cardBgImage: fo.cardBgImage,
+          cardBgGradient: fo.cardBgGradient, cardTransparent: fo.cardTransparent,
           textColor: fo.textColor,
+          borderStyle: fo.borderStyle, decoration: fo.decoration,
+          nameFont: fo.nameFont, statusLabel: fo.statusLabel,
         }}
         onChange={handleThemeChange}
         premium={premium}

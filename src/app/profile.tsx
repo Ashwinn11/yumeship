@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Sakura } from '@/components/deco/Sakura';
 import { Sparkle } from '@/components/deco/Sparkle';
 import { CardThemeSheet } from '@/components/profile/CardThemeSheet';
+import type { CardTheme } from '@/components/profile/cardTheme';
 import { ProfileCard } from '@/components/profile/ProfileCard';
 import { IconEdit, IconPalette } from '@/components/ui/Icon';
 import { Mark } from '@/components/ui/Mark';
@@ -32,7 +33,13 @@ function readMe() {
     pageBgImage: getGlobalSetting('user_page_bg_image'),
     cardBgColor: getGlobalSetting('user_card_bg_color'),
     cardBgImage: getGlobalSetting('user_card_bg_image'),
+    cardBgGradient: getGlobalSetting('user_card_bg_gradient'),
+    cardTransparent: getGlobalSetting('user_card_transparent') === '1',
     textColor: getGlobalSetting('user_text_color'),
+    borderStyle: getGlobalSetting('user_border_style'),
+    decoration: getGlobalSetting('user_decoration'),
+    nameFont: getGlobalSetting('user_name_font'),
+    statusLabel: getGlobalSetting('user_status_label'),
   };
 }
 
@@ -44,16 +51,24 @@ export default function MyProfileScreen() {
   const premium = usePremium();
   const [showCustomize, setShowCustomize] = useState(false);
 
-  function handleThemeChange(patch: Partial<{
-    pageBgColor: string; pageBgImage: string; cardBgColor: string; cardBgImage: string; textColor: string;
-  }>) {
+  function handleThemeChange(patch: Partial<CardTheme>) {
     const keyMap = {
       pageBgColor: 'user_page_bg_color', pageBgImage: 'user_page_bg_image',
       cardBgColor: 'user_card_bg_color', cardBgImage: 'user_card_bg_image',
+      cardBgGradient: 'user_card_bg_gradient',
       textColor: 'user_text_color',
+      borderStyle: 'user_border_style',
+      decoration: 'user_decoration',
+      nameFont: 'user_name_font',
+      statusLabel: 'user_status_label',
     } as const;
     for (const [k, v] of Object.entries(patch)) {
-      saveGlobalSetting(keyMap[k as keyof typeof keyMap], v as string);
+      if (k === 'cardTransparent') {
+        saveGlobalSetting('user_card_transparent', v ? '1' : '');
+        continue;
+      }
+      const mappedKey = keyMap[k as keyof typeof keyMap];
+      if (mappedKey) saveGlobalSetting(mappedKey, (v as string) ?? '');
     }
     setMe((p) => ({ ...p, ...patch }));
   }
@@ -106,7 +121,13 @@ export default function MyProfileScreen() {
           gallery={me.gallery}
           cardBgColor={me.cardBgColor}
           cardBgImage={me.cardBgImage}
+          cardBgGradient={me.cardBgGradient}
+          cardTransparent={me.cardTransparent}
           textColor={me.textColor}
+          borderStyle={me.borderStyle}
+          decoration={me.decoration}
+          nameFont={me.nameFont}
+          statusLabel={me.statusLabel}
         />
         <Text style={styles.footnote}>this is you, in their world ♡</Text>
       </ScrollView>
@@ -117,7 +138,10 @@ export default function MyProfileScreen() {
         theme={{
           pageBgColor: me.pageBgColor, pageBgImage: me.pageBgImage,
           cardBgColor: me.cardBgColor, cardBgImage: me.cardBgImage,
+          cardBgGradient: me.cardBgGradient, cardTransparent: me.cardTransparent,
           textColor: me.textColor,
+          borderStyle: me.borderStyle, decoration: me.decoration,
+          nameFont: me.nameFont, statusLabel: me.statusLabel,
         }}
         onChange={handleThemeChange}
         premium={premium}

@@ -20,7 +20,19 @@ export type Fo = {
   pageBgImage: string;
   cardBgColor: string;
   cardBgImage: string;
+  /** two comma-joined hex colors, e.g. "#fce4ec,#e1bee7" — empty when unset */
+  cardBgGradient: string;
+  /** hero card has no fill at all, letting the page background show through */
+  cardTransparent: boolean;
   textColor: string;
+  /** '' (default) | 'dashed' | 'double' | 'torn' | 'polaroid' */
+  borderStyle: string;
+  /** '' (classic washi+sparkle) | 'sparkles' | 'hearts' | 'stars' | 'floral' | 'washi' | 'none' */
+  decoration: string;
+  /** '' (default display font) | 'script' | 'marker' */
+  nameFont: string;
+  /** short free-text flair badge shown near the name, e.g. "comfort character" */
+  statusLabel: string;
   song: string;
   /** optional Spotify/YouTube/etc link for the theme song */
   songLink: string;
@@ -68,7 +80,13 @@ function rowToFo(row: Record<string, unknown>): Fo {
     pageBgImage: (row.page_bg_image as string) ?? '',
     cardBgColor: (row.card_bg_color as string) ?? '',
     cardBgImage: (row.card_bg_image as string) ?? '',
+    cardBgGradient: (row.card_bg_gradient as string) ?? '',
+    cardTransparent: !!(row.card_transparent as number),
     textColor: (row.text_color as string) ?? '',
+    borderStyle: (row.border_style as string) ?? '',
+    decoration: (row.decoration as string) ?? '',
+    nameFont: (row.name_font as string) ?? '',
+    statusLabel: (row.status_label as string) ?? '',
     song: (row.song as string) ?? '',
     songLink: (row.song_link as string) ?? '',
     gallery: parseGallery(row.gallery),
@@ -154,7 +172,13 @@ export function updateFo(id: string, d: Partial<Omit<Fo, 'id' | 'createdAt'>>) {
   if (d.pageBgImage !== undefined) { fields.push('page_bg_image = ?'); values.push(d.pageBgImage); }
   if (d.cardBgColor !== undefined) { fields.push('card_bg_color = ?'); values.push(d.cardBgColor); }
   if (d.cardBgImage !== undefined) { fields.push('card_bg_image = ?'); values.push(d.cardBgImage); }
+  if (d.cardBgGradient !== undefined) { fields.push('card_bg_gradient = ?'); values.push(d.cardBgGradient); }
+  if (d.cardTransparent !== undefined) { fields.push('card_transparent = ?'); values.push(d.cardTransparent ? 1 : 0); }
   if (d.textColor !== undefined)   { fields.push('text_color = ?');   values.push(d.textColor); }
+  if (d.borderStyle !== undefined) { fields.push('border_style = ?'); values.push(d.borderStyle); }
+  if (d.decoration !== undefined)  { fields.push('decoration = ?');   values.push(d.decoration); }
+  if (d.nameFont !== undefined)    { fields.push('name_font = ?');    values.push(d.nameFont); }
+  if (d.statusLabel !== undefined) { fields.push('status_label = ?'); values.push(d.statusLabel); }
   if (d.song !== undefined)        { fields.push('song = ?');         values.push(d.song); }
   if (d.songLink !== undefined)    { fields.push('song_link = ?');    values.push(d.songLink); }
   if (d.gallery !== undefined)     { fields.push('gallery = ?');      values.push(JSON.stringify(d.gallery)); }

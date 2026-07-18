@@ -1,19 +1,23 @@
+import { Image } from 'expo-image';
 import { useState } from 'react';
 import {
-  Modal, Pressable, ScrollView, StyleSheet,
+  Linking, Modal, Pressable, ScrollView, StyleSheet,
   Text, TextInput, TouchableWithoutFeedback, View,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import Animated, { useSharedValue, useAnimatedStyle, runOnJS, type SharedValue } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { PaperLined, PaperScalloped, PaperPolaroid, PaperGrid } from '@/components/deco/Papers';
-import {
-  StickerEnvelope, StickerSakuraBranch, StickerPolaroid as StickerPol,
-  StickerTicket, StickerWaxSeal, StickerHeartPatch, StickerSakuraFlower,
-} from '@/components/deco/Stickers';
 import { WashiTape } from '@/components/deco/WashiTape';
+import { SNIPSY_URL } from '@/constants/links';
+import { BUILTIN_STICKERS as STICKERS } from '@/constants/stickers';
 import { FontFamily, SheetColumn ,sf } from '@/constants/theme';
+import { useCustomStickers } from '@/store/customStickers';
 import { INK, Polaroid } from './primitives';
+
+// Custom sticker DecoItems reference a customStickers row, namespaced so
+// they never collide with a BUILTIN_STICKERS key.
+const CUSTOM_PREFIX = 'custom:';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export type DecoItem =
@@ -26,16 +30,6 @@ type AddableDecoItem<T extends DecoItem = DecoItem> = T extends DecoItem
   : never;
 
 type DecoTab = 'photo' | 'sticker' | 'paper';
-
-const STICKERS: { key: string; El: React.ComponentType<{ size?: number }> }[] = [
-  { key: 'envelope',     El: StickerEnvelope },
-  { key: 'sakura',       El: StickerSakuraBranch },
-  { key: 'polaroid',     El: StickerPol },
-  { key: 'ticket',       El: StickerTicket },
-  { key: 'waxseal',      El: StickerWaxSeal },
-  { key: 'heartpatch',   El: StickerHeartPatch },
-  { key: 'sakuraflower', El: StickerSakuraFlower },
-];
 
 const PAPERS: {
   key: string; label: string;
@@ -141,6 +135,7 @@ export function DecoBar({ editing, itemsJson, onItemsChange }: Props) {
   const [showSheet, setShowSheet] = useState(false);
   const [sheetTab, setSheetTab] = useState<DecoTab>('sticker');
   const canvasW = useSharedValue(300);
+  const customStickers = useCustomStickers();
 
   const items = parseItems(itemsJson);
 
@@ -196,17 +191,20 @@ export function DecoBar({ editing, itemsJson, onItemsChange }: Props) {
           </View>
         ) : (
           items.map((item) => {
-            const StickerEl = item.type === 'sticker'
+            const isCustomSticker = item.type === 'sticker' && item.stickerKey.startsWith(CUSTOM_PREFIX);
+            const StickerEl = item.type === 'sticker' && !isCustomSticker
               ? STICKERS.find(s => s.key === item.stickerKey)?.El
+              : undefined;
+            const customStickerUri = isCustomSticker && item.type === 'sticker'
+              ? customStickers.find(cs => cs.id === item.stickerKey.slice(CUSTOM_PREFIX.length))?.uri
               : undefined;
             const PaperEl = item.type === 'paper'
               ? PAPERS.find(p => p.key === item.paperKey)?.El
               : undefined;
 
-            const tapeProps =
-              item.type === 'photo'   ? { pattern: 'floral' as const, color: '#fadde5', rotate: -3 } :
-              item.type === 'sticker' ? { pattern: 'star'   as const, color: '#b8902a', rotate: 2 } :
-                                        { pattern: 'dot'    as const, color: '#c7b5e3', rotate: -1 };
+            const tapeProps = item.type === 'photo'
+              ? { pattern: 'floral' as const, color: '#fadde5', rotate: -3 }
+              : { pattern: 'dot'    as const, color: '#c7b5e3', rotate: -1 };
 
             return (
               <DraggableItem
@@ -218,7 +216,7 @@ export function DecoBar({ editing, itemsJson, onItemsChange }: Props) {
                 onRemove={() => removeItem(item.id)}
               >
                 <View style={s.decoItem}>
-                  <WashiTape width={40} height={10} {...tapeProps} />
+                  {item.type !== 'sticker' && <WashiTape width={40} height={10} {...tapeProps} />}
                   {item.type === 'photo' && (
                     <Polaroid
                       size={90} rotate={-4} tapeColor="transparent"
@@ -229,6 +227,9 @@ export function DecoBar({ editing, itemsJson, onItemsChange }: Props) {
                     />
                   )}
                   {item.type === 'sticker' && StickerEl && <StickerEl size={52} />}
+                  {item.type === 'sticker' && customStickerUri && (
+                    <Image source={{ uri: customStickerUri }} style={s.customStickerImg} contentFit="contain" />
+                  )}
                   {item.type === 'paper' && PaperEl && (
                     <PaperEl width={100} height={76}>
                       <TextInput
@@ -298,6 +299,22 @@ export function DecoBar({ editing, itemsJson, onItemsChange }: Props) {
                   <El size={42} />
                 </Pressable>
               ))}
+              {customStickers.map((cs) => (
+                <Pressable
+                  key={cs.id}
+                  style={s.decoCell}
+                  onPress={() => { addItem({ type: 'sticker', stickerKey: `${CUSTOM_PREFIX}${cs.id}` }); setShowSheet(false); }}
+                >
+                  <Image source={{ uri: cs.uri }} style={s.customStickerCellImg} contentFit="contain" />
+                </Pressable>
+              ))}
+              <Pressable
+                style={[s.decoCell, s.snipsyCell]}
+                onPress={() => Linking.openURL(SNIPSY_URL)}
+              >
+                <Text style={s.snipsyEmoji}>✂️</Text>
+                <Text style={s.snipsyLabel}>make more{'\n'}in Snipsy</Text>
+              </Pressable>
             </ScrollView>
           )}
 
@@ -338,6 +355,8 @@ const s = StyleSheet.create({
   },
 
   decoItem: { alignItems: 'center' },
+  customStickerImg: { width: 52, height: 52 },
+  customStickerCellImg: { width: 42, height: 42 },
 
   removeX: {
     position: 'absolute',
@@ -429,6 +448,23 @@ const s = StyleSheet.create({
     fontSize: sf(8),
     color: INK,
     letterSpacing: 0.4,
+  },
+
+  snipsyCell: {
+    borderStyle: 'dashed',
+    borderColor: INK + '40',
+    backgroundColor: '#fdf6ee',
+    minWidth: 58,
+    justifyContent: 'center',
+  },
+  snipsyEmoji: { fontSize: sf(20) },
+  snipsyLabel: {
+    fontFamily: FontFamily.markerBold,
+    fontSize: sf(8),
+    color: INK,
+    letterSpacing: 0.2,
+    textAlign: 'center',
+    marginTop: 2,
   },
 
   paperInput: {
