@@ -1,4 +1,4 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -115,24 +115,9 @@ function getWeeklyEquivalentOnly(pkg: PurchasesPackage): string | null {
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
-const REASON_COPY: Record<string, { title: string; sub: string }> = {
-  'add-ship':   { title: 'ship more than one\nF/O at a time ♡',     sub: 'keep every F/O you love, all in one vault.' },
-  'albums':     { title: 'their photos deserve\na real home ♡',      sub: 'a gallery for every face you adore.' },
-  'scenarios':  { title: 'your stories deserve\nto be told ♡',       sub: 'write every what-if and soft little moment.' },
-  'love-letter':{ title: 'write them something\nbeautiful ♡',        sub: 'love letters, yours to keep forever.' },
-  'storyline':  { title: 'every chapter of\nyour story ♡',           sub: 'your whole timeline, always with you.' },
-  'polyship':   { title: 'love more than one,\nall at once ♡',        sub: 'everyone you love, side by side.' },
-  'add-fo':     { title: 'room in your heart\nfor more than one ♡',   sub: 'keep a profile for every F/O you love.' },
-  'switch-template': { title: 'try on every\nstyle you love ♡',       sub: 'switch templates any time, as many times as you like.' },
-  'customize-theme': { title: 'make their profile\ntruly theirs ♡',    sub: 'custom colors, backgrounds & text — for yours and their card.' },
-  'notif-avatar': { title: 'make it feel\nlike them ♡',                sub: 'show their photo on every notification, not just the app icon.' },
-};
-
 export default function PaywallScreen() {
   const { column } = useIPad();
   const insets = useSafeAreaInsets();
-  const { reason } = useLocalSearchParams<{ reason?: string }>();
-  const copy = REASON_COPY[reason ?? ''] ?? REASON_COPY['add-ship'];
   const [packages, setPackages] = useState<PurchasesPackage[]>([]);
   const [selected, setSelected] = useState<PurchasesPackage | null>(null);
   const [loading, setLoading] = useState(true);
@@ -280,17 +265,13 @@ export default function PaywallScreen() {
           </View>
         </View>
 
-        {/* Title */}
-        <Text style={styles.heroTitle}>{copy.title}</Text>
-        <Text style={styles.heroSub}>{copy.sub}</Text>
-
         {/* Features card */}
         <View style={styles.featCard}>
           {[
-            { icon: '♡', label: 'Unlimited ships — all your F/Os' },
-            { icon: '♡', label: 'Polyships — love your whole polycule' },
-            { icon: '♡', label: 'Scenarios, Albums & Love Letters' },
-            { icon: '♡', label: 'Export & share templates to camera roll' },
+            { icon: '♡', label: 'Unlimited ships & F/Os' },
+            { icon: '♡', label: 'Polyships — your whole polycule, together' },
+            { icon: '♡', label: 'Every template & theme, switch anytime' },
+            { icon: '♡', label: 'Scenarios, Storyline, Albums & Love Letters' },
           ].map((f, i, arr) => (
             <View key={f.label} style={[styles.featRow, i < arr.length - 1 && styles.featRowBorder]}>
               <View style={styles.featPill}>
@@ -526,20 +507,6 @@ const styles = StyleSheet.create({
     height: 148,
     borderRadius: 28,
   },
-  heroEyebrow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 6 },
-  eyebrowTxt: {
-    fontFamily: FontFamily.marker, fontSize: sf(9), color: Colors.sakuraDeep,
-    letterSpacing: 1.4, textTransform: 'uppercase',
-  },
-  heroTitle: {
-    fontFamily: FontFamily.displayItalic, fontSize: sf(34), lineHeight: 38,
-    color: Colors.ink, marginBottom: Spacing.s2,
-  },
-  heroSub: {
-    fontFamily: FontFamily.script, fontSize: sf(17), color: Colors.ink2,
-    lineHeight: 24, marginBottom: Spacing.s4,
-  },
-
   featCard: {
     backgroundColor: Colors.sakuraSoft,
     borderRadius: Radius.r3,
