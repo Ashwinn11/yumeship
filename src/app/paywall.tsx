@@ -123,6 +123,9 @@ const REASON_COPY: Record<string, { title: string; sub: string }> = {
   'storyline':  { title: 'every chapter of\nyour story ♡',           sub: 'your whole timeline, always with you.' },
   'polyship':   { title: 'love more than one,\nall at once ♡',        sub: 'everyone you love, side by side.' },
   'add-fo':     { title: 'room in your heart\nfor more than one ♡',   sub: 'keep a profile for every F/O you love.' },
+  'switch-template': { title: 'try on every\nstyle you love ♡',       sub: 'switch templates any time, as many times as you like.' },
+  'edit-profile': { title: 'keep your profile\nfresh ♡',              sub: 'edit yours and their profile whenever you want.' },
+  'notif-avatar': { title: 'make it feel\nlike them ♡',                sub: 'show their photo on every notification, not just the app icon.' },
 };
 
 export default function PaywallScreen() {

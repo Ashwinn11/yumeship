@@ -10,6 +10,7 @@ import { CozyModal } from '@/components/ui/CozyModal';
 import { IconEdit, IconExport, IconTrashSolid } from '@/components/ui/Icon';
 import { Colors, FontFamily, Radius, Shadow, SheetColumn, Spacing ,sf } from '@/constants/theme';
 import { BG_COLORS } from '@/constants/bgPalette';
+import { usePremium } from '@/store/premium';
 import { askForReview } from '@/store/review';
 import { deleteShip, getShip, isPoly, updateShip } from '@/store/ships';
 import { TemplateDataCtx, buildPreFill, loadTemplateData, migrateTemplateData, saveTemplateData } from '@/store/templateData';
@@ -50,6 +51,7 @@ export function TemplateScreenWrapper({ templateKey, shipId, children }: Props) 
   const { column } = useIPad();
   const ship = shipId ? getShip(shipId) : undefined;
   const pickerTemplates = isPoly(ship) ? POLY_VISUAL : VISUAL_TEMPLATES;
+  const premium = usePremium();
   const [showPicker, setShowPicker] = useState(false);
   const [selected, setSelected] = useState(templateKey);
   const [confirming, setConfirming] = useState(false);
@@ -215,7 +217,16 @@ export function TemplateScreenWrapper({ templateKey, shipId, children }: Props) 
             {shipId && (() => {
               const tpl = pickerTemplates.find(t => t.key === templateKey);
               return (
-                <Pressable style={s.styleChip} onPress={() => setShowPicker(true)}>
+                <Pressable
+                  style={s.styleChip}
+                  onPress={() => {
+                    if (!premium) {
+                      router.push('/paywall?reason=switch-template' as any);
+                      return;
+                    }
+                    setShowPicker(true);
+                  }}
+                >
                   <View style={[s.styleChipDot, { backgroundColor: tpl?.color ?? Colors.sakuraDeep }]} />
                   <Text style={s.styleChipText}>{tpl?.label ?? 'style'}</Text>
                   <Svg width={10} height={10} viewBox="0 0 10 10" fill="none">

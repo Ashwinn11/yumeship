@@ -12,6 +12,7 @@ import { Mark } from '@/components/ui/Mark';
 import { Colors, FontFamily, FontSize, Radius, Spacing, sf } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
 import { getGlobalSetting, saveGlobalSetting } from '@/store/onboarding';
+import { usePremium } from '@/store/premium';
 import { parseGallery } from '@/store/fo';
 
 function readMe() {
@@ -40,6 +41,15 @@ export default function MyProfileScreen() {
   const { column } = useIPad();
   const [me, setMe] = useState(readMe);
   useFocusEffect(useCallback(() => { setMe(readMe()); }, []));
+  const premium = usePremium();
+
+  function handleEdit() {
+    if (!premium) {
+      router.push('/paywall?reason=edit-profile' as any);
+      return;
+    }
+    router.push('/onboarding/persona?mode=edit' as any);
+  }
   const [showCustomize, setShowCustomize] = useState(false);
 
   function handleThemeChange(patch: Partial<{
@@ -79,10 +89,7 @@ export default function MyProfileScreen() {
           <Pressable onPress={() => setShowCustomize(true)} style={styles.headerBtn}>
             <IconPalette size={13} color={Colors.ink2} />
           </Pressable>
-          <Pressable
-            onPress={() => router.push('/onboarding/persona?mode=edit' as any)}
-            style={styles.headerBtn}
-          >
+          <Pressable onPress={handleEdit} style={styles.headerBtn}>
             <IconEdit size={13} color={Colors.ink2} />
           </Pressable>
         </View>
