@@ -1,4 +1,5 @@
 export { Cloud } from './Cloud';
+export { FlagIcon } from './FlagIcon';
 export { Heart } from './Heart';
 export { Ribbon } from './Ribbon';
 export { Sakura } from './Sakura';

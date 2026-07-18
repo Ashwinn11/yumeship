@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { getDb, newId } from '@/db/client';
 import { notifyShips } from './ships';
+import { getGlobalSetting, saveGlobalSetting } from './onboarding';
 
 export type GalleryPhoto = { uri: string; caption: string };
 
@@ -216,6 +217,9 @@ export function deleteFo(id: string) {
   // unlink, never cascade — the ship survives with its cached identity fields frozen
   getDb().runSync(`UPDATE ships SET fo_id = '' WHERE fo_id = ?`, id);
   getDb().runSync('DELETE FROM fo WHERE id = ?', id);
+  if (getGlobalSetting('user_identify_fo_id') === id) {
+    saveGlobalSetting('user_identify_fo_id', '');
+  }
   notify();
   notifyShips();
 }

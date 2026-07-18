@@ -3,13 +3,15 @@ import * as ImagePicker from 'expo-image-picker';
 import { Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { GalleryPicker } from '@/components/profile/GalleryPicker';
+import { SexualityPicker } from '@/components/profile/SexualityPicker';
 import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
+import { EditSection, styles as editSection } from '@/components/ui/EditSection';
 import { Field } from '@/components/ui/Field';
 import { IconTrashSolid } from '@/components/ui/Icon';
 import { Row } from '@/components/ui/Row';
 import { UnderInput } from '@/components/ui/UnderInput';
-import { Colors, FontFamily, RelationshipColors, SharingColors, Radius, Spacing, sf } from '@/constants/theme';
+import { Colors, FontFamily, RelationshipColors, SharingColors, Radius, Shadow, Spacing, sf } from '@/constants/theme';
 import type { Fo, GalleryPhoto } from '@/store/fo';
 
 const PRONOUNS = ['she/her', 'he/him', 'they/them', '+'];
@@ -37,6 +39,7 @@ export type FoFormValue = {
   song: string;
   songLink: string;
   gallery: GalleryPhoto[];
+  statusLabel: string;
 };
 
 type Props = {
@@ -74,146 +77,148 @@ export function FoForm({ value, onChange, onSave, saveLabel = 'save them', onDel
       keyboardDismissMode="on-drag"
       onScrollBeginDrag={() => Keyboard.dismiss()}
     >
-      {/* Photo */}
-      <View style={styles.avatarRow}>
-        <Pressable onPress={pickPhoto} style={[styles.avatar, { backgroundColor: Colors.sakura }]}>
-          {value.photoUri ? (
-            <Image source={{ uri: value.photoUri }} style={styles.avatarImg} contentFit="cover" />
-          ) : (
-            <Text style={styles.avatarInitial}>{value.name.trim().charAt(0).toUpperCase() || '♡'}</Text>
-          )}
-          <View style={styles.avatarBadge}>
-            <Text style={styles.avatarBadgeText}>+</Text>
+      {/* Identity card — mirrors the "me" edit-profile identity block */}
+      <View style={styles.identityCard}>
+        <View style={styles.avatarRow}>
+          <Pressable onPress={pickPhoto} style={[styles.avatar, { backgroundColor: Colors.sakura }]}>
+            {value.photoUri ? (
+              <Image source={{ uri: value.photoUri }} style={styles.avatarImg} contentFit="cover" />
+            ) : (
+              <Text style={styles.avatarInitial}>{value.name.trim().charAt(0).toUpperCase() || '♡'}</Text>
+            )}
+            <View style={styles.avatarBadge}>
+              <Text style={styles.avatarBadgeText}>+</Text>
+            </View>
+          </Pressable>
+          <View style={styles.avatarHintCol}>
+            <Text style={styles.avatarHintTitle}>their portrait</Text>
+            <Text style={styles.avatarHint}>tap to add a photo — it shows on their profile card</Text>
           </View>
-        </Pressable>
-        <View style={styles.avatarHintCol}>
-          <Text style={styles.avatarHintTitle}>their portrait</Text>
-          <Text style={styles.avatarHint}>tap to add a photo — it shows on their profile card</Text>
         </View>
+
+        <View style={styles.fieldSpacer} />
+
+        <Field label="Their name">
+          <UnderInput value={value.name} onChangeText={(v) => set('name', v)} placeholder="e.g. Kuroo Tetsurou" />
+        </Field>
+
+        <View style={styles.fieldSpacer} />
+
+        <Field label="Pronouns">
+          <Row gap={6} wrap>
+            {PRONOUNS.map((p) => (
+              <Chip
+                key={p}
+                color={value.pronouns === p ? Colors.sakuraDeep : Colors.ink2}
+                bg={value.pronouns === p ? Colors.sakuraSoft : Colors.paperDeep}
+                active={value.pronouns === p}
+                onPress={() => set('pronouns', p)}
+              >
+                {p}
+              </Chip>
+            ))}
+          </Row>
+        </Field>
+
+        <View style={styles.fieldSpacer} />
+
+        <Field label="Source (fandom, canon, or original)">
+          <UnderInput value={value.fandom} onChangeText={(v) => set('fandom', v)} placeholder="e.g. Haikyuu!! · canon" />
+        </Field>
+
+        <View style={styles.fieldSpacer} />
+
+        <Field label="Relation status">
+          <Row gap={6} wrap>
+            {REL_OPTIONS.map((r) => {
+              const active = value.relStatus === r.key;
+              const color = RelationshipColors[r.key];
+              return (
+                <Chip
+                  key={r.key}
+                  color={active ? color : Colors.ink2}
+                  bg={active ? `${color}22` : Colors.paperDeep}
+                  active={active}
+                  onPress={() => set('relStatus', r.key)}
+                >
+                  {r.label}
+                </Chip>
+              );
+            })}
+          </Row>
+        </Field>
+
+        <View style={styles.fieldSpacer} />
+
+        <Field label="Sharing status" hint="how open you are to others engaging with them">
+          <Row gap={6} wrap>
+            {SHARE_OPTIONS.map((s) => {
+              const active = value.shareStatus === s.key;
+              const color = SharingColors[s.key];
+              return (
+                <Chip
+                  key={s.key}
+                  color={active ? color : Colors.ink2}
+                  bg={active ? `${color}22` : Colors.paperDeep}
+                  active={active}
+                  onPress={() => set('shareStatus', s.key)}
+                >
+                  {s.label}
+                </Chip>
+              );
+            })}
+          </Row>
+        </Field>
       </View>
 
-      <View style={styles.fieldSpacer} />
+      <View style={editSection.sectionsWrap}>
+        <EditSection label="about them">
+          <TextInput
+            value={value.bio}
+            onChangeText={(v) => set('bio', v)}
+            placeholder="a few soft lines about them…"
+            placeholderTextColor={Colors.ink3}
+            multiline
+            style={styles.bioInput}
+          />
+        </EditSection>
 
-      <Field label="Their name">
-        <UnderInput value={value.name} onChangeText={(v) => set('name', v)} placeholder="e.g. Kuroo Tetsurou" />
-      </Field>
+        <EditSection label="details">
+          <Row gap={14}>
+            <Field label="Height (optional)" style={{ flex: 1 }}>
+              <UnderInput value={value.height} onChangeText={(v) => set('height', v)} placeholder="e.g. 185 cm" />
+            </Field>
+            <Field label="Weight (optional)" style={{ flex: 1 }}>
+              <UnderInput value={value.weight} onChangeText={(v) => set('weight', v)} placeholder="optional" />
+            </Field>
+          </Row>
+        </EditSection>
 
-      <View style={styles.fieldSpacer} />
+        <EditSection label="theme song">
+          <Field label="Song title">
+            <UnderInput value={value.song} onChangeText={(v) => set('song', v)} placeholder="the song that feels like them" />
+          </Field>
+          <View style={editSection.innerSpacer} />
+          <Field label="Song link (optional)" hint="Spotify, YouTube, Apple Music…">
+            <UnderInput
+              value={value.songLink}
+              onChangeText={(v) => set('songLink', v)}
+              placeholder="https://…"
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="url"
+            />
+          </Field>
+        </EditSection>
 
-      <Field label="Pronouns">
-        <Row gap={6} wrap>
-          {PRONOUNS.map((p) => (
-            <Chip
-              key={p}
-              color={value.pronouns === p ? Colors.sakuraDeep : Colors.ink2}
-              bg={value.pronouns === p ? Colors.sakuraSoft : Colors.paperDeep}
-              active={value.pronouns === p}
-              onPress={() => set('pronouns', p)}
-            >
-              {p}
-            </Chip>
-          ))}
-        </Row>
-      </Field>
+        <EditSection label="sexuality">
+          <SexualityPicker value={value.statusLabel} onChange={(v) => set('statusLabel', v)} />
+        </EditSection>
 
-      <View style={styles.fieldSpacer} />
-
-      <Field label="Source (fandom, canon, or original)">
-        <UnderInput value={value.fandom} onChangeText={(v) => set('fandom', v)} placeholder="e.g. Haikyuu!! · canon" />
-      </Field>
-
-      <View style={styles.fieldSpacer} />
-
-      <Field label="Relation status">
-        <Row gap={6} wrap>
-          {REL_OPTIONS.map((r) => {
-            const active = value.relStatus === r.key;
-            const color = RelationshipColors[r.key];
-            return (
-              <Chip
-                key={r.key}
-                color={active ? color : Colors.ink2}
-                bg={active ? `${color}22` : Colors.paperDeep}
-                active={active}
-                onPress={() => set('relStatus', r.key)}
-              >
-                {r.label}
-              </Chip>
-            );
-          })}
-        </Row>
-      </Field>
-
-      <View style={styles.fieldSpacer} />
-
-      <Field label="Sharing status" hint="how open you are to others engaging with them">
-        <Row gap={6} wrap>
-          {SHARE_OPTIONS.map((s) => {
-            const active = value.shareStatus === s.key;
-            const color = SharingColors[s.key];
-            return (
-              <Chip
-                key={s.key}
-                color={active ? color : Colors.ink2}
-                bg={active ? `${color}22` : Colors.paperDeep}
-                active={active}
-                onPress={() => set('shareStatus', s.key)}
-              >
-                {s.label}
-              </Chip>
-            );
-          })}
-        </Row>
-      </Field>
-
-      <View style={styles.fieldSpacer} />
-
-      <Field label="Bio">
-        <TextInput
-          value={value.bio}
-          onChangeText={(v) => set('bio', v)}
-          placeholder="a few soft lines about them…"
-          placeholderTextColor={Colors.ink3}
-          multiline
-          style={styles.bioInput}
-        />
-      </Field>
-
-      <View style={styles.fieldSpacer} />
-
-      <Row gap={14}>
-        <Field label="Height (optional)" style={{ flex: 1 }}>
-          <UnderInput value={value.height} onChangeText={(v) => set('height', v)} placeholder="e.g. 185 cm" />
-        </Field>
-        <Field label="Weight (optional)" style={{ flex: 1 }}>
-          <UnderInput value={value.weight} onChangeText={(v) => set('weight', v)} placeholder="optional" />
-        </Field>
-      </Row>
-
-      <View style={styles.fieldSpacer} />
-
-      <Field label="Theme song">
-        <UnderInput value={value.song} onChangeText={(v) => set('song', v)} placeholder="the song that feels like them" />
-      </Field>
-
-      <View style={styles.fieldSpacer} />
-
-      <Field label="Song link (optional)" hint="Spotify, YouTube, Apple Music…">
-        <UnderInput
-          value={value.songLink}
-          onChangeText={(v) => set('songLink', v)}
-          placeholder="https://…"
-          autoCapitalize="none"
-          autoCorrect={false}
-          keyboardType="url"
-        />
-      </Field>
-
-      <View style={styles.fieldSpacer} />
-
-      <Field label="Gallery">
-        <GalleryPicker photos={value.gallery} onChange={(g) => set('gallery', g)} />
-      </Field>
+        <EditSection label="gallery">
+          <GalleryPicker photos={value.gallery} onChange={(g) => set('gallery', g)} />
+        </EditSection>
+      </View>
 
       <View style={styles.fieldSpacer2} />
 
@@ -234,6 +239,13 @@ export function FoForm({ value, onChange, onSave, saveLabel = 'save them', onDel
 const styles = StyleSheet.create({
   scroll: { flex: 1 },
   content: { paddingHorizontal: Spacing.s6, paddingTop: Spacing.s2, paddingBottom: Spacing.s6 },
+  identityCard: {
+    backgroundColor: Colors.vellum,
+    borderWidth: 1, borderColor: Colors.line,
+    borderRadius: Radius.r4,
+    padding: Spacing.s5,
+    ...Shadow.s1,
+  },
   avatarRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   avatar: {
     width: 84, height: 84, borderRadius: Radius.pill,

@@ -2,7 +2,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableWithoutFeedback, View } from 'react-native';
+import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, TouchableWithoutFeedback, View } from 'react-native';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
 import { Heart } from '@/components/deco/Heart';
@@ -254,20 +254,6 @@ export function CardThemeSheet({ visible, onClose, theme, onChange, premium }: P
                     </Pressable>
                   ))}
                 </View>
-
-                <Text style={[styles.sectionLabel, styles.sectionLabelSpaced]}>status label</Text>
-                <View style={styles.statusInputWrap}>
-                  <TextInput
-                    value={theme.statusLabel}
-                    onChangeText={(v) => onChange({ statusLabel: v.slice(0, 24) })}
-                    placeholder="e.g. comfort character"
-                    placeholderTextColor={Colors.ink3}
-                    editable={premium}
-                    maxLength={24}
-                    style={styles.statusInput}
-                  />
-                  {!premium && <Pressable style={StyleSheet.absoluteFill} onPress={requirePremium} />}
-                </View>
               </>
             ) : (
               <>
@@ -421,11 +407,4 @@ const styles = StyleSheet.create({
   borderPreviewInner: { position: 'absolute', top: 3, left: 3, right: 3, bottom: 3, borderWidth: 1, borderColor: Colors.ink, borderRadius: 2 },
   borderPreviewTorn: { position: 'absolute', left: 0, right: 0, bottom: -1 },
   decorationNoneText: { fontSize: sf(14), color: Colors.ink3, fontFamily: FontFamily.uiMedium },
-
-  statusInputWrap: { position: 'relative' },
-  statusInput: {
-    borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.r3,
-    backgroundColor: Colors.vellum, paddingHorizontal: Spacing.s4, paddingVertical: Spacing.s3,
-    fontFamily: FontFamily.ui, fontSize: sf(13), color: Colors.ink,
-  },
 });

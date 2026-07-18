@@ -14,7 +14,7 @@ import { Colors, FontFamily, FontSize, Radius, Spacing, sf } from '@/constants/t
 import { useIPad } from '@/hooks/use-ipad';
 import { getGlobalSetting, saveGlobalSetting } from '@/store/onboarding';
 import { usePremium } from '@/store/premium';
-import { parseGallery } from '@/store/fo';
+import { parseGallery, useFos } from '@/store/fo';
 
 function readMe() {
   return {
@@ -40,6 +40,7 @@ function readMe() {
     decoration: getGlobalSetting('user_decoration'),
     nameFont: getGlobalSetting('user_name_font'),
     statusLabel: getGlobalSetting('user_status_label'),
+    identifyFoId: getGlobalSetting('user_identify_fo_id'),
   };
 }
 
@@ -50,6 +51,8 @@ export default function MyProfileScreen() {
   useFocusEffect(useCallback(() => { setMe(readMe()); }, []));
   const premium = usePremium();
   const [showCustomize, setShowCustomize] = useState(false);
+  const fos = useFos();
+  const pairedFo = fos.find((f) => f.id === me.identifyFoId);
 
   function handleThemeChange(patch: Partial<CardTheme>) {
     const keyMap = {
@@ -128,6 +131,11 @@ export default function MyProfileScreen() {
           decoration={me.decoration}
           nameFont={me.nameFont}
           statusLabel={me.statusLabel}
+          showPairedIdentity={!!pairedFo}
+          pairedName={pairedFo?.name}
+          pairedPronouns={pairedFo?.pronouns}
+          pairedAvatarUri={pairedFo?.photoUri}
+          pairedStatusLabel={pairedFo?.statusLabel}
         />
         <Text style={styles.footnote}>this is you, in their world ♡</Text>
       </ScrollView>

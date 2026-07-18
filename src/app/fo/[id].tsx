@@ -51,6 +51,7 @@ export default function FoDetailScreen() {
       relStatus: fo!.relStatus, shareStatus: fo!.shareStatus,
       bio: fo!.bio, height: fo!.height, weight: fo!.weight, photoUri: fo!.photoUri,
       song: fo!.song, songLink: fo!.songLink, gallery: fo!.gallery,
+      statusLabel: fo!.statusLabel,
     });
     setEditing(true);
   }

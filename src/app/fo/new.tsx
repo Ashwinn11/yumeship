@@ -10,7 +10,7 @@ import { addFo } from '@/store/fo';
 
 const EMPTY: FoFormValue = {
   name: '', pronouns: '', fandom: '', relStatus: 'romantic', shareStatus: 'selective',
-  bio: '', height: '', weight: '', photoUri: '', song: '', songLink: '', gallery: [],
+  bio: '', height: '', weight: '', photoUri: '', song: '', songLink: '', gallery: [], statusLabel: '',
 };
 
 export default function NewFoScreen() {

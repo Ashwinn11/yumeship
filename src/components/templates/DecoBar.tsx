@@ -226,7 +226,7 @@ export function DecoBar({ editing, itemsJson, onItemsChange }: Props) {
                         : undefined}
                     />
                   )}
-                  {item.type === 'sticker' && StickerEl && <StickerEl size={52} />}
+                  {item.type === 'sticker' && StickerEl && <StickerEl size={80} />}
                   {item.type === 'sticker' && customStickerUri && (
                     <Image source={{ uri: customStickerUri }} style={s.customStickerImg} contentFit="contain" />
                   )}
@@ -296,7 +296,7 @@ export function DecoBar({ editing, itemsJson, onItemsChange }: Props) {
                   style={s.decoCell}
                   onPress={() => { addItem({ type: 'sticker', stickerKey: key }); setShowSheet(false); }}
                 >
-                  <El size={42} />
+                  <El size={56} />
                 </Pressable>
               ))}
               {customStickers.map((cs) => (
@@ -355,8 +355,8 @@ const s = StyleSheet.create({
   },
 
   decoItem: { alignItems: 'center' },
-  customStickerImg: { width: 52, height: 52 },
-  customStickerCellImg: { width: 42, height: 42 },
+  customStickerImg: { width: 80, height: 80 },
+  customStickerCellImg: { width: 56, height: 56 },
 
   removeX: {
     position: 'absolute',

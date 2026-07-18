@@ -2,6 +2,7 @@ import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ImageBackground, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { FlagIcon } from '@/components/deco/FlagIcon';
 import { Heart } from '@/components/deco/Heart';
 import { Sakura } from '@/components/deco/Sakura';
 import { Sparkle } from '@/components/deco/Sparkle';
@@ -11,6 +12,7 @@ import { TornEdge } from '@/components/deco/TornEdge';
 import { WashiTape } from '@/components/deco/WashiTape';
 import { Polaroid } from '@/components/templates/primitives';
 import { Colors, FontFamily, Radius, Shadow, Spacing, sf } from '@/constants/theme';
+import { findSexualityOption } from '@/constants/sexualities';
 import type { GalleryPhoto } from '@/store/fo';
 
 const POLAROID_TAPES = [Colors.sakura, Colors.lavender, Colors.butter, Colors.sage, Colors.peach];
@@ -54,8 +56,15 @@ type Props = {
   decoration?: string;
   /** '' default display font | 'script' | 'marker' */
   nameFont?: string;
-  /** short flair badge under the name, e.g. "comfort character" */
+  /** sexuality badge under the name, e.g. "bisexual" — free text, this person's own words */
   statusLabel?: string;
+  /** "profile identify" — show [me] ♡ [F/O] paired avatars instead of the solo one */
+  showPairedIdentity?: boolean;
+  pairedName?: string;
+  pairedPronouns?: string;
+  pairedAvatarUri?: string;
+  pairedFallbackColor?: string;
+  pairedStatusLabel?: string;
 };
 
 const NAME_FONT_MAP: Record<string, string> = {
@@ -135,6 +144,18 @@ function HeroDecoration({ decoration }: { decoration: string }) {
   );
 }
 
+function StatusPill({ label, style }: { label: string; style?: object }) {
+  const matched = findSexualityOption(label);
+  return (
+    <View style={[styles.statusPill, style]}>
+      {matched?.colors && (
+        <View style={styles.statusPillFlag}><FlagIcon colors={matched.colors} width={16} height={11} /></View>
+      )}
+      <Text style={styles.statusPillText}>{label}</Text>
+    </View>
+  );
+}
+
 function SectionLabel({ children }: { children: string }) {
   return (
     <View style={styles.sectionLabelRow}>
@@ -168,6 +189,12 @@ export function ProfileCard({
   decoration = '',
   nameFont = '',
   statusLabel,
+  showPairedIdentity,
+  pairedName,
+  pairedPronouns,
+  pairedAvatarUri,
+  pairedFallbackColor = Colors.lavender,
+  pairedStatusLabel,
 }: Props) {
   const stats = [
     type ? { label: 'type', value: type.label, color: type.color } : null,
@@ -196,26 +223,62 @@ export function ProfileCard({
     <>
       <HeroDecoration decoration={decoration} />
 
-      <View style={styles.avatarWrap}>
-        <View style={[styles.avatar, { backgroundColor: fallbackColor }]}>
-          {photoUri ? (
-            <Image source={{ uri: photoUri }} style={styles.avatarImg} contentFit="cover" />
-          ) : (
-            <Text style={styles.avatarInitial}>{name.trim().charAt(0).toUpperCase() || '♡'}</Text>
-          )}
+      {showPairedIdentity ? (
+        <View style={styles.pairedWrap}>
+          <View style={[styles.pairedAvatar, { backgroundColor: fallbackColor }]}>
+            {photoUri ? (
+              <Image source={{ uri: photoUri }} style={styles.pairedAvatarImg} contentFit="cover" />
+            ) : (
+              <Text style={styles.pairedAvatarInitial}>{name.trim().charAt(0).toUpperCase() || '♡'}</Text>
+            )}
+          </View>
+          <View style={styles.pairedHeartBadge}>
+            <Heart size={13} color={Colors.sakuraDeep} />
+          </View>
+          <View style={[styles.pairedAvatar, { backgroundColor: pairedFallbackColor }]}>
+            {pairedAvatarUri ? (
+              <Image source={{ uri: pairedAvatarUri }} style={styles.pairedAvatarImg} contentFit="cover" />
+            ) : (
+              <Text style={styles.pairedAvatarInitial}>{(pairedName ?? '').trim().charAt(0).toUpperCase() || '♡'}</Text>
+            )}
+          </View>
         </View>
-      </View>
+      ) : (
+        <View style={styles.avatarWrap}>
+          <View style={[styles.avatar, { backgroundColor: fallbackColor }]}>
+            {photoUri ? (
+              <Image source={{ uri: photoUri }} style={styles.avatarImg} contentFit="cover" />
+            ) : (
+              <Text style={styles.avatarInitial}>{name.trim().charAt(0).toUpperCase() || '♡'}</Text>
+            )}
+          </View>
+        </View>
+      )}
 
-      <View style={styles.nameRow}>
-        <Text style={[styles.name, nameFontStyle, textStyle]} numberOfLines={1}>{name || '—'}</Text>
-        {!!username && <Text style={[styles.username, textStyle]}>@{username}</Text>}
-      </View>
-      {!!pronouns && <Text style={[styles.pronouns, textStyle]}>{pronouns}</Text>}
-      {!!subtitle && <Text style={[styles.subtitle, textStyle]}>{subtitle}</Text>}
-      {!!statusLabel && (
-        <View style={styles.statusPill}>
-          <Text style={styles.statusPillText}>{statusLabel}</Text>
+      {showPairedIdentity ? (
+        <View style={styles.pairedNameRow}>
+          <View style={styles.pairedNameCol}>
+            <Text style={[styles.pairedNameText, nameFontStyle, textStyle]} numberOfLines={1}>{name || '—'}</Text>
+            {!!pronouns && <Text style={[styles.pairedPronounsText, textStyle]}>{pronouns}</Text>}
+            {!!statusLabel && <StatusPill label={statusLabel} style={styles.pairedStatusPill} />}
+          </View>
+          <Heart size={10} color={Colors.sakuraDeep} />
+          <View style={styles.pairedNameCol}>
+            <Text style={[styles.pairedNameText, nameFontStyle, textStyle]} numberOfLines={1}>{pairedName || '—'}</Text>
+            {!!pairedPronouns && <Text style={[styles.pairedPronounsText, textStyle]}>{pairedPronouns}</Text>}
+            {!!pairedStatusLabel && <StatusPill label={pairedStatusLabel} style={styles.pairedStatusPill} />}
+          </View>
         </View>
+      ) : (
+        <>
+          <View style={styles.nameRow}>
+            <Text style={[styles.name, nameFontStyle, textStyle]} numberOfLines={1}>{name || '—'}</Text>
+            {!!username && <Text style={[styles.username, textStyle]}>@{username}</Text>}
+          </View>
+          {!!pronouns && <Text style={[styles.pronouns, textStyle]}>{pronouns}</Text>}
+          {!!subtitle && <Text style={[styles.subtitle, textStyle]}>{subtitle}</Text>}
+          {!!statusLabel && <StatusPill label={statusLabel} />}
+        </>
       )}
 
       {borderStyle === 'double' && (
@@ -361,12 +424,14 @@ const styles = StyleSheet.create({
   },
   tornOverlay: { position: 'absolute', left: 0, right: 0, bottom: -1 },
   statusPill: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
     marginTop: Spacing.s2,
     paddingHorizontal: Spacing.s3, paddingVertical: 4,
     borderRadius: Radius.pill,
     backgroundColor: 'rgba(255,255,255,0.55)',
     borderWidth: 1, borderColor: Colors.line,
   },
+  statusPillFlag: { borderRadius: 2, overflow: 'hidden' },
   statusPillText: {
     fontFamily: FontFamily.uiMedium, fontSize: sf(10), color: Colors.ink2,
     letterSpacing: 0.4,
@@ -384,6 +449,33 @@ const styles = StyleSheet.create({
   },
   avatarImg: { width: 96, height: 96, borderRadius: Radius.pill },
   avatarInitial: { fontFamily: FontFamily.displayItalic, fontSize: sf(40), color: '#fff' },
+  pairedWrap: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 2,
+  },
+  pairedAvatar: {
+    width: 74, height: 74, borderRadius: Radius.pill,
+    alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+    borderWidth: 1.4, borderColor: Colors.line,
+  },
+  pairedAvatarImg: { width: 74, height: 74, borderRadius: Radius.pill },
+  pairedAvatarInitial: { fontFamily: FontFamily.displayItalic, fontSize: sf(30), color: '#fff' },
+  pairedHeartBadge: {
+    width: 26, height: 26, borderRadius: Radius.pill,
+    backgroundColor: Colors.vellum, borderWidth: 1.4, borderColor: Colors.line,
+    alignItems: 'center', justifyContent: 'center',
+    marginHorizontal: -7, zIndex: 1,
+    ...Shadow.s1,
+  },
+  pairedNameRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
+    marginTop: Spacing.s3, maxWidth: '100%',
+  },
+  pairedNameCol: { alignItems: 'center', maxWidth: 108, gap: 1 },
+  pairedNameText: {
+    fontFamily: FontFamily.displayItalic, fontSize: sf(19), lineHeight: sf(23), color: Colors.ink,
+  },
+  pairedPronounsText: { fontFamily: FontFamily.ui, fontSize: sf(11), color: Colors.ink2 },
+  pairedStatusPill: { marginTop: 4, paddingHorizontal: Spacing.s2, maxWidth: 108 },
   nameRow: {
     flexDirection: 'row',
     alignItems: 'baseline',
