@@ -1,7 +1,6 @@
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import { getGlobalSetting, saveGlobalSetting } from './onboarding';
-import { getPremium } from './premium';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -48,18 +47,6 @@ export function setNotifEnabled(v: boolean) {
   saveGlobalSetting('notif_enabled', String(v));
 }
 
-// Premium, iOS-only feature: show a chosen photo on notifications instead of
-// the app icon. Re-checked at schedule time (not just in Settings) so a
-// lapsed subscription silently stops attaching it rather than erroring.
-// Suppressed in discreet mode — showing a F/O's photo on the lock screen
-// would defeat the whole point of hiding who the notification is from.
-function getNotificationAttachments(): Notifications.NotificationContentInput['attachments'] {
-  if (Platform.OS !== 'ios' || !getPremium() || getDiscreetMode()) return undefined;
-  const uri = getGlobalSetting('notif_avatar_uri');
-  if (!uri) return undefined;
-  return [{ identifier: 'notif-avatar', url: uri, type: null }];
-}
-
 export async function scheduleDailyNotification(
   body: string,
   hour: number,
@@ -88,7 +75,6 @@ export async function scheduleDailyNotification(
       content: {
         title: discreet ? '♡' : (foName || 'F/O'),
         body: discreet ? 'a message for you~' : body,
-        attachments: getNotificationAttachments(),
       },
       trigger,
     });
@@ -142,7 +128,6 @@ export async function scheduleAnniversaryNotification(
       content: {
         title: discreet ? '♡' : 'a special day',
         body: discreet ? 'a reminder for you~' : `${title} is today ♡`,
-        attachments: getNotificationAttachments(),
       },
       // YEARLY works on both platforms (CALENDAR is iOS-only) and takes a
       // JS-Date-style 0-based month, unlike the 1-based dateStr.
