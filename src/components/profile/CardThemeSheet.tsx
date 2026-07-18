@@ -1,4 +1,5 @@
 import * as ImagePicker from 'expo-image-picker';
+import { router } from 'expo-router';
 import { useState } from 'react';
 import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, TouchableWithoutFeedback, View } from 'react-native';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
@@ -19,6 +20,8 @@ type Props = {
   onClose: () => void;
   theme: CardTheme;
   onChange: (patch: Partial<CardTheme>) => void;
+  /** browsing the sheet is always free — only applying a color/image is premium */
+  premium: boolean;
 };
 
 async function pickImage(): Promise<string | undefined> {
@@ -31,7 +34,7 @@ async function pickImage(): Promise<string | undefined> {
   return undefined;
 }
 
-export function CardThemeSheet({ visible, onClose, theme, onChange }: Props) {
+export function CardThemeSheet({ visible, onClose, theme, onChange, premium }: Props) {
   const [tab, setTab] = useState<Tab>('card');
 
   const bgColorKey = tab === 'card' ? 'cardBgColor' : 'pageBgColor';
@@ -39,13 +42,25 @@ export function CardThemeSheet({ visible, onClose, theme, onChange }: Props) {
   const currentColor = tab === 'card' ? theme.cardBgColor : theme.pageBgColor;
   const currentImage = tab === 'card' ? theme.cardBgImage : theme.pageBgImage;
 
+  function requirePremium() {
+    onClose();
+    router.push('/paywall?reason=customize-theme' as any);
+  }
+
   async function handlePickImage() {
+    if (!premium) { requirePremium(); return; }
     const uri = await pickImage();
     if (uri) onChange({ [bgImageKey]: uri, [bgColorKey]: '' } as Partial<CardTheme>);
   }
 
   function handlePickColor(c: string) {
+    if (!premium) { requirePremium(); return; }
     onChange({ [bgColorKey]: c, [bgImageKey]: '' } as Partial<CardTheme>);
+  }
+
+  function handlePickTextColor(c: string) {
+    if (!premium) { requirePremium(); return; }
+    onChange({ textColor: c });
   }
 
   function handleReset() {
@@ -93,7 +108,7 @@ export function CardThemeSheet({ visible, onClose, theme, onChange }: Props) {
                   {TEXT_COLORS.map((c) => (
                     <Pressable
                       key={c}
-                      onPress={() => onChange({ textColor: c })}
+                      onPress={() => handlePickTextColor(c)}
                       style={[styles.swatch, { backgroundColor: c }, theme.textColor === c && styles.swatchSelected]}
                     >
                       {theme.textColor === c && <View style={styles.swatchCheck}><Text style={styles.swatchCheckText}>✓</Text></View>}

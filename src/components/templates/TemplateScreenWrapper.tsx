@@ -145,6 +145,11 @@ export function TemplateScreenWrapper({ templateKey, shipId, children }: Props) 
 
   function applyTemplate() {
     if (!shipId || selected === templateKey) { setShowPicker(false); return; }
+    if (!premium) {
+      setShowPicker(false);
+      router.push('/paywall?reason=switch-template' as any);
+      return;
+    }
     migrateTemplateData(shipId, templateKey, selected);
     updateShip(shipId, { templateKey: selected });
     router.replace(`/template/${selected}?shipId=${shipId}` as any);
@@ -219,13 +224,7 @@ export function TemplateScreenWrapper({ templateKey, shipId, children }: Props) 
               return (
                 <Pressable
                   style={s.styleChip}
-                  onPress={() => {
-                    if (!premium) {
-                      router.push('/paywall?reason=switch-template' as any);
-                      return;
-                    }
-                    setShowPicker(true);
-                  }}
+                  onPress={() => setShowPicker(true)}
                 >
                   <View style={[s.styleChipDot, { backgroundColor: tpl?.color ?? Colors.sakuraDeep }]} />
                   <Text style={s.styleChipText}>{tpl?.label ?? 'style'}</Text>

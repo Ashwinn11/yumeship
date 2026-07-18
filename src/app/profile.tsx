@@ -44,14 +44,6 @@ export default function MyProfileScreen() {
   const premium = usePremium();
   const [showCustomize, setShowCustomize] = useState(false);
 
-  function handleCustomize() {
-    if (!premium) {
-      router.push('/paywall?reason=customize-theme' as any);
-      return;
-    }
-    setShowCustomize(true);
-  }
-
   function handleThemeChange(patch: Partial<{
     pageBgColor: string; pageBgImage: string; cardBgColor: string; cardBgImage: string; textColor: string;
   }>) {
@@ -86,7 +78,7 @@ export default function MyProfileScreen() {
           <Text style={styles.headerTitle}>my profile</Text>
         </View>
         <View style={styles.headerActions}>
-          <Pressable onPress={handleCustomize} style={styles.headerBtn}>
+          <Pressable onPress={() => setShowCustomize(true)} style={styles.headerBtn}>
             <IconPalette size={13} color={Colors.ink2} />
           </Pressable>
           <Pressable onPress={() => router.push('/onboarding/persona?mode=edit' as any)} style={styles.headerBtn}>
@@ -128,6 +120,7 @@ export default function MyProfileScreen() {
           textColor: me.textColor,
         }}
         onChange={handleThemeChange}
+        premium={premium}
       />
     </View>
   );

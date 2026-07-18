@@ -72,14 +72,6 @@ export default function FoDetailScreen() {
     updateFo(fo!.id, patch);
   }
 
-  function handleCustomize() {
-    if (!premium) {
-      router.push('/paywall?reason=customize-theme' as any);
-      return;
-    }
-    setShowCustomize(true);
-  }
-
   const pageBg = fo.pageBgImage || fo.pageBgColor;
 
   const body = (
@@ -96,7 +88,7 @@ export default function FoDetailScreen() {
           <View style={{ width: 32 }} />
         ) : (
           <View style={styles.headerActions}>
-            <Pressable onPress={handleCustomize} style={styles.headerBtn}>
+            <Pressable onPress={() => setShowCustomize(true)} style={styles.headerBtn}>
               <IconPalette size={13} color={Colors.ink2} />
             </Pressable>
             <Pressable onPress={startEdit} style={styles.headerBtn}>
@@ -160,6 +152,7 @@ export default function FoDetailScreen() {
           textColor: fo.textColor,
         }}
         onChange={handleThemeChange}
+        premium={premium}
       />
     </View>
   );
