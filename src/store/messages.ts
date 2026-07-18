@@ -17,6 +17,7 @@ export type Message = {
   // 'me' / 'them' for single ships (legacy); a member id for polyship group chats.
   sender: string;
   body: string;
+  imageUri: string;
   createdAt: number;
 };
 
@@ -65,15 +66,16 @@ export function getMessages(threadId: string): Message[] {
     threadId: r.thread_id as string,
     sender: r.sender as string,
     body: r.body as string,
+    imageUri: (r.image_uri as string) ?? '',
     createdAt: r.created_at as number,
   }));
 }
 
-export function addMessage(threadId: string, sender: string, body: string): string {
+export function addMessage(threadId: string, sender: string, body: string, imageUri = ''): string {
   const id = newId();
   getDb().runSync(
-    'INSERT INTO messages (id, thread_id, sender, body, created_at) VALUES (?, ?, ?, ?, ?)',
-    id, threadId, sender, body, Date.now(),
+    'INSERT INTO messages (id, thread_id, sender, body, image_uri, created_at) VALUES (?, ?, ?, ?, ?, ?)',
+    id, threadId, sender, body, imageUri, Date.now(),
   );
   notify();
   trackMeaningfulAction();

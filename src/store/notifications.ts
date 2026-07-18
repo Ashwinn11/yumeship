@@ -47,29 +47,51 @@ export function setNotifEnabled(v: boolean) {
   saveGlobalSetting('notif_enabled', String(v));
 }
 
-export async function scheduleDailyNotification(
+export async function scheduleFoNotification(
   body: string,
-  hour: number,
   foName: string,
-  isImmediate = false,
-  minute = 0,
+  arrivalDay: 'now' | 'today' | 'tomorrow' | 'everyday',
+  hour: number,
+  minute: number,
+  staggerIndex = 0,
 ): Promise<string | null> {
   try {
     const { status } = await Notifications.getPermissionsAsync();
     if (status !== 'granted') return null;
 
     const discreet = getDiscreetMode();
-    const trigger: Notifications.NotificationTriggerInput = isImmediate
-      ? {
-          type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-          seconds: 5,
-          repeats: false,
-        }
-      : {
-          type: Notifications.SchedulableTriggerInputTypes.DAILY,
-          hour,
-          minute,
-        };
+    let trigger: Notifications.NotificationTriggerInput;
+
+    if (arrivalDay === 'now') {
+      trigger = {
+        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+        seconds: 5 + (staggerIndex * 5),
+        repeats: false,
+      };
+    } else if (arrivalDay === 'today' || arrivalDay === 'tomorrow') {
+      const date = new Date();
+      if (arrivalDay === 'tomorrow') {
+        date.setDate(date.getDate() + 1);
+      }
+      date.setHours(hour, minute, 0, 0);
+
+      // If the target time today has already passed, schedule it for tomorrow
+      if (date.getTime() <= Date.now()) {
+        date.setDate(date.getDate() + 1);
+      }
+
+      trigger = {
+        type: Notifications.SchedulableTriggerInputTypes.DATE,
+        date: date,
+      };
+    } else {
+      // everyday
+      trigger = {
+        type: Notifications.SchedulableTriggerInputTypes.DAILY,
+        hour,
+        minute,
+      };
+    }
 
     const identifier = await Notifications.scheduleNotificationAsync({
       content: {

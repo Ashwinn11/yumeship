@@ -159,9 +159,9 @@ export default function PaywallScreen() {
         return getOrder(a) - getOrder(b);
       });
       setPackages(sorted);
-      // pre-select monthly — lower commitment, better conversion than lifetime default
-      const monthlyDefault = sorted.find(isMonthlyPkg) ?? sorted[0];
-      setSelected(monthlyDefault);
+      // pre-select lifetime by default
+      const lifetimeDefault = sorted.find(isLifetimePkg) ?? sorted[0];
+      setSelected(lifetimeDefault);
       setLoading(false);
     })();
   }, []);

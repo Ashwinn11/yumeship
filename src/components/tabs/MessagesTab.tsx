@@ -9,12 +9,17 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useIPad } from '@/hooks/use-ipad';
 
 import { CozyModal } from '@/components/ui/CozyModal';
-import { IconSend } from '@/components/ui/Icon';
+import { IconSend, IconPhoto } from '@/components/ui/Icon';
+import { Image } from 'expo-image';
+import * as ImagePicker from 'expo-image-picker';
+import { useFo } from '@/store/fo';
 import { Colors, FontFamily, Radius, Spacing ,sf } from '@/constants/theme';
 import { addMessage, addThread, deleteMessage, useMessages, useThreads } from '@/store/messages';
 import { getMembers, isPoly, memberColor, membersLabel, shipMe, useShip } from '@/store/ships';
 import { MemberPicker } from '@/components/nav/MemberPicker';
 import { StickerEnvelope } from '@/components/deco';
+import { router } from 'expo-router';
+import { usePremium } from '@/store/premium';
 
 export function MessagesTab({ shipId, shipName, sender: externalSender, onSenderChange, onBack }: {
   shipId: string;
@@ -71,6 +76,8 @@ function ThreadView({
   const insets = useSafeAreaInsets();
   const { isIPad } = useIPad();
   const ship = useShip(shipId);
+  const isPremium = usePremium();
+  const fo = useFo(ship?.foId);
   const poly = isPoly(ship);
   const members = getMembers(ship);
   const meId = shipMe(ship)?.id ?? 'me';
@@ -109,6 +116,23 @@ function ThreadView({
     addMessage(threadId, sender, draft.trim());
     setDraft('');
     setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 80);
+  }
+
+  async function pickImage() {
+    if (!isPremium) {
+      router.push({ pathname: '/paywall', params: { reason: 'image-upload' } });
+      return;
+    }
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') return;
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'] as ImagePicker.MediaType[],
+      quality: 0.85,
+    });
+    if (!result.canceled && result.assets?.[0]?.uri) {
+      addMessage(threadId, sender, '', result.assets[0].uri);
+      setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 150);
+    }
   }
 
   return (
@@ -150,39 +174,65 @@ function ThreadView({
           </Pressable>
         )}
 
-        {/* F/O Avatar Circle */}
-        <LinearGradient
-          colors={[gradStart, gradEnd]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={{
-            width: 44,
-            height: 44,
-            borderRadius: 22,
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderWidth: 2,
-            borderColor: '#ffffff',
-            shadowColor: 'rgba(110,58,90,0.18)',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 1,
-            shadowRadius: 4,
-            elevation: 2,
-          }}
-        >
-          <Text style={{ color: '#fff', fontFamily: FontFamily.displayItalic, fontSize: sf(21) }}>
-            {(headerName || '♡').charAt(0).toUpperCase()}
-          </Text>
-        </LinearGradient>
+        {/* Avatar Circle */}
+        {poly && ship?.coverUri ? (
+          <Image
+            source={{ uri: ship.coverUri }}
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 22,
+              borderWidth: 2,
+              borderColor: '#ffffff',
+            }}
+          />
+        ) : !poly && fo?.photoUri ? (
+          <Image
+            source={{ uri: fo.photoUri }}
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 22,
+              borderWidth: 2,
+              borderColor: '#ffffff',
+            }}
+          />
+        ) : (
+          <LinearGradient
+            colors={[gradStart, gradEnd]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 22,
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderWidth: 2,
+              borderColor: '#ffffff',
+              shadowColor: 'rgba(110,58,90,0.18)',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 1,
+              shadowRadius: 4,
+              elevation: 2,
+            }}
+          >
+            <Text style={{ color: '#fff', fontFamily: FontFamily.displayItalic, fontSize: sf(21) }}>
+              {(headerName || '♡').charAt(0).toUpperCase()}
+            </Text>
+          </LinearGradient>
+        )}
 
         {/* Name + subtitle */}
         <View style={{ flex: 1 }}>
           <Text style={{ fontFamily: FontFamily.uiMedium, fontSize: sf(19), color: Colors.ink, lineHeight: 21 }}>
             {headerName}
           </Text>
-          <Text style={{ fontFamily: FontFamily.ui, fontSize: sf(13), color: Colors.sakuraInk, marginTop: 1 }}>
-            {headerSub || 'imagined ♡'}
-          </Text>
+          {poly && (
+            <Text style={{ fontFamily: FontFamily.ui, fontSize: sf(13), color: Colors.sakuraInk, marginTop: 1 }}>
+              {headerSub || 'imagined ♡'}
+            </Text>
+          )}
         </View>
 
         {/* Segmented sender control — single ships only (poly uses "speaking as" below) */}
@@ -278,6 +328,17 @@ function ThreadView({
               const list: React.ReactNode[] = [];
               let lastTime = 0;
 
+              function formatMsgTime(timestamp: number) {
+                const d = new Date(timestamp);
+                let hours = d.getHours();
+                const minutes = d.getMinutes();
+                const ampm = hours >= 12 ? 'pm' : 'am';
+                hours = hours % 12;
+                hours = hours ? hours : 12;
+                const minStr = minutes < 10 ? '0' + minutes : minutes;
+                return `${hours}:${minStr} ${ampm}`;
+              }
+
               messages.forEach((m, idx) => {
                 const showTime = idx === 0 || (m.createdAt - lastTime > 15 * 60 * 1000);
                 if (showTime) {
@@ -297,19 +358,77 @@ function ThreadView({
                 const sIdx = members.findIndex((x) => x.id === m.sender);
                 const sColor = sIdx >= 0 ? memberColor(sIdx) : Colors.sakuraDeep;
                 const sLabel = poly && !mine ? (members[sIdx]?.name || foName) : '';
+
+                const showAvatar = !mine;
+                let avatarNode: React.ReactNode = null;
+                if (showAvatar) {
+                  if (poly) {
+                    const member = members[sIdx];
+                    if (member?.photoUri) {
+                      avatarNode = (
+                        <Image
+                          source={{ uri: member.photoUri }}
+                          style={s.chatAvatar}
+                        />
+                      );
+                    } else {
+                      const initial = (sLabel || foName).charAt(0).toUpperCase();
+                      avatarNode = (
+                        <View style={[s.chatAvatarFallback, { backgroundColor: sColor }]}>
+                          <Text style={s.chatAvatarFallbackText}>{initial}</Text>
+                        </View>
+                      );
+                    }
+                  } else {
+                    if (fo?.photoUri) {
+                      avatarNode = (
+                        <Image
+                          source={{ uri: fo.photoUri }}
+                          style={s.chatAvatar}
+                        />
+                      );
+                    } else {
+                      const initial = (foName || '♡').charAt(0).toUpperCase();
+                      avatarNode = (
+                        <View style={[s.chatAvatarFallback, { backgroundColor: gradEnd }]}>
+                          <Text style={s.chatAvatarFallbackText}>{initial}</Text>
+                        </View>
+                      );
+                    }
+                  }
+                }
+
                 list.push(
                   <Pressable
                     key={m.id}
                     style={[s.bubbleRow, mine ? s.bubbleRowMe : s.bubbleRowThem]}
                     onLongPress={() => setMsgToDelete(m.id)}
                   >
+                    {!mine && avatarNode}
                     <View style={{ maxWidth: '78%', alignItems: mine ? 'flex-end' : 'flex-start' }}>
                       {sLabel ? <Text style={s.senderLabel}>{sLabel}</Text> : null}
                       <View style={[s.bubble, { maxWidth: '100%' }, mine ? s.bubbleMe : (poly ? { backgroundColor: sColor, borderBottomLeftRadius: 4 } : s.bubbleThem)]}>
-                        <Text style={[s.bubbleText, (mine || poly) ? s.bubbleTextMe : s.bubbleTextThem]}>
-                          {m.body}
-                        </Text>
+                        {m.imageUri ? (
+                          <Image
+                            source={{ uri: m.imageUri }}
+                            style={{
+                              width: 200,
+                              height: 150,
+                              borderRadius: 12,
+                              marginBottom: m.body ? 6 : 0,
+                            }}
+                            contentFit="cover"
+                          />
+                        ) : null}
+                        {m.body ? (
+                          <Text style={[s.bubbleText, (mine || poly) ? s.bubbleTextMe : s.bubbleTextThem]}>
+                            {m.body}
+                          </Text>
+                        ) : null}
                       </View>
+                      <Text style={s.bubbleTimeOutside}>
+                        {formatMsgTime(m.createdAt)}
+                      </Text>
                     </View>
                   </Pressable>
                 );
@@ -328,6 +447,9 @@ function ThreadView({
       )}
 
       <View style={[s.inputRow, { paddingBottom: keyboardOpen ? Spacing.s3 : Math.max(insets.bottom, Spacing.s3) }]}>
+        <Pressable style={s.imagePickerBtn} onPress={pickImage}>
+          <IconPhoto size={18} color={Colors.sakuraDeep} />
+        </Pressable>
         <TextInput
           ref={inputRef}
           value={draft}
@@ -432,5 +554,48 @@ const s = StyleSheet.create({
     fontFamily: FontFamily.marker,
     letterSpacing: 0.6,
     marginVertical: 8,
+  },
+  imagePickerBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: Radius.pill,
+    backgroundColor: Colors.vellum,
+    borderWidth: 1.2,
+    borderColor: Colors.line,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 0,
+  },
+  chatAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    marginRight: 8,
+    alignSelf: 'flex-end',
+    borderWidth: 1.2,
+    borderColor: Colors.line,
+  },
+  chatAvatarFallback: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    marginRight: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'flex-end',
+    borderWidth: 1.2,
+    borderColor: Colors.line,
+  },
+  chatAvatarFallbackText: {
+    fontFamily: FontFamily.uiMedium,
+    fontSize: sf(12),
+    color: '#fff',
+  },
+  bubbleTimeOutside: {
+    fontFamily: FontFamily.ui,
+    fontSize: sf(9),
+    color: Colors.ink3,
+    marginTop: 3,
+    marginHorizontal: 4,
   },
 });

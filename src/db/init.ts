@@ -33,6 +33,8 @@ export function initDb() {
   try { db.execSync(`ALTER TABLE fo_messages ADD COLUMN scheduled_minute INTEGER NOT NULL DEFAULT 0`); } catch (_) {}
   try { db.execSync(`ALTER TABLE dates ADD COLUMN subtitle TEXT NOT NULL DEFAULT ''`); } catch (_) {}
   try { db.execSync(`ALTER TABLE dates ADD COLUMN notif_id TEXT NOT NULL DEFAULT ''`); } catch (_) {}
+  try { db.execSync(`ALTER TABLE messages ADD COLUMN image_uri TEXT NOT NULL DEFAULT ''`); } catch (_) {}
+  try { db.execSync(`ALTER TABLE fo_messages ADD COLUMN arrival_day TEXT NOT NULL DEFAULT 'everyday'`); } catch (_) {}
   db.execSync(`
     CREATE TABLE IF NOT EXISTS ships (
       id TEXT PRIMARY KEY,
@@ -112,6 +114,7 @@ export function initDb() {
       thread_id TEXT NOT NULL,
       sender TEXT NOT NULL,
       body TEXT NOT NULL,
+      image_uri TEXT NOT NULL DEFAULT '',
       created_at INTEGER NOT NULL
     );
     CREATE TABLE IF NOT EXISTS dates (
@@ -162,6 +165,7 @@ export function initDb() {
       notif_id TEXT NOT NULL DEFAULT '',
       scheduled_hour INTEGER NOT NULL DEFAULT 9,
       scheduled_minute INTEGER NOT NULL DEFAULT 0,
+      arrival_day TEXT NOT NULL DEFAULT 'everyday',
       active INTEGER NOT NULL DEFAULT 1,
       current_index INTEGER NOT NULL DEFAULT 0,
       created_at INTEGER NOT NULL

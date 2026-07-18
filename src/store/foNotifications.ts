@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getDb, newId } from '@/db/client';
-import { cancelNotification, scheduleDailyNotification } from './notifications';
+import { cancelNotification, getScheduledNotifications, scheduleFoNotification } from './notifications';
 
 export type FoMessage = {
   id: string;
@@ -9,6 +9,7 @@ export type FoMessage = {
   senderName: string;
   scheduledHour: number;
   scheduledMinute: number;
+  arrivalDay: 'now' | 'today' | 'tomorrow' | 'everyday';
   active: boolean;
   notifId: string;
   currentIndex: number;
@@ -26,6 +27,7 @@ function rowToMsg(r: Record<string, unknown>): FoMessage {
     senderName: (r.sender_name as string) ?? '',
     scheduledHour: r.scheduled_hour as number,
     scheduledMinute: (r.scheduled_minute as number) ?? 0,
+    arrivalDay: (r.arrival_day as FoMessage['arrivalDay']) ?? 'everyday',
     active: !!(r.active as number),
     notifId: (r.notif_id as string) ?? '',
     currentIndex: (r.current_index as number) ?? 0,
@@ -46,11 +48,13 @@ export async function addFoMessage(
   scheduledHour = 9,
   senderName = '',
   scheduledMinute = 0,
+  arrivalDay: FoMessage['arrivalDay'] = 'everyday',
+  active = 1,
 ): Promise<string> {
   const id = newId();
   getDb().runSync(
-    'INSERT INTO fo_messages (id, ship_id, body, sender_name, scheduled_hour, scheduled_minute, active, notif_id, current_index, created_at) VALUES (?, ?, ?, ?, ?, ?, 1, ?, 0, ?)',
-    id, shipId, body, senderName, scheduledHour, scheduledMinute, '', Date.now(),
+    'INSERT INTO fo_messages (id, ship_id, body, sender_name, scheduled_hour, scheduled_minute, arrival_day, active, notif_id, current_index, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)',
+    id, shipId, body, senderName, scheduledHour, scheduledMinute, arrivalDay, active, '', Date.now(),
   );
 
   let triggerBody = body;
@@ -65,16 +69,27 @@ export async function addFoMessage(
     }
   } catch (_) {}
 
-  const isImmediate = scheduledHour === -2;
-  const targetHour = scheduledHour === -1
-    ? [6, 8, 10, 12, 14, 16, 18, 20, 22][Math.floor(Math.random() * 9)]
-    : isImmediate ? 0 : scheduledHour;
-  const targetMinute = (scheduledHour === -1 || isImmediate) ? 0 : scheduledMinute;
+  // Calculate stagger index for "now" type
+  let staggerIndex = 0;
+  if (arrivalDay === 'now' && active === 1) {
+    const activeImmediates = getDb().getAllSync(
+      'SELECT id FROM fo_messages WHERE active = 1 AND arrival_day = "now" AND id != ?',
+      id,
+    );
+    staggerIndex = activeImmediates.length;
+  }
 
-  const notifId = await scheduleDailyNotification(triggerBody, targetHour, senderName, isImmediate, targetMinute);
-  if (notifId) {
-    const nextIndex = parsedLength > 1 ? 1 : 0;
-    getDb().runSync('UPDATE fo_messages SET notif_id = ?, current_index = ? WHERE id = ?', notifId, nextIndex, id);
+  let notifId = '';
+  if (active === 1) {
+    const targetHour = scheduledHour === -2 ? 0 : scheduledHour;
+    const targetMinute = scheduledHour === -2 ? 0 : scheduledMinute;
+
+    const nid = await scheduleFoNotification(triggerBody, senderName, arrivalDay, targetHour, targetMinute, staggerIndex);
+    if (nid) {
+      notifId = nid;
+      const nextIndex = parsedLength > 1 ? 1 : 0;
+      getDb().runSync('UPDATE fo_messages SET notif_id = ?, current_index = ? WHERE id = ?', notifId, nextIndex, id);
+    }
   }
 
   notify();
@@ -102,13 +117,20 @@ export async function toggleFoMessage(id: string, active: boolean, foName = ''):
       }
     } catch (_) {}
 
-    const isImmediate = msg.scheduledHour === -2;
-    const targetHour = msg.scheduledHour === -1
-      ? [6, 8, 10, 12, 14, 16, 18, 20, 22][Math.floor(Math.random() * 9)]
-      : isImmediate ? 0 : msg.scheduledHour;
-    const targetMinute = (msg.scheduledHour === -1 || isImmediate) ? 0 : msg.scheduledMinute;
+    // Calculate stagger index
+    let staggerIndex = 0;
+    if (msg.arrivalDay === 'now') {
+      const activeImmediates = getDb().getAllSync(
+        'SELECT id FROM fo_messages WHERE active = 1 AND arrival_day = "now" AND id != ?',
+        id,
+      );
+      staggerIndex = activeImmediates.length;
+    }
 
-    const newId = await scheduleDailyNotification(triggerBody, targetHour, msg.senderName || foName, isImmediate, targetMinute);
+    const targetHour = msg.scheduledHour === -2 ? 0 : msg.scheduledHour;
+    const targetMinute = msg.scheduledHour === -2 ? 0 : msg.scheduledMinute;
+
+    const newId = await scheduleFoNotification(triggerBody, msg.senderName || foName, msg.arrivalDay, targetHour, targetMinute, staggerIndex);
     const nextIndex = parsedLength > 1 ? (msg.currentIndex + 1) % parsedLength : 0;
     getDb().runSync(
       'UPDATE fo_messages SET active = 1, notif_id = ?, current_index = ? WHERE id = ?',
@@ -126,6 +148,7 @@ export async function updateFoMessage(
   senderName: string,
   foName = '',
   scheduledMinute = 0,
+  arrivalDay: FoMessage['arrivalDay'] = 'everyday',
 ): Promise<void> {
   const row = getDb().getFirstSync('SELECT * FROM fo_messages WHERE id = ?', id) as Record<string, unknown> | null;
   if (!row) return;
@@ -150,19 +173,26 @@ export async function updateFoMessage(
       }
     } catch (_) {}
 
-    const isImmediate = scheduledHour === -2;
-    const targetHour = scheduledHour === -1
-      ? [6, 8, 10, 12, 14, 16, 18, 20, 22][Math.floor(Math.random() * 9)]
-      : isImmediate ? 0 : scheduledHour;
-    const targetMinute = (scheduledHour === -1 || isImmediate) ? 0 : scheduledMinute;
+    // Calculate stagger index
+    let staggerIndex = 0;
+    if (arrivalDay === 'now') {
+      const activeImmediates = getDb().getAllSync(
+        'SELECT id FROM fo_messages WHERE active = 1 AND arrival_day = "now" AND id != ?',
+        id,
+      );
+      staggerIndex = activeImmediates.length;
+    }
 
-    notifId = await scheduleDailyNotification(triggerBody, targetHour, senderName, isImmediate, targetMinute) ?? '';
+    const targetHour = scheduledHour === -2 ? 0 : scheduledHour;
+    const targetMinute = scheduledHour === -2 ? 0 : scheduledMinute;
+
+    notifId = await scheduleFoNotification(triggerBody, senderName, arrivalDay, targetHour, targetMinute, staggerIndex) ?? '';
     newIndex = parsedLength > 1 ? 1 : 0;
   }
 
   getDb().runSync(
-    'UPDATE fo_messages SET body = ?, sender_name = ?, scheduled_hour = ?, scheduled_minute = ?, notif_id = ?, current_index = ? WHERE id = ?',
-    body, senderName, scheduledHour, scheduledMinute, notifId, newIndex, id,
+    'UPDATE fo_messages SET body = ?, sender_name = ?, scheduled_hour = ?, scheduled_minute = ?, arrival_day = ?, notif_id = ?, current_index = ? WHERE id = ?',
+    body, senderName, scheduledHour, scheduledMinute, arrivalDay, notifId, newIndex, id,
   );
 
   notify();
@@ -173,6 +203,65 @@ export async function deleteFoMessage(id: string): Promise<void> {
   if (row?.notif_id) await cancelNotification(row.notif_id);
   getDb().runSync('DELETE FROM fo_messages WHERE id = ?', id);
   notify();
+}
+
+export async function syncFoMessagesDb(): Promise<void> {
+  try {
+    // 1. Variations array split migration
+    const allMsgs = getDb().getAllSync('SELECT * FROM fo_messages') as Record<string, unknown>[];
+    let migrated = false;
+
+    for (const row of allMsgs) {
+      const msg = rowToMsg(row);
+      if (msg.body.startsWith('[')) {
+        try {
+          const parsed = JSON.parse(msg.body);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            if (msg.notifId) {
+              await cancelNotification(msg.notifId);
+            }
+            getDb().runSync('DELETE FROM fo_messages WHERE id = ?', msg.id);
+
+            for (const item of parsed) {
+              await addFoMessage(
+                msg.shipId,
+                String(item),
+                msg.scheduledHour,
+                msg.senderName,
+                msg.scheduledMinute,
+                msg.arrivalDay,
+                row.active as number,
+              );
+            }
+            migrated = true;
+          }
+        } catch (_) {}
+      }
+    }
+
+    // 2. Expired alarm sync
+    const scheduled = await getScheduledNotifications();
+    const scheduledIds = new Set(scheduled.map((s) => s.identifier));
+
+    const activeMsgs = getDb().getAllSync(
+      'SELECT id, notif_id, arrival_day FROM fo_messages WHERE active = 1 AND notif_id != ""'
+    ) as { id: string; notif_id: string; arrival_day: string }[];
+
+    let changed = false;
+    for (const msg of activeMsgs) {
+      const isOneShot = msg.arrival_day === 'now' || msg.arrival_day === 'today' || msg.arrival_day === 'tomorrow';
+      if (isOneShot && !scheduledIds.has(msg.notif_id)) {
+        getDb().runSync('UPDATE fo_messages SET active = 0, notif_id = "" WHERE id = ?', msg.id);
+        changed = true;
+      }
+    }
+
+    if (changed || migrated) {
+      notify();
+    }
+  } catch (error) {
+    console.error('Failed to sync F/O messages database:', error);
+  }
 }
 
 export function useFoMessages(shipId: string): FoMessage[] {
