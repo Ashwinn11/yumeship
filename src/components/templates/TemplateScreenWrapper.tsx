@@ -419,7 +419,15 @@ export function TemplateScreenWrapper({ templateKey, shipId, children }: Props) 
             <View style={s.sheetActions}>
               <Pressable
                 style={[s.applyBtn, selected === templateKey && s.applyBtnDisabled]}
-                onPress={() => selected !== templateKey ? setConfirming(true) : setShowPicker(false)}
+                onPress={() => {
+                  if (selected === templateKey) { setShowPicker(false); return; }
+                  if (!premium) {
+                    setShowPicker(false);
+                    router.push('/paywall?reason=switch-template' as any);
+                    return;
+                  }
+                  setConfirming(true);
+                }}
               >
                 <Text style={s.applyBtnText}>
                   {selected === templateKey ? 'no changes' : `switch to ${pickerTemplates.find(t => t.key === selected)?.label}`}
