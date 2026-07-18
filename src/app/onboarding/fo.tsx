@@ -88,11 +88,10 @@ export default function OnbFO() {
           gradEnd: pal.end,
         });
       } else {
+        // F/O identity (name, source, relation) is edited on the F/O profile now —
+        // this screen only touches ship-level fields.
         updateShip(shipId, {
-          name: foName.trim(),
           shipName: shipName.trim(),
-          fandom: fandom.trim(),
-          relType,
           coverUri,
           gradStart: pal.start,
           gradEnd: pal.end,
@@ -139,7 +138,7 @@ export default function OnbFO() {
         {!isNew && !isEdit && <Text style={styles.eyebrow}>step three · them</Text>}
         <Text style={[styles.heading, (isNew || isEdit) && styles.headingNew]}>
           {isEdit
-            ? <>Edit their details.</>
+            ? <>Edit this ship.</>
             : kind === 'poly'
               ? <>Your polycule,{"\n"}all in one place.</>
               : <>Meet them,{"\n"}your forever-someone.</>}
@@ -225,7 +224,7 @@ export default function OnbFO() {
             </View>
           )}
 
-          {kind === 'single' && (<>
+          {kind === 'single' && !isEdit && (<>
           {/* Avatar Preview Tile & inputs */}
           <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
             <LinearGradient
@@ -364,6 +363,15 @@ export default function OnbFO() {
             </View>
             <Text style={styles.imageHint}>or tap + to use a photo · crop it your way</Text>
           </View>
+
+          {isEdit && kind === 'single' && !!editingShip?.foId && (
+            <Pressable
+              onPress={() => router.push(`/fo/${editingShip.foId}` as any)}
+              style={styles.foLink}
+            >
+              <Text style={styles.foLinkText}>their name, source & more live on their profile · edit it ↗</Text>
+            </Pressable>
+          )}
         </View>
 
         {/* Thought cloud at bottom */}
@@ -450,6 +458,8 @@ const styles = StyleSheet.create({
   imageSwatchThumb: { width: 24, height: 24, borderRadius: Radius.pill },
   imageSwatchPlus: { fontSize: sf(13), color: Colors.ink3, fontFamily: FontFamily.ui, lineHeight: 16 },
   imageHint: { fontFamily: FontFamily.ui, fontSize: sf(9), color: Colors.ink3, marginTop: 6 },
+  foLink: { marginTop: 14, paddingTop: 12, borderTopWidth: 1.2, borderTopColor: Colors.line },
+  foLinkText: { fontFamily: FontFamily.ui, fontSize: sf(11), color: Colors.sakuraDeep, textDecorationLine: 'underline' },
   actions: { paddingHorizontal: Spacing.s6, paddingBottom: Spacing.s3, gap: Spacing.s2 },
   skipPressable: { alignItems: 'center' },
   skip: { fontFamily: FontFamily.ui, fontSize: FontSize.meta, color: Colors.ink3, textDecorationLine: 'underline' },

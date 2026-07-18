@@ -122,6 +122,7 @@ const REASON_COPY: Record<string, { title: string; sub: string }> = {
   'love-letter':{ title: 'write them something\nbeautiful ♡',        sub: 'love letters, yours to keep forever.' },
   'storyline':  { title: 'every chapter of\nyour story ♡',           sub: 'your whole timeline, always with you.' },
   'polyship':   { title: 'love more than one,\nall at once ♡',        sub: 'everyone you love, side by side.' },
+  'add-fo':     { title: 'room in your heart\nfor more than one ♡',   sub: 'keep a profile for every F/O you love.' },
 };
 
 export default function PaywallScreen() {

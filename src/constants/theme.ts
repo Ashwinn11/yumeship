@@ -74,10 +74,12 @@ export const RelationshipColors = {
   familial: Peach.peachDeep,
 } as const;
 
+// Single shared vocabulary for "sharing status" everywhere it appears —
+// F/O profile, ship badge, and every template's own sharing field.
 export const SharingColors = {
-  ng: Ember.ember,
-  welcome: Sage.sageDeep,
-  mirror: Lavender.lavenderDeep,
+  no: Ember.ember,
+  yes: Sage.sageDeep,
+  selective: Lavender.lavenderDeep,
 } as const;
 
 // ─── Flat color map (for indexed lookups) ────────────────────────────────────

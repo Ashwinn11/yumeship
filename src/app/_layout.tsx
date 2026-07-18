@@ -86,6 +86,8 @@ export default function RootLayout() {
             <Stack.Screen name="onboarding" />
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="ship/[id]" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="profile" options={{ animation: 'slide_from_right' }} />
+            <Stack.Screen name="fo" options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="messages" options={{ animation: 'slide_from_right' }} />
             <Stack.Screen name="template" options={{ animation: 'slide_from_right', gestureEnabled: false }} />
             <Stack.Screen name="paywall" options={{ animation: 'slide_from_bottom', presentation: 'modal' }} />

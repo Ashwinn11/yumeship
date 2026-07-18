@@ -1,4 +1,4 @@
-import { getDb } from './client';
+import { getDb, newId } from './client';
 
 export function initDb() {
   const db = getDb();
@@ -9,6 +9,18 @@ export function initDb() {
   try { db.execSync(`ALTER TABLE ships ADD COLUMN cover_uri TEXT NOT NULL DEFAULT ''`); } catch (_) {}
   try { db.execSync(`ALTER TABLE ships ADD COLUMN kind TEXT NOT NULL DEFAULT 'single'`); } catch (_) {}
   try { db.execSync(`ALTER TABLE ships ADD COLUMN members TEXT NOT NULL DEFAULT '[]'`); } catch (_) {}
+  try { db.execSync(`ALTER TABLE ships ADD COLUMN fo_id TEXT NOT NULL DEFAULT ''`); } catch (_) {}
+  try { db.execSync(`ALTER TABLE fo ADD COLUMN page_bg_color TEXT NOT NULL DEFAULT ''`); } catch (_) {}
+  try { db.execSync(`ALTER TABLE fo ADD COLUMN page_bg_image TEXT NOT NULL DEFAULT ''`); } catch (_) {}
+  try { db.execSync(`ALTER TABLE fo ADD COLUMN card_bg_color TEXT NOT NULL DEFAULT ''`); } catch (_) {}
+  try { db.execSync(`ALTER TABLE fo ADD COLUMN card_bg_image TEXT NOT NULL DEFAULT ''`); } catch (_) {}
+  try { db.execSync(`ALTER TABLE fo ADD COLUMN text_color TEXT NOT NULL DEFAULT ''`); } catch (_) {}
+  try { db.execSync(`ALTER TABLE fo ADD COLUMN song TEXT NOT NULL DEFAULT ''`); } catch (_) {}
+  try { db.execSync(`ALTER TABLE fo ADD COLUMN song_link TEXT NOT NULL DEFAULT ''`); } catch (_) {}
+  try { db.execSync(`ALTER TABLE fo ADD COLUMN gallery TEXT NOT NULL DEFAULT '[]'`); } catch (_) {}
+  try { db.execSync(`ALTER TABLE fo ADD COLUMN is_public INTEGER NOT NULL DEFAULT 0`); } catch (_) {}
+  try { db.execSync(`ALTER TABLE fo ADD COLUMN avatar_synced_uri TEXT NOT NULL DEFAULT ''`); } catch (_) {}
+  try { db.execSync(`ALTER TABLE fo ADD COLUMN gallery_sync_map TEXT NOT NULL DEFAULT '{}'`); } catch (_) {}
   try { db.execSync(`ALTER TABLE fo_messages ADD COLUMN notif_id TEXT NOT NULL DEFAULT ''`); } catch (_) {}
   try { db.execSync(`ALTER TABLE fo_messages ADD COLUMN sender_name TEXT NOT NULL DEFAULT ''`); } catch (_) {}
   try { db.execSync(`ALTER TABLE fo_messages ADD COLUMN current_index INTEGER NOT NULL DEFAULT 0`); } catch (_) {}
@@ -36,6 +48,31 @@ export function initDb() {
       template_key TEXT NOT NULL DEFAULT 'get-to-know',
       kind TEXT NOT NULL DEFAULT 'single',
       members TEXT NOT NULL DEFAULT '[]',
+      fo_id TEXT NOT NULL DEFAULT '',
+      created_at INTEGER NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS fo (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL DEFAULT '',
+      pronouns TEXT NOT NULL DEFAULT '',
+      fandom TEXT NOT NULL DEFAULT '',
+      rel_status TEXT NOT NULL DEFAULT 'romantic',
+      share_status TEXT NOT NULL DEFAULT 'selective',
+      bio TEXT NOT NULL DEFAULT '',
+      height TEXT NOT NULL DEFAULT '',
+      weight TEXT NOT NULL DEFAULT '',
+      photo_uri TEXT NOT NULL DEFAULT '',
+      page_bg_color TEXT NOT NULL DEFAULT '',
+      page_bg_image TEXT NOT NULL DEFAULT '',
+      card_bg_color TEXT NOT NULL DEFAULT '',
+      card_bg_image TEXT NOT NULL DEFAULT '',
+      text_color TEXT NOT NULL DEFAULT '',
+      song TEXT NOT NULL DEFAULT '',
+      song_link TEXT NOT NULL DEFAULT '',
+      gallery TEXT NOT NULL DEFAULT '[]',
+      is_public INTEGER NOT NULL DEFAULT 0,
+      avatar_synced_uri TEXT NOT NULL DEFAULT '',
+      gallery_sync_map TEXT NOT NULL DEFAULT '{}',
       created_at INTEGER NOT NULL
     );
     CREATE TABLE IF NOT EXISTS headcanons (
@@ -154,4 +191,36 @@ export function initDb() {
       value TEXT NOT NULL
     );
   `);
+  migrateShareVocabulary();
+  backfillFos();
+}
+
+// One-time rename: sharing status used to be stored as ng/welcome/mirror
+// (matching the old kanji badge). Every surface now shares one vocabulary —
+// yes/no/selective — so old rows get renamed in place. Idempotent: once
+// renamed, these WHERE clauses match nothing on future runs.
+function migrateShareVocabulary() {
+  const db = getDb();
+  const rename: [string, string][] = [['ng', 'no'], ['welcome', 'yes'], ['mirror', 'selective']];
+  for (const [from, to] of rename) {
+    db.runSync(`UPDATE ships SET share_type = ? WHERE share_type = ?`, to, from);
+    db.runSync(`UPDATE fo SET share_status = ? WHERE share_status = ?`, to, from);
+  }
+}
+
+// One-time link: single ships created before the fo table existed get an fo row
+// seeded from their flattened identity fields. fo_id = '' guard keeps it idempotent.
+function backfillFos() {
+  const db = getDb();
+  const orphans = db.getAllSync(
+    `SELECT id, name, fandom, rel_type, share_type, about_text FROM ships WHERE kind = 'single' AND fo_id = ''`
+  ) as { id: string; name: string; fandom: string; rel_type: string; share_type: string; about_text: string }[];
+  for (const s of orphans) {
+    const foId = newId();
+    db.runSync(
+      `INSERT INTO fo (id, name, fandom, rel_status, share_status, bio, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      foId, s.name ?? '', s.fandom ?? '', s.rel_type || 'romantic', s.share_type || 'selective', s.about_text ?? '', Date.now(),
+    );
+    db.runSync(`UPDATE ships SET fo_id = ? WHERE id = ?`, foId, s.id);
+  }
 }

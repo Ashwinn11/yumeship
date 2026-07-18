@@ -329,6 +329,54 @@ export function StickerSakuraFlower({ size = 40, style }: StickerProps) {
 
 
 
+// Cassette tape — for "theme song" moments
+export function StickerCassette({ size = 48, style }: StickerProps) {
+  const w = size * 1.4;
+  const h = size;
+  return (
+    <StickerShadow w={w} h={h} style={style}>
+      <Svg width={w} height={h} viewBox="0 0 70 50">
+        <Rect x="1" y="1" width="68" height="48" rx="7" fill="white" stroke="white" strokeWidth="3" />
+        <Rect x="2.5" y="2.5" width="65" height="45" rx="6" fill="#e9c7a8" stroke="#a8765c" strokeWidth="1" />
+        <Rect x="8" y="8" width="54" height="21" rx="3" fill="#fdf6ee" stroke="#a8765c" strokeWidth="0.8" />
+        <G>
+          <Circle cx="21" cy="18.5" r="7.4" fill="none" stroke="#a8765c" strokeWidth="1" />
+          <Circle cx="21" cy="18.5" r="3.2" fill="#f3b6c4" stroke="#a8765c" strokeWidth="0.7" />
+          {[0, 60, 120, 180, 240, 300].map((r) => (
+            <Path
+              key={r}
+              d="M21 15.3 V 12.3"
+              stroke="#a8765c"
+              strokeWidth="0.7"
+              strokeLinecap="round"
+              transform={`rotate(${r} 21 18.5)`}
+            />
+          ))}
+          <Circle cx="49" cy="18.5" r="7.4" fill="none" stroke="#a8765c" strokeWidth="1" />
+          <Circle cx="49" cy="18.5" r="3.2" fill="#f3b6c4" stroke="#a8765c" strokeWidth="0.7" />
+          {[0, 60, 120, 180, 240, 300].map((r) => (
+            <Path
+              key={r}
+              d="M49 15.3 V 12.3"
+              stroke="#a8765c"
+              strokeWidth="0.7"
+              strokeLinecap="round"
+              transform={`rotate(${r} 49 18.5)`}
+            />
+          ))}
+          <Path d="M27 18.5 H 43" stroke="#a8765c" strokeWidth="0.7" strokeDasharray="1.5,1.8" />
+        </G>
+        <Rect x="14" y="34" width="42" height="7.5" rx="2" fill="#f8ddb0" stroke="#a8765c" strokeWidth="0.7" />
+        <Path d="M18 37.7 H 40 M18 39.7 H 34" stroke="#a8765c" strokeWidth="0.7" strokeDasharray="1.4,1.6" />
+        <Circle cx="8.5" cy="41.5" r="1.3" fill="none" stroke="#a8765c" strokeWidth="0.8" />
+        <Circle cx="61.5" cy="41.5" r="1.3" fill="none" stroke="#a8765c" strokeWidth="0.8" />
+        <Circle cx="8.5" cy="8.5" r="1.3" fill="none" stroke="#a8765c" strokeWidth="0.8" />
+        <Circle cx="61.5" cy="8.5" r="1.3" fill="none" stroke="#a8765c" strokeWidth="0.8" />
+      </Svg>
+    </StickerShadow>
+  );
+}
+
 // Sticker Sparkle
 export function StickerSparkle({ size = 16, color = '#d77a8d', style }: StickerProps) {
   return (

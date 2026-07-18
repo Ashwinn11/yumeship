@@ -2,11 +2,12 @@ import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Sparkle } from '@/components/deco/Sparkle';
 import { StickerSakuraBranch } from '@/components/deco';
+import { GalleryPicker } from '@/components/profile/GalleryPicker';
 import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
 import { Field } from '@/components/ui/Field';
@@ -18,6 +19,7 @@ import { CalloutBubble } from '@/components/ui';
 import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing ,sf } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
 import { getGlobalSetting, saveGlobalSetting, setOnbField } from '@/store/onboarding';
+import { parseGallery, type GalleryPhoto } from '@/store/fo';
 
 const PRONOUNS = ['she/her', 'he/him', 'they/them', '+'];
 const COLOR_OPTIONS = [
@@ -42,8 +44,20 @@ export default function OnbPersona() {
     return i >= 0 ? i : 0;
   });
   const [avatar, setAvatar] = useState(() => getGlobalSetting('user_avatar'));
+  const [bio, setBio] = useState(() => getGlobalSetting('user_bio'));
+  const [height, setHeight] = useState(() => getGlobalSetting('user_height'));
+  const [weight, setWeight] = useState(() => getGlobalSetting('user_weight'));
+  const [song, setSong] = useState(() => getGlobalSetting('user_song'));
+  const [songLink, setSongLink] = useState(() => getGlobalSetting('user_song_link'));
+  const [gallery, setGallery] = useState<GalleryPhoto[]>(() => parseGallery(getGlobalSetting('user_gallery')));
 
   const handleNameChange = (v: string) => { setName(v); setOnbField('userName', v); };
+  const handleBioChange = (v: string) => { setBio(v); saveGlobalSetting('user_bio', v); };
+  const handleHeightChange = (v: string) => { setHeight(v); saveGlobalSetting('user_height', v); };
+  const handleWeightChange = (v: string) => { setWeight(v); saveGlobalSetting('user_weight', v); };
+  const handleSongChange = (v: string) => { setSong(v); saveGlobalSetting('user_song', v); };
+  const handleSongLinkChange = (v: string) => { setSongLink(v); saveGlobalSetting('user_song_link', v); };
+  const handleGalleryChange = (g: GalleryPhoto[]) => { setGallery(g); saveGlobalSetting('user_gallery', JSON.stringify(g)); };
   const handlePronounChange = (p: string) => {
     setPronoun(p);
     setOnbField('pronouns', p);
@@ -88,7 +102,14 @@ export default function OnbPersona() {
         </View>
       )}
 
-      <ScrollView style={styles.scroll} contentContainerStyle={[styles.scrollContent, scrollFill]} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[styles.scrollContent, scrollFill]}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        onScrollBeginDrag={() => Keyboard.dismiss()}
+      >
         <View style={[column, { position: 'relative' }]}>
           <View style={styles.decoTR} pointerEvents="none">
             <StickerSakuraBranch size={60} />
@@ -101,15 +122,19 @@ export default function OnbPersona() {
 
         {/* Persona card */}
         <View style={styles.card}>
-          {/* Avatar preview */}
+          {/* Avatar preview — tappable photo upload */}
           <View style={styles.avatarRow}>
-            <View style={[styles.avatar, { backgroundColor: COLOR_OPTIONS[colorIdx] }]}>
+            <Pressable onPress={pickAvatar} style={[styles.avatar, { backgroundColor: COLOR_OPTIONS[colorIdx] }]}>
               {avatar ? (
                 <Image source={{ uri: avatar }} style={styles.avatarImg} contentFit="cover" />
               ) : (
                 <Text style={styles.avatarInitial}>{name.trim().charAt(0).toUpperCase() || '♡'}</Text>
               )}
-            </View>
+              <View style={styles.avatarBadge}>
+                <Text style={styles.avatarBadgeText}>+</Text>
+              </View>
+            </Pressable>
+            <Text style={styles.avatarHint}>tap to add a photo of you — or pick a color below instead</Text>
           </View>
 
           <View style={styles.fieldSpacer} />
@@ -182,6 +207,59 @@ export default function OnbPersona() {
             </Row>
           </Field>
           <Text style={styles.imageHint}>or tap + to use a photo of you</Text>
+
+          {isEdit && (
+            <>
+              <View style={styles.fieldSpacer} />
+
+              <Field label="About you (shows on your profile card)">
+                <TextInput
+                  value={bio}
+                  onChangeText={handleBioChange}
+                  placeholder="a few soft lines about you…"
+                  placeholderTextColor={Colors.ink3}
+                  multiline
+                  style={styles.bioInput}
+                />
+              </Field>
+
+              <View style={styles.fieldSpacer} />
+
+              <Row gap={14}>
+                <Field label="Height (optional)" style={{ flex: 1 }}>
+                  <UnderInput value={height} onChangeText={handleHeightChange} placeholder="e.g. 165 cm" />
+                </Field>
+                <Field label="Weight (optional)" style={{ flex: 1 }}>
+                  <UnderInput value={weight} onChangeText={handleWeightChange} placeholder="optional" />
+                </Field>
+              </Row>
+
+              <View style={styles.fieldSpacer} />
+
+              <Field label="Theme song">
+                <UnderInput value={song} onChangeText={handleSongChange} placeholder="the song that feels like you" />
+              </Field>
+
+              <View style={styles.fieldSpacer} />
+
+              <Field label="Song link (optional)" hint="Spotify, YouTube, Apple Music…">
+                <UnderInput
+                  value={songLink}
+                  onChangeText={handleSongLinkChange}
+                  placeholder="https://…"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  keyboardType="url"
+                />
+              </Field>
+
+              <View style={styles.fieldSpacer} />
+
+              <Field label="Gallery">
+                <GalleryPicker photos={gallery} onChange={handleGalleryChange} />
+              </Field>
+            </>
+          )}
         </View>
 
         {/* Reassurance note */}
@@ -303,6 +381,12 @@ const styles = StyleSheet.create({
   imageSwatchThumb: { width: 26, height: 26, borderRadius: Radius.pill },
   imageSwatchPlus: { fontSize: sf(15), color: Colors.ink3, fontFamily: FontFamily.ui, lineHeight: 18 },
   imageHint: { fontFamily: FontFamily.ui, fontSize: sf(9), color: Colors.ink3, marginTop: 8 },
+  bioInput: {
+    borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.r3,
+    backgroundColor: Colors.paperDeep,
+    padding: Spacing.s3, minHeight: 76, textAlignVertical: 'top',
+    fontFamily: FontFamily.ui, fontSize: sf(13), color: Colors.ink, lineHeight: sf(19),
+  },
   actions: {
     paddingHorizontal: Spacing.s6,
     paddingBottom: Spacing.s3,

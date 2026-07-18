@@ -12,6 +12,7 @@ import { Field } from '@/components/ui/Field';
 import { StepDots } from '@/components/ui/StepDots';
 import { Colors, FontFamily, FontSize, Radius, Spacing ,sf } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
+import { addFo } from '@/store/fo';
 import { getOnbState, resetOnb } from '@/store/onboarding';
 import { addShip, REL_GRADS } from '@/store/ships';
 import { newId } from '@/db/client';
@@ -78,9 +79,15 @@ export default function OnbRules() {
     }
 
     const relType = state.relType || 'romantic';
-    const shareType = state.shareType || 'mirror';
+    const shareType = state.shareType || 'selective';
     const relGrad = REL_GRADS[relType] ?? REL_GRADS.romantic;
     const tape = TAPE_BY_REL[relType] ?? TAPE_BY_REL.romantic;
+    const foId = addFo({
+      name: state.foName || 'untitled',
+      fandom: state.fandom,
+      relStatus: relType,
+      shareStatus: shareType,
+    });
     const shipId = addShip({
       name: state.foName || 'untitled',
       shipName: state.shipName || state.foName || 'untitled',
@@ -94,6 +101,7 @@ export default function OnbRules() {
       tapeColor: tape.color,
       coverUri: state.coverUri,
       templateKey,
+      foId,
     });
 
     if (isNew) {

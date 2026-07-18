@@ -35,7 +35,8 @@ import { deleteAllData } from '@/store/ships';
 function readProfile() {
   return {
     name: getGlobalSetting('user_name'),
-    pronouns: getGlobalSetting('user_pronouns'),
+    pronouns: getGlobalSetting('user_pronouns', 'she/her'),
+    username: getGlobalSetting('user_username'),
     color: getGlobalSetting('user_color') || Colors.sakura,
     avatar: getGlobalSetting('user_avatar'),
   };
@@ -200,6 +201,8 @@ export default function SettingsScreen() {
     }
   }
 
+
+
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]}>
       {/* Background accents */}
@@ -226,34 +229,8 @@ export default function SettingsScreen() {
         contentContainerStyle={[styles.list, column]}
         showsVerticalScrollIndicator={false}
       >
-        {/* Profile */}
-        <Pressable
-          style={styles.profileCard}
-          onPress={() => router.push('/onboarding/persona?mode=edit' as any)}
-        >
-          <View style={[styles.profileAvatar, { backgroundColor: profile.color }]}>
-            {profile.avatar ? (
-              <Image source={{ uri: profile.avatar }} style={styles.profileAvatarImg} contentFit="cover" />
-            ) : (
-              <Text style={styles.profileAvatarInitial}>{profile.name.trim().charAt(0).toUpperCase() || '♡'}</Text>
-            )}
-          </View>
-          <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>{profile.name || 'set up your profile'}</Text>
-            {!!profile.pronouns && <Text style={styles.profilePronouns}>{profile.pronouns}</Text>}
-          </View>
-          <View style={styles.profileEdit}>
-            <IconEdit size={13} color={Colors.ink3} />
-          </View>
-        </Pressable>
-
         {/* Pro area */}
-        {premium ? (
-          <View style={styles.premiumBadge}>
-            <Heart size={14} color={Colors.vellum} />
-            <Text style={styles.premiumBadgeText}>you're a premium member</Text>
-          </View>
-        ) : (
+        {!premium && (
           <Pressable
             style={styles.proCard}
             onPress={() => router.push('/paywall' as any)}
@@ -263,6 +240,39 @@ export default function SettingsScreen() {
             <Text style={styles.proSub}>unlock unlimited ships, templates & more</Text>
           </Pressable>
         )}
+
+        {/* Profile */}
+        <Pressable
+          style={styles.profileCard}
+          onPress={() => router.push('/profile' as any)}
+        >
+          <View style={[styles.profileAvatar, { backgroundColor: profile.color }]}>
+            {profile.avatar ? (
+              <Image source={{ uri: profile.avatar }} style={styles.profileAvatarImg} contentFit="cover" />
+            ) : (
+              <Text style={styles.profileAvatarInitial}>{profile.name.trim().charAt(0).toUpperCase() || '♡'}</Text>
+            )}
+          </View>
+          <View style={styles.profileInfo}>
+            <View style={styles.profileNameRow}>
+              <Text style={styles.profileName} numberOfLines={1}>{profile.name || 'set up your profile'}</Text>
+              {!!profile.username && <Text style={styles.profileUsername}>@{profile.username}</Text>}
+            </View>
+            {!!profile.pronouns && <Text style={styles.profilePronouns}>{profile.pronouns}</Text>}
+          </View>
+          <View style={styles.profileEdit}>
+            <IconEdit size={13} color={Colors.ink3} />
+          </View>
+        </Pressable>
+
+        <SettingGroup ja="推" name="F/O profiles">
+          <SettingRow
+            label="Manage F/Os"
+            icon={<Heart size={14} color={Colors.sakuraDeep} />}
+            onPress={() => router.push('/fo' as any)}
+            trailing={<MetaText>›</MetaText>}
+          />
+        </SettingGroup>
 
         <SettingGroup ja="便" name="Notifications">
           <SettingRow
@@ -405,7 +415,9 @@ const styles = StyleSheet.create({
   profileAvatarImg: { width: 52, height: 52, borderRadius: Radius.pill },
   profileAvatarInitial: { fontFamily: FontFamily.displayItalic, fontSize: sf(24), color: '#fff' },
   profileInfo: { flex: 1, gap: 2 },
-  profileName: { fontFamily: FontFamily.displayItalic, fontSize: sf(18), color: Colors.ink },
+  profileNameRow: { flexDirection: 'row', alignItems: 'baseline', gap: 6 },
+  profileName: { fontFamily: FontFamily.displayItalic, fontSize: sf(18), color: Colors.ink, flexShrink: 1 },
+  profileUsername: { fontFamily: FontFamily.uiMedium, fontSize: sf(12), color: Colors.sakuraDeep },
   profilePronouns: { fontFamily: FontFamily.ui, fontSize: sf(11), color: Colors.ink3 },
   profileEdit: {
     width: 28, height: 28, borderRadius: Radius.pill,
@@ -449,3 +461,4 @@ const styles = StyleSheet.create({
     right: 30,
   },
 });
+
