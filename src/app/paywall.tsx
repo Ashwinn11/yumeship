@@ -124,7 +124,7 @@ const REASON_COPY: Record<string, { title: string; sub: string }> = {
   'polyship':   { title: 'love more than one,\nall at once ♡',        sub: 'everyone you love, side by side.' },
   'add-fo':     { title: 'room in your heart\nfor more than one ♡',   sub: 'keep a profile for every F/O you love.' },
   'switch-template': { title: 'try on every\nstyle you love ♡',       sub: 'switch templates any time, as many times as you like.' },
-  'edit-profile': { title: 'keep your profile\nfresh ♡',              sub: 'edit yours and their profile whenever you want.' },
+  'customize-theme': { title: 'make their profile\ntruly theirs ♡',    sub: 'custom colors, backgrounds & text — for yours and their card.' },
   'notif-avatar': { title: 'make it feel\nlike them ♡',                sub: 'show their photo on every notification, not just the app icon.' },
 };
 
