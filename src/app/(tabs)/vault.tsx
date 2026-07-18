@@ -29,9 +29,7 @@ import { Mark } from '@/components/ui/Mark';
 import { MockPhoneTop } from '@/components/ui/MockPhone';
 import { Colors, FontFamily, FontSize, Radius, sf, Shadow, SheetColumn, Spacing } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
-import { NotificationAvatarSheet } from '@/components/settings/NotificationAvatarSheet';
 import { addFoMessage, deleteFoMessage, toggleFoMessage, updateFoMessage, useFoMessages } from '@/store/foNotifications';
-import { getFo } from '@/store/fo';
 import { addHeadcanon, clearCategoryHeadcanons, deleteHeadcanon, getHeadcanons, updateHeadcanon, useHeadcanonCounts, useHeadcanons } from '@/store/headcanons';
 import { requestPermission } from '@/store/notifications';
 import { getGlobalSetting, saveGlobalSetting } from '@/store/onboarding';
@@ -1211,11 +1209,11 @@ function FoMessagesFeature({ shipId, shipName, setCustomBack }: { shipId: string
         shipName={shipName}
         ship={composeShip}
         initialMessage={composingMsg === 'new' ? undefined : composingMsg}
-        onQueue={async (body, hour, senderName, minute, photoUri) => {
+        onQueue={async (body, hour, senderName, minute) => {
           if (composingMsg === 'new') {
-            await addFoMessage(shipId, body, hour, senderName, minute, photoUri);
+            await addFoMessage(shipId, body, hour, senderName, minute);
           } else {
-            await updateFoMessage(composingMsg.id, body, hour, senderName, shipName, minute, photoUri);
+            await updateFoMessage(composingMsg.id, body, hour, senderName, shipName, minute);
           }
           setComposingMsg(null);
           setCustomBack(null);
@@ -1397,25 +1395,10 @@ function FoCompose({ shipName, ship, initialMessage, onQueue }: {
   shipName: string;
   ship?: Ship;
   initialMessage?: FoMessage;
-  onQueue: (body: string, hour: number, senderName: string, minute: number, photoUri: string) => void;
+  onQueue: (body: string, hour: number, senderName: string, minute: number) => void;
 }) {
-  const premium = usePremium();
   const [notifDenied, setNotifDenied] = useState(false);
   const [pendingQueue, setPendingQueue] = useState<string[] | null>(null);
-  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
-  const [photoUri, setPhotoUri] = useState(() => {
-    if (initialMessage) return initialMessage.photoUri;
-    if (!isPoly(ship) && ship?.foId) return getFo(ship.foId)?.photoUri ?? '';
-    return '';
-  });
-
-  function handlePhotoPress() {
-    if (!premium) {
-      router.push('/paywall?reason=notif-avatar' as any);
-      return;
-    }
-    setShowAvatarPicker(true);
-  }
   const [options, setOptions] = useState<string[]>(() => {
     if (initialMessage) {
       try {
@@ -1497,7 +1480,7 @@ function FoCompose({ shipName, ship, initialMessage, onQueue }: {
 
     // Save as JSON string if multiple options, else save plain string
     const finalBody = filtered.length > 1 ? JSON.stringify(filtered) : filtered[0];
-    onQueue(finalBody, resolvedHour, senderName.trim() || shipName, resolvedMinute, photoUri);
+    onQueue(finalBody, resolvedHour, senderName.trim() || shipName, resolvedMinute);
   }
 
   const showAround = arrivalDay !== 'now' && arrivalDay !== 'random';
@@ -1541,12 +1524,6 @@ function FoCompose({ shipName, ship, initialMessage, onQueue }: {
         onConfirm={() => { setNotifDenied(false); if (pendingQueue) { proceedWithQueue(pendingQueue); setPendingQueue(null); } }}
         onClose={() => { setNotifDenied(false); setPendingQueue(null); }}
       />
-      <NotificationAvatarSheet
-        visible={showAvatarPicker}
-        onClose={() => setShowAvatarPicker(false)}
-        currentUri={photoUri}
-        onSelect={setPhotoUri}
-      />
       <ScrollView contentContainerStyle={fo.composeContent} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" onScrollBeginDrag={() => Keyboard.dismiss()} showsVerticalScrollIndicator={false}>
         <Text style={fo.sectionLabel}>START WITH</Text>
         <View style={fo.starterRow}>
@@ -1582,20 +1559,6 @@ function FoCompose({ shipName, ship, initialMessage, onQueue }: {
             />
           </View>
         )}
-
-        <Text style={fo.sectionLabel}>PHOTO</Text>
-        <Pressable style={fo.photoRow} onPress={handlePhotoPress}>
-          <View style={fo.photoPreview}>
-            {photoUri ? (
-              <Image source={{ uri: photoUri }} style={fo.photoPreviewImg} />
-            ) : (
-              <Image source={require('@/assets/images/icon.png')} style={fo.photoPreviewImg} />
-            )}
-          </View>
-          <Text style={fo.photoRowText}>
-            {photoUri ? 'shown on this notification instead of the app icon · tap to change' : 'tap to show a photo instead of the app icon'}
-          </Text>
-        </Pressable>
 
         <Text style={fo.sectionLabel}>WHAT THEY MIGHT SEND</Text>
         {options.map((opt, index) => (
@@ -1745,7 +1708,7 @@ function FoCompose({ shipName, ship, initialMessage, onQueue }: {
                 </>
               )}
               <View style={fo.notifBanner}>
-                <Image style={fo.notifIcon} source={photoUri ? { uri: photoUri } : require('@/assets/images/icon.png')} />
+                <Image style={fo.notifIcon} source={require('@/assets/images/icon.png')} />
                 <View style={fo.notifRight}>
                   <View style={fo.notifHeader}>
                     <Text style={fo.notifTitle} numberOfLines={1}>{senderName.trim() || shipName}</Text>
@@ -2148,17 +2111,6 @@ const fo = StyleSheet.create({
     fontFamily: FontFamily.script, fontSize: sf(15), color: Colors.ink,
     padding: 0,
   },
-  photoRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-    backgroundColor: Colors.vellum, borderWidth: 1, borderColor: Colors.line,
-    borderRadius: Radius.r3, paddingHorizontal: Spacing.s3, paddingVertical: 10,
-  },
-  photoPreview: {
-    width: 36, height: 36, borderRadius: Radius.pill, overflow: 'hidden',
-    backgroundColor: Colors.paperDeep,
-  },
-  photoPreviewImg: { width: 36, height: 36, borderRadius: Radius.pill },
-  photoRowText: { flex: 1, fontFamily: FontFamily.ui, fontSize: sf(11.5), color: Colors.ink3 },
 
   // Compose
   compose: { flex: 1, backgroundColor: Colors.paper },

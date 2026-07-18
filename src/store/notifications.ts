@@ -1,7 +1,6 @@
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import { getGlobalSetting, saveGlobalSetting } from './onboarding';
-import { getPremium } from './premium';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -48,25 +47,12 @@ export function setNotifEnabled(v: boolean) {
   saveGlobalSetting('notif_enabled', String(v));
 }
 
-// Premium, iOS-only feature: show a chosen photo on a notification instead of
-// the app icon. The photo is chosen per F/O message (see FoCompose), not a
-// single global setting — each ship's messages can carry their own F/O's photo.
-// Re-checked at schedule time (not just when picked) so a lapsed subscription
-// silently stops attaching it rather than erroring. Suppressed in discreet
-// mode — showing a F/O's photo on the lock screen would defeat the whole
-// point of hiding who the notification is from.
-function getNotificationAttachments(photoUri?: string): Notifications.NotificationContentInput['attachments'] {
-  if (!photoUri || Platform.OS !== 'ios' || !getPremium() || getDiscreetMode()) return undefined;
-  return [{ identifier: 'notif-avatar', url: photoUri, type: null }];
-}
-
 export async function scheduleDailyNotification(
   body: string,
   hour: number,
   foName: string,
   isImmediate = false,
   minute = 0,
-  photoUri = '',
 ): Promise<string | null> {
   try {
     const { status } = await Notifications.getPermissionsAsync();
@@ -89,7 +75,6 @@ export async function scheduleDailyNotification(
       content: {
         title: discreet ? '♡' : (foName || 'F/O'),
         body: discreet ? 'a message for you~' : body,
-        attachments: getNotificationAttachments(photoUri),
       },
       trigger,
     });
@@ -143,7 +128,6 @@ export async function scheduleAnniversaryNotification(
       content: {
         title: discreet ? '♡' : 'a special day',
         body: discreet ? 'a reminder for you~' : `${title} is today ♡`,
-        attachments: getNotificationAttachments(),
       },
       // YEARLY works on both platforms (CALENDAR is iOS-only) and takes a
       // JS-Date-style 0-based month, unlike the 1-based dateStr.
