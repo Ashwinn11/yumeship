@@ -15,6 +15,7 @@ import { useIPad } from '@/hooks/use-ipad';
 import { addFo } from '@/store/fo';
 import { getOnbState, resetOnb } from '@/store/onboarding';
 import { addShip, REL_GRADS } from '@/store/ships';
+import { requestPermission } from '@/store/notifications';
 import { newId } from '@/db/client';
 
 const VISUAL_TEMPLATES = [
@@ -54,8 +55,12 @@ export default function OnbRules() {
     return isPolyFlow ? 'poly-chart' : 'get-to-know';
   });
 
-  function finish() {
+  async function finish() {
     const state = getOnbState();
+
+    if (!isNew) {
+      await requestPermission();
+    }
 
     if (state.kind === 'poly') {
       const name = (state.shipName || 'untitled').trim();
@@ -73,8 +78,12 @@ export default function OnbRules() {
         kind: 'poly',
         members: [{ id: newId(), name: state.userName || 'me ♡', isMe: true }],
       });
-      resetOnb();
-      router.replace(`/template/${templateKey}?shipId=${shipId}` as any);
+      if (isNew) {
+        resetOnb();
+        router.replace(`/template/${templateKey}?shipId=${shipId}` as any);
+        return;
+      }
+      router.replace({ pathname: '/paywall', params: { reason: 'onboarding', shipId } });
       return;
     }
 
@@ -110,7 +119,7 @@ export default function OnbRules() {
       return;
     }
 
-    router.replace({ pathname: '/onboarding/ready', params: { shipId } });
+    router.replace({ pathname: '/paywall', params: { reason: 'onboarding', shipId } });
   }
 
   return (

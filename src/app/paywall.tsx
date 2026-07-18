@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -13,20 +13,16 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PACKAGE_TYPE, PurchasesPackage } from 'react-native-purchases';
 
-import { Heart } from '@/components/deco/Heart';
-import { Sparkle } from '@/components/deco/Sparkle';
-import {
-  StickerSakuraBranch, StickerEnvelope, StickerWaxSeal, StickerHeartPatch,
-} from '@/components/deco/Stickers';
-import { WashiTape } from '@/components/deco/WashiTape';
+
 import { CozyModal } from '@/components/ui';
 import { Colors, FontFamily, FontSize, Radius, Spacing ,sf } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
+import { resetOnb } from '@/store/onboarding';
 import { refreshPremium } from '@/store/premium';
 import { askForReview } from '@/store/review';
+import { getShip } from '@/store/ships';
 import {
   getAvailablePackages,
-  isPremium,
   purchasePackage,
   restorePurchases,
 } from '@/store/purchases';
@@ -116,6 +112,7 @@ function getWeeklyEquivalentOnly(pkg: PurchasesPackage): string | null {
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
 export default function PaywallScreen() {
+  const { reason, shipId } = useLocalSearchParams<{ reason?: string; shipId?: string }>();
   const { column } = useIPad();
   const insets = useSafeAreaInsets();
   const [packages, setPackages] = useState<PurchasesPackage[]>([]);
@@ -126,6 +123,21 @@ export default function PaywallScreen() {
   const [showClose, setShowClose] = useState(false);
   const [alertModal, setAlertModal] = useState<{ title: string; message: string; onClose?: () => void } | null>(null);
 
+  function dismissPaywall() {
+    if (reason === 'onboarding') {
+      resetOnb();
+      const ship = shipId ? getShip(shipId) : undefined;
+      if (ship?.id) {
+        const template = ship.templateKey ?? 'get-to-know';
+        router.replace(`/template/${template}?shipId=${ship.id}` as any);
+      } else {
+        router.replace('/(tabs)');
+      }
+    } else {
+      router.back();
+    }
+  }
+
   useEffect(() => {
     const t = setTimeout(() => setShowClose(true), 3000);
     return () => clearTimeout(t);
@@ -133,8 +145,6 @@ export default function PaywallScreen() {
 
   useEffect(() => {
     (async () => {
-      const already = await isPremium();
-      if (already) { router.back(); return; }
       const pkgs = await getAvailablePackages();
       // filter out all plans except lifetime, monthly, and weekly
       const filtered = pkgs.filter((p) => isWeeklyPkg(p) || isLifetimePkg(p) || isMonthlyPkg(p));
@@ -167,7 +177,7 @@ export default function PaywallScreen() {
         setAlertModal({
           title: '🎉 Welcome to Premium!',
           message: 'Premium is now active.',
-          onClose: () => router.back(),
+          onClose: () => dismissPaywall(),
         });
       } else if (!result.cancelled) {
         setAlertModal({ title: 'Purchase failed', message: result.error ?? 'Something went wrong. Please try again.' });
@@ -188,7 +198,7 @@ export default function PaywallScreen() {
         setAlertModal({
           title: 'Restored! ✓',
           message: 'Your premium access has been restored.',
-          onClose: () => router.back(),
+          onClose: () => dismissPaywall(),
         });
       } else {
         setAlertModal({ title: 'Nothing to restore', message: `No purchases found for this ${Platform.OS === 'android' ? 'Google account' : 'Apple ID'}.` });
@@ -206,7 +216,7 @@ export default function PaywallScreen() {
       {showClose && (
         <Pressable
           style={[styles.closeBtn, { top: insets.top + 10 }]}
-          onPress={() => router.back()}
+          onPress={() => dismissPaywall()}
           id="paywall-close"
         >
           <Text style={styles.closeTxt}>✕</Text>
@@ -215,48 +225,20 @@ export default function PaywallScreen() {
 
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={[styles.content, column, { paddingTop: 0 }]}
+        contentContainerStyle={[
+          styles.content,
+          column,
+          {
+            paddingTop: insets.top + Spacing.s2,
+            paddingBottom: insets.bottom + Spacing.s9 + 20,
+          },
+        ]}
         showsVerticalScrollIndicator={false}
       >
         {/* ── Hero ─────────────────────────────────────────────────── */}
         <View style={styles.heroSection}>
-          {/* scattered sparkles */}
-          <View style={[styles.abs, { top: 8, left: 16 }]} pointerEvents="none">
-            <Sparkle size={14} color={Colors.butterDeep} />
-          </View>
-          <View style={[styles.abs, { top: 0, right: 28 }]} pointerEvents="none">
-            <Sparkle size={10} color={Colors.lavenderDeep} />
-          </View>
-          <View style={[styles.abs, { bottom: 12, right: 10 }]} pointerEvents="none">
-            <Sparkle size={12} color={Colors.sakuraDeep} />
-          </View>
-
-          {/* sakura branch — top-left */}
-          <View style={[styles.abs, { top: 26, left: 0, transform: [{ rotate: '-20deg' }] }]} pointerEvents="none">
-            <StickerSakuraBranch size={64} />
-          </View>
-
-          {/* envelope — bottom-right */}
-          <View style={[styles.abs, { bottom: 0, right: 4, transform: [{ rotate: '10deg' }] }]} pointerEvents="none">
-            <StickerEnvelope size={48} />
-          </View>
-
-          {/* heart patch — left side */}
-          <View style={[styles.abs, { bottom: 10, left: 8, transform: [{ rotate: '-8deg' }] }]} pointerEvents="none">
-            <StickerHeartPatch size={38} />
-          </View>
-
-          {/* wax seal — top-right */}
-          <View style={[styles.abs, { top: 220, right: 10, transform: [{ rotate: '12deg' }], zIndex: 5 }]} pointerEvents="none">
-            <StickerWaxSeal size={36} />
-          </View>
-
           {/* icon card */}
           <View style={styles.iconCard}>
-            <WashiTape
-              width={70} height={13} pattern="floral" color="#fadde5" rotate={-3}
-              style={{ alignSelf: 'center', marginBottom: -6, zIndex: 1 }}
-            />
             <Image
               source={require('../../assets/images/icon.png')}
               style={styles.heroIcon}
@@ -319,39 +301,7 @@ export default function PaywallScreen() {
                     </View>
                   )}
 
-                  {/* Lifetime deco — sparkles in corners */}
-                  {isLifetime && (
-                    <>
-                      <View style={[styles.cardDeco, { top: 8, right: 10 }]} pointerEvents="none">
-                        <Sparkle size={11} color={isSel ? Colors.sakuraDeep : Colors.sakura} />
-                      </View>
-                      <View style={[styles.cardDeco, { bottom: 8, right: 28 }]} pointerEvents="none">
-                        <Sparkle size={7} color={isSel ? Colors.sakuraDeep : Colors.line} />
-                      </View>
-                      <View style={[styles.cardDeco, { top: 6, right: 26 }]} pointerEvents="none">
-                        <Heart size={7} color={isSel ? Colors.sakuraDeep : Colors.sakura} />
-                      </View>
-                    </>
-                  )}
 
-                  {/* Monthly deco — small hearts */}
-                  {isMonthly && (
-                    <>
-                      <View style={[styles.cardDeco, { top: 8, right: 12 }]} pointerEvents="none">
-                        <Heart size={12} color={isSel ? Colors.lavenderDeep : Colors.lavender} />
-                      </View>
-                      <View style={[styles.cardDeco, { bottom: 8, right: 30 }]} pointerEvents="none">
-                        <Sparkle size={7} color={isSel ? Colors.lavenderDeep : Colors.lavender} />
-                      </View>
-                    </>
-                  )}
-
-                  {/* Weekly deco */}
-                  {isWeekly && (
-                    <View style={[styles.cardDeco, { top: 8, right: 12 }]} pointerEvents="none">
-                      <Sparkle size={9} color={Colors.line} />
-                    </View>
-                  )}
 
                   <View style={styles.planCardRow}>
                     {/* Left Column */}
@@ -420,8 +370,11 @@ export default function PaywallScreen() {
             <ActivityIndicator color="#fff" />
           ) : (() => {
             if (!selected) return <Text style={styles.ctaTxt}>Continue ♡</Text>;
-            const period = periodLabel(selected);
             const price = selected.product.priceString;
+            if (isLifetimePkg(selected)) {
+              return <Text style={styles.ctaTxt}>Unlock Lifetime for {price}</Text>;
+            }
+            const period = periodLabel(selected);
             const suffix = period ? `${price} / ${period}` : price;
             return <Text style={styles.ctaTxt}>Continue · {suffix}</Text>;
           })()}
