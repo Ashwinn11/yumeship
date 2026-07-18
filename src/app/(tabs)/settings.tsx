@@ -21,6 +21,7 @@ import {
 import { IconEdit, IconLock } from '@/components/ui/Icon';
 import { Mark } from '@/components/ui/Mark';
 import { Toggle } from '@/components/ui/Toggle';
+import { NotificationAvatarSheet } from '@/components/settings/NotificationAvatarSheet';
 import { Colors, FontFamily, FontSize, Radius, Spacing ,sf } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
 import {
@@ -29,7 +30,7 @@ import {
 import { manageSubscriptions, restorePurchases } from '@/store/purchases';
 import { openWriteReview } from '@/store/review';
 import { usePremium } from '@/store/premium';
-import { getGlobalSetting } from '@/store/onboarding';
+import { getGlobalSetting, saveGlobalSetting } from '@/store/onboarding';
 import { deleteAllData } from '@/store/ships';
 
 function readProfile() {
@@ -158,6 +159,21 @@ export default function SettingsScreen() {
   useFocusEffect(useCallback(() => { setProfile(readProfile()); }, []));
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [alertModal, setAlertModal] = useState<{ title: string; message: string } | null>(null);
+  const [notifAvatarUri, setNotifAvatarUri] = useState(() => getGlobalSetting('notif_avatar_uri'));
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
+
+  function handleNotifAvatarPress() {
+    if (!premium) {
+      router.push('/paywall?reason=notif-avatar' as any);
+      return;
+    }
+    setShowAvatarPicker(true);
+  }
+
+  function handleNotifAvatarSelect(uri: string) {
+    setNotifAvatarUri(uri);
+    saveGlobalSetting('notif_avatar_uri', uri);
+  }
 
   useEffect(() => {
     const path = (FileSystem.documentDirectory ?? '') + 'SQLite/yumeship.db';
@@ -289,6 +305,20 @@ export default function SettingsScreen() {
             icon={<IconBellSolid size={14} />}
             trailing={<Toggle value={notifEnabled} onValueChange={handleToggleNotif} />}
           />
+          {Platform.OS === 'ios' && (
+            <SettingRow
+              label="Notification photo"
+              icon={
+                notifAvatarUri ? (
+                  <Image source={{ uri: notifAvatarUri }} style={styles.notifAvatarThumb} contentFit="cover" />
+                ) : (
+                  <Heart size={14} color={Colors.sakuraDeep} />
+                )
+              }
+              onPress={handleNotifAvatarPress}
+              trailing={<MetaText>›</MetaText>}
+            />
+          )}
         </SettingGroup>
 
         <SettingGroup ja="課" name="Subscription">
@@ -365,6 +395,13 @@ export default function SettingsScreen() {
         confirmText="OK"
         onClose={() => setAlertModal(null)}
       />
+      <NotificationAvatarSheet
+        visible={showAvatarPicker}
+        onClose={() => setShowAvatarPicker(false)}
+        currentUri={notifAvatarUri}
+        myAvatarUri={profile.avatar}
+        onSelect={handleNotifAvatarSelect}
+      />
     </View>
   );
 }
@@ -428,6 +465,7 @@ const styles = StyleSheet.create({
   profileName: { fontFamily: FontFamily.displayItalic, fontSize: sf(18), color: Colors.ink, flexShrink: 1 },
   profileUsername: { fontFamily: FontFamily.uiMedium, fontSize: sf(12), color: Colors.sakuraDeep },
   profilePronouns: { fontFamily: FontFamily.ui, fontSize: sf(11), color: Colors.ink3 },
+  notifAvatarThumb: { width: 16, height: 16, borderRadius: Radius.pill },
   profileEdit: {
     width: 28, height: 28, borderRadius: Radius.pill,
     backgroundColor: Colors.paperDeep, alignItems: 'center', justifyContent: 'center',

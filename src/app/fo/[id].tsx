@@ -14,6 +14,7 @@ import { Colors, FontFamily, FontSize, RelationshipColors, SharingColors, Radius
 import { useIPad } from '@/hooks/use-ipad';
 import { pushFoProfile, unpublishFoProfile } from '@/store/community';
 import { deleteFo, updateFo, useFo } from '@/store/fo';
+import { usePremium } from '@/store/premium';
 import { shipTitle, useShips } from '@/store/ships';
 
 const REL_LABEL: Record<string, string> = { romantic: 'romantic', platonic: 'platonic', familial: 'familial' };
@@ -25,6 +26,7 @@ export default function FoDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const fo = useFo(id);
   const ships = useShips();
+  const premium = usePremium();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<FoFormValue | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -47,6 +49,10 @@ export default function FoDetailScreen() {
   const linked = ships.find((s) => s.foId === fo.id);
 
   function startEdit() {
+    if (!premium) {
+      router.push('/paywall?reason=edit-profile' as any);
+      return;
+    }
     setDraft({
       name: fo!.name, pronouns: fo!.pronouns, fandom: fo!.fandom,
       relStatus: fo!.relStatus, shareStatus: fo!.shareStatus,
