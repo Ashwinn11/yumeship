@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getDb, newId } from '@/db/client';
-import { cancelNotification, getScheduledNotifications, scheduleFoNotification } from './notifications';
+import { cancelNotification, getScheduledNotifications, scheduleFoNotification, scheduleOneShotAtDate } from './notifications';
 
 export type FoMessage = {
   id: string;
@@ -9,7 +9,7 @@ export type FoMessage = {
   senderName: string;
   scheduledHour: number;
   scheduledMinute: number;
-  arrivalDay: 'now' | 'today' | 'tomorrow' | 'everyday';
+  arrivalDay: 'now' | 'today' | 'tomorrow' | 'everyday' | 'random';
   active: boolean;
   notifId: string;
   currentIndex: number;
@@ -34,6 +34,105 @@ function rowToMsg(r: Record<string, unknown>): FoMessage {
     createdAt: r.created_at as number,
   };
 }
+
+// ─── Random scheduling helpers ──────────────────────────────────────────────
+
+const RANDOM_HOUR_POOL = [6, 8, 10, 12, 14, 16, 18, 20, 22];
+const RANDOM_DAYS_AHEAD = 7;
+
+/**
+ * Seeded shuffle of the hour pool for a given calendar date.
+ * Using the date as a seed means every call for the same day gets the same shuffle,
+ * so different messages can independently pick non-colliding lanes.
+ */
+function shufflePoolForDay(date: Date): number[] {
+  const seed = date.getFullYear() * 10000 + (date.getMonth() + 1) * 100 + date.getDate();
+  const arr = [...RANDOM_HOUR_POOL];
+  let s = seed;
+  for (let i = arr.length - 1; i > 0; i--) {
+    s = Math.imul(s, 1664525) + 1013904223;
+    const j = Math.abs(s) % (i + 1);
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+/**
+ * Schedules RANDOM_DAYS_AHEAD one-shot notifications for a random message.
+ * Each day gets a different hour (seeded per-day), and the lane index ensures
+ * multiple random messages from the same ship don't collide.
+ * Returns a JSON-encoded array of notification IDs.
+ */
+async function scheduleRandomDays(
+  shipId: string,
+  msgId: string,
+  body: string,
+  foName: string,
+  daysAhead = RANDOM_DAYS_AHEAD,
+): Promise<string> {
+  // Hours already locked in by non-random messages (everyday/today/tomorrow)
+  const fixedMsgs = getDb().getAllSync(
+    'SELECT scheduled_hour FROM fo_messages WHERE ship_id = ? AND active = 1 AND arrival_day != "random" AND id != ?',
+    shipId, msgId,
+  ) as { scheduled_hour: number }[];
+  const takenHours = new Set(fixedMsgs.map((r) => r.scheduled_hour));
+
+  // Pool with fixed-time hours excluded
+  const availablePool = RANDOM_HOUR_POOL.filter((h) => !takenHours.has(h));
+  // Fallback to full pool if all hours are somehow taken
+  const pool = availablePool.length > 0 ? availablePool : RANDOM_HOUR_POOL;
+
+  // Determine lane: how many other active random messages exist for this ship
+  const existing = getDb().getAllSync(
+    'SELECT id FROM fo_messages WHERE ship_id = ? AND arrival_day = "random" AND active = 1 AND id != ?',
+    shipId, msgId,
+  ) as { id: string }[];
+  const lane = existing.length % pool.length;
+
+  const ids: string[] = [];
+
+  for (let dayOffset = 0; dayOffset < daysAhead; dayOffset++) {
+    const date = new Date();
+    date.setDate(date.getDate() + dayOffset);
+    date.setSeconds(0, 0);
+
+    const shuffled = shufflePoolForDay(date).filter((h) => pool.includes(h));
+    const hour = shuffled[lane % shuffled.length];
+    date.setHours(hour, 0, 0, 0);
+
+    // If the slot is already in the past, push it to tomorrow
+    if (date.getTime() <= Date.now()) {
+      date.setDate(date.getDate() + 1);
+    }
+
+    const id = await scheduleOneShotAtDate(body, foName, date);
+    if (id) ids.push(id);
+  }
+
+  return JSON.stringify(ids);
+}
+
+/**
+ * Parses a notifId field that may be a single ID string or a JSON array of IDs.
+ */
+function parseNotifIds(notifId: string): string[] {
+  if (!notifId) return [];
+  if (notifId.startsWith('[')) {
+    try { return JSON.parse(notifId) as string[]; } catch (_) {}
+  }
+  return [notifId];
+}
+
+/**
+ * Cancels all notification IDs stored in a notifId field.
+ */
+async function cancelAllNotifIds(notifId: string): Promise<void> {
+  for (const id of parseNotifIds(notifId)) {
+    await cancelNotification(id);
+  }
+}
+
+// ─── Public API ─────────────────────────────────────────────────────────────
 
 export function getFoMessages(shipId: string): FoMessage[] {
   return (getDb().getAllSync(
@@ -69,24 +168,30 @@ export async function addFoMessage(
     }
   } catch (_) {}
 
-  // Calculate stagger index for "now" type
-  let staggerIndex = 0;
-  if (arrivalDay === 'now' && active === 1) {
-    const activeImmediates = getDb().getAllSync(
-      'SELECT id FROM fo_messages WHERE active = 1 AND arrival_day = "now" AND id != ?',
-      id,
-    );
-    staggerIndex = activeImmediates.length;
-  }
-
   let notifId = '';
-  if (active === 1) {
-    const targetHour = scheduledHour === -2 ? 0 : scheduledHour;
-    const targetMinute = scheduledHour === -2 ? 0 : scheduledMinute;
 
-    const nid = await scheduleFoNotification(triggerBody, senderName, arrivalDay, targetHour, targetMinute, staggerIndex);
-    if (nid) {
-      notifId = nid;
+  if (active === 1) {
+    if (arrivalDay === 'random') {
+      notifId = await scheduleRandomDays(shipId, id, triggerBody, senderName);
+    } else {
+      // Calculate stagger index for "now" type
+      let staggerIndex = 0;
+      if (arrivalDay === 'now') {
+        const activeImmediates = getDb().getAllSync(
+          'SELECT id FROM fo_messages WHERE active = 1 AND arrival_day = "now" AND id != ?',
+          id,
+        );
+        staggerIndex = activeImmediates.length;
+      }
+
+      const targetHour = scheduledHour === -2 ? 0 : scheduledHour;
+      const targetMinute = scheduledHour === -2 ? 0 : scheduledMinute;
+
+      const nid = await scheduleFoNotification(triggerBody, senderName, arrivalDay, targetHour, targetMinute, staggerIndex);
+      if (nid) notifId = nid;
+    }
+
+    if (notifId) {
       const nextIndex = parsedLength > 1 ? 1 : 0;
       getDb().runSync('UPDATE fo_messages SET notif_id = ?, current_index = ? WHERE id = ?', notifId, nextIndex, id);
     }
@@ -102,7 +207,7 @@ export async function toggleFoMessage(id: string, active: boolean, foName = ''):
   const msg = rowToMsg(row);
 
   if (!active && msg.notifId) {
-    await cancelNotification(msg.notifId);
+    await cancelAllNotifIds(msg.notifId);
     getDb().runSync('UPDATE fo_messages SET active = 0, notif_id = ? WHERE id = ?', '', id);
   } else if (active) {
     let triggerBody = msg.body;
@@ -117,24 +222,32 @@ export async function toggleFoMessage(id: string, active: boolean, foName = ''):
       }
     } catch (_) {}
 
-    // Calculate stagger index
-    let staggerIndex = 0;
-    if (msg.arrivalDay === 'now') {
-      const activeImmediates = getDb().getAllSync(
-        'SELECT id FROM fo_messages WHERE active = 1 AND arrival_day = "now" AND id != ?',
-        id,
-      );
-      staggerIndex = activeImmediates.length;
+    let newNotifId = '';
+
+    if (msg.arrivalDay === 'random') {
+      newNotifId = await scheduleRandomDays(msg.shipId, id, triggerBody, msg.senderName || foName);
+    } else {
+      // Calculate stagger index
+      let staggerIndex = 0;
+      if (msg.arrivalDay === 'now') {
+        const activeImmediates = getDb().getAllSync(
+          'SELECT id FROM fo_messages WHERE active = 1 AND arrival_day = "now" AND id != ?',
+          id,
+        );
+        staggerIndex = activeImmediates.length;
+      }
+
+      const targetHour = msg.scheduledHour === -2 ? 0 : msg.scheduledHour;
+      const targetMinute = msg.scheduledHour === -2 ? 0 : msg.scheduledMinute;
+
+      const nid = await scheduleFoNotification(triggerBody, msg.senderName || foName, msg.arrivalDay, targetHour, targetMinute, staggerIndex);
+      if (nid) newNotifId = nid;
     }
 
-    const targetHour = msg.scheduledHour === -2 ? 0 : msg.scheduledHour;
-    const targetMinute = msg.scheduledHour === -2 ? 0 : msg.scheduledMinute;
-
-    const newId = await scheduleFoNotification(triggerBody, msg.senderName || foName, msg.arrivalDay, targetHour, targetMinute, staggerIndex);
     const nextIndex = parsedLength > 1 ? (msg.currentIndex + 1) % parsedLength : 0;
     getDb().runSync(
       'UPDATE fo_messages SET active = 1, notif_id = ?, current_index = ? WHERE id = ?',
-      newId ?? '', nextIndex, id,
+      newNotifId, nextIndex, id,
     );
   }
 
@@ -155,7 +268,7 @@ export async function updateFoMessage(
   const msg = rowToMsg(row);
 
   if (msg.notifId) {
-    await cancelNotification(msg.notifId);
+    await cancelAllNotifIds(msg.notifId);
   }
 
   let notifId = '';
@@ -173,20 +286,25 @@ export async function updateFoMessage(
       }
     } catch (_) {}
 
-    // Calculate stagger index
-    let staggerIndex = 0;
-    if (arrivalDay === 'now') {
-      const activeImmediates = getDb().getAllSync(
-        'SELECT id FROM fo_messages WHERE active = 1 AND arrival_day = "now" AND id != ?',
-        id,
-      );
-      staggerIndex = activeImmediates.length;
+    if (arrivalDay === 'random') {
+      notifId = await scheduleRandomDays(msg.shipId, id, triggerBody, senderName);
+    } else {
+      // Calculate stagger index
+      let staggerIndex = 0;
+      if (arrivalDay === 'now') {
+        const activeImmediates = getDb().getAllSync(
+          'SELECT id FROM fo_messages WHERE active = 1 AND arrival_day = "now" AND id != ?',
+          id,
+        );
+        staggerIndex = activeImmediates.length;
+      }
+
+      const targetHour = scheduledHour === -2 ? 0 : scheduledHour;
+      const targetMinute = scheduledHour === -2 ? 0 : scheduledMinute;
+
+      notifId = await scheduleFoNotification(triggerBody, senderName, arrivalDay, targetHour, targetMinute, staggerIndex) ?? '';
     }
 
-    const targetHour = scheduledHour === -2 ? 0 : scheduledHour;
-    const targetMinute = scheduledHour === -2 ? 0 : scheduledMinute;
-
-    notifId = await scheduleFoNotification(triggerBody, senderName, arrivalDay, targetHour, targetMinute, staggerIndex) ?? '';
     newIndex = parsedLength > 1 ? 1 : 0;
   }
 
@@ -200,7 +318,7 @@ export async function updateFoMessage(
 
 export async function deleteFoMessage(id: string): Promise<void> {
   const row = getDb().getFirstSync('SELECT notif_id FROM fo_messages WHERE id = ?', id) as { notif_id: string } | null;
-  if (row?.notif_id) await cancelNotification(row.notif_id);
+  if (row?.notif_id) await cancelAllNotifIds(row.notif_id);
   getDb().runSync('DELETE FROM fo_messages WHERE id = ?', id);
   notify();
 }
@@ -218,7 +336,7 @@ export async function syncFoMessagesDb(): Promise<void> {
           const parsed = JSON.parse(msg.body);
           if (Array.isArray(parsed) && parsed.length > 0) {
             if (msg.notifId) {
-              await cancelNotification(msg.notifId);
+              await cancelAllNotifIds(msg.notifId);
             }
             getDb().runSync('DELETE FROM fo_messages WHERE id = ?', msg.id);
 
@@ -239,20 +357,38 @@ export async function syncFoMessagesDb(): Promise<void> {
       }
     }
 
-    // 2. Expired alarm sync
+    // 2. Sync expired / partially-consumed notifications
     const scheduled = await getScheduledNotifications();
     const scheduledIds = new Set(scheduled.map((s) => s.identifier));
 
     const activeMsgs = getDb().getAllSync(
-      'SELECT id, notif_id, arrival_day FROM fo_messages WHERE active = 1 AND notif_id != ""'
-    ) as { id: string; notif_id: string; arrival_day: string }[];
+      'SELECT id, ship_id, body, sender_name, notif_id, arrival_day FROM fo_messages WHERE active = 1 AND notif_id != ""'
+    ) as { id: string; ship_id: string; body: string; sender_name: string; notif_id: string; arrival_day: string }[];
 
     let changed = false;
+
     for (const msg of activeMsgs) {
-      const isOneShot = msg.arrival_day === 'now' || msg.arrival_day === 'today' || msg.arrival_day === 'tomorrow';
-      if (isOneShot && !scheduledIds.has(msg.notif_id)) {
-        getDb().runSync('UPDATE fo_messages SET active = 0, notif_id = "" WHERE id = ?', msg.id);
-        changed = true;
+      const ids = parseNotifIds(msg.notif_id);
+
+      if (msg.arrival_day === 'random') {
+        // Filter to only the IDs still pending
+        const remaining = ids.filter((i) => scheduledIds.has(i));
+
+        if (remaining.length < RANDOM_DAYS_AHEAD) {
+          // Top up: schedule enough days to reach RANDOM_DAYS_AHEAD again
+          const needed = RANDOM_DAYS_AHEAD - remaining.length;
+          const newIds = await scheduleRandomDays(msg.ship_id, msg.id, msg.body, msg.sender_name, needed);
+          const merged = JSON.stringify([...remaining, ...JSON.parse(newIds)]);
+          getDb().runSync('UPDATE fo_messages SET notif_id = ? WHERE id = ?', merged, msg.id);
+          changed = true;
+        }
+      } else {
+        // One-shot modes: mark inactive once the notification has fired
+        const isOneShot = msg.arrival_day === 'now' || msg.arrival_day === 'today' || msg.arrival_day === 'tomorrow';
+        if (isOneShot && !scheduledIds.has(ids[0] ?? '')) {
+          getDb().runSync('UPDATE fo_messages SET active = 0, notif_id = "" WHERE id = ?', msg.id);
+          changed = true;
+        }
       }
     }
 

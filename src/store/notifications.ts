@@ -108,6 +108,32 @@ export async function scheduleFoNotification(
   }
 }
 
+export async function scheduleOneShotAtDate(
+  body: string,
+  foName: string,
+  date: Date,
+): Promise<string | null> {
+  try {
+    const { status } = await Notifications.getPermissionsAsync();
+    if (status !== 'granted') return null;
+    const discreet = getDiscreetMode();
+    const identifier = await Notifications.scheduleNotificationAsync({
+      content: {
+        title: discreet ? '♡' : (foName || 'F/O'),
+        body: discreet ? 'a message for you~' : body,
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DATE,
+        date,
+      },
+    });
+    return identifier;
+  } catch (error) {
+    console.error('Failed to schedule one-shot notification:', error);
+    return null;
+  }
+}
+
 export async function cancelNotification(notifId: string): Promise<void> {
   if (!notifId) return;
   try {

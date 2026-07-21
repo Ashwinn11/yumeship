@@ -1314,6 +1314,10 @@ function FoMessagesFeature({ shipId, shipName, setCustomBack }: { shipId: string
             if (arrivalDay === 'now' || hour === -2) {
               bigTimeStr = 'NOW';
               subtextStr = 'triggers immediately';
+            } else if (arrivalDay === 'random') {
+              bigTimeStr = '❖';
+              ampmStr = '';
+              subtextStr = 'random daily';
             } else {
               const ampm = hour >= 12 ? 'PM' : 'AM';
               const displayHour = hour % 12 === 0 ? 12 : hour % 12;
@@ -1347,6 +1351,8 @@ function FoMessagesFeature({ shipId, shipName, setCustomBack }: { shipId: string
             let nextScheduledStr = '';
             if (arrivalDay === 'now') {
               nextScheduledStr = 'now';
+            } else if (arrivalDay === 'random') {
+              nextScheduledStr = 'random time daily';
             } else {
               const displayMin = String(minute).padStart(2, '0');
               const displayHour = hour % 12 === 0 ? 12 : hour % 12;
@@ -1425,6 +1431,7 @@ const ARRIVAL_DAYS = [
   { id: 'today', label: 'Today' },
   { id: 'tomorrow', label: 'Tomorrow' },
   { id: 'everyday', label: 'Every day' },
+  { id: 'random', label: 'Random daily' },
 ] as const;
 
 const OpenLockIcon = ({ size = 13, color = '#ffffff' }: { size?: number; color?: string }) => (
@@ -1439,7 +1446,7 @@ const OpenLockIcon = ({ size = 13, color = '#ffffff' }: { size?: number; color?:
 type ComposeOption = {
   id: string;
   body: string;
-  arrivalDay: 'now' | 'today' | 'tomorrow' | 'everyday';
+  arrivalDay: 'now' | 'today' | 'tomorrow' | 'everyday' | 'random';
   customHour: number;
   customMinute: number;
   customAmPm: 'AM' | 'PM';
@@ -1451,7 +1458,7 @@ function FoCompose({ shipName, ship, initialMessage, onQueue }: {
   shipName: string;
   ship?: Ship;
   initialMessage?: FoMessage;
-  onQueue: (options: { body: string; hour: number; minute: number; arrivalDay: 'now' | 'today' | 'tomorrow' | 'everyday' }[], senderName: string) => void;
+  onQueue: (options: { body: string; hour: number; minute: number; arrivalDay: 'now' | 'today' | 'tomorrow' | 'everyday' | 'random' }[], senderName: string) => void;
 }) {
   const isPremium = usePremium();
   const [notifDenied, setNotifDenied] = useState(false);
@@ -1526,6 +1533,9 @@ function FoCompose({ shipName, ship, initialMessage, onQueue }: {
       let resolvedMinute = 0;
       if (opt.arrivalDay === 'now') {
         resolvedHour = -2;
+      } else if (opt.arrivalDay === 'random') {
+        // hour/minute are irrelevant for random — scheduling handled in foNotifications
+        resolvedHour = -1;
       } else {
         const h = opt.customHour % 12;
         resolvedHour = opt.customAmPm === 'PM' ? h + 12 : h;
@@ -1555,6 +1565,9 @@ function FoCompose({ shipName, ship, initialMessage, onQueue }: {
       const hrs = String(now.getHours()).padStart(2, '0');
       const mins = String(now.getMinutes()).padStart(2, '0');
       lockscreenTimeText = `${hrs}:${mins}`;
+    } else if (firstOpt.arrivalDay === 'random') {
+      lockscreenDateText = now.toLocaleDateString('en-US', dateOptions);
+      lockscreenTimeText = '🎁 surprise';
     } else {
       if (firstOpt.arrivalDay === 'tomorrow') {
         const tomorrow = new Date();
@@ -1618,7 +1631,7 @@ function FoCompose({ shipName, ship, initialMessage, onQueue }: {
 
         <Text style={fo.sectionLabel}>WHAT THEY MIGHT SEND</Text>
         {options.map((opt, index) => {
-          const showAround = opt.arrivalDay !== 'now';
+          const showAround = opt.arrivalDay !== 'now' && opt.arrivalDay !== 'random';
           return (
             <View
               key={opt.id}
@@ -1824,7 +1837,10 @@ function FoCompose({ shipName, ship, initialMessage, onQueue }: {
 
             <View style={fo.lockscreenClockContainer}>
               <Text style={fo.lockscreenDate}>{lockscreenDateText}</Text>
-              <Text style={fo.lockscreenTime}>{lockscreenTimeText}</Text>
+              <Text style={[
+                fo.lockscreenTime,
+                firstOpt?.arrivalDay === 'random' && { fontSize: sf(28), letterSpacing: 0 },
+              ]}>{lockscreenTimeText}</Text>
             </View>
 
             <View style={[fo.notifStackContainer, filteredOptions.length > 1 && fo.notifStackActive]}>
