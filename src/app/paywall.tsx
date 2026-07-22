@@ -120,7 +120,6 @@ export default function PaywallScreen() {
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState(false);
   const [restoring, setRestoring] = useState(false);
-  const [showClose, setShowClose] = useState(false);
   const [alertModal, setAlertModal] = useState<{ title: string; message: string; onClose?: () => void } | null>(null);
 
   function dismissPaywall() {
@@ -137,11 +136,6 @@ export default function PaywallScreen() {
       router.back();
     }
   }
-
-  useEffect(() => {
-    const t = setTimeout(() => setShowClose(true), 3000);
-    return () => clearTimeout(t);
-  }, []);
 
   useEffect(() => {
     (async () => {
@@ -212,16 +206,13 @@ export default function PaywallScreen() {
 
   return (
     <View style={styles.screen}>
-      {/* Close button — delayed so users read the value prop first */}
-      {showClose && (
-        <Pressable
+      <Pressable
           style={[styles.closeBtn, { top: insets.top + 10 }]}
           onPress={() => dismissPaywall()}
           id="paywall-close"
         >
           <Text style={styles.closeTxt}>✕</Text>
         </Pressable>
-      )}
 
       <ScrollView
         style={styles.scroll}

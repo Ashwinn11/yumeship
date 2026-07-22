@@ -16,31 +16,18 @@ const PANEL_EDGE = '#f3a8c4';
 const PANEL_BG = '#ffffff';
 const TRANSPARENT = 'transparent';
 
-const INFO_KEYS = ['age', 'birthday', 'pronouns', 'love language', 'mbti'] as const;
+// Each info field renders once per person — key becomes `${prefix}${Field}`,
+// e.g. 'age' -> 'theirAge' / 'myAge'.
+const INFO_FIELDS = [
+  { field: 'age', label: 'age' },
+  { field: 'birthday', label: 'birthday' },
+  { field: 'pronouns', label: 'pronouns' },
+  { field: 'loveLanguage', label: 'love language' },
+  { field: 'mbti', label: 'mbti' },
+] as const;
 const SHARING_OPTS = ['Yes', 'No', 'Selective'] as const;
 
-function calculateTimeSince(dateStr: string) {
-  if (!dateStr) return '——';
-  const clean = dateStr.trim().replace(/\./g, '-');
-  // parse YYYY-MM-DD as local time, not UTC, or the count shifts a day
-  const m = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(clean);
-  const parsed = m
-    ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])).getTime()
-    : Date.parse(clean);
-  if (isNaN(parsed)) return clean;
-  
-  const diffMs = Date.now() - parsed;
-  if (diffMs < 0) return '0d';
-  
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  const years = Math.floor(diffDays / 365);
-  const remainingDays = diffDays % 365;
-  
-  if (years > 0) {
-    return `${years}y ${remainingDays}d`;
-  }
-  return `${remainingDays}d`;
-}
+function cap(s: string) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
 export function KawaiiUIContent({ editing = false }: { editing?: boolean }) {
   const ctx = useTemplateCtx();
@@ -50,21 +37,23 @@ export function KawaiiUIContent({ editing = false }: { editing?: boolean }) {
   const [bgSize, setBgSize] = useState({ width: 0, height: 0 });
 
   const [vals, setVals] = useState<Record<string, string>>(() => ({
-    name:     ctx.get('name'),
+    shipName: ctx.get('shipName'),
     from:     ctx.get('from'),
     type:     ctx.get('type'),
-    age:      ctx.get('age'),
-    birthday: ctx.get('birthday'),
-    pronouns: ctx.get('pronouns'),
-    'love language': ctx.get('love language'),
-    mbti:     ctx.get('mbti'),
+    theirName: ctx.get('theirName'),
+    myName:    ctx.get('myName'),
+    theirPortrait: ctx.get('theirPortrait'),
+    myPortrait:    ctx.get('myPortrait'),
+    ...Object.fromEntries(INFO_FIELDS.flatMap(({ field }) => [
+      [`their${cap(field)}`, ctx.get(`their${cap(field)}`)],
+      [`my${cap(field)}`, ctx.get(`my${cap(field)}`)],
+    ])),
     sharing:  ctx.get('sharing'),
     song:     ctx.get('song'),
     trope0:   ctx.get('trope0'),
     trope1:   ctx.get('trope1'),
     trope2:   ctx.get('trope2'),
     anniv:    ctx.get('anniv'),
-    portrait: ctx.get('portrait'),
   }));
 
   const setVal = (key: string, v: string) => {
@@ -76,6 +65,80 @@ export function KawaiiUIContent({ editing = false }: { editing?: boolean }) {
   const sharing = vals.sharing || null;
 
   const set = (key: string) => e ? (v: string) => setVal(key, v) : undefined;
+
+  function renderPersonPanel(prefix: 'their' | 'my', who: string, nameKey: string, portraitKey: string, namePlaceholder: string) {
+    return (
+      <KawaiiPanel edge={PANEL_EDGE} bg={panelBg} style={s.mainPanel}>
+        <View style={s.personHeaderRow}>
+          <Heart size={11} color={PINK_INK} outline />
+          <Text style={[s.kawaiiLabel, { color: PINK_INK }]}>{who}</Text>
+          {e ? (
+            <TextInput
+              value={vals[nameKey] ?? ''}
+              onChangeText={set(nameKey)}
+              placeholder={namePlaceholder}
+              placeholderTextColor={PINK_INK + '88'}
+              underlineColorAndroid="transparent"
+              style={s.personNameInput}
+            />
+          ) : (
+            <Text style={s.personNameText}>{vals[nameKey] || namePlaceholder}</Text>
+          )}
+        </View>
+        <View style={s.mainRow}>
+          <PhotoBox
+            width={90} height={106} editing={e}
+            style={s.portraitStyle}
+            uri={vals[portraitKey]}
+            onUriChange={e ? (u) => setVal(portraitKey, u) : undefined}
+          />
+          <View style={s.infoCol}>
+            {INFO_FIELDS.map(({ field, label }) => {
+              const k = `${prefix}${cap(field)}`;
+              return (
+                <View key={k} style={s.infoRow}>
+                  <Text style={[s.infoKey, { color: PINK_INK }]}>{label}</Text>
+                  {field === 'birthday' ? (
+                    <DateField
+                      value={vals[k]}
+                      onChange={(v) => setVal(k, v)}
+                      editing={e}
+                      format="birthday"
+                      placeholder="pick date"
+                      style={[s.infoVal, { backgroundColor: infoBg, borderColor: PANEL_EDGE, borderWidth: 1, borderRadius: 4 }]}
+                      textStyle={{ fontSize: sf(9), color: PINK_INK, fontFamily: FontFamily.ja }}
+                    />
+                  ) : e ? (
+                    <TextInput
+                      value={vals[k] ?? ''}
+                      onChangeText={(v) => setVal(k, v)}
+                      placeholder="——"
+                      placeholderTextColor={PINK_INK + '88'}
+                      underlineColorAndroid="transparent"
+                      style={[
+                        s.infoVal,
+                        s.infoValInput,
+                        { backgroundColor: infoBg, borderColor: PANEL_EDGE },
+                        field === 'loveLanguage' && { fontSize: sf(9) },
+                      ]}
+                    />
+                  ) : (
+                    <View style={[s.infoVal, { backgroundColor: infoBg, borderColor: PANEL_EDGE, justifyContent: 'center' }]}>
+                      <Text style={{
+                        fontFamily: FontFamily.ja,
+                        fontSize: field === 'loveLanguage' ? 8.5 : 11,
+                        color: INK,
+                      }}>{vals[k]}</Text>
+                    </View>
+                  )}
+                </View>
+              );
+            })}
+          </View>
+        </View>
+      </KawaiiPanel>
+    );
+  }
 
   return (
     <LinearGradient
@@ -115,15 +178,15 @@ export function KawaiiUIContent({ editing = false }: { editing?: boolean }) {
       </View>
 
       <View style={s.statRow}>
-        {(['name', 'from', 'type'] as const).map((label) => (
-          <KawaiiPanel key={label} edge={PANEL_EDGE} bg={panelBg} style={s.statPanel}>
+        {([['shipName', 'ship name'], ['from', 'from'], ['type', 'type']] as const).map(([key, label]) => (
+          <KawaiiPanel key={key} edge={PANEL_EDGE} bg={panelBg} style={s.statPanel}>
             <Text style={[s.kawaiiLabel, { color: PINK_INK }]}>{label}</Text>
             <View style={{ marginTop: 6, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-              {label === 'name' && <Heart size={12} color={PINK_INK} outline />}
+              {key === 'shipName' && <Heart size={12} color={PINK_INK} outline />}
               {e ? (
                 <TextInput
-                  value={vals[label] ?? ''}
-                  onChangeText={set(label)}
+                  value={vals[key] ?? ''}
+                  onChangeText={set(key)}
                   placeholder="——"
                   placeholderTextColor={PINK_INK + '88'}
                   underlineColorAndroid="transparent"
@@ -131,7 +194,7 @@ export function KawaiiUIContent({ editing = false }: { editing?: boolean }) {
                 />
               ) : (
                 <Text style={{ fontFamily: FontFamily.ja, fontSize: sf(13), color: PINK_INK }}>
-                  {vals[label] || '——'}
+                  {vals[key] || '——'}
                 </Text>
               )}
             </View>
@@ -139,51 +202,10 @@ export function KawaiiUIContent({ editing = false }: { editing?: boolean }) {
         ))}
       </View>
 
-      <KawaiiPanel edge={PANEL_EDGE} bg={panelBg} style={s.mainPanel}>
-        <View style={s.mainRow}>
-          <PhotoBox width={110} height={130} editing={e} style={s.portraitStyle} uri={vals.portrait} onUriChange={e ? (u) => setVal('portrait', u) : undefined} />
-          <View style={s.infoCol}>
-            {INFO_KEYS.map((k) => (
-              <View key={k} style={s.infoRow}>
-                <Text style={[s.infoKey, { color: PINK_INK }]}>{k}</Text>
-                {k === 'birthday' ? (
-                  <DateField
-                    value={vals.birthday}
-                    onChange={(v) => setVal('birthday', v)}
-                    editing={e}
-                    format="birthday"
-                    placeholder="pick date"
-                    style={[s.infoVal, { backgroundColor: infoBg, borderColor: PANEL_EDGE, borderWidth: 1, borderRadius: 4 }]}
-                    textStyle={{ fontSize: sf(9), color: PINK_INK, fontFamily: FontFamily.ja }}
-                  />
-                ) : e ? (
-                  <TextInput
-                    value={vals[k] ?? ''}
-                    onChangeText={(v) => setVal(k, v)}
-                    placeholder="——"
-                    placeholderTextColor={PINK_INK + '88'}
-                    underlineColorAndroid="transparent"
-                    style={[
-                      s.infoVal,
-                      s.infoValInput,
-                      { backgroundColor: infoBg, borderColor: PANEL_EDGE },
-                      k === 'love language' && { fontSize: sf(9) }
-                    ]}
-                  />
-                ) : (
-                  <View style={[s.infoVal, { backgroundColor: infoBg, borderColor: PANEL_EDGE, justifyContent: 'center' }]}>
-                    <Text style={{
-                      fontFamily: FontFamily.ja,
-                      fontSize: k === 'love language' ? 8.5 : 11,
-                      color: INK,
-                    }}>{vals[k]}</Text>
-                  </View>
-                )}
-              </View>
-            ))}
-          </View>
-        </View>
-      </KawaiiPanel>
+      {renderPersonPanel('their', 'them', 'theirName', 'theirPortrait', 'their name')}
+      <View style={s.mt10}>
+        {renderPersonPanel('my', 'me', 'myName', 'myPortrait', 'my name')}
+      </View>
 
       <KawaiiPanel edge={PANEL_EDGE} bg={panelBg} style={s.mt10}>
         <Text style={[s.kawaiiLabel, { color: PINK_INK, marginBottom: 6 }]}>sharing status</Text>
@@ -344,6 +366,9 @@ const s = StyleSheet.create({
   statPanel: { flex: 1 },
   kawaiiLabel: { fontFamily: FontFamily.markerBold, fontSize: sf(8), letterSpacing: 1, textTransform: 'uppercase', opacity: 0.7 },
   mainPanel: { marginTop: 10 },
+  personHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 6 },
+  personNameInput: { flex: 1, fontFamily: FontFamily.ja, fontSize: sf(13), color: PINK_INK, padding: 0 },
+  personNameText: { flex: 1, fontFamily: FontFamily.ja, fontSize: sf(13), color: PINK_INK },
   mainRow: { flexDirection: 'row', gap: 10 },
   portraitStyle: { borderRadius: 8, borderWidth: 1.5, borderColor: PANEL_EDGE },
   infoCol: { flex: 1, gap: 5 },

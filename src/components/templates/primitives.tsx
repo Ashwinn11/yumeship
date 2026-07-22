@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, createContext, useContext } from 'react';
 import { View, Text, TextInput, Pressable, Image, StyleSheet } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import Svg, {
@@ -13,6 +13,15 @@ import { FontFamily ,sf } from '@/constants/theme';
 export const INK = '#1f1219';
 export const FILL_GRAY = '#e9d8cb';
 export const FILL_GRAY_DARK = '#d0bba9';
+
+// ─── TemplateTextColorCtx ──────────────────────────────────────
+// Per-template user-chosen text color (parallels the bgColor/bgImage
+// convention). Empty string means "use the template's own default ink."
+export const TemplateTextColorCtx = createContext<string>('');
+export function useThemedInk(): string {
+  const c = useContext(TemplateTextColorCtx);
+  return c || INK;
+}
 
 // ─── useSliderTrack ───────────────────────────────────────────
 // Shared touch handling for horizontal value sliders. Uses pageX
@@ -52,8 +61,9 @@ type MarkerCardProps = {
   style?: object;
 };
 export function MarkerCard({ children, tint = '#fffbf6', style }: MarkerCardProps) {
+  const ink = useThemedInk();
   return (
-    <View style={[s.markerCard, { backgroundColor: tint === 'transparent' ? 'transparent' : tint }, style]}>
+    <View style={[s.markerCard, { backgroundColor: tint === 'transparent' ? 'transparent' : tint, borderColor: ink, shadowColor: ink }, style]}>
       {children}
     </View>
   );
@@ -62,8 +72,9 @@ export function MarkerCard({ children, tint = '#fffbf6', style }: MarkerCardProp
 // ─── MarkerHeader ─────────────────────────────────────────────
 type MarkerHeaderProps = { children: React.ReactNode; size?: number; style?: object };
 export function MarkerHeader({ children, size = 32, style }: MarkerHeaderProps) {
+  const ink = useThemedInk();
   return (
-    <Text style={[s.markerHeader, { fontSize: size, lineHeight: size }, style]}>
+    <Text style={[s.markerHeader, { fontSize: size, lineHeight: size, color: ink }, style]}>
       {children}
     </Text>
   );
@@ -72,10 +83,11 @@ export function MarkerHeader({ children, size = 32, style }: MarkerHeaderProps) 
 // ─── TitleHeader ──────────────────────────────────────────────
 type TitleHeaderProps = { title: string; subtitle?: string };
 export function TitleHeader({ title, subtitle }: TitleHeaderProps) {
+  const ink = useThemedInk();
   return (
     <View style={s.titleHeader}>
       <MarkerHeader size={26}>{title}</MarkerHeader>
-      {subtitle && <Text style={s.titleSubtitle}>{subtitle}</Text>}
+      {subtitle && <Text style={[s.titleSubtitle, { color: ink }]}>{subtitle}</Text>}
     </View>
   );
 }
@@ -89,14 +101,15 @@ type BlankPillProps = {
   style?: any;
 };
 export function BlankPill({ width = '100%' as number | string, value, onChangeText, placeholder = '——', style }: BlankPillProps) {
+  const ink = useThemedInk();
   if (onChangeText !== undefined) {
     return (
       <TextInput
         value={value ?? ''}
         onChangeText={onChangeText}
         placeholder={placeholder}
-        placeholderTextColor={INK + '88'}
-        style={[s.blankPill, s.blankPillInput, typeof width === 'number' ? { width } : { flex: 1 }, style]}
+        placeholderTextColor={ink + '88'}
+        style={[s.blankPill, s.blankPillInput, typeof width === 'number' ? { width } : { flex: 1 }, { color: ink, borderColor: ink }, style]}
       />
     );
   }
@@ -105,11 +118,11 @@ export function BlankPill({ width = '100%' as number | string, value, onChangeTe
       s.blankPill,
       value ? s.blankPillInput : null,
       typeof width === 'number' ? { width } : { flex: 1 },
-      { justifyContent: 'center' },
+      { justifyContent: 'center', borderColor: ink },
       style
     ]}>
       {value ? (
-        <Text style={[{ fontFamily: FontFamily.ja, fontSize: sf(11), color: INK }, style && { fontSize: style.fontSize }]}>{value}</Text>
+        <Text style={[{ fontFamily: FontFamily.ja, fontSize: sf(11), color: ink }, style && { fontSize: style.fontSize }]}>{value}</Text>
       ) : null}
     </View>
   );
@@ -122,26 +135,30 @@ type TemplateFieldProps = {
   valueWidth?: number;
   onChangeText?: (t: string) => void;
   keyboardType?: 'default' | 'numeric' | 'email-address' | 'phone-pad' | 'number-pad';
+  /** value box shows the template's own background through instead of a solid white pill */
+  transparent?: boolean;
 };
-export function TemplateField({ label, value, valueWidth = 90, onChangeText, keyboardType }: TemplateFieldProps) {
+export function TemplateField({ label, value, valueWidth = 90, onChangeText, keyboardType, transparent }: TemplateFieldProps) {
+  const ink = useThemedInk();
+  const boxTint = transparent ? { backgroundColor: 'transparent' } : null;
   return (
     <View style={s.fieldRow}>
-      <Text style={s.fieldLabel}>{label}</Text>
+      <Text style={[s.fieldLabel, { color: ink }]}>{label}</Text>
       {onChangeText !== undefined ? (
         <TextInput
           value={value ?? ''}
           onChangeText={onChangeText}
           placeholder="——"
-          placeholderTextColor={INK + '88'}
+          placeholderTextColor={ink + '88'}
           keyboardType={keyboardType}
-          style={[s.fieldValueBox, s.fieldValueInput, { width: valueWidth }]}
+          style={[s.fieldValueBox, s.fieldValueInput, { width: valueWidth, color: ink, borderColor: ink }, boxTint]}
         />
       ) : value ? (
-        <View style={[s.fieldValueBox, { width: valueWidth }]}>
-          <Text style={s.fieldValueText}>{value}</Text>
+        <View style={[s.fieldValueBox, { width: valueWidth, borderColor: ink }, boxTint]}>
+          <Text style={[s.fieldValueText, { color: ink }]}>{value}</Text>
         </View>
       ) : (
-        <View style={[s.blankPill, { width: valueWidth }]} />
+        <View style={[s.blankPill, { width: valueWidth, borderColor: ink }, boxTint]} />
       )}
     </View>
   );
@@ -149,10 +166,11 @@ export function TemplateField({ label, value, valueWidth = 90, onChangeText, key
 
 // ─── Check ────────────────────────────────────────────────────
 export function Check({ on = false, size = 14, onPress }: { on?: boolean; size?: number; onPress?: () => void }) {
+  const ink = useThemedInk();
   const svg = (
     <Svg width={size} height={size} viewBox="0 0 16 16">
-      <Circle cx="8" cy="8" r="6.5" fill="none" stroke={INK} strokeWidth="1.6" />
-      {on && <Circle cx="8" cy="8" r="3.5" fill={INK} />}
+      <Circle cx="8" cy="8" r="6.5" fill="none" stroke={ink} strokeWidth="1.6" />
+      {on && <Circle cx="8" cy="8" r="3.5" fill={ink} />}
     </Svg>
   );
   if (onPress) return <Pressable onPress={onPress} hitSlop={8}>{svg}</Pressable>;
@@ -160,14 +178,16 @@ export function Check({ on = false, size = 14, onPress }: { on?: boolean; size?:
 }
 
 // ─── SquareCheck (used by Boundaries) ─────────────────────────
-export function SquareCheck({ on = false, size = 11, stroke = INK }: { on?: boolean; size?: number; stroke?: string }) {
+export function SquareCheck({ on = false, size = 11, stroke }: { on?: boolean; size?: number; stroke?: string }) {
+  const themedInk = useThemedInk();
+  const strokeColor = stroke ?? themedInk;
   return (
     <Svg width={size} height={size} viewBox="0 0 12 12">
-      <Rect x="1" y="1" width="10" height="10" rx="2" fill="#fff" stroke={stroke} strokeWidth="1.4" />
+      <Rect x="1" y="1" width="10" height="10" rx="2" fill="#fff" stroke={strokeColor} strokeWidth="1.4" />
       {on && (
         <Path
           d="M3 6 L 5 8.5 L 9 4"
-          stroke={stroke}
+          stroke={strokeColor}
           strokeWidth="1.6"
           fill="none"
           strokeLinecap="round"
@@ -186,6 +206,7 @@ type DichotomyProps = {
   onChoiceChange?: (c: 'left' | 'right' | null) => void;
 };
 export function Dichotomy({ left, right, choice, onChoiceChange }: DichotomyProps) {
+  const ink = useThemedInk();
   const handlePressLeft = () => {
     if (choice === 'left') {
       onChoiceChange?.(null);
@@ -205,11 +226,11 @@ export function Dichotomy({ left, right, choice, onChoiceChange }: DichotomyProp
   return (
     <View style={s.dichotomyRow}>
       <Pressable onPress={handlePressLeft} disabled={!onChoiceChange} hitSlop={{ top: 12, bottom: 12, left: 10, right: 6 }}>
-        <Text style={[s.dichotomyText, choice === 'left' && s.dichotomyChosen]}>{left}</Text>
+        <Text style={[s.dichotomyText, { color: ink }, choice === 'left' && s.dichotomyChosen]}>{left}</Text>
       </Pressable>
-      <Text style={s.dichotomySlash}>/</Text>
+      <Text style={[s.dichotomySlash, { color: ink }]}>/</Text>
       <Pressable onPress={handlePressRight} disabled={!onChoiceChange} hitSlop={{ top: 12, bottom: 12, left: 6, right: 10 }} style={s.dichotomyRight}>
-        <Text style={[s.dichotomyText, choice === 'right' && s.dichotomyChosen]}>{right}</Text>
+        <Text style={[s.dichotomyText, { color: ink }, choice === 'right' && s.dichotomyChosen]}>{right}</Text>
       </Pressable>
       <Check on={!!choice} />
     </View>
@@ -218,13 +239,14 @@ export function Dichotomy({ left, right, choice, onChoiceChange }: DichotomyProp
 
 // ─── SharingRow ───────────────────────────────────────────────
 export function SharingRow({ choice, onChoiceChange }: { choice?: 'Yes' | 'No' | 'Selective'; onChoiceChange?: (c: 'Yes' | 'No' | 'Selective') => void }) {
+  const ink = useThemedInk();
   return (
     <View style={s.sharingRow}>
-      <Text style={s.sharingLabel}>♡ Sharing:</Text>
+      <Text style={[s.sharingLabel, { color: ink }]}>♡ Sharing:</Text>
       {(['Yes', 'No', 'Selective'] as const).map((c) => (
         <Pressable key={c} style={s.sharingOption} onPress={() => onChoiceChange?.(c)} disabled={!onChoiceChange} hitSlop={4}>
           <Check on={choice === c} size={13} />
-          <Text style={[s.sharingText, choice === c && s.sharingActive]}>{c}</Text>
+          <Text style={[s.sharingText, { color: ink }, choice === c && s.sharingActive]}>{c}</Text>
         </Pressable>
       ))}
     </View>
@@ -233,17 +255,18 @@ export function SharingRow({ choice, onChoiceChange }: { choice?: 'Yes' | 'No' |
 
 // ─── AttrSlider ───────────────────────────────────────────────
 export function AttrSlider({ label, value = 0, onValueChange }: { label: string; value?: number; onValueChange?: (v: number) => void }) {
+  const ink = useThemedInk();
   const { trackRef, responder } = useSliderTrack(onValueChange);
   return (
     <View style={s.sliderCol}>
-      <Text style={s.sliderLabel}>{label}</Text>
+      <Text style={[s.sliderLabel, { color: ink }]}>{label}</Text>
       <View
         ref={trackRef}
-        style={s.sliderTrack}
+        style={[s.sliderTrack, { borderColor: ink }]}
         {...responder}
       >
         <View style={[s.sliderFill, { width: `${value * 100}%` as any }]} />
-        <View style={[s.sliderThumb, { left: `${value * 100}%` as any }]} />
+        <View style={[s.sliderThumb, { left: `${value * 100}%` as any, borderColor: ink }]} />
       </View>
     </View>
   );
@@ -265,6 +288,7 @@ type PhotoBoxProps = {
   svgXml?: string;
 };
 export function PhotoBox({ size, round, label, style, width, height, onPress, editing, uri: controlledUri, onUriChange, svgXml }: PhotoBoxProps) {
+  const ink = useThemedInk();
   const [localUri, setLocalUri] = useState<string | null>(null);
   const imageUri = controlledUri !== undefined ? (controlledUri || null) : localUri;
   // preview data can pass raw SVG markup where a picked-photo uri normally lives
@@ -286,6 +310,7 @@ export function PhotoBox({ size, round, label, style, width, height, onPress, ed
 
   const boxStyle = [
     s.photoBox,
+    { borderColor: ink },
     round && s.photoBoxRound,
     size ? { width: size, height: size } : null,
     width ? { width } : null,
@@ -307,8 +332,8 @@ export function PhotoBox({ size, round, label, style, width, height, onPress, ed
         />
       ) : (
         <>
-          {label && <Text style={s.photoBoxLabel}>{label}</Text>}
-          {editing && !label && <Text style={s.photoBoxLabel}>tap to add</Text>}
+          {label && <Text style={[s.photoBoxLabel, { color: ink }]}>{label}</Text>}
+          {editing && !label && <Text style={[s.photoBoxLabel, { color: ink }]}>tap to add</Text>}
         </>
       )}
     </>
@@ -331,6 +356,7 @@ type PolaroidProps = {
   onUriChange?: (uri: string) => void;
 };
 export function Polaroid({ size = 130, rotate = -4, caption, onCaptionChange, tapeColor = '#f3b6c4', style, editing, uri: controlledUri, onUriChange }: PolaroidProps) {
+  const ink = useThemedInk();
   const [localUri, setLocalUri] = useState<string | null>(null);
   const imageUri = controlledUri !== undefined ? (controlledUri || null) : localUri;
 
@@ -349,7 +375,7 @@ export function Polaroid({ size = 130, rotate = -4, caption, onCaptionChange, ta
   };
 
   return (
-    <View style={[s.polaroid, { width: size, transform: [{ rotate: `${rotate}deg` }] }, style]}>
+    <View style={[s.polaroid, { width: size, borderColor: ink, shadowColor: ink, transform: [{ rotate: `${rotate}deg` }] }, style]}>
       <View
         style={[
           s.polaroidTape,
@@ -362,11 +388,11 @@ export function Polaroid({ size = 130, rotate = -4, caption, onCaptionChange, ta
         ]}
       />
       <Pressable onPress={editing ? handlePhotoPress : undefined} disabled={!editing}>
-        <View style={[s.polaroidPhoto, { width: size - 16 }]}>
+        <View style={[s.polaroidPhoto, { width: size - 16, borderColor: ink }]}>
           {imageUri && (
             <Image source={{ uri: imageUri }} style={[StyleSheet.absoluteFill, { borderRadius: 2 }]} resizeMode="cover" />
           )}
-          {editing && !imageUri && <Text style={[s.photoBoxLabel, { position: 'absolute', alignSelf: 'center', top: '40%' as any }]}>tap</Text>}
+          {editing && !imageUri && <Text style={[s.photoBoxLabel, { color: ink, position: 'absolute', alignSelf: 'center', top: '40%' as any }]}>tap</Text>}
         </View>
       </Pressable>
       {editing && onCaptionChange !== undefined ? (
@@ -374,13 +400,71 @@ export function Polaroid({ size = 130, rotate = -4, caption, onCaptionChange, ta
           value={caption ?? ''}
           onChangeText={onCaptionChange}
           placeholder="caption..."
-          placeholderTextColor={INK + '88'}
+          placeholderTextColor={ink + '88'}
           underlineColorAndroid="transparent"
-          style={s.polaroidCaptionInput}
+          style={[s.polaroidCaptionInput, { color: ink }]}
         />
       ) : caption ? (
-        <Text style={s.polaroidCaption}>{caption}</Text>
+        <Text style={[s.polaroidCaption, { color: ink }]}>{caption}</Text>
       ) : null}
+    </View>
+  );
+}
+
+// ─── MemoriesFooter ───────────────────────────────────────────
+// Shared closing section for every template: a small captioned-photo strip
+// + a song row. Standardized keys (memPhoto0/1/2, memCap0/1/2, song) so
+// switching templates never drops these via FIELD_MAP.
+export type MemoryPhoto = { uri: string; caption: string };
+const MEMORY_TAPE = ['#f3b6c4', '#c9b8e8', '#f0daa0'];
+const MEMORY_ROTATE = [-5, 4, -3];
+type MemoriesFooterProps = {
+  editing?: boolean;
+  photos: MemoryPhoto[]; // length 3
+  onPhotoChange?: (i: number, uri: string) => void;
+  onCaptionChange?: (i: number, caption: string) => void;
+  song?: string;
+  onSongChange?: (v: string) => void;
+  style?: object;
+  /** song card shows the template's own background through instead of solid white */
+  transparentBg?: boolean;
+};
+export function MemoriesFooter({ editing, photos, onPhotoChange, onCaptionChange, song, onSongChange, style, transparentBg }: MemoriesFooterProps) {
+  const ink = useThemedInk();
+  return (
+    <View style={[s.memoriesWrap, style]}>
+      <View style={s.memoriesRow}>
+        {[0, 1, 2].map((i) => (
+          <Polaroid
+            key={i}
+            size={92}
+            rotate={MEMORY_ROTATE[i]}
+            tapeColor={MEMORY_TAPE[i]}
+            editing={editing}
+            uri={photos[i]?.uri}
+            onUriChange={onPhotoChange ? (u) => onPhotoChange(i, u) : undefined}
+            caption={photos[i]?.caption}
+            onCaptionChange={onCaptionChange ? (c) => onCaptionChange(i, c) : undefined}
+          />
+        ))}
+      </View>
+      <WindowFrame title="Our song" style={transparentBg ? { backgroundColor: 'transparent' } : undefined}>
+        <View style={{ padding: 2 }}>
+          {editing ? (
+            <TextInput
+              value={song ?? ''}
+              onChangeText={onSongChange}
+              placeholder="song title..."
+              placeholderTextColor={ink + '88'}
+              underlineColorAndroid="transparent"
+              style={[s.memoriesSongInput, { color: ink }]}
+            />
+          ) : song ? (
+            <Text style={[s.memoriesSongText, { color: ink }]}>{song}</Text>
+          ) : null}
+          <MusicPlayer />
+        </View>
+      </WindowFrame>
     </View>
   );
 }
@@ -388,26 +472,27 @@ export function Polaroid({ size = 130, rotate = -4, caption, onCaptionChange, ta
 // ─── WindowFrame ──────────────────────────────────────────────
 type WindowFrameProps = { title: string; children: React.ReactNode; style?: object };
 export function WindowFrame({ title, children, style }: WindowFrameProps) {
+  const ink = useThemedInk();
   return (
-    <View style={[s.windowFrame, style]}>
-      <View style={s.windowTitleBar}>
-        <Text style={s.windowTitle}>{title}</Text>
+    <View style={[s.windowFrame, { borderColor: ink }, style]}>
+      <View style={[s.windowTitleBar, { borderBottomColor: ink }]}>
+        <Text style={[s.windowTitle, { color: ink }]}>{title}</Text>
         <View style={s.windowControls}>
           {/* heart / min / max / close as simple shapes */}
           <Svg width="11" height="11" viewBox="0 0 16 16">
             <Path
               d="M8 14 C 3 11 1 8.5 1 5.5 C 1 3.5 2.5 2 4.5 2 C 6 2 7.3 2.9 8 4.3 C 8.7 2.9 10 2 11.5 2 C 13.5 2 15 3.5 15 5.5 C 15 8.5 13 11 8 14 Z"
-              fill="none" stroke={INK} strokeWidth="1.4"
+              fill="none" stroke={ink} strokeWidth="1.4"
             />
           </Svg>
           <Svg width="11" height="11" viewBox="0 0 11 11">
-            <Path d="M2 6 L9 6" stroke={INK} strokeWidth="1.5" strokeLinecap="round" />
+            <Path d="M2 6 L9 6" stroke={ink} strokeWidth="1.5" strokeLinecap="round" />
           </Svg>
           <Svg width="11" height="11" viewBox="0 0 11 11">
-            <Rect x="2" y="2" width="7" height="7" stroke={INK} strokeWidth="1.5" fill="none" />
+            <Rect x="2" y="2" width="7" height="7" stroke={ink} strokeWidth="1.5" fill="none" />
           </Svg>
           <Svg width="11" height="11" viewBox="0 0 11 11">
-            <Path d="M2 2 L9 9 M9 2 L2 9" stroke={INK} strokeWidth="1.5" strokeLinecap="round" />
+            <Path d="M2 2 L9 9 M9 2 L2 9" stroke={ink} strokeWidth="1.5" strokeLinecap="round" />
           </Svg>
         </View>
       </View>
@@ -418,49 +503,50 @@ export function WindowFrame({ title, children, style }: WindowFrameProps) {
 
 // ─── MusicPlayer ──────────────────────────────────────────────
 export function MusicPlayer({ track }: { track?: string }) {
+  const ink = useThemedInk();
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0.62);
   const { trackRef: barRef, responder: scrubProps } = useSliderTrack(setProgress);
   return (
     <View style={s.musicPlayer}>
-      {track && <Text style={s.musicTrack}>{track}</Text>}
+      {track && <Text style={[s.musicTrack, { color: ink }]}>{track}</Text>}
       <View style={s.musicScrubRow}>
         <View
           ref={barRef}
-          style={s.musicBar}
+          style={[s.musicBar, { borderColor: ink }]}
           {...scrubProps}
         >
           <View style={[s.musicFill, { width: `${progress * 100}%` as any }]} />
-          <View style={[s.musicThumb, { left: `${progress * 100}%` as any }]} />
+          <View style={[s.musicThumb, { left: `${progress * 100}%` as any, borderColor: ink }]} />
         </View>
-        <Svg width="18" height="18" viewBox="0 0 16 16" fill={INK}>
-          <Path d="M6 2 L12 4 L12 11 A 2 2 0 1 1 10 9 L10 5 L8 4 L8 12 A 2 2 0 1 1 6 10 Z" fill={INK} />
+        <Svg width="18" height="18" viewBox="0 0 16 16" fill={ink}>
+          <Path d="M6 2 L12 4 L12 11 A 2 2 0 1 1 10 9 L10 5 L8 4 L8 12 A 2 2 0 1 1 6 10 Z" fill={ink} />
         </Svg>
       </View>
       <View style={s.musicControls}>
         <Svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <Path d="M3 8 a5 5 0 0 1 9 -3 M3 5 L3 8 L6 8 M13 8 a5 5 0 0 1 -9 3 M13 11 L13 8 L10 8" stroke={INK} strokeWidth="1.5" strokeLinecap="round" />
+          <Path d="M3 8 a5 5 0 0 1 9 -3 M3 5 L3 8 L6 8 M13 8 a5 5 0 0 1 -9 3 M13 11 L13 8 L10 8" stroke={ink} strokeWidth="1.5" strokeLinecap="round" />
         </Svg>
-        <Svg width="16" height="16" viewBox="0 0 16 16" fill={INK}>
-          <Path d="M9 4 L4 8 L9 12 Z" /><Rect x="2" y="4" width="1.6" height="8" fill={INK} />
+        <Svg width="16" height="16" viewBox="0 0 16 16" fill={ink}>
+          <Path d="M9 4 L4 8 L9 12 Z" /><Rect x="2" y="4" width="1.6" height="8" fill={ink} />
         </Svg>
-        <Pressable style={s.musicPlayBtn} onPress={() => setPlaying((p) => !p)} hitSlop={8}>
+        <Pressable style={[s.musicPlayBtn, { borderColor: ink }]} onPress={() => setPlaying((p) => !p)} hitSlop={8}>
           <Svg width="9" height="9" viewBox="0 0 9 9">
             {playing ? (
               <>
-                <Rect x="1.5" y="1" width="2" height="7" rx="0.5" fill={INK} />
-                <Rect x="5.5" y="1" width="2" height="7" rx="0.5" fill={INK} />
+                <Rect x="1.5" y="1" width="2" height="7" rx="0.5" fill={ink} />
+                <Rect x="5.5" y="1" width="2" height="7" rx="0.5" fill={ink} />
               </>
             ) : (
-              <Path d="M2 1 L8 4.5 L2 8 Z" fill={INK} />
+              <Path d="M2 1 L8 4.5 L2 8 Z" fill={ink} />
             )}
           </Svg>
         </Pressable>
-        <Svg width="16" height="16" viewBox="0 0 16 16" fill={INK}>
-          <Path d="M7 4 L12 8 L7 12 Z" /><Rect x="12.4" y="4" width="1.6" height="8" fill={INK} />
+        <Svg width="16" height="16" viewBox="0 0 16 16" fill={ink}>
+          <Path d="M7 4 L12 8 L7 12 Z" /><Rect x="12.4" y="4" width="1.6" height="8" fill={ink} />
         </Svg>
         <Svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <Path d="M3 3 L13 13 M13 3 L3 13" stroke={INK} strokeWidth="1.6" strokeLinecap="round" />
+          <Path d="M3 3 L13 13 M13 3 L3 13" stroke={ink} strokeWidth="1.6" strokeLinecap="round" />
         </Svg>
       </View>
     </View>
@@ -491,39 +577,44 @@ type ProfileBlockProps = {
   showPhoto?: boolean;
   photoUri?: string;
   onPhotoUriChange?: (uri: string) => void;
+  /** which side the photo sits on — lets two stacked blocks mirror each other, photos facing outward */
+  photoSide?: 'left' | 'right';
+  /** block + field boxes show the template's own background through instead of solid white */
+  transparent?: boolean;
 };
-export function ProfileBlock({ who, filled = {}, onFilledChange, dicho = {}, onDichoChange, sliders = [['TRUST', 0], ['CLINGY', 0], ['JEALOUSY', 0]], onSliderChange, showPhoto, photoUri, onPhotoUriChange }: ProfileBlockProps) {
+export function ProfileBlock({ who, filled = {}, onFilledChange, dicho = {}, onDichoChange, sliders = [['TRUST', 0], ['CLINGY', 0], ['JEALOUSY', 0]], onSliderChange, showPhoto, photoUri, onPhotoUriChange, photoSide = 'left', transparent }: ProfileBlockProps) {
+  const ink = useThemedInk();
   const f = (field: keyof FilledState) => onFilledChange ? (v: string) => onFilledChange(field, v) : undefined;
   const d = (field: keyof DichoState) => onDichoChange ? (c: 'left' | 'right' | null) => onDichoChange(field, c) : undefined;
   return (
-    <View style={s.profileBlock}>
+    <View style={[s.profileBlock, { borderColor: ink }, photoSide === 'right' && s.profileBlockReverse, transparent && { backgroundColor: 'transparent' }]}>
       {!showPhoto && <PhotoBox size={80} style={s.profilePhoto} editing={!!onFilledChange} uri={photoUri} onUriChange={onPhotoUriChange} />}
       <View style={s.profileContent}>
         <View style={s.profileTopRow}>
-          <View style={s.profileWhoTag}>
-            <Text style={s.profileWhoText}>{who}</Text>
+          <View style={[s.profileWhoTag, { borderColor: ink }]}>
+            <Text style={[s.profileWhoText, { color: ink }]}>{who}</Text>
           </View>
-          <TemplateField label="Age" value={filled.age} onChangeText={f('age')} valueWidth={32} keyboardType="numeric" />
-          <TemplateField label="Height" value={filled.height} onChangeText={f('height')} valueWidth={44} />
+          <TemplateField label="Age" value={filled.age} onChangeText={f('age')} valueWidth={32} keyboardType="numeric" transparent={transparent} />
+          <TemplateField label="Height" value={filled.height} onChangeText={f('height')} valueWidth={44} transparent={transparent} />
         </View>
-        <TemplateField label="Occupation" value={filled.occupation} onChangeText={f('occupation')} valueWidth={120} />
+        <TemplateField label="Occupation" value={filled.occupation} onChangeText={f('occupation')} valueWidth={120} transparent={transparent} />
         <View style={s.profileDichoCol}>
           <Dichotomy left="Big spoon" right="Little spoon" choice={dicho.spoon} onChoiceChange={d('spoon')} />
           <Dichotomy left="Confident" right="Shy" choice={dicho.energy} onChoiceChange={d('energy')} />
           <Dichotomy left="PDA" right="Reserved" choice={dicho.pda} onChoiceChange={d('pda')} />
         </View>
         <View style={s.profileGoodRow}>
-          <Text style={s.profileGoodLabel}>I'm good at</Text>
+          <Text style={[s.profileGoodLabel, { color: ink }]}>I'm good at</Text>
           {onFilledChange !== undefined ? (
             <TextInput
               value={filled.good ?? ''}
               onChangeText={f('good')}
               placeholder="your strengths"
-              placeholderTextColor={INK + '88'}
-              style={s.profileGoodInput}
+              placeholderTextColor={ink + '88'}
+              style={[s.profileGoodInput, { color: ink }]}
             />
           ) : (
-            <Text style={s.profileGoodText}>{filled.good || '——'}</Text>
+            <Text style={[s.profileGoodText, { color: ink }]}>{filled.good || '——'}</Text>
           )}
         </View>
         <View style={s.profileSliders}>
@@ -539,27 +630,34 @@ export function ProfileBlock({ who, filled = {}, onFilledChange, dicho = {}, onD
 }
 
 // ─── TwinProfile ──────────────────────────────────────────────
-type TwinProfileProps = { who: string; info: [string, string?][]; onInfoChange?: (index: number, value: string) => void };
-export function TwinProfile({ who, info, onInfoChange }: TwinProfileProps) {
+type TwinProfileProps = {
+  who: string;
+  info: [string, string?][];
+  onInfoChange?: (index: number, value: string) => void;
+  /** body shows the template's own background through instead of solid white */
+  transparent?: boolean;
+};
+export function TwinProfile({ who, info, onInfoChange, transparent }: TwinProfileProps) {
+  const ink = useThemedInk();
   return (
-    <View style={s.twinProfile}>
-      <View style={s.twinProfileHeader}>
-        <Text style={s.twinProfileWho}>{who}</Text>
+    <View style={[s.twinProfile, { borderColor: ink }, transparent && { backgroundColor: 'transparent' }]}>
+      <View style={[s.twinProfileHeader, { borderBottomColor: ink }]}>
+        <Text style={[s.twinProfileWho, { color: ink }]}>{who}</Text>
       </View>
       <View style={s.twinProfileBody}>
         {info.map(([k, v], i) => (
           <View key={k} style={s.twinProfileRow}>
-            <Text style={s.twinProfileKey}>{k}</Text>
+            <Text style={[s.twinProfileKey, { color: ink }]}>{k}</Text>
             {onInfoChange ? (
               <TextInput
                 value={v ?? ''}
                 onChangeText={(t) => onInfoChange(i, t)}
                 placeholder="——"
-                placeholderTextColor={INK + '88'}
-                style={[s.twinProfileVal, s.twinProfileInput]}
+                placeholderTextColor={ink + '88'}
+                style={[s.twinProfileVal, s.twinProfileInput, { color: ink, borderColor: ink + '55' }]}
               />
             ) : v ? (
-              <Text style={s.twinProfileVal}>{v}</Text>
+              <Text style={[s.twinProfileVal, { color: ink }]}>{v}</Text>
             ) : (
               <View style={{ flex: 1 }}><BlankPill /></View>
             )}
@@ -583,6 +681,7 @@ type HeartClipPhotoProps = {
   onRightUriChange?: (uri: string) => void;
 };
 export function HeartClipPhoto({ width = 180, height = 160, leftUri, rightUri, editing, onLeftUriChange, onRightUriChange }: HeartClipPhotoProps) {
+  const ink = useThemedInk();
   const pickLeft = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'] as ImagePicker.MediaType[], allowsEditing: true, quality: 0.85 });
     if (!result.canceled && result.assets[0]) onLeftUriChange?.(result.assets[0].uri);
@@ -609,7 +708,7 @@ export function HeartClipPhoto({ width = 180, height = 160, leftUri, rightUri, e
           {leftUri ? (
             <SvgImage x="0" y="0" width="90" height="160" href={leftUri} preserveAspectRatio="xMidYMid slice" />
           ) : editing ? (
-            <Path d="M45 72 L45 88 M37 80 L53 80" stroke={INK} strokeWidth="1.5" strokeLinecap="round" opacity="0.4" />
+            <Path d="M45 72 L45 88 M37 80 L53 80" stroke={ink} strokeWidth="1.5" strokeLinecap="round" opacity="0.4" />
           ) : null}
 
           {/* Right half */}
@@ -617,13 +716,13 @@ export function HeartClipPhoto({ width = 180, height = 160, leftUri, rightUri, e
           {rightUri ? (
             <SvgImage x="90" y="0" width="90" height="160" href={rightUri} preserveAspectRatio="xMidYMid slice" />
           ) : editing ? (
-            <Path d="M135 72 L135 88 M127 80 L143 80" stroke={INK} strokeWidth="1.5" strokeLinecap="round" opacity="0.4" />
+            <Path d="M135 72 L135 88 M127 80 L143 80" stroke={ink} strokeWidth="1.5" strokeLinecap="round" opacity="0.4" />
           ) : null}
         </G>
 
         {/* Outline + divider */}
-        <Path d={HEART_PATH} fill="none" stroke={INK} strokeWidth="2.2" />
-        <Path d="M90 8 L90 142" stroke={INK} strokeWidth="1.4" strokeDasharray="4,4" />
+        <Path d={HEART_PATH} fill="none" stroke={ink} strokeWidth="2.2" />
+        <Path d="M90 8 L90 142" stroke={ink} strokeWidth="1.4" strokeDasharray="4,4" />
       </Svg>
 
       {/* Tap areas when editing */}
@@ -879,6 +978,10 @@ const s = StyleSheet.create({
     padding: 0,
     height: 20,
   },
+  memoriesWrap: { marginTop: 14, gap: 10 },
+  memoriesRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'flex-start', paddingVertical: 6, gap: 2 },
+  memoriesSongInput: { fontFamily: FontFamily.ui, fontSize: sf(14), color: INK, marginBottom: 6, padding: 0 },
+  memoriesSongText: { fontFamily: FontFamily.ui, fontSize: sf(14), color: INK, marginBottom: 6 },
   windowFrame: {
     backgroundColor: '#fff',
     borderWidth: 1.5,
@@ -987,6 +1090,7 @@ const s = StyleSheet.create({
     gap: 10,
     backgroundColor: '#fff',
   },
+  profileBlockReverse: { flexDirection: 'row-reverse' },
   profilePhoto: {
     flexShrink: 0,
   },

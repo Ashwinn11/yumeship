@@ -31,6 +31,7 @@ export function LoveLetterTab({ shipId }: { shipId: string }) {
     },
     bgColor: '',
     bgImage: '',
+    textColor: '',
   }), [shipId]);
 
   return (

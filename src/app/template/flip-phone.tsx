@@ -11,11 +11,11 @@ import { useTemplateCtx } from '@/store/templateData';
 import { Colors, FontFamily ,sf } from '@/constants/theme';
 
 // Y2K OS-style window chrome — faithful port of design/templates.jsx Y2KWindow
-function Y2KWindow({ title, children, tint, mini = false }: { title: string; children: React.ReactNode; tint: string; mini?: boolean }) {
+function Y2KWindow({ title, children, tint, ink, mini = false }: { title: string; children: React.ReactNode; tint: string; ink: string; mini?: boolean }) {
   return (
     <View style={[y.win, { borderColor: Colors.sakuraInk }]}>
       <View style={[y.titleBar, { backgroundColor: tint }]}>
-        <Text style={y.titleText}>{title}</Text>
+        <Text style={[y.titleText, { color: ink }]}>{title}</Text>
         <View style={y.dots}>
           {[0, 1, 2].map(i => <View key={i} style={y.dot} />)}
         </View>
@@ -30,6 +30,7 @@ function Y2KWindow({ title, children, tint, mini = false }: { title: string; chi
 export function FlipPhoneContent({ editing = false }: { editing?: boolean }) {
   const ctx = useTemplateCtx();
   const customBg = ctx.bgColor || ctx.bgImage;
+  const ink = ctx.textColor || '#fff';
   const [vals, setVals] = useState<Record<string, string>>(() => ({
     chat:     ctx.get('chat', 'xx says:\ni miss you\nxx says:\ncome over?\nxx says:\n♡♡♡'),
     name:     ctx.get('name', ''),
@@ -62,21 +63,21 @@ export function FlipPhoneContent({ editing = false }: { editing?: boolean }) {
 
         {/* Title */}
         <View style={s.titleBlock}>
-          <Text style={s.titleText}>My YumeShip</Text>
-          <Text style={s.hearts}>♡ ♡ ♡ ♡ ♡</Text>
+          <Text style={[s.titleText, { color: ink }]}>My YumeShip</Text>
+          <Text style={[s.hearts, { color: ink }]}>♡ ♡ ♡ ♡ ♡</Text>
         </View>
 
         {/* Top row: To: (chat) + About Me */}
         <View style={s.row2}>
-          <Y2KWindow title="To:" tint={tint}>
+          <Y2KWindow title="To:" tint={tint} ink={ink}>
             {e ? (
-              <BlankPill value={vals.chat} onChangeText={v => setVal('chat', v)} placeholder="xx says: ..." style={s.chatInput} />
+              <BlankPill value={vals.chat} onChangeText={v => setVal('chat', v)} placeholder="xx says: ..." style={[s.chatInput, { color: ink }]} />
             ) : (
-              <Text style={s.windowText}>{vals.chat}</Text>
+              <Text style={[s.windowText, { color: ink }]}>{vals.chat}</Text>
             )}
             <View style={[s.chatBar, customBg ? { backgroundColor: 'rgba(255,255,255,0.3)' } : null]} />
           </Y2KWindow>
-          <Y2KWindow title="About Me" tint={tint}>
+          <Y2KWindow title="About Me" tint={tint} ink={ink}>
             {[
               ['Name', 'name'],
               ['Nickname', 'nickname'],
@@ -85,18 +86,18 @@ export function FlipPhoneContent({ editing = false }: { editing?: boolean }) {
               ['Occupation', 'occ'],
             ].map(([label, key]) => (
               <View key={key} style={s.aboutRow}>
-                <Text style={s.aboutKey}>{label}: </Text>
+                <Text style={[s.aboutKey, { color: ink }]}>{label}: </Text>
                 {e ? (
-                  <BlankPill value={vals[key]} onChangeText={v => setVal(key, v)} placeholder="——" style={s.aboutVal} />
+                  <BlankPill value={vals[key]} onChangeText={v => setVal(key, v)} placeholder="——" style={[s.aboutVal, { color: ink }]} />
                 ) : (
-                  <Text style={s.aboutVal2}>{vals[key] || '——'}</Text>
+                  <Text style={[s.aboutVal2, { color: ink }]}>{vals[key] || '——'}</Text>
                 )}
               </View>
             ))}
             {e ? (
-              <BlankPill value={vals.valentine} onChangeText={v => setVal('valentine', v)} placeholder="My Valentine ♡" style={[s.aboutVal, { marginTop: 4 }]} />
+              <BlankPill value={vals.valentine} onChangeText={v => setVal('valentine', v)} placeholder="My Valentine ♡" style={[s.aboutVal, { color: ink, marginTop: 4 }]} />
             ) : (
-              <Text style={[s.windowText, { marginTop: 4 }]}>{vals.valentine || 'My Valentine ♡'}</Text>
+              <Text style={[s.windowText, { color: ink, marginTop: 4 }]}>{vals.valentine || 'My Valentine ♡'}</Text>
             )}
           </Y2KWindow>
         </View>
@@ -104,7 +105,7 @@ export function FlipPhoneContent({ editing = false }: { editing?: boolean }) {
         {/* Middle: phone-frame photo picker */}
         <View style={s.phoneWrap}>
           <View style={[s.phoneOuter, customBg ? { backgroundColor: 'transparent' } : null]}>
-            <Text style={s.phoneDots}>+ + + +</Text>
+            <Text style={[s.phoneDots, { color: ink }]}>+ + + +</Text>
             <View style={s.phoneInner}>
               <PhotoBox
                 width={84}
@@ -122,16 +123,16 @@ export function FlipPhoneContent({ editing = false }: { editing?: boolean }) {
 
         {/* Bottom row: Sharing + Free space */}
         <View style={s.rowBottom}>
-          <Y2KWindow title="!" tint={Colors.sakura + '80'} mini>
+          <Y2KWindow title="!" tint={Colors.sakura + '80'} ink={ink} mini>
             <View style={s.sharingHeader}>
-              <Text style={s.sharingWarn}>⚠</Text>
-              <Text style={s.sharingLabel}>SHARING</Text>
+              <Text style={[s.sharingWarn, { color: ink }]}>⚠</Text>
+              <Text style={[s.sharingLabel, { color: ink }]}>SHARING</Text>
             </View>
             {e ? (
               <View style={s.sharingPills}>
                 {(['Yes', 'No', 'Selective'] as const).map(opt => (
-                  <Pressable key={opt} onPress={() => setVal('sharing', opt)} style={[s.sPill, vals.sharing === opt && s.sPillOn]}>
-                    <Text style={[s.sPillText, vals.sharing === opt && s.sPillTextOn]}>{opt}</Text>
+                  <Pressable key={opt} onPress={() => setVal('sharing', opt)} style={[s.sPill, { borderColor: ink }, vals.sharing === opt && { backgroundColor: ink }]}>
+                    <Text style={[s.sPillText, { color: ink }, vals.sharing === opt && s.sPillTextOn]}>{opt}</Text>
                   </Pressable>
                 ))}
               </View>
@@ -141,11 +142,11 @@ export function FlipPhoneContent({ editing = false }: { editing?: boolean }) {
               </View>
             )}
           </Y2KWindow>
-          <Y2KWindow title="Free space" tint={tint}>
+          <Y2KWindow title="Free space" tint={tint} ink={ink}>
             {e ? (
-              <BlankPill value={vals.free} onChangeText={v => setVal('free', v)} placeholder="he kissed me on the rooftop..." style={s.freeInput} />
+              <BlankPill value={vals.free} onChangeText={v => setVal('free', v)} placeholder="he kissed me on the rooftop..." style={[s.freeInput, { color: ink }]} />
             ) : (
-              <Text style={s.freeText}>{vals.free || '——'}</Text>
+              <Text style={[s.freeText, { color: ink }]}>{vals.free || '——'}</Text>
             )}
             <View style={s.bulletRow}>
               <Bullets.Heart size={10} color="white" />
@@ -156,26 +157,26 @@ export function FlipPhoneContent({ editing = false }: { editing?: boolean }) {
         </View>
 
         {/* Theme song player */}
-        <View style={[s.songBar, { backgroundColor: tint }, customBg ? { borderColor: 'rgba(255,255,255,0.4)' } : null]}>
+        <View style={[s.songBar, { backgroundColor: tint, borderColor: ink }, customBg ? { borderColor: 'rgba(255,255,255,0.4)' } : null]}>
           {e ? (
             <TextInput
               value={vals.song}
               onChangeText={v => setVal('song', v)}
               placeholder="♪ Theme Song"
-              placeholderTextColor="rgba(255,255,255,0.5)"
-              style={s.songTitle}
+              placeholderTextColor={ink + '80'}
+              style={[s.songTitle, { color: ink }]}
               textAlign="center"
             />
           ) : (
-            <Text style={s.songTitle}>{vals.song || '♪ Theme Song'}</Text>
+            <Text style={[s.songTitle, { color: ink }]}>{vals.song || '♪ Theme Song'}</Text>
           )}
           <View style={s.progressRow}>
-            <Text style={s.timeText}>0:00</Text>
+            <Text style={[s.timeText, { color: ink }]}>0:00</Text>
             <View style={s.progressTrack}>
-              <View style={s.progressFill} />
-              <View style={s.progressThumb} />
+              <View style={[s.progressFill, { backgroundColor: ink }]} />
+              <View style={[s.progressThumb, { borderColor: ink }]} />
             </View>
-            <Text style={s.timeText}>3:50</Text>
+            <Text style={[s.timeText, { color: ink }]}>3:50</Text>
           </View>
         </View>
 

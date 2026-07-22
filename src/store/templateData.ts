@@ -10,6 +10,7 @@ type TemplateCtx = {
   set: (key: string, val: string) => void;
   bgColor: string;
   bgImage: string;
+  textColor: string;
 };
 
 export const TemplateDataCtx = createContext<TemplateCtx>({
@@ -17,6 +18,7 @@ export const TemplateDataCtx = createContext<TemplateCtx>({
   set: () => {},
   bgColor: '',
   bgImage: '',
+  textColor: '',
 });
 
 export function useTemplateCtx() {
@@ -41,19 +43,31 @@ export function saveTemplateData(shipId: string, templateKey: string, data: Reco
   );
 }
 
+// Shared across every template — the "memories" closing section (MemoriesFooter
+// primitive) always uses these exact key names, so this maps 1:1 and just needs
+// spreading into each template's entry for migrateTemplateData to carry it over.
+const MEMORY_FIELDS: Record<string, string> = {
+  memPhoto0: 'memPhoto0', memPhoto1: 'memPhoto1', memPhoto2: 'memPhoto2',
+  memCap0: 'memCap0', memCap1: 'memCap1', memCap2: 'memCap2',
+};
+
 // Maps logical field names to each template's actual storage key.
 // mainPhoto = primary portrait/photo of the F/O
 const FIELD_MAP: Record<string, Record<string, string>> = {
-  'get-to-know': { foName: 'themName', myName: 'meName', sharing: 'sharing', song: 'song', mainPhoto: 'themPhoto', photo1: 'photo1' },
-  'kawaii-ui':   { foName: 'name',     sharing: 'sharing', song: 'song', anniv: 'anniv',   mainPhoto: 'portrait' },
-  'heart-frame': { foName: 'themName', myName: 'meName', sharing: 'sharing', anniv: 'anniv', mainPhoto: 'themPhoto', myPhoto: 'mePhoto' },
+  'get-to-know': { ...MEMORY_FIELDS, foName: 'themName', myName: 'meName', sharing: 'sharing', song: 'song', mainPhoto: 'themPhoto', myPhoto: 'mePhoto' },
+  'kawaii-ui':   { ...MEMORY_FIELDS, shipName: 'shipName', foName: 'theirName', myName: 'myName', sharing: 'sharing', song: 'song', anniv: 'anniv', mainPhoto: 'theirPortrait', myPhoto: 'myPortrait' },
+  'heart-frame': { ...MEMORY_FIELDS, foName: 'themName', myName: 'meName', sharing: 'sharing', song: 'song', anniv: 'anniv', mainPhoto: 'themPhoto', myPhoto: 'mePhoto' },
   'love-letter': { foName: 'dearName', myName: 'signName' },
-  'aesthetic':   { song: 'song',       mainPhoto: 'photo0', photo1: 'photo1', photo2: 'photo2' },
+  'aesthetic':   { ...MEMORY_FIELDS, shipName: 'shipName', song: 'song', mainPhoto: 'photo0', photo1: 'photo1', photo2: 'photo2' },
   'this-or-that': { foName: 'name' },
   'headcanons':  { foName: 'fo' },
-  'talking-about': { foName: 'foName', myName: 'meName', sharing: 'sharing', mainPhoto: 'photoL', myPhoto: 'photoR' },
-  'flip-phone':  { foName: 'name', sharing: 'sharing', song: 'song' },
-  'bond-banner': { myName: 'meName', foName: 'foName' },
+  'talking-about': { ...MEMORY_FIELDS, foName: 'foName', myName: 'meName', sharing: 'sharing', song: 'song', mainPhoto: 'photoL', myPhoto: 'photoR' },
+  'flip-phone':  { ...MEMORY_FIELDS, foName: 'name', myName: 'myName', sharing: 'sharing', song: 'song' },
+  'bond-banner': { ...MEMORY_FIELDS, myName: 'meName', foName: 'foName', song: 'song' },
+  'ask-meme':    { sharing: 'sharing' },
+  'playlist':    {},
+  'bucket-list': {},
+  'how-we-met':  { ...MEMORY_FIELDS, foName: 'foName', myName: 'myName', anniv: 'anniv', mainPhoto: 'heroPhoto' },
   // poly templates store their roster on the ship and their viz data in dedicated keys; no shared logical fields.
   'poly-chart':    {},
   'poly-quick':    {},
@@ -113,11 +127,15 @@ export function buildPreFill(ship: Ship, templateKey: string): Record<string, st
       if (userHeight)     base['meFilled'] = JSON.stringify({ height: userHeight });
       break;
     case 'kawaii-ui':
-      if (foSeed)         base['name'] = foSeed;
+      if (foSeed)         base['shipName'] = foSeed;
       if (ship.fandom)    base['from'] = ship.fandom;
       if (ship.relType)   base['type'] = ship.relType;
-      if (fo?.pronouns)   base['pronouns'] = fo.pronouns;
-      if (fo?.photoUri)   base['portrait'] = fo.photoUri;
+      if (foSeed)         base['theirName'] = foSeed;
+      if (fo?.pronouns)   base['theirPronouns'] = fo.pronouns;
+      if (fo?.photoUri)   base['theirPortrait'] = fo.photoUri;
+      if (userName)       base['myName'] = userName;
+      if (userPronouns)   base['myPronouns'] = userPronouns;
+      if (userPhoto)      base['myPortrait'] = userPhoto;
       break;
     case 'heart-frame':
       if (foSeed)         base['themName'] = foSeed;
@@ -154,10 +172,16 @@ export function buildPreFill(ship: Ship, templateKey: string): Record<string, st
     case 'flip-phone':
       if (foSeed)         base['name'] = foSeed;
       if (ship.shareType) base['sharing'] = shareMap[ship.shareType] ?? '';
+      if (userName)       base['myName'] = userName;
       break;
     case 'bond-banner':
       if (foSeed)         base['foName'] = foSeed;
       if (userName)       base['meName'] = userName;
+      break;
+    case 'how-we-met':
+      if (foSeed)         base['foName'] = foSeed;
+      if (userName)       base['myName'] = userName;
+      if (fo?.photoUri)   base['heroPhoto'] = fo.photoUri;
       break;
   }
   return base;

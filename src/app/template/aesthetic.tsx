@@ -8,7 +8,8 @@ import { TemplateScreenWrapper } from '@/components/templates/TemplateScreenWrap
 import { Heart } from '@/components/deco/Heart';
 import { Colors, FontFamily, Radius, SheetColumn, Spacing ,sf } from '@/constants/theme';
 import { useTemplateCtx } from '@/store/templateData';
-import { getShip } from '@/store/ships';
+
+const MOOD_PLACEHOLDERS = ['cozy', 'electric', 'safe'];
 
 const PALETTE_OPTIONS = [
   '#8b3a4a', '#d77a8d', '#f3b6c4', '#fadde5',
@@ -26,8 +27,13 @@ export function AestheticContent({ editing = false }: { editing?: boolean }) {
   const ctx = useTemplateCtx();
   const e = editing;
   const customBg = ctx.bgColor || ctx.bgImage;
+  const ink = ctx.textColor || INK;
 
   const [vals, setVals] = useState(() => ({
+    shipName: ctx.get('shipName'),
+    mood0:  ctx.get('mood0'),
+    mood1:  ctx.get('mood1'),
+    mood2:  ctx.get('mood2'),
     song:   ctx.get('song'),
     cap0:   ctx.get('cap0', 'rainy tuesday'),
     cap1:   ctx.get('cap1', 'green coat day'),
@@ -55,10 +61,47 @@ export function AestheticContent({ editing = false }: { editing?: boolean }) {
   const palette = [vals.pal0, vals.pal1, vals.pal2, vals.pal3, vals.pal4];
   const palKeys = ['pal0', 'pal1', 'pal2', 'pal3', 'pal4'] as const;
 
-  const { song, cap0, cap1, cap2, photo0, photo1, photo2, polPh0, polPh1, polPh2 } = vals;
+  const { song, cap0, cap1, cap2, photo0, photo1, photo2, polPh0, polPh1, polPh2, shipName, mood0, mood1, mood2 } = vals;
 
   return (
     <MarkerCard tint={customBg ? 'transparent' : '#fffbf6'}>
+      <View style={s.headerRow}>
+        <Heart size={14} color={INK} outline />
+        {e ? (
+          <TextInput
+            value={shipName}
+            onChangeText={set('shipName')}
+            placeholder="our aesthetic"
+            placeholderTextColor={ink + '55'}
+            underlineColorAndroid="transparent"
+            style={[s.headerInput, { color: ink }]}
+          />
+        ) : (
+          <Text style={[s.headerText, { color: ink }]}>{shipName || 'our aesthetic'}</Text>
+        )}
+      </View>
+
+      <View style={s.moodRow}>
+        {([['mood0', mood0], ['mood1', mood1], ['mood2', mood2]] as const).map(([key, val], i) => (
+          <View key={key} style={s.moodChip}>
+            {e ? (
+              <TextInput
+                value={val}
+                onChangeText={set(key)}
+                placeholder={MOOD_PLACEHOLDERS[i]}
+                placeholderTextColor={ink + '55'}
+                underlineColorAndroid="transparent"
+                style={[s.moodChipInput, { color: ink }]}
+              />
+            ) : (
+              <Text style={[s.moodChipText, { color: ink }]}>{val || MOOD_PLACEHOLDERS[i]}</Text>
+            )}
+          </View>
+        ))}
+      </View>
+
+      <View style={s.gap12} />
+
       <WindowFrame title="My Yumeship Aesthetic" style={customBg ? { backgroundColor: 'transparent' } : undefined}>
         <View style={s.photoGrid}>
           <PhotoBox width="31%" height={90} style={s.gridPhoto} editing={e} uri={photo0} onUriChange={e ? set('photo0') : undefined} />
@@ -76,12 +119,12 @@ export function AestheticContent({ editing = false }: { editing?: boolean }) {
               value={song ?? ''}
               onChangeText={set('song')}
               placeholder="song title..."
-              placeholderTextColor={INK + '88'}
+              placeholderTextColor={ink + '88'}
               underlineColorAndroid="transparent"
-              style={{ fontFamily: FontFamily.ui, fontSize: sf(14), color: INK, marginBottom: 6, padding: 0 }}
+              style={{ fontFamily: FontFamily.ui, fontSize: sf(14), color: ink, marginBottom: 6, padding: 0 }}
             />
           ) : (
-            song ? <Text style={{ fontFamily: FontFamily.ui, fontSize: sf(14), color: INK, marginBottom: 6 }}>{song}</Text> : null
+            song ? <Text style={{ fontFamily: FontFamily.ui, fontSize: sf(14), color: ink, marginBottom: 6 }}>{song}</Text> : null
           )}
           <MusicPlayer />
         </View>
@@ -109,7 +152,7 @@ export function AestheticContent({ editing = false }: { editing?: boolean }) {
             </Pressable>
           ))}
         </View>
-        {e && <Text style={s.palHint}>tap a swatch to change its color</Text>}
+        {e && <Text style={[s.palHint, { color: ink + '60' }]}>tap a swatch to change its color</Text>}
       </WindowFrame>
 
       <View style={s.footer}>
@@ -160,6 +203,16 @@ export default function TemplateAesthetic() {
 }
 
 const s = StyleSheet.create({
+  headerRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  headerInput: { flex: 1, fontFamily: FontFamily.script, fontSize: sf(18), color: INK, padding: 0 },
+  headerText: { flex: 1, fontFamily: FontFamily.script, fontSize: sf(18), color: INK },
+  moodRow: { flexDirection: 'row', gap: 6, marginTop: 8 },
+  moodChip: {
+    flex: 1, borderWidth: 1.2, borderColor: INK, borderRadius: 999,
+    paddingHorizontal: 10, paddingVertical: 5, alignItems: 'center',
+  },
+  moodChipInput: { fontFamily: FontFamily.marker, fontSize: sf(10), color: INK, padding: 0, textAlign: 'center' },
+  moodChipText: { fontFamily: FontFamily.marker, fontSize: sf(10), color: INK, textTransform: 'lowercase' },
   photoGrid: { flexDirection: 'row', gap: 8 },
   gridPhoto: { flex: 1 },
   gap12: { height: 12 },

@@ -106,6 +106,10 @@ function PolyDynamicsContent({ editing, shipId }: { editing?: boolean; shipId?: 
   const members = getMembers(ship);
   const roster: Roster = useMemo(() => members.map((m, i) => ({ ...m, color: memberColor(i) })), [members]);
 
+  const ctx = useTemplateCtx();
+  const customBg = ctx.bgColor || ctx.bgImage;
+  const tBg = customBg ? { backgroundColor: 'transparent' } : null;
+
   const [quotes, setQuotes] = useJsonState<Record<string, string>>('quotes', {});
   const [diffs, setDiffs] = useJsonState<Record<string, { h: string; ag: string }>>('diffs', {});
   const [grids, setGrids] = useJsonState<Record<string, Record<string, { x: number; y: number }>>>('grids', {});
@@ -133,7 +137,7 @@ function PolyDynamicsContent({ editing, shipId }: { editing?: boolean; shipId?: 
   const toggleWho = (ri: number, id: string) => setWho({ ...who, [ri]: { ...who[ri], [id]: !who[ri]?.[id] } });
 
   return (
-    <View style={ds.card}>
+    <View style={[ds.card, tBg]}>
       <View style={ds.headerWrap}>
         <View style={ds.titlePill}><Text style={ds.titlePillText}>POLYCULE DYNAMICS</Text></View>
         <Text style={ds.subtitle}>place everyone on the charts &amp; tick who's who ♡</Text>
@@ -157,7 +161,7 @@ function PolyDynamicsContent({ editing, shipId }: { editing?: boolean; shipId?: 
             ) : (
               <Text style={ds.castName}>{m.name || '—'}</Text>
             )}
-            <View style={ds.quoteBubble}>
+            <View style={[ds.quoteBubble, tBg]}>
               {e ? (
                 <TextInput value={quotes[m.id] ?? ''} onChangeText={(v) => setQuote(m.id, v)} placeholder="a quote…" placeholderTextColor={Colors.ink3} style={ds.quoteText} />
               ) : (
@@ -173,7 +177,7 @@ function PolyDynamicsContent({ editing, shipId }: { editing?: boolean; shipId?: 
 
       {/* differences */}
       {roster.length >= 2 && (
-        <View style={ds.diffBox}>
+        <View style={[ds.diffBox, tBg]}>
           <Text style={ds.diffLabel}>THE DIFFERENCES</Text>
           {roster.slice(0, -1).map((a, i) => {
             const b = roster[i + 1];

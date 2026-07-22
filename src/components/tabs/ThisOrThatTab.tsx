@@ -33,6 +33,7 @@ export function ThisOrThatTab({ shipId }: { shipId: string }) {
     },
     bgColor: '',
     bgImage: '',
+    textColor: '',
   }), [shipId]);
 
   const getPairs = (): [string, string][] => {

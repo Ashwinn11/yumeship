@@ -3,7 +3,7 @@ import { View, Text, TextInput, StyleSheet, Pressable, Modal, TouchableWithoutFe
 import { useLocalSearchParams } from 'expo-router';
 import Svg, { Path } from 'react-native-svg';
 import { TemplateScreenWrapper } from '@/components/templates/TemplateScreenWrapper';
-import { PhotoBox, MarkerCard, INK, useSliderTrack } from '@/components/templates/primitives';
+import { PhotoBox, MarkerCard, MemoriesFooter, INK, useSliderTrack } from '@/components/templates/primitives';
 import { Sparkle } from '@/components/deco';
 import { useTemplateCtx } from '@/store/templateData';
 import { Colors, FontFamily, Radius, SheetColumn, Spacing ,sf } from '@/constants/theme';
@@ -259,6 +259,9 @@ export function TalkingAboutContent({ editing = false }: { editing?: boolean }) 
     doodle:    ctx.get('doodle',   '[]'),
     tropes:    ctx.get('tropes',   ''),
     sliders:   ctx.get('sliders',  '[0.7,0.55,0.35]'),
+    memPhoto0: ctx.get('memPhoto0', ''), memPhoto1: ctx.get('memPhoto1', ''), memPhoto2: ctx.get('memPhoto2', ''),
+    memCap0:   ctx.get('memCap0',   ''), memCap1:   ctx.get('memCap1',   ''), memCap2:   ctx.get('memCap2',   ''),
+    song:      ctx.get('song',      ''),
   }));
 
   const setVal = (key: string, v: string) => { setVals(p => ({ ...p, [key]: v })); ctx.set(key, v); };
@@ -457,6 +460,20 @@ export function TalkingAboutContent({ editing = false }: { editing?: boolean }) 
             } : undefined} />
         ))}
       </View>
+
+      <MemoriesFooter
+        editing={e}
+        photos={[
+          { uri: vals.memPhoto0, caption: vals.memCap0 },
+          { uri: vals.memPhoto1, caption: vals.memCap1 },
+          { uri: vals.memPhoto2, caption: vals.memCap2 },
+        ]}
+        onPhotoChange={e ? (i, u) => setVal(`memPhoto${i}`, u) : undefined}
+        onCaptionChange={e ? (i, c) => setVal(`memCap${i}`, c) : undefined}
+        song={vals.song}
+        onSongChange={e ? (v) => setVal('song', v) : undefined}
+        transparentBg={!!customBg}
+      />
 
       {doodleOpen && (
         <DoodleModal

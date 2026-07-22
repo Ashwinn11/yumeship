@@ -4,7 +4,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { TemplateScreenWrapper } from '@/components/templates/TemplateScreenWrapper';
 import {
   MarkerCard, MarkerHeader, SharingRow,
-  BlankPill, ProfileBlock, PhotoBox, INK,
+  BlankPill, ProfileBlock, PhotoBox, MemoriesFooter, INK,
 } from '@/components/templates/primitives';
 import { Heart } from '@/components/deco/Heart';
 import { useTemplateCtx } from '@/store/templateData';
@@ -28,8 +28,16 @@ export function GetToKnowContent({ editing = false }: { editing?: boolean }) {
     meSliders:   ctx.get('meSliders', '[0.5,0.5,0.5]'),
     themSliders: ctx.get('themSliders', '[0.5,0.5,0.5]'),
     photo0:      ctx.get('photo0'),
-    photo1:      ctx.get('photo1'),
+    bannerPhoto: ctx.get('bannerPhoto'),
+    mePhoto:     ctx.get('mePhoto'),
     themPhoto:   ctx.get('themPhoto'),
+    memPhoto0:   ctx.get('memPhoto0'),
+    memPhoto1:   ctx.get('memPhoto1'),
+    memPhoto2:   ctx.get('memPhoto2'),
+    memCap0:     ctx.get('memCap0'),
+    memCap1:     ctx.get('memCap1'),
+    memCap2:     ctx.get('memCap2'),
+    song:        ctx.get('song'),
   }));
 
   const setVal = (key: string, v: string) => {
@@ -62,9 +70,13 @@ export function GetToKnowContent({ editing = false }: { editing?: boolean }) {
         <Heart size={20} color={INK} outline />
       </View>
 
+      <View style={s.bannerBox}>
+        <PhotoBox width="100%" height={100} style={s.bannerPhoto} editing={e} uri={vals.bannerPhoto} onUriChange={e ? (u) => setVal('bannerPhoto', u) : undefined} />
+      </View>
+
       <View style={s.headerRow}>
-        <View style={s.portraitBox}>
-          <PhotoBox size={140} editing={e} uri={vals.photo0} onUriChange={e ? (u) => setVal('photo0', u) : undefined} />
+        <View style={s.avatarWrap}>
+          <PhotoBox size={104} round style={s.avatarPhoto} editing={e} uri={vals.photo0} onUriChange={e ? (u) => setVal('photo0', u) : undefined} />
         </View>
         <View style={s.headerText}>
           <MarkerHeader size={20}>ALL ABOUT</MarkerHeader>
@@ -74,11 +86,11 @@ export function GetToKnowContent({ editing = false }: { editing?: boolean }) {
 
       <View style={s.namePills}>
         <View style={s.pillHalf}>
-          <BlankPill value={vals.meName} onChangeText={e ? (v) => setVal('meName', v) : undefined} placeholder="your name" />
+          <BlankPill value={vals.meName} onChangeText={e ? (v) => setVal('meName', v) : undefined} placeholder="your name" style={customBg ? { backgroundColor: 'transparent' } : undefined} />
         </View>
         <Heart size={18} color={INK} outline />
         <View style={s.pillHalf}>
-          <BlankPill value={vals.themName} onChangeText={e ? (v) => setVal('themName', v) : undefined} placeholder="their name" />
+          <BlankPill value={vals.themName} onChangeText={e ? (v) => setVal('themName', v) : undefined} placeholder="their name" style={customBg ? { backgroundColor: 'transparent' } : undefined} />
         </View>
       </View>
 
@@ -105,7 +117,10 @@ export function GetToKnowContent({ editing = false }: { editing?: boolean }) {
         } : undefined}
         sliders={SLIDER_LABELS.map((l, i) => [l, meSliders[i]] as [string, number])}
         onSliderChange={e ? makeSliderChange('meSliders') : undefined}
-        showPhoto
+        photoUri={vals.mePhoto}
+        onPhotoUriChange={e ? (u) => setVal('mePhoto', u) : undefined}
+        photoSide="right"
+        transparent={!!customBg}
       />
 
       <ProfileBlock
@@ -126,6 +141,21 @@ export function GetToKnowContent({ editing = false }: { editing?: boolean }) {
         onSliderChange={e ? makeSliderChange('themSliders') : undefined}
         photoUri={vals.themPhoto}
         onPhotoUriChange={e ? (u) => setVal('themPhoto', u) : undefined}
+        transparent={!!customBg}
+      />
+
+      <MemoriesFooter
+        editing={e}
+        photos={[
+          { uri: vals.memPhoto0, caption: vals.memCap0 },
+          { uri: vals.memPhoto1, caption: vals.memCap1 },
+          { uri: vals.memPhoto2, caption: vals.memCap2 },
+        ]}
+        onPhotoChange={e ? (i, u) => setVal(`memPhoto${i}`, u) : undefined}
+        onCaptionChange={e ? (i, c) => setVal(`memCap${i}`, c) : undefined}
+        song={vals.song}
+        onSongChange={e ? (v) => setVal('song', v) : undefined}
+        transparentBg={!!customBg}
       />
     </MarkerCard>
   );
@@ -142,10 +172,15 @@ export default function TemplateGetToKnow() {
 
 const s = StyleSheet.create({
   heartCorner: { position: 'absolute', top: 14, right: 16 },
-  headerRow: { flexDirection: 'row', gap: 16, alignItems: 'flex-start' },
-  portraitBox: { position: 'relative', width: 140, height: 140 },
-  portraitInner: { position: 'absolute', top: 24, left: 24 },
-  headerText: { flex: 1, paddingTop: 4 },
+  bannerBox: { marginHorizontal: -20, marginTop: -20 },
+  bannerPhoto: { borderRadius: 0, borderWidth: 0 },
+  headerRow: { flexDirection: 'row', gap: 12, alignItems: 'flex-end', marginTop: -40 },
+  avatarWrap: {
+    borderWidth: 3, borderColor: '#fffbf6', borderRadius: 999,
+    shadowColor: INK, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 4, elevation: 3,
+  },
+  avatarPhoto: { borderWidth: 0 },
+  headerText: { flex: 1, paddingBottom: 4 },
   mt4: { marginTop: 4 },
   mt8: { marginTop: 8 },
   mt14: { marginTop: 14 },

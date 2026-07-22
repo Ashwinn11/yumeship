@@ -60,6 +60,8 @@ function PolyQuickContent({ editing, shipId }: { editing?: boolean; shipId?: str
   const roster: Roster = useMemo(() => members.map((m, i) => ({ ...m, color: memberColor(i) })), [members]);
 
   const ctx = useTemplateCtx();
+  const customBg = ctx.bgColor || ctx.bgImage;
+  const tBg = customBg ? { backgroundColor: 'transparent' } : null;
   const [song, setSong] = useState(() => ctx.get('song', ''));
   const [story, setStory] = useState(() => ctx.get('story', ''));
   const [words, setWords] = useJsonState<string[]>('words', ['', '', '']);
@@ -89,7 +91,7 @@ function PolyQuickContent({ editing, shipId }: { editing?: boolean; shipId?: str
   function addTrope() { const t = tropeDraft.trim(); if (!t) return; setTropes([...tropes, t]); setTropeDraft(''); }
 
   return (
-    <View style={qs.card}>
+    <View style={[qs.card, tBg]}>
       <View style={qs.headerWrap}>
         <View style={qs.titlePill}><Text style={qs.titlePillText}>OUR POLYSHIP IN 5 MINUTES</Text></View>
         <Text style={qs.subtitle}>the quick version ♡  ·  tap anything to edit</Text>
@@ -111,7 +113,7 @@ function PolyQuickContent({ editing, shipId }: { editing?: boolean; shipId?: str
       <Section title="The polycule" hint="tap ＋ to add anyone" />
       <View style={qs.chipsWrap}>
         {roster.map((m) => (
-          <View key={m.id} style={qs.memberChip}>
+          <View key={m.id} style={[qs.memberChip, tBg]}>
             <View style={[qs.chipDot, { backgroundColor: m.color }]} />
             {e ? (
               <TextInput value={m.name} onChangeText={(v) => setMemberName(m.id, v)} placeholder="name"
@@ -135,7 +137,7 @@ function PolyQuickContent({ editing, shipId }: { editing?: boolean; shipId?: str
         {[0, 1, 2].map((i) => (
           <TextInput key={i} value={words[i] ?? ''} editable={e}
             onChangeText={(v) => setWords(words.map((w, j) => (j === i ? v : w)))}
-            placeholder="word" placeholderTextColor={Colors.ink3} style={qs.wordInput} textAlign="center" />
+            placeholder="word" placeholderTextColor={Colors.ink3} style={[qs.wordInput, tBg]} textAlign="center" />
         ))}
       </View>
 
@@ -173,7 +175,7 @@ function PolyQuickContent({ editing, shipId }: { editing?: boolean; shipId?: str
 
       {/* story */}
       <Section title="How it happened" />
-      <View style={qs.storyBox}>
+      <View style={[qs.storyBox, tBg]}>
         <TextInput value={story} editable={e} multiline
           onChangeText={(v) => { setStory(v); ctx.set('story', v); }}
           placeholder="they fell in like idiots because…" placeholderTextColor={Colors.ink3} style={qs.storyInput} />
@@ -196,7 +198,7 @@ function PolyQuickContent({ editing, shipId }: { editing?: boolean; shipId?: str
 
       {/* song */}
       <Section title="Their song" />
-      <View style={qs.songRow}>
+      <View style={[qs.songRow, tBg]}>
         <View style={qs.songIcon}><Text style={qs.songNote}>♪</Text></View>
         <View style={{ flex: 1 }}>
           <Text style={qs.label}>song that is So Them</Text>

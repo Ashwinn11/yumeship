@@ -3,7 +3,7 @@ import { View, Text, TextInput, StyleSheet } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { TemplateScreenWrapper } from '@/components/templates/TemplateScreenWrapper';
 import {
-  MarkerCard, TitleHeader, TemplateField, SharingRow, TwinProfile, HeartClipPhoto, BlankPill, INK, FILL_GRAY,
+  MarkerCard, TitleHeader, TemplateField, SharingRow, TwinProfile, HeartClipPhoto, BlankPill, MemoriesFooter, INK, FILL_GRAY,
 } from '@/components/templates/primitives';
 import { Heart } from '@/components/deco/Heart';
 import { FontFamily ,sf } from '@/constants/theme';
@@ -16,6 +16,7 @@ const INFO_LABELS = ['age', 'pronouns', 'pet name', 'love language'];
 export function HeartFrameContent({ editing = false }: { editing?: boolean }) {
   const ctx = useTemplateCtx();
   const customBg = ctx.bgColor || ctx.bgImage;
+  const ink = ctx.textColor || INK;
 
   const [vals, setVals] = useState<{
     sharing: 'Yes' | 'No' | 'Selective' | undefined;
@@ -27,6 +28,9 @@ export function HeartFrameContent({ editing = false }: { editing?: boolean }) {
     anniv: string;
     mePhoto: string;
     themPhoto: string;
+    memPhoto0: string; memPhoto1: string; memPhoto2: string;
+    memCap0: string; memCap1: string; memCap2: string;
+    song: string;
   }>(() => {
     const sharingRaw = ctx.get('sharing');
     return {
@@ -39,8 +43,16 @@ export function HeartFrameContent({ editing = false }: { editing?: boolean }) {
       anniv: ctx.get('anniv'),
       mePhoto: ctx.get('mePhoto'),
       themPhoto: ctx.get('themPhoto'),
+      memPhoto0: ctx.get('memPhoto0'), memPhoto1: ctx.get('memPhoto1'), memPhoto2: ctx.get('memPhoto2'),
+      memCap0: ctx.get('memCap0'), memCap1: ctx.get('memCap1'), memCap2: ctx.get('memCap2'),
+      song: ctx.get('song'),
     };
   });
+
+  const setMem = (key: string, v: string) => {
+    setVals((p) => ({ ...p, [key]: v }));
+    ctx.set(key, v);
+  };
 
   const e = editing;
 
@@ -96,14 +108,14 @@ export function HeartFrameContent({ editing = false }: { editing?: boolean }) {
       </View>
 
       <View style={s.namesRow}>
-        <Text style={s.nameLabel}>ME</Text>
+        <Text style={[s.nameLabel, { color: ink }]}>ME</Text>
         <View style={s.namePillContainer}>
-          <BlankPill value={meName} onChangeText={e ? set('meName') : undefined} width={80} />
+          <BlankPill value={meName} onChangeText={e ? set('meName') : undefined} width={80} style={customBg ? { backgroundColor: 'transparent' } : undefined} />
         </View>
         <Heart size={16} color={INK} />
-        <Text style={s.nameLabel}>THEM</Text>
+        <Text style={[s.nameLabel, { color: ink }]}>THEM</Text>
         <View style={s.namePillContainer}>
-          <BlankPill value={themName} onChangeText={e ? set('themName') : undefined} width={80} />
+          <BlankPill value={themName} onChangeText={e ? set('themName') : undefined} width={80} style={customBg ? { backgroundColor: 'transparent' } : undefined} />
         </View>
       </View>
 
@@ -113,6 +125,7 @@ export function HeartFrameContent({ editing = false }: { editing?: boolean }) {
             who="ME"
             info={meInfoPairs}
             onInfoChange={e ? (i, v) => setMeInfo(i, v) : undefined}
+            transparent={!!customBg}
           />
         </View>
         <View style={s.twinCol}>
@@ -120,29 +133,30 @@ export function HeartFrameContent({ editing = false }: { editing?: boolean }) {
             who="THEM"
             info={themInfoPairs}
             onInfoChange={e ? (i, v) => setThemInfo(i, v) : undefined}
+            transparent={!!customBg}
           />
         </View>
       </View>
 
       <View style={[s.metBox, customBg ? { backgroundColor: 'transparent' } : null]}>
-        <Text style={s.metLabel}>how we met</Text>
+        <Text style={[s.metLabel, { color: ink }]}>how we met</Text>
         {e ? (
           <TextInput
             value={metText}
             onChangeText={set('metText')}
             placeholder="our story..."
-            placeholderTextColor={INK + '88'}
+            placeholderTextColor={ink + '88'}
             multiline
             underlineColorAndroid="transparent"
-            style={s.metText}
+            style={[s.metText, { color: ink }]}
           />
         ) : (
-          <Text style={s.metText}>{metText || 'our story...'}</Text>
+          <Text style={[s.metText, { color: ink }]}>{metText || 'our story...'}</Text>
         )}
       </View>
 
       <View style={[s.anniversaryPill, customBg ? { backgroundColor: 'transparent' } : null]}>
-        <Text style={s.anniversaryLabel}>♡ anniversary</Text>
+        <Text style={[s.anniversaryLabel, { color: ink }]}>♡ anniversary</Text>
         <View style={{ alignItems: 'flex-end' }}>
           {e ? (
             <DateField
@@ -160,7 +174,7 @@ export function HeartFrameContent({ editing = false }: { editing?: boolean }) {
               textStyle={{
                 fontFamily: FontFamily.ja,
                 fontSize: sf(13),
-                color: INK,
+                color: ink,
               }}
               displayValue={(() => {
                 const el = calcElapsed(anniv);
@@ -168,12 +182,26 @@ export function HeartFrameContent({ editing = false }: { editing?: boolean }) {
               })()}
             />
           ) : (
-            <Text style={{ fontFamily: FontFamily.ja, fontSize: sf(13), color: INK }}>
+            <Text style={{ fontFamily: FontFamily.ja, fontSize: sf(13), color: ink }}>
               {anniv ? `${calcElapsed(anniv)?.since} · ${calcElapsed(anniv)?.label}` : '——'}
             </Text>
           )}
         </View>
       </View>
+
+      <MemoriesFooter
+        editing={e}
+        photos={[
+          { uri: vals.memPhoto0, caption: vals.memCap0 },
+          { uri: vals.memPhoto1, caption: vals.memCap1 },
+          { uri: vals.memPhoto2, caption: vals.memCap2 },
+        ]}
+        onPhotoChange={e ? (i, u) => setMem(`memPhoto${i}`, u) : undefined}
+        onCaptionChange={e ? (i, c) => setMem(`memCap${i}`, c) : undefined}
+        song={vals.song}
+        onSongChange={e ? (v) => setMem('song', v) : undefined}
+        transparentBg={!!customBg}
+      />
     </MarkerCard>
   );
 }

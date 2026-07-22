@@ -251,7 +251,7 @@ function MemberRadar({ roster, sel, setSel, loveOf, setLove, editing }: {
           );
         })}
       </View>
-      <Svg width="100%" height={210} viewBox="0 0 260 210">
+      <Svg width="100%" height={228} viewBox="0 0 260 228">
         <Polygon points={poly(1)} fill="none" stroke="#e0cdc0" strokeWidth={1.2} />
         <Polygon points={poly(0.5)} fill="none" stroke="#eadccf" strokeWidth={1} />
         {LOVE_AXES.map((a, i) => (
@@ -383,6 +383,8 @@ export function PolyChartContent({ editing, shipId }: { editing?: boolean; shipI
   const [bonds, setBonds] = useJsonState<Record<string, { type: string; close: string }>>('bonds', {});
 
   const ctx = useTemplateCtx();
+  const customBg = ctx.bgColor || ctx.bgImage;
+  const tBg = customBg ? { backgroundColor: 'transparent' } : null;
   const [music, setMusic] = useState(() => ctx.get('music', ''));
 
   const [sel, setSel] = useState<string | null>(null);
@@ -428,7 +430,7 @@ export function PolyChartContent({ editing, shipId }: { editing?: boolean; shipI
     : '';
 
   return (
-    <View style={ps.card}>
+    <View style={[ps.card, tBg]}>
       <View style={ps.headerWrap}>
         <View style={ps.titlePill}><Text style={ps.titlePillText}>POLY SHIP CHART</Text></View>
         <Text style={ps.subtitle}>for the whole polycule ♡  ·  tap anything to edit</Text>
@@ -527,7 +529,7 @@ export function PolyChartContent({ editing, shipId }: { editing?: boolean; shipI
       )}
 
       {/* music */}
-      <View style={ps.musicRow}>
+      <View style={[ps.musicRow, tBg]}>
         <View style={ps.musicIcon}><Text style={ps.musicNote}>♪</Text></View>
         <View style={{ flex: 1 }}>
           <Text style={ps.fieldLabel}>The polycule's song</Text>

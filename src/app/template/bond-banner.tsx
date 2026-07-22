@@ -3,7 +3,7 @@ import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { TemplateScreenWrapper } from '@/components/templates/TemplateScreenWrapper';
 import {
-  MarkerCard, MarkerHeader, BlankPill, AttrSlider, INK,
+  MarkerCard, MarkerHeader, BlankPill, AttrSlider, MemoriesFooter, INK,
 } from '@/components/templates/primitives';
 import Svg, { Path, Defs, ClipPath, Image as SvgImage } from 'react-native-svg';
 import * as ImagePicker from 'expo-image-picker';
@@ -24,6 +24,7 @@ const SLIDERS = [
 export function BondBannerContent({ editing = false }: { editing?: boolean }) {
   const ctx = useTemplateCtx();
   const customBg = ctx.bgColor || ctx.bgImage;
+  const ink = ctx.textColor || INK;
 
   const [vals, setVals] = useState<Record<string, string>>(() => ({
     meName:      ctx.get('meName', ''),
@@ -37,6 +38,9 @@ export function BondBannerContent({ editing = false }: { editing?: boolean }) {
     anniv:      ctx.get('anniv', ''),
     shieldPhoto: ctx.get('shieldPhoto', ''),
     sliders: ctx.get('sliders', JSON.stringify(SLIDERS.map(() => 0.5))),
+    memPhoto0: ctx.get('memPhoto0', ''), memPhoto1: ctx.get('memPhoto1', ''), memPhoto2: ctx.get('memPhoto2', ''),
+    memCap0: ctx.get('memCap0', ''), memCap1: ctx.get('memCap1', ''), memCap2: ctx.get('memCap2', ''),
+    song: ctx.get('song', ''),
   }));
 
   const setVal = (key: string, v: string) => {
@@ -67,8 +71,8 @@ export function BondBannerContent({ editing = false }: { editing?: boolean }) {
       {/* Banner + ribbon */}
       <View style={s.bannerWrap}>
         <View style={[s.banner, customBg ? { backgroundColor: 'transparent' } : null]}>
-          <Text style={s.bannerSmall}>all about my</Text>
-          <Text style={s.bannerBig}>♡ YumeShip ♡</Text>
+          <Text style={[s.bannerSmall, { color: ink }]}>all about my</Text>
+          <Text style={[s.bannerBig, { color: ink }]}>♡ YumeShip ♡</Text>
         </View>
         <View style={s.ribbonRow}>
           <Ribbon size={22} color={Colors.sakura} />
@@ -122,16 +126,16 @@ export function BondBannerContent({ editing = false }: { editing?: boolean }) {
           { header: 'MY F/O', pfx: 'fo' },
         ].map(({ header, pfx }) => (
           <View key={pfx} style={s.aboutCol}>
-            <Text style={s.aboutHeader}>♡ About {header}</Text>
+            <Text style={[s.aboutHeader, { color: ink }]}>♡ About {header}</Text>
             {(['Name', 'Pronouns', 'MBTI', 'Vibe'] as const).map((f) => {
               const key = `${pfx}${f}`;
               return (
                 <View key={key} style={[s.aboutField, customBg ? { backgroundColor: 'transparent' } : null]}>
-                  <Text style={s.aboutFieldLabel}>{f}:</Text>
+                  <Text style={[s.aboutFieldLabel, { color: ink }]}>{f}:</Text>
                   {e ? (
                     <BlankPill value={vals[key]} onChangeText={v => setVal(key, v)} placeholder="——" style={s.aboutFieldVal} />
                   ) : (
-                    <Text style={s.aboutFieldValText}>{vals[key] || '——'}</Text>
+                    <Text style={[s.aboutFieldValText, { color: ink }]}>{vals[key] || '——'}</Text>
                   )}
                 </View>
               );
@@ -142,14 +146,14 @@ export function BondBannerContent({ editing = false }: { editing?: boolean }) {
 
       {/* Anniversary */}
       <View style={[s.annivBox, customBg ? { backgroundColor: 'transparent' } : null]}>
-        <Text style={s.annivLabel}>♡ Anniversary ♡</Text>
+        <Text style={[s.annivLabel, { color: ink }]}>♡ Anniversary ♡</Text>
         <DateField
           value={vals.anniv}
           onChange={v => setVal('anniv', v)}
           editing={e}
           placeholder="pick a date"
           style={{ borderWidth: 0, backgroundColor: 'transparent', paddingHorizontal: 0, height: 'auto', justifyContent: 'center' }}
-          textStyle={{ fontFamily: FontFamily.script, fontSize: sf(18), color: INK }}
+          textStyle={{ fontFamily: FontFamily.script, fontSize: sf(18), color: ink }}
           displayValue={(() => {
             const el = calcElapsed(vals.anniv);
             return el ? `${el.since}  ·  ${el.label}` : undefined;
@@ -162,8 +166,8 @@ export function BondBannerContent({ editing = false }: { editing?: boolean }) {
         {SLIDERS.map((sl, i) => (
           <View key={i} style={s.sliderItem}>
             <View style={s.sliderLabelRow}>
-              <Text style={s.sliderSide}>{sl.l}</Text>
-              <Text style={s.sliderSide}>{sl.r}</Text>
+              <Text style={[s.sliderSide, { color: ink }]}>{sl.l}</Text>
+              <Text style={[s.sliderSide, { color: ink }]}>{sl.r}</Text>
             </View>
             <AttrSlider
               label=""
@@ -178,6 +182,19 @@ export function BondBannerContent({ editing = false }: { editing?: boolean }) {
         ))}
       </View>
 
+      <MemoriesFooter
+        editing={e}
+        photos={[
+          { uri: vals.memPhoto0, caption: vals.memCap0 },
+          { uri: vals.memPhoto1, caption: vals.memCap1 },
+          { uri: vals.memPhoto2, caption: vals.memCap2 },
+        ]}
+        onPhotoChange={e ? (i, u) => setVal(`memPhoto${i}`, u) : undefined}
+        onCaptionChange={e ? (i, c) => setVal(`memCap${i}`, c) : undefined}
+        song={vals.song}
+        onSongChange={e ? (v) => setVal('song', v) : undefined}
+        transparentBg={!!customBg}
+      />
     </MarkerCard>
   );
 }
