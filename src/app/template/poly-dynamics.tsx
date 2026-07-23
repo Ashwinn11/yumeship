@@ -3,7 +3,7 @@ import { useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { TemplateScreenWrapper } from '@/components/templates/TemplateScreenWrapper';
-import { INK, PhotoBox } from '@/components/templates/primitives';
+import { INK, PhotoBox, useThemedInk, getContrastColor } from '@/components/templates/primitives';
 import { useTemplateCtx } from '@/store/templateData';
 import { getMembers, memberColor, ShipMember, updateShip, useShip } from '@/store/ships';
 import { newId } from '@/db/client';
@@ -46,6 +46,7 @@ function ChartCell({ chart, roster, valueOf, onChange, editing }: {
   chart: typeof CHARTS[number]; roster: Roster;
   valueOf: (mId: string) => { x: number; y: number }; onChange: (mId: string, xy: { x: number; y: number }) => void; editing: boolean;
 }) {
+  const ink = useThemedInk();
   const ref = useRef<View>(null);
   const geo = useRef({ x: 0, y: 0, w: 0, h: 0 });
   const active = useRef<string | null>(null);
@@ -81,17 +82,17 @@ function ChartCell({ chart, roster, valueOf, onChange, editing }: {
 
   return (
     <View style={ds.chartCell}>
-      <Text style={ds.chartTitle}>{chart.title}</Text>
-      <View ref={ref} style={ds.chartBox} {...responder}>
-        <View style={ds.chartVLine} />
-        <View style={ds.chartHLine} />
-        <Text style={[ds.axis, ds.axisTop]} numberOfLines={1}>{chart.t}</Text>
-        <Text style={[ds.axis, ds.axisBottom]} numberOfLines={1}>{chart.b}</Text>
-        <Text style={[ds.axis, ds.axisLeft]} numberOfLines={1}>{chart.l}</Text>
-        <Text style={[ds.axis, ds.axisRight]} numberOfLines={1}>{chart.r}</Text>
+      <Text style={[ds.chartTitle, { color: ink }]}>{chart.title}</Text>
+      <View ref={ref} style={[ds.chartBox, { borderColor: ink }]} {...responder}>
+        <View style={[ds.chartVLine, { backgroundColor: ink + '44' }]} />
+        <View style={[ds.chartHLine, { backgroundColor: ink + '44' }]} />
+        <Text style={[ds.axis, ds.axisTop, { color: ink }]} numberOfLines={1}>{chart.t}</Text>
+        <Text style={[ds.axis, ds.axisBottom, { color: ink }]} numberOfLines={1}>{chart.b}</Text>
+        <Text style={[ds.axis, ds.axisLeft, { color: ink }]} numberOfLines={1}>{chart.l}</Text>
+        <Text style={[ds.axis, ds.axisRight, { color: ink }]} numberOfLines={1}>{chart.r}</Text>
         {roster.map((m) => {
           const p = valueOf(m.id);
-          return <View key={m.id} style={[ds.dot, { left: `${p.x * 100}%` as any, top: `${p.y * 100}%` as any, backgroundColor: m.color }]} />;
+          return <View key={m.id} style={[ds.dot, { left: `${p.x * 100}%` as any, top: `${p.y * 100}%` as any, backgroundColor: m.color, borderColor: ink }]} />;
         })}
       </View>
     </View>
@@ -107,6 +108,7 @@ function PolyDynamicsContent({ editing, shipId }: { editing?: boolean; shipId?: 
   const roster: Roster = useMemo(() => members.map((m, i) => ({ ...m, color: memberColor(i) })), [members]);
 
   const ctx = useTemplateCtx();
+  const ink = useThemedInk();
   const customBg = ctx.bgColor || ctx.bgImage;
   const tBg = customBg ? { backgroundColor: 'transparent' } : null;
 
@@ -137,10 +139,10 @@ function PolyDynamicsContent({ editing, shipId }: { editing?: boolean; shipId?: 
   const toggleWho = (ri: number, id: string) => setWho({ ...who, [ri]: { ...who[ri], [id]: !who[ri]?.[id] } });
 
   return (
-    <View style={[ds.card, tBg]}>
+    <View style={[ds.card, { borderColor: ink }, tBg]}>
       <View style={ds.headerWrap}>
-        <View style={ds.titlePill}><Text style={ds.titlePillText}>POLYCULE DYNAMICS</Text></View>
-        <Text style={ds.subtitle}>place everyone on the charts &amp; tick who's who ♡</Text>
+        <View style={[ds.titlePill, { backgroundColor: ink }]}><Text style={[ds.titlePillText, { color: getContrastColor(ink) }]}>POLYCULE DYNAMICS</Text></View>
+        <Text style={[ds.subtitle, { color: ink }]}>place everyone on the charts &amp; tick who's who ♡</Text>
       </View>
 
       {/* cast */}
@@ -150,46 +152,46 @@ function PolyDynamicsContent({ editing, shipId }: { editing?: boolean; shipId?: 
             <View>
               <PhotoBox width={120} height={96} editing={e} uri={m.photoUri}
                 onUriChange={e ? (u) => patchMembers(members.map((x) => (x.id === m.id ? { ...x, photoUri: u } : x))) : undefined}
-                style={ds.castPhoto} />
-              <View style={[ds.colorDot, { backgroundColor: m.color }]} />
+                style={[ds.castPhoto, { borderColor: ink }]} />
+              <View style={[ds.colorDot, { backgroundColor: m.color, borderColor: ink }]} />
               {e && roster.length > 2 && (
-                <Pressable style={ds.removeDot} onPress={() => removeMember(m.id)} hitSlop={6}><Text style={ds.removeX}>✕</Text></Pressable>
+                <Pressable style={[ds.removeDot, { borderColor: ink }]} onPress={() => removeMember(m.id)} hitSlop={6}><Text style={ds.removeX}>✕</Text></Pressable>
               )}
             </View>
             {e ? (
-              <TextInput value={m.name} onChangeText={(v) => setName(m.id, v)} placeholder="name" placeholderTextColor={Colors.ink3} style={ds.castName} />
+              <TextInput value={m.name} onChangeText={(v) => setName(m.id, v)} placeholder="name" placeholderTextColor={ink + '77'} style={[ds.castName, { color: ink, borderColor: ink }]} />
             ) : (
-              <Text style={ds.castName}>{m.name || '—'}</Text>
+              <Text style={[ds.castName, { color: ink, borderColor: ink }]}>{m.name || '—'}</Text>
             )}
-            <View style={[ds.quoteBubble, tBg]}>
+            <View style={[ds.quoteBubble, { borderColor: ink }, tBg]}>
               {e ? (
-                <TextInput value={quotes[m.id] ?? ''} onChangeText={(v) => setQuote(m.id, v)} placeholder="a quote…" placeholderTextColor={Colors.ink3} style={ds.quoteText} />
+                <TextInput value={quotes[m.id] ?? ''} onChangeText={(v) => setQuote(m.id, v)} placeholder="a quote…" placeholderTextColor={ink + '77'} style={[ds.quoteText, { color: ink }]} />
               ) : (
-                <Text style={ds.quoteText}>{quotes[m.id] || 'a quote…'}</Text>
+                <Text style={[ds.quoteText, { color: ink }]}>{quotes[m.id] || 'a quote…'}</Text>
               )}
             </View>
           </View>
         ))}
         {e && (
-          <Pressable style={ds.addCard} onPress={addMember}><Text style={ds.addPlus}>＋</Text></Pressable>
+          <Pressable style={[ds.addCard, { borderColor: ink }]} onPress={addMember}><Text style={[ds.addPlus, { color: ink }]}>＋</Text></Pressable>
         )}
       </ScrollView>
 
       {/* differences */}
       {roster.length >= 2 && (
-        <View style={[ds.diffBox, tBg]}>
-          <Text style={ds.diffLabel}>THE DIFFERENCES</Text>
+        <View style={[ds.diffBox, { borderColor: ink }, tBg]}>
+          <Text style={[ds.diffLabel, { color: ink }]}>THE DIFFERENCES</Text>
           {roster.slice(0, -1).map((a, i) => {
             const b = roster[i + 1];
             const k = `${a.id}>${b.id}`;
             const d = diffs[k] ?? { h: '', ag: '' };
             return (
               <View key={k} style={ds.diffRow}>
-                <Text style={ds.diffPair} numberOfLines={1}>{(a.name || '?')} ↔ {(b.name || '?')}</Text>
-                <Text style={ds.diffKey}>height</Text>
-                <TextInput value={d.h} editable={e} onChangeText={(v) => setDiff(k, 'h', v)} placeholder="—" placeholderTextColor={Colors.ink3} style={ds.diffInput} />
-                <Text style={ds.diffKey}>age</Text>
-                <TextInput value={d.ag} editable={e} onChangeText={(v) => setDiff(k, 'ag', v)} placeholder="—" placeholderTextColor={Colors.ink3} style={ds.diffInput} />
+                <Text style={[ds.diffPair, { color: ink }]} numberOfLines={1}>{(a.name || '?')} ↔ {(b.name || '?')}</Text>
+                <Text style={[ds.diffKey, { color: ink }]}>height</Text>
+                <TextInput value={d.h} editable={e} onChangeText={(v) => setDiff(k, 'h', v)} placeholder="—" placeholderTextColor={ink + '77'} style={[ds.diffInput, { color: ink, borderColor: ink }]} />
+                <Text style={[ds.diffKey, { color: ink }]}>age</Text>
+                <TextInput value={d.ag} editable={e} onChangeText={(v) => setDiff(k, 'ag', v)} placeholder="—" placeholderTextColor={ink + '77'} style={[ds.diffInput, { color: ink, borderColor: ink }]} />
               </View>
             );
           })}
@@ -198,15 +200,15 @@ function PolyDynamicsContent({ editing, shipId }: { editing?: boolean; shipId?: 
 
       {/* charts */}
       <View style={ds.section}>
-        <Text style={ds.sectionTitle}>Where everyone lands</Text>
-        <Text style={ds.sectionHint}>drag each dot on every chart</Text>
+        <Text style={[ds.sectionTitle, { color: ink }]}>Where everyone lands</Text>
+        <Text style={[ds.sectionHint, { color: ink, opacity: 0.7 }]}>drag each dot on every chart</Text>
       </View>
       {/* legend */}
       <View style={ds.legend}>
         {roster.map((m) => (
           <View key={m.id} style={ds.legendItem}>
-            <View style={[ds.legendDot, { backgroundColor: m.color }]} />
-            <Text style={ds.legendName}>{m.name || '—'}</Text>
+            <View style={[ds.legendDot, { backgroundColor: m.color, borderColor: ink }]} />
+            <Text style={[ds.legendName, { color: ink }]}>{m.name || '—'}</Text>
           </View>
         ))}
       </View>
@@ -219,20 +221,20 @@ function PolyDynamicsContent({ editing, shipId }: { editing?: boolean; shipId?: 
 
       {/* who's the one to */}
       <View style={ds.section}>
-        <Text style={ds.sectionTitle}>Who's the one to…</Text>
-        <Text style={ds.sectionHint}>tick everyone it applies to</Text>
+        <Text style={[ds.sectionTitle, { color: ink }]}>Who's the one to…</Text>
+        <Text style={[ds.sectionHint, { color: ink, opacity: 0.7 }]}>tick everyone it applies to</Text>
       </View>
       <View style={{ marginTop: 8, gap: 8 }}>
         {WHO.map((label, ri) => (
           <View key={ri} style={ds.whoRow}>
-            <Text style={ds.whoLabel}>{label}</Text>
+            <Text style={[ds.whoLabel, { color: ink }]}>{label}</Text>
             <View style={ds.whoChecks}>
               {roster.map((m) => {
                 const on = !!who[ri]?.[m.id];
                 return (
                   <Pressable key={m.id} onPress={e ? () => toggleWho(ri, m.id) : undefined} disabled={!e}
-                    style={[ds.whoBox, { borderColor: on ? m.color : INK, backgroundColor: on ? m.color : '#fff' }]}>
-                    {on && <Text style={ds.whoCheck}>✓</Text>}
+                    style={[ds.whoBox, { borderColor: on ? m.color : ink, backgroundColor: on ? m.color : '#fff' }]}>
+                    {on && <Text style={[ds.whoCheck, { color: getContrastColor(m.color) }]}>✓</Text>}
                   </Pressable>
                 );
               })}
@@ -255,13 +257,12 @@ export default function TemplatePolyDynamics() {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const PLUM = Colors.plum;
 const ds = StyleSheet.create({
   card: { backgroundColor: Colors.vellum, borderWidth: 2, borderColor: INK, borderRadius: 20, padding: 18 },
   headerWrap: { alignItems: 'center', marginBottom: 14 },
-  titlePill: { backgroundColor: PLUM, borderRadius: 999, paddingVertical: 6, paddingHorizontal: 18 },
-  titlePillText: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(17), color: '#fff', letterSpacing: 0.5 },
-  subtitle: { fontFamily: FontFamily.script, fontSize: sf(16), color: PLUM, marginTop: 5, textAlign: 'center' },
+  titlePill: { borderRadius: 999, paddingVertical: 6, paddingHorizontal: 18 },
+  titlePillText: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(17), letterSpacing: 0.5 },
+  subtitle: { fontFamily: FontFamily.script, fontSize: sf(16), marginTop: 5, textAlign: 'center' },
 
   // cast
   castRow: { gap: 9, paddingTop: 8, paddingBottom: 4, paddingRight: 8 },
@@ -272,37 +273,37 @@ const ds = StyleSheet.create({
   removeX: { fontSize: sf(11), color: '#b04a4a', fontFamily: FontFamily.ui, lineHeight: 14 },
   castName: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(13), color: INK, borderBottomWidth: 1.4, borderColor: INK, paddingBottom: 2, padding: 0 },
   quoteBubble: { backgroundColor: '#fff', borderWidth: 1.5, borderColor: INK, borderRadius: 12, borderBottomLeftRadius: 3, paddingVertical: 4, paddingHorizontal: 8 },
-  quoteText: { fontFamily: FontFamily.script, fontSize: sf(13), color: Colors.ink2, padding: 0 },
+  quoteText: { fontFamily: FontFamily.script, fontSize: sf(13), color: INK, padding: 0 },
   addCard: { width: 34, minHeight: 96, borderWidth: 1.5, borderColor: '#c9a9c0', borderStyle: 'dashed', borderRadius: 8, alignItems: 'center', justifyContent: 'center', alignSelf: 'flex-start', marginTop: 8 },
   addPlus: { fontSize: sf(18), color: '#8b6fc4', fontFamily: FontFamily.ui },
 
   // diffs
   diffBox: { backgroundColor: '#fffdfb', borderWidth: 1.5, borderColor: '#e3cdbe', borderRadius: 12, padding: 12, marginTop: 12, gap: 7 },
-  diffLabel: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(8), letterSpacing: 0.5, textTransform: 'uppercase', color: PLUM },
+  diffLabel: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(8), letterSpacing: 0.5, textTransform: 'uppercase', color: INK },
   diffRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
   diffPair: { fontFamily: FontFamily.uiMedium, fontSize: sf(11), color: INK, minWidth: 92 },
-  diffKey: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(8), letterSpacing: 0.5, textTransform: 'uppercase', color: '#9a7e92' },
+  diffKey: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(8), letterSpacing: 0.5, textTransform: 'uppercase', color: INK },
   diffInput: { minWidth: 44, borderBottomWidth: 1.4, borderColor: INK, fontFamily: FontFamily.ja, fontSize: sf(11), color: INK, textAlign: 'center', padding: 0, paddingBottom: 2 },
 
   // section
   section: { alignItems: 'center', marginTop: 24 },
-  sectionTitle: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(15), textTransform: 'uppercase', color: PLUM },
-  sectionHint: { fontFamily: FontFamily.script, fontSize: sf(14), color: Colors.ink3 },
+  sectionTitle: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(15), textTransform: 'uppercase', color: INK },
+  sectionHint: { fontFamily: FontFamily.script, fontSize: sf(14), color: INK },
 
   // legend
   legend: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 12, marginTop: 8 },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   legendDot: { width: 10, height: 10, borderRadius: 999, borderWidth: 1.4, borderColor: INK },
-  legendName: { fontFamily: FontFamily.ui, fontSize: sf(10), color: Colors.ink2 },
+  legendName: { fontFamily: FontFamily.ui, fontSize: sf(10), color: INK },
 
   // charts
   chartGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 10, justifyContent: 'space-between' },
   chartCell: { width: '47%' },
-  chartTitle: { textAlign: 'center', fontFamily: FontFamily.uiSemiBold, fontSize: sf(10), textTransform: 'uppercase', color: PLUM, marginBottom: 4 },
+  chartTitle: { textAlign: 'center', fontFamily: FontFamily.uiSemiBold, fontSize: sf(10), textTransform: 'uppercase', color: INK, marginBottom: 4 },
   chartBox: { width: '100%', aspectRatio: 1, backgroundColor: '#fffdfb', borderWidth: 1.5, borderColor: INK, borderRadius: 8 },
   chartVLine: { position: 'absolute', left: '50%', top: 6, bottom: 6, width: 1, backgroundColor: '#d9c4b6' },
   chartHLine: { position: 'absolute', top: '50%', left: 6, right: 6, height: 1, backgroundColor: '#d9c4b6' },
-  axis: { position: 'absolute', fontFamily: FontFamily.ui, fontSize: sf(7.5), color: Colors.ink2 },
+  axis: { position: 'absolute', fontFamily: FontFamily.ui, fontSize: sf(7.5), color: INK },
   axisTop: { top: 3, alignSelf: 'center', left: 0, right: 0, textAlign: 'center' },
   axisBottom: { bottom: 3, alignSelf: 'center', left: 0, right: 0, textAlign: 'center' },
   axisLeft: { left: 2, top: '46%' },

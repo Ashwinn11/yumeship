@@ -4,7 +4,7 @@ import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 
 import Svg, { Circle, Line, Polygon, Text as SvgText } from 'react-native-svg';
 
 import { TemplateScreenWrapper } from '@/components/templates/TemplateScreenWrapper';
-import { AttrSlider, INK, PhotoBox } from '@/components/templates/primitives';
+import { AttrSlider, INK, PhotoBox, useThemedInk, getContrastColor } from '@/components/templates/primitives';
 import { useTemplateCtx } from '@/store/templateData';
 import { getMembers, memberColor, ShipMember, updateShip, useShip } from '@/store/ships';
 import { newId } from '@/db/client';
@@ -69,21 +69,24 @@ function useJsonState<T>(key: string, fallback: T) {
 
 // ─── Roster strip ─────────────────────────────────────────────────────────────
 
+// ─── Roster strip ─────────────────────────────────────────────────────────────
+
 function RosterStrip({ roster, editing, onAdd, onRemove, onField }: {
   roster: Roster; editing: boolean;
   onAdd: () => void; onRemove: (id: string) => void;
   onField: (id: string, key: keyof ShipMember, v: string) => void;
 }) {
+  const ink = useThemedInk();
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={ps.rosterRow}>
       {roster.map((m) => (
         <View key={m.id} style={ps.memberCard}>
           <View>
             <PhotoBox width={118} height={120} editing={editing} uri={m.photoUri} svgXml={m.svgXml}
-              onUriChange={editing ? (u) => onField(m.id, 'photoUri', u) : undefined} style={ps.cardPhoto} />
-            <View style={[ps.colorDot, { backgroundColor: m.color }]} />
+              onUriChange={editing ? (u) => onField(m.id, 'photoUri', u) : undefined} style={[ps.cardPhoto, { borderColor: ink }]} />
+            <View style={[ps.colorDot, { backgroundColor: m.color, borderColor: ink }]} />
             {editing && roster.length > 2 && (
-              <Pressable style={ps.removeDot} onPress={() => onRemove(m.id)} hitSlop={6}>
+              <Pressable style={[ps.removeDot, { borderColor: ink }]} onPress={() => onRemove(m.id)} hitSlop={6}>
                 <Text style={ps.removeX}>✕</Text>
               </Pressable>
             )}
@@ -106,14 +109,15 @@ function RosterStrip({ roster, editing, onAdd, onRemove, onField }: {
 function Field({ label, value, editing, onChange, accent }: {
   label: string; value: string; editing: boolean; onChange: (v: string) => void; accent?: boolean;
 }) {
+  const ink = useThemedInk();
   return (
     <View style={ps.field}>
-      <Text style={ps.fieldLabel}>{label}</Text>
+      <Text style={[ps.fieldLabel, { color: ink }]}>{label}</Text>
       {editing ? (
-        <TextInput value={value} onChangeText={onChange} placeholder="—" placeholderTextColor={Colors.ink3}
-          style={[ps.fieldInput, accent && { color: Colors.plum }]} />
+        <TextInput value={value} onChangeText={onChange} placeholder="—" placeholderTextColor={ink + '88'}
+          style={[ps.fieldInput, { borderColor: ink, color: ink }]} />
       ) : (
-        <Text style={[ps.fieldVal, accent && { color: Colors.plum }]}>{value || '—'}</Text>
+        <Text style={[ps.fieldVal, { borderColor: ink, color: ink }]}>{value || '—'}</Text>
       )}
     </View>
   );
@@ -125,6 +129,7 @@ function SpectrumRow({ sp, roster, valueOf, onChange, editing }: {
   sp: typeof SPECTRA[number]; roster: Roster;
   valueOf: (mId: string) => number; onChange: (mId: string, v: number) => void; editing: boolean;
 }) {
+  const ink = useThemedInk();
   const trackRef = useRef<View>(null);
   const geo = useRef({ x: 0, w: 0 });
   const active = useRef<string | null>(null);
@@ -154,14 +159,14 @@ function SpectrumRow({ sp, roster, valueOf, onChange, editing }: {
 
   return (
     <View style={ps.specRow}>
-      <Text style={ps.specEnd}>{sp.l}</Text>
+      <Text style={[ps.specEnd, { color: ink }]}>{sp.l}</Text>
       <View ref={trackRef} style={ps.specTrack} {...responder}>
-        <View style={ps.specLine} />
+        <View style={[ps.specLine, { backgroundColor: ink }]} />
         {roster.map((m) => (
-          <View key={m.id} style={[ps.specDot, { left: `${valueOf(m.id) * 100}%` as any, backgroundColor: m.color }]} />
+          <View key={m.id} style={[ps.specDot, { left: `${valueOf(m.id) * 100}%` as any, backgroundColor: m.color, borderColor: ink }]} />
         ))}
       </View>
-      <Text style={ps.specEnd}>{sp.r}</Text>
+      <Text style={[ps.specEnd, { color: ink }]}>{sp.r}</Text>
     </View>
   );
 }
@@ -172,6 +177,7 @@ function RelationshipMap({ roster, bonds, onLink, onEditBond, pick, editing }: {
   roster: Roster; bonds: Record<string, { type: string; close: string }>;
   onLink: (id: string) => void; onEditBond: (key: string) => void; pick: string | null; editing: boolean;
 }) {
+  const ink = useThemedInk();
   const [w, setW] = useState(320);
   const H = Math.round(w * 0.7);
   const cx = w / 2, cy = H / 2, r = Math.min(w, H) / 2 - 38;
@@ -202,7 +208,7 @@ function RelationshipMap({ roster, bonds, onLink, onEditBond, pick, editing }: {
         ))}
         {roster.map((m) => (
           <SvgText key={m.id} x={pos[m.id].x} y={pos[m.id].y + 4} fontSize={11} fontFamily={FontFamily.uiSemiBold}
-            fill={INK} textAnchor="middle">{(m.name || '?').slice(0, 4)}</SvgText>
+            fill={ink} textAnchor="middle">{(m.name || '?').slice(0, 4)}</SvgText>
         ))}
       </Svg>
       {/* tap targets for nodes + bond lines (overlaid, since SVG press is finicky) */}
@@ -226,6 +232,7 @@ function MemberRadar({ roster, sel, setSel, loveOf, setLove, editing }: {
   roster: Roster; sel: string | null; setSel: (id: string) => void;
   loveOf: (id: string) => Record<string, number>; setLove: (id: string, k: string, v: number) => void; editing: boolean;
 }) {
+  const ink = useThemedInk();
   const C = 130, R = 92;
   const verts = LOVE_AXES.map((_, i) => {
     const ang = (-90 + 72 * i) * Math.PI / 180;
@@ -234,7 +241,7 @@ function MemberRadar({ roster, sel, setSel, loveOf, setLove, editing }: {
   const active = sel && roster.some((m) => m.id === sel) ? sel : roster[0]?.id ?? null;
   if (!active) return null;
   const lv = loveOf(active);
-  const col = roster.find((m) => m.id === active)?.color ?? Colors.plum;
+  const col = roster.find((m) => m.id === active)?.color ?? ink;
   const poly = (scale: number) => verts.map((v) => `${C + (v.x - C) * scale},${122 + (v.y - 122) * scale}`).join(' ');
   const valPoly = LOVE_AXES.map((a, i) => `${C + (verts[i].x - C) * lv[a.k]},${122 + (verts[i].y - 122) * lv[a.k]}`).join(' ');
 
@@ -246,7 +253,7 @@ function MemberRadar({ roster, sel, setSel, loveOf, setLove, editing }: {
           return (
             <Pressable key={m.id} onPress={() => setSel(m.id)}
               style={[ps.chip, { borderColor: m.color, backgroundColor: on ? m.color : Colors.paperDeep }]}>
-              <Text style={[ps.chipText, { color: on ? '#fff' : Colors.ink2 }]}>{m.name || '—'}</Text>
+              <Text style={[ps.chipText, { color: on ? getContrastColor(m.color) : ink }]}>{m.name || '—'}</Text>
             </Pressable>
           );
         })}
@@ -261,7 +268,7 @@ function MemberRadar({ roster, sel, setSel, loveOf, setLove, editing }: {
         {LOVE_AXES.map((a, i) => {
           const lx = C + (verts[i].x - C) * 1.18, ly = 122 + (verts[i].y - 122) * 1.18;
           return (
-            <SvgText key={a.k} x={lx} y={ly + 3} fontSize={9} fontFamily={FontFamily.ui} fill={Colors.ink2}
+            <SvgText key={a.k} x={lx} y={ly + 3} fontSize={9} fontFamily={FontFamily.ui} fill={ink}
               textAnchor={lx < C - 10 ? 'end' : lx > C + 10 ? 'start' : 'middle'}>{a.label}</SvgText>
           );
         })}
@@ -283,6 +290,7 @@ function AlignGrid({ g, roster, valueOf, onChange, editing }: {
   g: typeof GRIDS[number]; roster: Roster;
   valueOf: (mId: string) => { x: number; y: number }; onChange: (mId: string, xy: { x: number; y: number }) => void; editing: boolean;
 }) {
+  const ink = useThemedInk();
   const ref = useRef<View>(null);
   const geo = useRef({ x: 0, y: 0, w: 0, h: 0 });
   const active = useRef<string | null>(null);
@@ -318,16 +326,16 @@ function AlignGrid({ g, roster, valueOf, onChange, editing }: {
 
   return (
     <View style={ps.gridWrap}>
-      <View ref={ref} style={ps.gridBox} {...responder}>
+      <View ref={ref} style={[ps.gridBox, { borderColor: ink }]} {...responder}>
         <View style={ps.gridVLine} />
         <View style={ps.gridHLine} />
-        <Text style={[ps.gridAxis, ps.gridTop]}>{g.t}</Text>
-        <Text style={[ps.gridAxis, ps.gridBottom]}>{g.b}</Text>
-        <Text style={[ps.gridAxis, ps.gridLeft]}>{g.l}</Text>
-        <Text style={[ps.gridAxis, ps.gridRight]}>{g.r}</Text>
+        <Text style={[ps.gridAxis, ps.gridTop, { color: ink }]}>{g.t}</Text>
+        <Text style={[ps.gridAxis, ps.gridBottom, { color: ink }]}>{g.b}</Text>
+        <Text style={[ps.gridAxis, ps.gridLeft, { color: ink }]}>{g.l}</Text>
+        <Text style={[ps.gridAxis, ps.gridRight, { color: ink }]}>{g.r}</Text>
         {roster.map((m) => {
           const p = valueOf(m.id);
-          return <View key={m.id} style={[ps.gridDot, { left: `${p.x * 100}%` as any, top: `${p.y * 100}%` as any, backgroundColor: m.color }]} />;
+          return <View key={m.id} style={[ps.gridDot, { left: `${p.x * 100}%` as any, top: `${p.y * 100}%` as any, backgroundColor: m.color, borderColor: ink }]} />;
         })}
       </View>
     </View>
@@ -337,12 +345,13 @@ function AlignGrid({ g, roster, valueOf, onChange, editing }: {
 // ─── Member legend ────────────────────────────────────────────────────────────
 
 function Legend({ roster }: { roster: Roster }) {
+  const ink = useThemedInk();
   return (
     <View style={ps.legend}>
       {roster.map((m) => (
         <View key={m.id} style={ps.legendItem}>
-          <View style={[ps.legendDot, { backgroundColor: m.color }]} />
-          <Text style={ps.legendName}>{m.name || '—'}</Text>
+          <View style={[ps.legendDot, { backgroundColor: m.color, borderColor: ink }]} />
+          <Text style={[ps.legendName, { color: ink }]}>{m.name || '—'}</Text>
         </View>
       ))}
     </View>
@@ -352,10 +361,11 @@ function Legend({ roster }: { roster: Roster }) {
 // ─── Section heading ──────────────────────────────────────────────────────────
 
 function Section({ title, hint }: { title: string; hint?: string }) {
+  const ink = useThemedInk();
   return (
     <View style={ps.section}>
-      <Text style={ps.sectionTitle}>{title}</Text>
-      {hint ? <Text style={ps.sectionHint}>{hint}</Text> : null}
+      <Text style={[ps.sectionTitle, { color: ink }]}>{title}</Text>
+      {hint ? <Text style={[ps.sectionHint, { color: ink }]}>{hint}</Text> : null}
     </View>
   );
 }
@@ -383,6 +393,7 @@ export function PolyChartContent({ editing, shipId }: { editing?: boolean; shipI
   const [bonds, setBonds] = useJsonState<Record<string, { type: string; close: string }>>('bonds', {});
 
   const ctx = useTemplateCtx();
+  const ink = useThemedInk();
   const customBg = ctx.bgColor || ctx.bgImage;
   const tBg = customBg ? { backgroundColor: 'transparent' } : null;
   const [music, setMusic] = useState(() => ctx.get('music', ''));
@@ -430,20 +441,20 @@ export function PolyChartContent({ editing, shipId }: { editing?: boolean; shipI
     : '';
 
   return (
-    <View style={[ps.card, tBg]}>
+    <View style={[ps.card, { borderColor: ink }, tBg]}>
       <View style={ps.headerWrap}>
-        <View style={ps.titlePill}><Text style={ps.titlePillText}>POLY SHIP CHART</Text></View>
-        <Text style={ps.subtitle}>for the whole polycule ♡  ·  tap anything to edit</Text>
+        <View style={[ps.titlePill, { backgroundColor: ink }]}><Text style={[ps.titlePillText, { color: getContrastColor(ink) }]}>POLY SHIP CHART</Text></View>
+        <Text style={[ps.subtitle, { color: ink }]}>for the whole polycule ♡  ·  tap anything to edit</Text>
       </View>
 
       {/* top bar */}
       <View style={ps.topBar}>
-        <View style={ps.countPill}>
-          <Text style={ps.countText}>♡ {roster.length} character{roster.length === 1 ? '' : 's'}</Text>
+        <View style={[ps.countPill, { borderColor: ink }]}>
+          <Text style={[ps.countText, { color: ink }]}>♡ {roster.length} character{roster.length === 1 ? '' : 's'}</Text>
         </View>
         {e && (
-          <Pressable style={ps.addBtn} onPress={addMember}>
-            <Text style={ps.addBtnText}>＋ add member</Text>
+          <Pressable style={[ps.addBtn, { backgroundColor: ink }]} onPress={addMember}>
+            <Text style={[ps.addBtnText, { color: getContrastColor(ink) }]}>＋ add member</Text>
           </Pressable>
         )}
       </View>
@@ -484,7 +495,7 @@ export function PolyChartContent({ editing, shipId }: { editing?: boolean; shipI
               {BOND_TYPE_ORDER.map((t) => (
                 <View key={t} style={ps.legendItem}>
                   <View style={[ps.bondSwatch, { backgroundColor: BOND_TYPES[t] }]} />
-                  <Text style={ps.legendName}>{t}</Text>
+                  <Text style={[ps.legendName, { color: ink }]}>{t}</Text>
                 </View>
               ))}
             </View>
@@ -510,15 +521,15 @@ export function PolyChartContent({ editing, shipId }: { editing?: boolean; shipI
           <View style={[ps.block, ps.prefRow]}>
             {PREFS.map((p) => (
               <View key={p.id} style={ps.prefCol}>
-                <Text style={ps.prefLabel}>{p.label}</Text>
+                <Text style={[ps.prefLabel, { color: ink }]}>{p.label}</Text>
                 {roster.map((m) => (
                   <View key={m.id} style={ps.prefItem}>
-                    <View style={[ps.legendDot, { backgroundColor: m.color }]} />
+                    <View style={[ps.legendDot, { backgroundColor: m.color, borderColor: ink }]} />
                     {e ? (
                       <TextInput value={prefOf(p.id, m.id)} onChangeText={(v) => setPrefVal(p.id, m.id, v)}
-                        placeholder="—" placeholderTextColor={Colors.ink3} style={ps.prefInput} />
+                        placeholder="—" placeholderTextColor={ink + '88'} style={[ps.prefInput, { borderColor: ink, color: ink }]} />
                     ) : (
-                      <Text style={ps.prefVal}>{prefOf(p.id, m.id) || '—'}</Text>
+                      <Text style={[ps.prefVal, { borderColor: ink, color: ink }]}>{prefOf(p.id, m.id) || '—'}</Text>
                     )}
                   </View>
                 ))}
@@ -529,15 +540,15 @@ export function PolyChartContent({ editing, shipId }: { editing?: boolean; shipI
       )}
 
       {/* music */}
-      <View style={[ps.musicRow, tBg]}>
-        <View style={ps.musicIcon}><Text style={ps.musicNote}>♪</Text></View>
+      <View style={[ps.musicRow, { borderColor: ink }, tBg]}>
+        <View style={[ps.musicIcon, { borderColor: ink }]}><Text style={[ps.musicNote, { color: ink }]}>♪</Text></View>
         <View style={{ flex: 1 }}>
-          <Text style={ps.fieldLabel}>The polycule's song</Text>
+          <Text style={[ps.fieldLabel, { color: ink }]}>The polycule's song</Text>
           {e ? (
             <TextInput value={music} onChangeText={(v) => { setMusic(v); ctx.set('music', v); }}
-              placeholder="add a track…" placeholderTextColor={Colors.ink3} style={ps.musicInput} />
+              placeholder="add a track…" placeholderTextColor={ink + '88'} style={[ps.musicInput, { color: ink }]} />
           ) : (
-            <Text style={ps.musicVal}>{music || '—'}</Text>
+            <Text style={[ps.musicVal, { color: ink }]}>{music || '—'}</Text>
           )}
         </View>
       </View>
@@ -546,8 +557,8 @@ export function PolyChartContent({ editing, shipId }: { editing?: boolean; shipI
       <Modal visible={!!bondEdit} transparent animationType="fade" onRequestClose={() => setBondEdit(null)}>
         <Pressable style={ps.modalOverlay} onPress={() => setBondEdit(null)} />
         <View style={ps.modalSheet}>
-         <View style={[ps.modalCard, SheetColumn]}>
-          <Text style={ps.modalTitle}>{bondNames}</Text>
+         <View style={[ps.modalCard, { borderColor: ink }, SheetColumn]}>
+          <Text style={[ps.modalTitle, { color: ink }]}>{bondNames}</Text>
           <View style={ps.modalChips}>
             {BOND_TYPE_ORDER.map((t) => {
               const on = editBond?.type === t;
@@ -564,15 +575,15 @@ export function PolyChartContent({ editing, shipId }: { editing?: boolean; shipI
               const on = editBond?.close === c;
               return (
                 <Pressable key={c} onPress={() => bondEdit && setBondClose(bondEdit, c)}
-                  style={[ps.modalCloseBtn, on && { backgroundColor: Colors.plum }]}>
-                  <Text style={[ps.modalCloseText, on && { color: '#fff' }]}>{CLOSENESS[c]}</Text>
+                  style={[ps.modalCloseBtn, { borderColor: ink }, on && { backgroundColor: ink }]}>
+                  <Text style={[ps.modalCloseText, { color: ink }, on && { color: getContrastColor(ink) }]}>{CLOSENESS[c]}</Text>
                 </Pressable>
               );
             })}
           </View>
           <View style={ps.modalActions}>
             <Pressable onPress={() => bondEdit && removeBond(bondEdit)}><Text style={ps.modalRemove}>✕ remove bond</Text></Pressable>
-            <Pressable onPress={() => setBondEdit(null)}><Text style={ps.modalDone}>done</Text></Pressable>
+            <Pressable onPress={() => setBondEdit(null)}><Text style={[ps.modalDone, { color: ink }]}>done</Text></Pressable>
           </View>
          </View>
         </View>
@@ -592,18 +603,17 @@ export default function TemplatePolyChart() {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const PLUM = Colors.plum;
 const ps = StyleSheet.create({
   card: { backgroundColor: Colors.vellum, borderWidth: 2, borderColor: INK, borderRadius: 20, padding: 18 },
   headerWrap: { alignItems: 'center' },
-  titlePill: { backgroundColor: PLUM, borderRadius: 999, paddingVertical: 6, paddingHorizontal: 20 },
-  titlePillText: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(17), color: '#fff', letterSpacing: 0.5 },
-  subtitle: { fontFamily: FontFamily.script, fontSize: sf(16), color: PLUM, marginTop: 5 },
+  titlePill: { borderRadius: 999, paddingVertical: 6, paddingHorizontal: 20 },
+  titlePillText: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(17), letterSpacing: 0.5 },
+  subtitle: { fontFamily: FontFamily.script, fontSize: sf(16), marginTop: 5 },
 
   topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 12 },
-  countPill: { backgroundColor: '#f4ecf7', borderWidth: 1.5, borderColor: '#c9a9c0', borderRadius: 999, paddingVertical: 4, paddingHorizontal: 12 },
-  countText: { fontFamily: FontFamily.uiMedium, fontSize: sf(12), color: PLUM },
-  addBtn: { backgroundColor: PLUM, borderRadius: 999, paddingVertical: 5, paddingHorizontal: 14 },
+  countPill: { backgroundColor: 'transparent', borderWidth: 1.5, borderRadius: 999, paddingVertical: 4, paddingHorizontal: 12 },
+  countText: { fontFamily: FontFamily.uiMedium, fontSize: sf(12) },
+  addBtn: { borderRadius: 999, paddingVertical: 5, paddingHorizontal: 14 },
   addBtnText: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(12), color: '#fff' },
 
   shipRow: { flexDirection: 'row', gap: 14, marginTop: 14 },
@@ -612,7 +622,7 @@ const ps = StyleSheet.create({
 
   // fields
   field: { gap: 2 },
-  fieldLabel: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(8), letterSpacing: 0.5, textTransform: 'uppercase', color: '#9a7e92' },
+  fieldLabel: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(8), letterSpacing: 0.5, textTransform: 'uppercase', color: INK },
   fieldInput: { fontFamily: FontFamily.ja, fontSize: sf(11), color: INK, borderBottomWidth: 1.4, borderColor: INK, paddingBottom: 2, padding: 0 },
   fieldVal: { fontFamily: FontFamily.ja, fontSize: sf(11), color: INK, borderBottomWidth: 1.4, borderColor: INK, paddingBottom: 2 },
 
@@ -628,8 +638,8 @@ const ps = StyleSheet.create({
 
   // section
   section: { alignItems: 'center', marginTop: 24 },
-  sectionTitle: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(15), textTransform: 'uppercase', color: PLUM },
-  sectionHint: { fontFamily: FontFamily.script, fontSize: sf(14), color: Colors.ink3 },
+  sectionTitle: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(15), textTransform: 'uppercase', color: INK },
+  sectionHint: { fontFamily: FontFamily.script, fontSize: sf(14), color: INK },
 
   // spectra
   specRow: { flexDirection: 'row', alignItems: 'center', gap: 9, marginBottom: 14 },
@@ -642,7 +652,7 @@ const ps = StyleSheet.create({
   legend: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 12, marginTop: 8 },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   legendDot: { width: 10, height: 10, borderRadius: 999, borderWidth: 1.4, borderColor: INK },
-  legendName: { fontFamily: FontFamily.ui, fontSize: sf(10), color: Colors.ink2 },
+  legendName: { fontFamily: FontFamily.ui, fontSize: sf(10), color: INK },
 
   // map
   mapBox: { backgroundColor: '#fffdfb', borderWidth: 1.5, borderColor: '#e3cdbe', borderRadius: 12, overflow: 'hidden' },
@@ -663,7 +673,7 @@ const ps = StyleSheet.create({
   gridBox: { width: 150, height: 150, backgroundColor: '#fffdfb', borderWidth: 1.5, borderColor: INK, borderRadius: 8 },
   gridVLine: { position: 'absolute', left: '50%', top: 8, bottom: 8, width: 1, backgroundColor: '#d9c4b6' },
   gridHLine: { position: 'absolute', top: '50%', left: 8, right: 8, height: 1, backgroundColor: '#d9c4b6' },
-  gridAxis: { position: 'absolute', fontFamily: FontFamily.ui, fontSize: sf(9), color: Colors.ink2 },
+  gridAxis: { position: 'absolute', fontFamily: FontFamily.ui, fontSize: sf(9), color: INK },
   gridTop: { top: 4, alignSelf: 'center', left: 0, right: 0, textAlign: 'center' },
   gridBottom: { bottom: 4, alignSelf: 'center', left: 0, right: 0, textAlign: 'center' },
   gridLeft: { left: 4, top: '46%' },
@@ -673,15 +683,15 @@ const ps = StyleSheet.create({
   // prefs
   prefRow: { flexDirection: 'row', gap: 12 },
   prefCol: { flex: 1 },
-  prefLabel: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(8), color: PLUM, marginBottom: 7, textTransform: 'uppercase' },
+  prefLabel: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(8), color: INK, marginBottom: 7, textTransform: 'uppercase' },
   prefItem: { flexDirection: 'row', alignItems: 'flex-end', gap: 6, marginBottom: 9 },
   prefInput: { flex: 1, fontFamily: FontFamily.ja, fontSize: sf(9), color: INK, borderBottomWidth: 1.2, borderColor: INK, padding: 0, paddingBottom: 2 },
   prefVal: { flex: 1, fontFamily: FontFamily.ja, fontSize: sf(9), color: INK, borderBottomWidth: 1.2, borderColor: INK, paddingBottom: 2 },
 
   // music
   musicRow: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#f4ecf7', borderWidth: 1.5, borderColor: '#c9a9c0', borderRadius: 12, padding: 12, marginTop: 22 },
-  musicIcon: { width: 40, height: 40, borderRadius: 999, backgroundColor: '#fff', borderWidth: 1.5, borderColor: PLUM, alignItems: 'center', justifyContent: 'center' },
-  musicNote: { fontSize: sf(18), color: PLUM },
+  musicIcon: { width: 40, height: 40, borderRadius: 999, backgroundColor: '#fff', borderWidth: 1.5, borderColor: INK, alignItems: 'center', justifyContent: 'center' },
+  musicNote: { fontSize: sf(18), color: INK },
   musicInput: { fontFamily: FontFamily.ja, fontSize: sf(12), color: INK, borderBottomWidth: 1.4, borderColor: '#c9a9c0', padding: 0, paddingBottom: 2, marginTop: 3 },
   musicVal: { fontFamily: FontFamily.ja, fontSize: sf(12), color: INK, marginTop: 3 },
 
@@ -689,14 +699,14 @@ const ps = StyleSheet.create({
   modalOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(43,26,38,0.4)' },
   modalSheet: { position: 'absolute', left: 0, right: 0, top: '32%', alignItems: 'center', paddingHorizontal: 20 },
   modalCard: { width: '100%', backgroundColor: Colors.vellum, borderWidth: 1.5, borderColor: INK, borderRadius: 16, padding: 16, gap: 10 },
-  modalTitle: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(15), color: PLUM, textAlign: 'center' },
+  modalTitle: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(15), color: INK, textAlign: 'center' },
   modalChips: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 6 },
   modalChip: { borderWidth: 1, borderRadius: 999, paddingVertical: 3, paddingHorizontal: 9 },
   modalChipText: { fontFamily: FontFamily.uiMedium, fontSize: sf(10) },
   modalCloseRow: { flexDirection: 'row', gap: 6 },
   modalCloseBtn: { flex: 1, alignItems: 'center', paddingVertical: 6, borderRadius: 8, backgroundColor: '#f4ecf7', borderWidth: 1, borderColor: '#c9a9c0' },
-  modalCloseText: { fontFamily: FontFamily.uiMedium, fontSize: sf(10), color: Colors.ink2 },
+  modalCloseText: { fontFamily: FontFamily.uiMedium, fontSize: sf(10), color: INK },
   modalActions: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 2 },
   modalRemove: { fontFamily: FontFamily.uiMedium, fontSize: sf(11), color: '#b04a4a' },
-  modalDone: { fontFamily: FontFamily.uiMedium, fontSize: sf(11), color: Colors.ink3 },
+  modalDone: { fontFamily: FontFamily.uiMedium, fontSize: sf(11), color: INK },
 });

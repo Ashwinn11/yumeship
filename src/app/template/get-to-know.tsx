@@ -4,7 +4,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { TemplateScreenWrapper } from '@/components/templates/TemplateScreenWrapper';
 import {
   MarkerCard, MarkerHeader, SharingRow,
-  BlankPill, ProfileBlock, PhotoBox, MemoriesFooter, INK,
+  BlankPill, ProfileBlock, PhotoBox, MemoriesFooter, INK, useThemedInk,
 } from '@/components/templates/primitives';
 import { Heart } from '@/components/deco/Heart';
 import { useTemplateCtx } from '@/store/templateData';
@@ -16,6 +16,7 @@ type DichoState = Partial<{ spoon: 'left' | 'right'; energy: 'left' | 'right'; p
 export function GetToKnowContent({ editing = false }: { editing?: boolean }) {
   const ctx = useTemplateCtx();
   const customBg = ctx.bgColor || ctx.bgImage;
+  const ink = useThemedInk();
 
   const [vals, setVals] = useState<Record<string, string>>(() => ({
     meName:      ctx.get('meName'),
@@ -67,7 +68,7 @@ export function GetToKnowContent({ editing = false }: { editing?: boolean }) {
   return (
     <MarkerCard tint={customBg ? 'transparent' : '#fffbf6'}>
       <View style={s.heartCorner}>
-        <Heart size={20} color={INK} outline />
+        <Heart size={20} color={ink} outline />
       </View>
 
       <View style={s.bannerBox}>
@@ -75,7 +76,7 @@ export function GetToKnowContent({ editing = false }: { editing?: boolean }) {
       </View>
 
       <View style={s.headerRow}>
-        <View style={s.avatarWrap}>
+        <View style={[s.avatarWrap, { shadowColor: ink }]}>
           <PhotoBox size={104} round style={s.avatarPhoto} editing={e} uri={vals.photo0} onUriChange={e ? (u) => setVal('photo0', u) : undefined} />
         </View>
         <View style={s.headerText}>
@@ -88,7 +89,7 @@ export function GetToKnowContent({ editing = false }: { editing?: boolean }) {
         <View style={s.pillHalf}>
           <BlankPill value={vals.meName} onChangeText={e ? (v) => setVal('meName', v) : undefined} placeholder="your name" style={customBg ? { backgroundColor: 'transparent' } : undefined} />
         </View>
-        <Heart size={18} color={INK} outline />
+        <Heart size={18} color={ink} outline />
         <View style={s.pillHalf}>
           <BlankPill value={vals.themName} onChangeText={e ? (v) => setVal('themName', v) : undefined} placeholder="their name" style={customBg ? { backgroundColor: 'transparent' } : undefined} />
         </View>

@@ -3,7 +3,7 @@ import { View, Text, TextInput, StyleSheet, Pressable } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { TemplateScreenWrapper } from '@/components/templates/TemplateScreenWrapper';
 import {
-  MarkerCard, BlankPill, PhotoBox, INK,
+  MarkerCard, BlankPill, PhotoBox, getContrastColor,
 } from '@/components/templates/primitives';
 import { WashiTape } from '@/components/deco/WashiTape';
 import { Bullets } from '@/components/deco';
@@ -132,7 +132,7 @@ export function FlipPhoneContent({ editing = false }: { editing?: boolean }) {
               <View style={s.sharingPills}>
                 {(['Yes', 'No', 'Selective'] as const).map(opt => (
                   <Pressable key={opt} onPress={() => setVal('sharing', opt)} style={[s.sPill, { borderColor: ink }, vals.sharing === opt && { backgroundColor: ink }]}>
-                    <Text style={[s.sPillText, { color: ink }, vals.sharing === opt && s.sPillTextOn]}>{opt}</Text>
+                    <Text style={[s.sPillText, { color: ink }, vals.sharing === opt && { color: getContrastColor(ink) }]}>{opt}</Text>
                   </Pressable>
                 ))}
               </View>
@@ -149,9 +149,9 @@ export function FlipPhoneContent({ editing = false }: { editing?: boolean }) {
               <Text style={[s.freeText, { color: ink }]}>{vals.free || '——'}</Text>
             )}
             <View style={s.bulletRow}>
-              <Bullets.Heart size={10} color="white" />
-              <Bullets.Sakura size={10} color="white" />
-              <Bullets.Star size={10} color="white" />
+              <Bullets.Heart size={10} color={ink} />
+              <Bullets.Sakura size={10} color={ink} />
+              <Bullets.Star size={10} color={ink} />
             </View>
           </Y2KWindow>
         </View>
@@ -173,8 +173,8 @@ export function FlipPhoneContent({ editing = false }: { editing?: boolean }) {
           <View style={s.progressRow}>
             <Text style={[s.timeText, { color: ink }]}>0:00</Text>
             <View style={s.progressTrack}>
-              <View style={[s.progressFill, { backgroundColor: ink }]} />
-              <View style={[s.progressThumb, { borderColor: ink }]} />
+              <View style={s.progressFill} />
+              <View style={s.progressThumb} />
             </View>
             <Text style={[s.timeText, { color: ink }]}>3:50</Text>
           </View>
@@ -242,13 +242,13 @@ const s = StyleSheet.create({
   sharingHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 2 },
   sharingWarn: { fontSize: sf(12), fontWeight: '700', color: '#fff' },
   sharingLabel: { fontFamily: FontFamily.markerBold, fontSize: sf(9), color: '#fff', letterSpacing: 0.4 },
-  sharingBox: { backgroundColor: '#fff', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2, alignSelf: 'center', borderWidth: 1, borderColor: Colors.sakuraInk },
-  sharingBoxText: { fontFamily: FontFamily.ja, fontSize: sf(9), color: Colors.sakuraInk },
-  sharingPills: { flexDirection: 'row', flexWrap: 'wrap', gap: 3, marginTop: 3 },
-  sPill: { paddingHorizontal: 4, paddingVertical: 1, borderRadius: 4, borderWidth: 1, borderColor: '#fff' },
-  sPillOn: { backgroundColor: '#fff' },
-  sPillText: { fontFamily: FontFamily.ja, fontSize: sf(7), color: '#fff' },
-  sPillTextOn: { color: Colors.sakuraInk },
+  sharingBox: { backgroundColor: '#fff', borderRadius: 6, paddingHorizontal: 10, paddingVertical: 4, alignSelf: 'stretch', alignItems: 'center', borderWidth: 1.2, borderColor: Colors.sakuraInk, marginTop: 4 },
+  sharingBoxText: { fontFamily: FontFamily.ja, fontSize: sf(9), color: Colors.sakuraInk, textAlign: 'center' },
+  sharingPills: { flexDirection: 'column', gap: 4, marginTop: 4, width: '100%' },
+  sPill: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, borderWidth: 1.2, alignItems: 'center', justifyContent: 'center' },
+  sPillOn: {},
+  sPillText: { fontFamily: FontFamily.ja, fontSize: sf(9), textAlign: 'center' },
+  sPillTextOn: {},
   freeInput: { height: 50, textAlignVertical: 'top', fontFamily: FontFamily.script, fontSize: sf(11), backgroundColor: 'transparent', borderColor: 'transparent', color: '#fff' },
   freeText: { fontFamily: FontFamily.script, fontSize: sf(13), color: '#fff', lineHeight: 15 },
   bulletRow: { flexDirection: 'row', gap: 4, marginTop: 4 },

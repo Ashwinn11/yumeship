@@ -70,14 +70,14 @@ export function BondBannerContent({ editing = false }: { editing?: boolean }) {
 
       {/* Banner + ribbon */}
       <View style={s.bannerWrap}>
-        <View style={[s.banner, customBg ? { backgroundColor: 'transparent' } : null]}>
+        <View style={[s.banner, { borderColor: ink }, customBg ? { backgroundColor: 'transparent' } : null]}>
           <Text style={[s.bannerSmall, { color: ink }]}>all about my</Text>
           <Text style={[s.bannerBig, { color: ink }]}>♡ YumeShip ♡</Text>
         </View>
         <View style={s.ribbonRow}>
-          <Ribbon size={22} color={Colors.sakura} />
-          <Ribbon size={22} color={Colors.lavender} />
-          <Ribbon size={22} color={Colors.butter} />
+          <Ribbon size={22} color={ink} />
+          <Ribbon size={22} color={ink} />
+          <Ribbon size={22} color={ink} />
         </View>
       </View>
 
@@ -110,7 +110,7 @@ export function BondBannerContent({ editing = false }: { editing?: boolean }) {
             )}
             <Path
               d="M60 130 C 20 100 6 70 6 40 C 6 22 18 14 30 14 C 44 14 54 22 60 32 C 66 22 76 14 90 14 C 102 14 114 22 114 40 C 114 70 100 100 60 130 Z"
-              fill="none" stroke={INK} strokeWidth="2"
+              fill="none" stroke={ink} strokeWidth="2"
             />
           </Svg>
           {e && !vals.shieldPhoto && (
@@ -130,7 +130,7 @@ export function BondBannerContent({ editing = false }: { editing?: boolean }) {
             {(['Name', 'Pronouns', 'MBTI', 'Vibe'] as const).map((f) => {
               const key = `${pfx}${f}`;
               return (
-                <View key={key} style={[s.aboutField, customBg ? { backgroundColor: 'transparent' } : null]}>
+                <View key={key} style={[s.aboutField, { borderColor: ink }, customBg ? { backgroundColor: 'transparent' } : null]}>
                   <Text style={[s.aboutFieldLabel, { color: ink }]}>{f}:</Text>
                   {e ? (
                     <BlankPill value={vals[key]} onChangeText={v => setVal(key, v)} placeholder="——" style={s.aboutFieldVal} />
@@ -145,7 +145,7 @@ export function BondBannerContent({ editing = false }: { editing?: boolean }) {
       </View>
 
       {/* Anniversary */}
-      <View style={[s.annivBox, customBg ? { backgroundColor: 'transparent' } : null]}>
+      <View style={[s.annivBox, { borderColor: ink }, customBg ? { backgroundColor: 'transparent' } : null]}>
         <Text style={[s.annivLabel, { color: ink }]}>♡ Anniversary ♡</Text>
         <DateField
           value={vals.anniv}
@@ -215,7 +215,7 @@ const s = StyleSheet.create({
   banner: {
     paddingHorizontal: 18, paddingVertical: 8,
     backgroundColor: Colors.sakura,
-    borderWidth: 2, borderColor: INK,
+    borderWidth: 2, borderColor: INK, // overridden inline with live ink
     borderRadius: 14,
     alignItems: 'center',
   },
@@ -226,13 +226,13 @@ const s = StyleSheet.create({
   aboutCols: { flexDirection: 'row', gap: 10, zIndex: 2, position: 'relative' },
   aboutCol: { flex: 1, gap: 4 },
   aboutHeader: { fontFamily: FontFamily.markerBold, fontSize: sf(9), color: INK },
-  aboutField: { backgroundColor: 'rgba(255,255,255,0.6)', borderWidth: 1.5, borderColor: INK, borderRadius: 8, padding: 6, gap: 2 },
+  aboutField: { backgroundColor: 'rgba(255,255,255,0.6)', borderWidth: 1.5, borderColor: INK, borderRadius: 8, padding: 6, gap: 2 }, // borderColor overridden inline
   aboutFieldLabel: { fontFamily: FontFamily.markerBold, fontSize: sf(7), color: INK, letterSpacing: 0.4 },
   aboutFieldVal: { height: 16, backgroundColor: 'transparent', borderWidth: 0 },
   aboutFieldValText: { fontFamily: FontFamily.script, fontSize: sf(14), color: INK },
   annivBox: {
     backgroundColor: 'rgba(255,255,255,0.6)',
-    borderWidth: 1.5, borderColor: INK,
+    borderWidth: 1.5, borderColor: INK, // borderColor overridden inline
     borderRadius: 10, padding: 10,
     alignItems: 'center',
   },

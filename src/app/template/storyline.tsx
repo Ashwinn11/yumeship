@@ -4,7 +4,7 @@ import Svg, { Line } from 'react-native-svg';
 import { useLocalSearchParams } from 'expo-router';
 import { TemplateScreenWrapper } from '@/components/templates/TemplateScreenWrapper';
 import {
-  MarkerCard, TitleHeader, INK,
+  MarkerCard, TitleHeader, INK, useThemedInk,
 } from '@/components/templates/primitives';
 import { Bullets, WashiTape } from '@/components/deco';
 import { Colors, FontFamily ,sf } from '@/constants/theme';
@@ -18,6 +18,7 @@ const BLANK_EVENTS: EventEntry[] = Array.from({ length: 5 }, () => ({ d: '', t: 
 export function StorylineContent({ editing = false }: { editing?: boolean }) {
   const ctx = useTemplateCtx();
   const customBg = ctx.bgColor || ctx.bgImage;
+  const ink = useThemedInk();
 
   const [events, setEvents] = useState<EventEntry[]>(() =>
     JSON.parse(ctx.get('events', 'null')) ?? BLANK_EVENTS
@@ -38,49 +39,30 @@ export function StorylineContent({ editing = false }: { editing?: boolean }) {
   return (
     <MarkerCard tint={customBg ? 'transparent' : '#fffbf6'} style={s.card}>
       <View style={{ position: 'absolute', top: -7, right: 24, zIndex: 10 }}>
-        <WashiTape width={65} height={14} pattern="star" color="#b8902a" rotate={5} />
+        <WashiTape width={65} height={14} pattern="star" color={ink} rotate={5} />
       </View>
       <TitleHeader title="OUR STORYLINE" subtitle="the year so far" />
 
       <View style={s.timeline} onLayout={(ev) => setTimelineH(ev.nativeEvent.layout.height)}>
         {timelineH > 0 && (
           <Svg style={StyleSheet.absoluteFill} width="100%" height={timelineH}>
-            <Line x1="11" y1="8" x2="11" y2={timelineH - 8} stroke={INK} strokeWidth="1.5" strokeDasharray="4,4" />
+            <Line x1="11" y1="8" x2="11" y2={timelineH - 8} stroke={ink} strokeWidth="1.5" strokeDasharray="4,4" />
           </Svg>
         )}
         {events.map((ev, i) => {
           const isLast = i === events.length - 1;
           return (
             <View key={i} style={s.event}>
-              {(() => {
-                if (isLast) {
-                  return (
-                    <View style={[s.dotCircle, { borderColor: Colors.sakuraDeep }]}>
-                      <Bullets.Heart size={13} color={Colors.sakuraDeep} />
-                    </View>
-                  );
-                }
-                switch (i % 3) {
-                  case 0: return (
-                    <View style={[s.dotCircle, { borderColor: Colors.sakura }]}>
-                      <Bullets.Sakura size={13} color={Colors.sakuraDeep} />
-                    </View>
-                  );
-                  case 1: return (
-                    <View style={[s.dotCircle, { borderColor: Colors.butterDeep }]}>
-                      <Bullets.Star size={13} color={Colors.butterDeep} />
-                    </View>
-                  );
-                  default: return (
-                    <View style={[s.dotCircle, { borderColor: Colors.lavenderDeep }]}>
-                      <Bullets.Dot size={10} color={Colors.lavenderDeep} />
-                    </View>
-                  );
-                }
-              })()}
+              <View style={[s.dotCircle, { borderColor: ink }]}>
+                {isLast ? (
+                  <Bullets.Heart size={13} color={ink} />
+                ) : (
+                  <Bullets.Sakura size={13} color={ink} />
+                )}
+              </View>
               <View style={s.eventContent}>
                 <View style={s.eventHeader}>
-                  <View style={s.dateBadge}>
+                  <View style={[s.dateBadge, { borderColor: ink }]}>
                     <DateField
                       value={ev.d}
                       onChange={setField(i, 'd') || (() => {})}
@@ -98,7 +80,7 @@ export function StorylineContent({ editing = false }: { editing?: boolean }) {
                       textStyle={{
                         fontFamily: FontFamily.markerBold,
                         fontSize: sf(10),
-                        color: INK,
+                        color: ink,
                         textAlign: 'center',
                       }}
                       displayValue={ev.d || undefined}
@@ -110,29 +92,29 @@ export function StorylineContent({ editing = false }: { editing?: boolean }) {
                         value={ev.t}
                         onChangeText={setField(i, 't') || (() => {})}
                         placeholder="WHAT HAPPENED?"
-                        placeholderTextColor={INK + '55'}
+                        placeholderTextColor={ink + '55'}
                         autoCapitalize="characters"
                         underlineColorAndroid="transparent"
-                        style={s.eventTitle}
+                        style={[s.eventTitle, { color: ink }]}
                       />
                     ) : (
-                      <Text style={s.eventTitle}>{ev.t || '———'}</Text>
+                      <Text style={[s.eventTitle, { color: ink }]}>{ev.t || '———'}</Text>
                     )}
                   </View>
-                  {isLast && <Bullets.Heart size={14} color={INK} />}
+                  {isLast && <Bullets.Heart size={14} color={ink} />}
                 </View>
                 {e ? (
                   <TextInput
                     value={ev.body}
                     onChangeText={setField(i, 'body')}
                     placeholder="what happened..."
-                    placeholderTextColor={INK + '88'}
+                    placeholderTextColor={ink + '88'}
                     multiline
                     underlineColorAndroid="transparent"
-                    style={s.eventBody}
+                    style={[s.eventBody, { color: ink }]}
                   />
                 ) : (
-                  <Text style={s.eventBody}>{ev.body || '...'}</Text>
+                  <Text style={[s.eventBody, { color: ink }]}>{ev.body || '...'}</Text>
                 )}
               </View>
             </View>
@@ -171,7 +153,6 @@ const s = StyleSheet.create({
     borderRadius: 11,
     backgroundColor: '#fffbf6',
     borderWidth: 1.5,
-    borderColor: INK,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -183,12 +164,10 @@ const s = StyleSheet.create({
     paddingVertical: 1,
     borderRadius: 4,
     borderWidth: 1.2,
-    borderColor: INK,
   },
   eventTitle: {
     fontFamily: FontFamily.markerBold,
     fontSize: sf(14),
-    color: INK,
     textTransform: 'uppercase',
     letterSpacing: 0.3,
     flex: 1,
@@ -196,7 +175,6 @@ const s = StyleSheet.create({
   eventBody: {
     fontFamily: FontFamily.ja,
     fontSize: sf(12),
-    color: INK,
     lineHeight: 18,
     minHeight: 18,
     textAlignVertical: 'top',

@@ -1,5 +1,5 @@
 import { TemplateScreenWrapper } from '@/components/templates/TemplateScreenWrapper';
-import { INK, MarkerCard, SquareCheck } from '@/components/templates/primitives';
+import { INK, MarkerCard, SquareCheck, useThemedInk, getContrastColor } from '@/components/templates/primitives';
 import { FontFamily ,sf } from '@/constants/theme';
 import { useTemplateCtx } from '@/store/templateData';
 import { useLocalSearchParams } from 'expo-router';
@@ -33,6 +33,7 @@ const DEFAULT_CHECK_STATES = STATES.map((st) => [...st.defaults]);
 export function BoundariesContent({ editing = false }: { editing?: boolean }) {
   const ctx = useTemplateCtx();
   const customBg = ctx.bgColor || ctx.bgImage;
+  const ink = useThemedInk();
 
   const [checkStates, setCheckStates] = useState<boolean[][]>(() =>
     JSON.parse(ctx.get('checkStates', 'null')) ?? DEFAULT_CHECK_STATES
@@ -50,11 +51,11 @@ export function BoundariesContent({ editing = false }: { editing?: boolean }) {
   return (
     <MarkerCard tint={customBg ? 'transparent' : '#fffaf1'}>
       <View style={s.titleCenter}>
-        <View style={s.titlePill}>
-          <Text style={s.titleJa}>夢</Text>
-          <Text style={s.titleText}>BOUNDARIES</Text>
+        <View style={[s.titlePill, { backgroundColor: ink }]}>
+          <Text style={[s.titleJa, { color: getContrastColor(ink) }]}>夢</Text>
+          <Text style={[s.titleText, { color: getContrastColor(ink) }]}>BOUNDARIES</Text>
         </View>
-        <Text style={s.titleSub}>sharing status &amp; what's ok</Text>
+        <Text style={[s.titleSub, { color: ink }]}>sharing status &amp; what's ok</Text>
       </View>
 
       <View style={s.states}>
@@ -65,7 +66,7 @@ export function BoundariesContent({ editing = false }: { editing?: boolean }) {
             </View>
             <View style={s.stateContent}>
               <Text style={[s.stateTitle, { color: st.stroke }]}>{st.title}</Text>
-              <Text style={s.stateDesc}>{st.desc}</Text>
+              <Text style={[s.stateDesc, { color: ink }]}>{st.desc}</Text>
               <View style={s.checkGrid}>
                 {st.checks.map((label, ci) => (
                   <Pressable
@@ -75,7 +76,7 @@ export function BoundariesContent({ editing = false }: { editing?: boolean }) {
                     disabled={!editing}
                   >
                     <SquareCheck on={checkStates[si][ci]} size={11} stroke={st.stroke} />
-                    <Text style={[s.checkText, { opacity: checkStates[si][ci] ? 1 : 0.8 }]}>
+                    <Text style={[s.checkText, { color: ink, opacity: checkStates[si][ci] ? 1 : 0.8 }]}>
                       {label}
                     </Text>
                   </Pressable>
@@ -85,15 +86,15 @@ export function BoundariesContent({ editing = false }: { editing?: boolean }) {
             <Svg width={44} height={54} viewBox="0 0 50 60" style={s.chibi}>
               <Circle cx="25" cy="18" r="13" fill="#fff" stroke={st.stroke} strokeWidth="1.5" />
               <Path d="M14 35 L 16 56 L 34 56 L 36 35 Z" fill="#fff" stroke={st.stroke} strokeWidth="1.5" strokeLinejoin="round" />
-              <Circle cx="20" cy="18" r="1.2" fill={INK} />
-              <Circle cx="30" cy="18" r="1.2" fill={INK} />
-              <Path d="M22 23 Q 25 25, 28 23" stroke={INK} strokeWidth="1.2" fill="none" strokeLinecap="round" />
+              <Circle cx="20" cy="18" r="1.2" fill={ink} />
+              <Circle cx="30" cy="18" r="1.2" fill={ink} />
+              <Path d="M22 23 Q 25 25, 28 23" stroke={ink} strokeWidth="1.2" fill="none" strokeLinecap="round" />
             </Svg>
           </View>
         ))}
       </View>
 
-      <Text style={s.footer}>let's keep the yumeship community happy ♡</Text>
+      <Text style={[s.footer, { color: ink }]}>let's keep the yumeship community happy ♡</Text>
     </MarkerCard>
   );
 }
@@ -113,14 +114,13 @@ const s = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: INK,
     paddingHorizontal: 18,
     paddingVertical: 6,
     borderRadius: 999,
   },
-  titleJa: { fontFamily: FontFamily.ja, fontSize: sf(18), color: '#fff' },
-  titleText: { fontFamily: FontFamily.markerBold, fontSize: sf(16), color: '#fff', letterSpacing: 0.8, textTransform: 'uppercase' },
-  titleSub: { fontFamily: FontFamily.script, fontSize: sf(14), color: INK },
+  titleJa: { fontFamily: FontFamily.ja, fontSize: sf(18) },
+  titleText: { fontFamily: FontFamily.markerBold, fontSize: sf(16), letterSpacing: 0.8, textTransform: 'uppercase' },
+  titleSub: { fontFamily: FontFamily.script, fontSize: sf(14) },
   states: { marginTop: 14, gap: 10 },
   stateCard: {
     borderWidth: 2,
@@ -143,16 +143,15 @@ const s = StyleSheet.create({
   sealJa: { fontFamily: FontFamily.ja, fontSize: sf(22) },
   stateContent: { flex: 1, minWidth: 0 },
   stateTitle: { fontFamily: FontFamily.markerBold, fontSize: sf(15), letterSpacing: 0.5 },
-  stateDesc: { fontFamily: FontFamily.ui, fontSize: sf(11), color: INK, marginTop: 1 },
+  stateDesc: { fontFamily: FontFamily.ui, fontSize: sf(11), marginTop: 1 },
   checkGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 3, marginTop: 6 },
   checkRow: { flexDirection: 'row', alignItems: 'center', gap: 4, width: '48%' },
-  checkText: { fontFamily: FontFamily.marker, fontSize: sf(9), color: INK },
+  checkText: { fontFamily: FontFamily.marker, fontSize: sf(9) },
   chibi: { flexShrink: 0, alignSelf: 'center' },
   footer: {
     textAlign: 'center',
     fontFamily: FontFamily.ui,
     fontSize: sf(11),
-    color: INK,
     opacity: 0.7,
     marginTop: 14,
   },

@@ -112,7 +112,7 @@ export function HeartFrameContent({ editing = false }: { editing?: boolean }) {
         <View style={s.namePillContainer}>
           <BlankPill value={meName} onChangeText={e ? set('meName') : undefined} width={80} style={customBg ? { backgroundColor: 'transparent' } : undefined} />
         </View>
-        <Heart size={16} color={INK} />
+        <Heart size={16} color={ink} />
         <Text style={[s.nameLabel, { color: ink }]}>THEM</Text>
         <View style={s.namePillContainer}>
           <BlankPill value={themName} onChangeText={e ? set('themName') : undefined} width={80} style={customBg ? { backgroundColor: 'transparent' } : undefined} />
@@ -138,7 +138,7 @@ export function HeartFrameContent({ editing = false }: { editing?: boolean }) {
         </View>
       </View>
 
-      <View style={[s.metBox, customBg ? { backgroundColor: 'transparent' } : null]}>
+      <View style={[s.metBox, { borderColor: ink }, customBg ? { backgroundColor: 'transparent' } : null]}>
         <Text style={[s.metLabel, { color: ink }]}>how we met</Text>
         {e ? (
           <TextInput
@@ -155,7 +155,7 @@ export function HeartFrameContent({ editing = false }: { editing?: boolean }) {
         )}
       </View>
 
-      <View style={[s.anniversaryPill, customBg ? { backgroundColor: 'transparent' } : null]}>
+      <View style={[s.anniversaryPill, { borderColor: ink }, customBg ? { backgroundColor: 'transparent' } : null]}>
         <Text style={[s.anniversaryLabel, { color: ink }]}>♡ anniversary</Text>
         <View style={{ alignItems: 'flex-end' }}>
           {e ? (
@@ -226,7 +226,7 @@ const s = StyleSheet.create({
     padding: 12,
     backgroundColor: '#fff',
     borderWidth: 1.5,
-    borderColor: INK,
+    borderColor: INK, // overridden inline with live ink
     borderRadius: 8,
   },
   metLabel: {
@@ -255,7 +255,7 @@ const s = StyleSheet.create({
     paddingVertical: 8,
     backgroundColor: FILL_GRAY,
     borderWidth: 1.5,
-    borderColor: INK,
+    borderColor: INK, // overridden inline with live ink
     borderRadius: 999,
     gap: 10,
   },

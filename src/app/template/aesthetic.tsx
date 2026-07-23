@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Modal, Pressable, TouchableWithoutFeedback, View, Text, TextInput, StyleSheet } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import {
-  MarkerCard, PhotoBox, Polaroid, WindowFrame, MusicPlayer, INK,
+  MarkerCard, PhotoBox, Polaroid, WindowFrame, MusicPlayer, INK, useThemedInk,
 } from '@/components/templates/primitives';
 import { TemplateScreenWrapper } from '@/components/templates/TemplateScreenWrapper';
 import { Heart } from '@/components/deco/Heart';
@@ -27,7 +27,7 @@ export function AestheticContent({ editing = false }: { editing?: boolean }) {
   const ctx = useTemplateCtx();
   const e = editing;
   const customBg = ctx.bgColor || ctx.bgImage;
-  const ink = ctx.textColor || INK;
+  const ink = useThemedInk();
 
   const [vals, setVals] = useState(() => ({
     shipName: ctx.get('shipName'),
@@ -66,7 +66,7 @@ export function AestheticContent({ editing = false }: { editing?: boolean }) {
   return (
     <MarkerCard tint={customBg ? 'transparent' : '#fffbf6'}>
       <View style={s.headerRow}>
-        <Heart size={14} color={INK} outline />
+        <Heart size={14} color={ink} outline />
         {e ? (
           <TextInput
             value={shipName}
@@ -83,7 +83,7 @@ export function AestheticContent({ editing = false }: { editing?: boolean }) {
 
       <View style={s.moodRow}>
         {([['mood0', mood0], ['mood1', mood1], ['mood2', mood2]] as const).map(([key, val], i) => (
-          <View key={key} style={s.moodChip}>
+          <View key={key} style={[s.moodChip, { borderColor: ink }]}>
             {e ? (
               <TextInput
                 value={val}
@@ -145,7 +145,7 @@ export function AestheticContent({ editing = false }: { editing?: boolean }) {
           {palette.map((c, i) => (
             <Pressable
               key={i}
-              style={[s.swatch, { backgroundColor: c }]}
+              style={[s.swatch, { backgroundColor: c, borderColor: ink }]}
               onPress={e ? () => setPickingIdx(i) : undefined}
             >
               {e && <View style={s.swatchEdit}><Text style={s.swatchEditDot}>·</Text></View>}
@@ -156,7 +156,7 @@ export function AestheticContent({ editing = false }: { editing?: boolean }) {
       </WindowFrame>
 
       <View style={s.footer}>
-        <Heart size={20} color={INK} outline />
+        <Heart size={20} color={ink} outline />
       </View>
 
       {/* Color picker modal */}

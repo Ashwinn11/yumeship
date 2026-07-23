@@ -4,7 +4,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Defs, Pattern as SvgPattern, Path, Rect } from 'react-native-svg';
 import { TemplateScreenWrapper } from '@/components/templates/TemplateScreenWrapper';
-import { KawaiiPanel, BlankPill, PhotoBox, INK } from '@/components/templates/primitives';
+import { KawaiiPanel, BlankPill, PhotoBox, INK, getContrastColor } from '@/components/templates/primitives';
 import { Heart } from '@/components/deco/Heart';
 import { DateField, calcElapsed } from '@/components/ui/DateField';
 import { useTemplateCtx } from '@/store/templateData';
@@ -31,6 +31,7 @@ function cap(s: string) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
 export function KawaiiUIContent({ editing = false }: { editing?: boolean }) {
   const ctx = useTemplateCtx();
+  const ink = ctx.textColor || PINK_INK;
   const customBg = ctx.bgColor || ctx.bgImage;
   const panelBg = customBg ? TRANSPARENT : PANEL_BG;
   const infoBg = customBg ? TRANSPARENT : PINK_BG;
@@ -70,19 +71,19 @@ export function KawaiiUIContent({ editing = false }: { editing?: boolean }) {
     return (
       <KawaiiPanel edge={PANEL_EDGE} bg={panelBg} style={s.mainPanel}>
         <View style={s.personHeaderRow}>
-          <Heart size={11} color={PINK_INK} outline />
-          <Text style={[s.kawaiiLabel, { color: PINK_INK }]}>{who}</Text>
+          <Heart size={11} color={ink} outline />
+          <Text style={[s.kawaiiLabel, { color: ink }]}>{who}</Text>
           {e ? (
             <TextInput
               value={vals[nameKey] ?? ''}
               onChangeText={set(nameKey)}
               placeholder={namePlaceholder}
-              placeholderTextColor={PINK_INK + '88'}
+              placeholderTextColor={ink + '88'}
               underlineColorAndroid="transparent"
-              style={s.personNameInput}
+              style={[s.personNameInput, { color: ink }]}
             />
           ) : (
-            <Text style={s.personNameText}>{vals[nameKey] || namePlaceholder}</Text>
+            <Text style={[s.personNameText, { color: ink }]}>{vals[nameKey] || namePlaceholder}</Text>
           )}
         </View>
         <View style={s.mainRow}>
@@ -97,7 +98,7 @@ export function KawaiiUIContent({ editing = false }: { editing?: boolean }) {
               const k = `${prefix}${cap(field)}`;
               return (
                 <View key={k} style={s.infoRow}>
-                  <Text style={[s.infoKey, { color: PINK_INK }]}>{label}</Text>
+                  <Text style={[s.infoKey, { color: ink }]}>{label}</Text>
                   {field === 'birthday' ? (
                     <DateField
                       value={vals[k]}
@@ -106,19 +107,19 @@ export function KawaiiUIContent({ editing = false }: { editing?: boolean }) {
                       format="birthday"
                       placeholder="pick date"
                       style={[s.infoVal, { backgroundColor: infoBg, borderColor: PANEL_EDGE, borderWidth: 1, borderRadius: 4 }]}
-                      textStyle={{ fontSize: sf(9), color: PINK_INK, fontFamily: FontFamily.ja }}
+                      textStyle={{ fontSize: sf(9), color: ink, fontFamily: FontFamily.ja }}
                     />
                   ) : e ? (
                     <TextInput
                       value={vals[k] ?? ''}
                       onChangeText={(v) => setVal(k, v)}
                       placeholder="——"
-                      placeholderTextColor={PINK_INK + '88'}
+                      placeholderTextColor={ink + '88'}
                       underlineColorAndroid="transparent"
                       style={[
                         s.infoVal,
                         s.infoValInput,
-                        { backgroundColor: infoBg, borderColor: PANEL_EDGE },
+                        { backgroundColor: infoBg, borderColor: PANEL_EDGE, color: ink },
                         field === 'loveLanguage' && { fontSize: sf(9) },
                       ]}
                     />
@@ -127,7 +128,7 @@ export function KawaiiUIContent({ editing = false }: { editing?: boolean }) {
                       <Text style={{
                         fontFamily: FontFamily.ja,
                         fontSize: field === 'loveLanguage' ? 8.5 : 11,
-                        color: INK,
+                        color: ink,
                       }}>{vals[k]}</Text>
                     </View>
                   )}
@@ -145,7 +146,7 @@ export function KawaiiUIContent({ editing = false }: { editing?: boolean }) {
       colors={customBg ? ['transparent', 'transparent'] : ['#fcd6e2', '#f5b3c8']}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
-      style={s.card}
+      style={[s.card, { borderColor: ink }]}
       onLayout={(ev) => {
         const { width, height } = ev.nativeEvent.layout;
         setBgSize({ width, height });
@@ -163,37 +164,37 @@ export function KawaiiUIContent({ editing = false }: { editing?: boolean }) {
       )}
 
       <Svg style={s.ribbonTL} width={60} height={60} viewBox="0 0 60 60">
-        <Path d="M5 25 Q 15 5, 30 20 Q 45 5, 55 25 L 30 40 Z" fill={PINK_INK} opacity="0.8" />
-        <Path d="M30 40 L 22 56 L 30 50 L 38 56 Z" fill={PINK_INK} opacity="0.8" />
+        <Path d="M5 25 Q 15 5, 30 20 Q 45 5, 55 25 L 30 40 Z" fill={ink} opacity="0.8" />
+        <Path d="M30 40 L 22 56 L 30 50 L 38 56 Z" fill={ink} opacity="0.8" />
       </Svg>
       <Svg style={s.ribbonTR} width={60} height={60} viewBox="0 0 60 60">
-        <Path d="M5 25 Q 15 5, 30 20 Q 45 5, 55 25 L 30 40 Z" fill={PINK_INK} opacity="0.8" />
-        <Path d="M30 40 L 22 56 L 30 50 L 38 56 Z" fill={PINK_INK} opacity="0.8" />
+        <Path d="M5 25 Q 15 5, 30 20 Q 45 5, 55 25 L 30 40 Z" fill={ink} opacity="0.8" />
+        <Path d="M30 40 L 22 56 L 30 50 L 38 56 Z" fill={ink} opacity="0.8" />
       </Svg>
 
       <View style={s.titlePillRow}>
-        <View style={[s.titlePill, customBg ? { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: PINK_INK } : null]}>
-          <Text style={[s.titlePillText, customBg ? { color: PINK_INK } : null]}>My YumeShip</Text>
+        <View style={[s.titlePill, { backgroundColor: customBg ? 'transparent' : ink }, customBg ? { borderWidth: 1.5, borderColor: ink } : null]}>
+          <Text style={[s.titlePillText, { color: customBg ? ink : getContrastColor(ink) }]}>My YumeShip</Text>
         </View>
       </View>
 
       <View style={s.statRow}>
         {([['shipName', 'ship name'], ['from', 'from'], ['type', 'type']] as const).map(([key, label]) => (
           <KawaiiPanel key={key} edge={PANEL_EDGE} bg={panelBg} style={s.statPanel}>
-            <Text style={[s.kawaiiLabel, { color: PINK_INK }]}>{label}</Text>
+            <Text style={[s.kawaiiLabel, { color: ink }]}>{label}</Text>
             <View style={{ marginTop: 6, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-              {key === 'shipName' && <Heart size={12} color={PINK_INK} outline />}
+              {key === 'shipName' && <Heart size={12} color={ink} outline />}
               {e ? (
                 <TextInput
                   value={vals[key] ?? ''}
                   onChangeText={set(key)}
                   placeholder="——"
-                  placeholderTextColor={PINK_INK + '88'}
+                  placeholderTextColor={ink + '88'}
                   underlineColorAndroid="transparent"
-                  style={{ fontFamily: FontFamily.ja, fontSize: sf(13), color: PINK_INK, padding: 0, flex: 1 }}
+                  style={{ fontFamily: FontFamily.ja, fontSize: sf(13), color: ink, padding: 0, flex: 1 }}
                 />
               ) : (
-                <Text style={{ fontFamily: FontFamily.ja, fontSize: sf(13), color: PINK_INK }}>
+                <Text style={{ fontFamily: FontFamily.ja, fontSize: sf(13), color: ink }}>
                   {vals[key] || '——'}
                 </Text>
               )}
@@ -208,7 +209,7 @@ export function KawaiiUIContent({ editing = false }: { editing?: boolean }) {
       </View>
 
       <KawaiiPanel edge={PANEL_EDGE} bg={panelBg} style={s.mt10}>
-        <Text style={[s.kawaiiLabel, { color: PINK_INK, marginBottom: 6 }]}>sharing status</Text>
+        <Text style={[s.kawaiiLabel, { color: ink, marginBottom: 6 }]}>sharing status</Text>
         <View style={s.sharingRow}>
           {SHARING_OPTS.map((t) => (
             <Pressable
@@ -217,8 +218,8 @@ export function KawaiiUIContent({ editing = false }: { editing?: boolean }) {
               onPress={e ? () => setVal('sharing', sharing === t ? '' : t) : undefined}
               disabled={!e}
             >
-              <Heart size={12} color={PINK_INK} outline={sharing !== t} />
-              <Text style={[s.sharingText, { color: PINK_INK, fontFamily: sharing === t ? FontFamily.markerBold : FontFamily.marker }]}>
+              <Heart size={12} color={ink} outline={sharing !== t} />
+              <Text style={[s.sharingText, { color: ink, fontFamily: sharing === t ? FontFamily.markerBold : FontFamily.marker }]}>
                 {t}
               </Text>
             </Pressable>
@@ -229,23 +230,23 @@ export function KawaiiUIContent({ editing = false }: { editing?: boolean }) {
       <KawaiiPanel edge={PANEL_EDGE} bg={panelBg} style={s.mt10}>
         <View style={s.songRow}>
           <View style={[s.songIcon, { backgroundColor: infoBg, borderColor: PANEL_EDGE }]}>
-            <Text style={{ color: PINK_INK, fontSize: sf(16) }}>♪</Text>
+            <Text style={{ color: ink, fontSize: sf(16) }}>♪</Text>
           </View>
           <View style={s.songInfo}>
-            <Text style={[s.kawaiiLabel, { color: PINK_INK }]}>theme song</Text>
+            <Text style={[s.kawaiiLabel, { color: ink }]}>theme song</Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 }}>
-              <Heart size={12} color={PINK_INK} outline />
+              <Heart size={12} color={ink} outline />
               {e ? (
                 <TextInput
                   value={vals.song ?? ''}
                   onChangeText={set('song')}
                   placeholder="song title"
-                  placeholderTextColor={PINK_INK + '88'}
+                  placeholderTextColor={ink + '88'}
                   underlineColorAndroid="transparent"
-                  style={{ fontFamily: FontFamily.ja, fontSize: sf(13), color: PINK_INK, padding: 0, flex: 1 }}
+                  style={{ fontFamily: FontFamily.ja, fontSize: sf(13), color: ink, padding: 0, flex: 1 }}
                 />
               ) : (
-                <Text style={{ fontFamily: FontFamily.ja, fontSize: sf(13), color: PINK_INK }}>
+                <Text style={{ fontFamily: FontFamily.ja, fontSize: sf(13), color: ink }}>
                   {vals.song || '——'}
                 </Text>
               )}
@@ -256,22 +257,22 @@ export function KawaiiUIContent({ editing = false }: { editing?: boolean }) {
 
       <View style={s.bottomGrid}>
         <KawaiiPanel edge={PANEL_EDGE} bg={panelBg} style={s.bottomPanel}>
-          <Text style={[s.kawaiiLabel, { color: PINK_INK }]}>tropes</Text>
+          <Text style={[s.kawaiiLabel, { color: ink }]}>tropes</Text>
           <View style={s.tropesWrap}>
             {[0, 1, 2].map((i) => (
               <View key={i} style={[s.tropeChip, { backgroundColor: infoBg, borderColor: PANEL_EDGE, flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 6 }]}>
-                <Heart size={10} color={PINK_INK} />
+                <Heart size={10} color={ink} />
                 {e ? (
                   <TextInput
                     value={vals[`trope${i}`] ?? ''}
                     onChangeText={set(`trope${i}`)}
                     placeholder="trope"
-                    placeholderTextColor={PINK_INK + '88'}
+                    placeholderTextColor={ink + '88'}
                     underlineColorAndroid="transparent"
-                    style={{ fontFamily: FontFamily.markerBold, fontSize: sf(9), color: PINK_INK, padding: 0, flex: 1 }}
+                    style={{ fontFamily: FontFamily.markerBold, fontSize: sf(9), color: ink, padding: 0, flex: 1 }}
                   />
                 ) : (
-                  <Text style={{ fontFamily: FontFamily.markerBold, fontSize: sf(9), color: PINK_INK }}>
+                  <Text style={{ fontFamily: FontFamily.markerBold, fontSize: sf(9), color: ink }}>
                     {vals[`trope${i}`] || '——'}
                   </Text>
                 )}
@@ -280,14 +281,14 @@ export function KawaiiUIContent({ editing = false }: { editing?: boolean }) {
           </View>
         </KawaiiPanel>
         <KawaiiPanel edge={PANEL_EDGE} bg={panelBg} style={s.bottomPanel}>
-          <Text style={[s.kawaiiLabel, { color: PINK_INK }]}>anniversary</Text>
+          <Text style={[s.kawaiiLabel, { color: ink }]}>anniversary</Text>
           <View style={{ marginTop: 6 }}>
             {(() => {
               const el = calcElapsed(vals.anniv);
               if (e) {
                 return (
                   <View style={{ marginTop: 6 }}>
-                    <Text style={{ fontFamily: FontFamily.markerBold, fontSize: sf(26), color: PINK_INK, lineHeight: 28 }}>
+                    <Text style={{ fontFamily: FontFamily.markerBold, fontSize: sf(26), color: ink, lineHeight: 28 }}>
                       {el ? el.label : '——'}
                     </Text>
                     <DateField
@@ -305,22 +306,22 @@ export function KawaiiUIContent({ editing = false }: { editing?: boolean }) {
                         justifyContent: 'flex-start',
                         marginTop: 2,
                       }}
-                      textStyle={{ fontFamily: FontFamily.marker, fontSize: sf(10), color: PINK_INK, opacity: 0.7 }}
+                      textStyle={{ fontFamily: FontFamily.marker, fontSize: sf(10), color: ink, opacity: 0.7 }}
                     />
                   </View>
                 );
               } else {
                 return el ? (
                   <View style={{ marginTop: 6 }}>
-                    <Text style={{ fontFamily: FontFamily.markerBold, fontSize: sf(26), color: PINK_INK, lineHeight: 28 }}>
+                    <Text style={{ fontFamily: FontFamily.markerBold, fontSize: sf(26), color: ink, lineHeight: 28 }}>
                       {el.label}
                     </Text>
-                    <Text style={{ fontFamily: FontFamily.marker, fontSize: sf(10), color: PINK_INK, opacity: 0.7, marginTop: 2 }}>
+                    <Text style={{ fontFamily: FontFamily.marker, fontSize: sf(10), color: ink, opacity: 0.7, marginTop: 2 }}>
                       since {el.since}
                     </Text>
                   </View>
                 ) : (
-                  <Text style={{ fontFamily: FontFamily.ja, fontSize: sf(11), color: PINK_INK }}>——</Text>
+                  <Text style={{ fontFamily: FontFamily.ja, fontSize: sf(11), color: ink }}>——</Text>
                 );
               }
             })()}

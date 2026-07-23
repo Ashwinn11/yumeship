@@ -23,6 +23,25 @@ export function useThemedInk(): string {
   return c || INK;
 }
 
+export function getContrastColor(hexColor: string): string {
+  if (!hexColor) return '#ffffff';
+  const c = hexColor.replace('#', '').trim();
+  let r = 0, g = 0, b = 0;
+  if (c.length === 3) {
+    r = parseInt(c[0] + c[0], 16);
+    g = parseInt(c[1] + c[1], 16);
+    b = parseInt(c[2] + c[2], 16);
+  } else if (c.length === 6) {
+    r = parseInt(c.substring(0, 2), 16);
+    g = parseInt(c.substring(2, 4), 16);
+    b = parseInt(c.substring(4, 6), 16);
+  } else {
+    return '#ffffff';
+  }
+  const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+  return yiq >= 150 ? '#1f1219' : '#ffffff';
+}
+
 // ─── useSliderTrack ───────────────────────────────────────────
 // Shared touch handling for horizontal value sliders. Uses pageX
 // against the track's measured screen position rather than locationX,
