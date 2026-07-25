@@ -20,7 +20,7 @@ function Y2KWindow({ title, children, tint, ink, mini = false }: { title: string
           {[0, 1, 2].map(i => <View key={i} style={y.dot} />)}
         </View>
       </View>
-      <View style={[y.body, { backgroundColor: tint, minHeight: mini ? 0 : 60, padding: mini ? 4 : 8 }]}>
+      <View style={[y.body, { backgroundColor: tint, padding: mini ? 4 : 8, paddingBottom: mini ? 4 : 4, justifyContent: 'space-between' }]}>
         {children}
       </View>
     </View>
@@ -31,19 +31,22 @@ export function FlipPhoneContent({ editing = false }: { editing?: boolean }) {
   const ctx = useTemplateCtx();
   const customBg = ctx.bgColor || ctx.bgImage;
   const ink = ctx.textColor || '#fff';
-  const [vals, setVals] = useState<Record<string, string>>(() => ({
-    chat:     ctx.get('chat', 'xx says:\ni miss you\nxx says:\ncome over?\nxx says:\n♡♡♡'),
-    name:     ctx.get('name', ''),
-    nickname: ctx.get('nickname', ''),
-    age:      ctx.get('age', ''),
-    bday:     ctx.get('bday', ''),
-    occ:      ctx.get('occ', ''),
-    valentine:ctx.get('valentine', ''),
-    sharing:  ctx.get('sharing', 'Selective'),
-    free:     ctx.get('free', ''),
-    song:     ctx.get('song', '♪ Theme Song'),
-    photo:    ctx.get('photo', ''),
-  }));
+  const [vals, setVals] = useState<Record<string, string>>(() => {
+    const foName = ctx.get('name', '') || 'them';
+    return {
+      chat:     ctx.get('chat', `${foName} says:\ni miss you\n${foName} says:\ncome over?\n${foName} says:\n♡♡♡`),
+      name:     ctx.get('name', ''),
+      myName:   ctx.get('myName', ''),
+      nickname: ctx.get('nickname', ''),
+      age:      ctx.get('age', ''),
+      bday:     ctx.get('bday', ''),
+      occ:      ctx.get('occ', ''),
+      sharing:  ctx.get('sharing', 'Selective'),
+      free:     ctx.get('free', ''),
+      song:     ctx.get('song', '♪ Theme Song'),
+      photo:    ctx.get('photo', ''),
+    };
+  });
 
   const setVal = (key: string, v: string) => {
     setVals(p => ({ ...p, [key]: v }));
@@ -71,7 +74,7 @@ export function FlipPhoneContent({ editing = false }: { editing?: boolean }) {
         <View style={s.row2}>
           <Y2KWindow title="To:" tint={tint} ink={ink}>
             {e ? (
-              <BlankPill value={vals.chat} onChangeText={v => setVal('chat', v)} placeholder="xx says: ..." style={[s.chatInput, { color: ink }]} />
+              <BlankPill value={vals.chat} onChangeText={v => setVal('chat', v)} placeholder="xx says: ..." multiline style={[s.chatInput, { color: ink }]} />
             ) : (
               <Text style={[s.windowText, { color: ink }]}>{vals.chat}</Text>
             )}
@@ -79,7 +82,7 @@ export function FlipPhoneContent({ editing = false }: { editing?: boolean }) {
           </Y2KWindow>
           <Y2KWindow title="About Me" tint={tint} ink={ink}>
             {[
-              ['Name', 'name'],
+              ['Name', 'myName'],
               ['Nickname', 'nickname'],
               ['Age', 'age'],
               ['Birthday', 'bday'],
@@ -94,11 +97,14 @@ export function FlipPhoneContent({ editing = false }: { editing?: boolean }) {
                 )}
               </View>
             ))}
-            {e ? (
-              <BlankPill value={vals.valentine} onChangeText={v => setVal('valentine', v)} placeholder="My Valentine ♡" style={[s.aboutVal, { color: ink, marginTop: 4 }]} />
-            ) : (
-              <Text style={[s.windowText, { color: ink, marginTop: 4 }]}>{vals.valentine || 'My Valentine ♡'}</Text>
-            )}
+            <View style={s.aboutRow}>
+              <Text style={[s.aboutKey, { color: ink, marginTop: 4 }]}>My Valentine: </Text>
+              {e ? (
+                <BlankPill value={vals.name} onChangeText={v => setVal('name', v)} placeholder="——" style={[s.aboutVal, { color: ink, marginTop: 4 }]} />
+              ) : (
+                <Text style={[s.aboutVal2, { color: ink, marginTop: 4 }]}>{vals.name || '——'}</Text>
+              )}
+            </View>
           </Y2KWindow>
         </View>
 
@@ -123,11 +129,7 @@ export function FlipPhoneContent({ editing = false }: { editing?: boolean }) {
 
         {/* Bottom row: Sharing + Free space */}
         <View style={s.rowBottom}>
-          <Y2KWindow title="!" tint={Colors.sakura + '80'} ink={ink} mini>
-            <View style={s.sharingHeader}>
-              <Text style={[s.sharingWarn, { color: ink }]}>⚠</Text>
-              <Text style={[s.sharingLabel, { color: ink }]}>SHARING</Text>
-            </View>
+          <Y2KWindow title="⚠ SHARING" tint={Colors.sakura + '80'} ink={ink} mini>
             {e ? (
               <View style={s.sharingPills}>
                 {(['Yes', 'No', 'Selective'] as const).map(opt => (
@@ -144,7 +146,7 @@ export function FlipPhoneContent({ editing = false }: { editing?: boolean }) {
           </Y2KWindow>
           <Y2KWindow title="Free space" tint={tint} ink={ink}>
             {e ? (
-              <BlankPill value={vals.free} onChangeText={v => setVal('free', v)} placeholder="he kissed me on the rooftop..." style={[s.freeInput, { color: ink }]} />
+              <BlankPill value={vals.free} onChangeText={v => setVal('free', v)} placeholder="he kissed me on the rooftop..." multiline style={[s.freeInput, { color: ink }]} />
             ) : (
               <Text style={[s.freeText, { color: ink }]}>{vals.free || '——'}</Text>
             )}
@@ -157,7 +159,7 @@ export function FlipPhoneContent({ editing = false }: { editing?: boolean }) {
         </View>
 
         {/* Theme song player */}
-        <View style={[s.songBar, { backgroundColor: tint, borderColor: ink }, customBg ? { borderColor: 'rgba(255,255,255,0.4)' } : null]}>
+        <Y2KWindow title="Now Playing" tint={tint} ink={ink}>
           {e ? (
             <TextInput
               value={vals.song}
@@ -178,7 +180,7 @@ export function FlipPhoneContent({ editing = false }: { editing?: boolean }) {
             </View>
             <Text style={[s.timeText, { color: ink }]}>3:50</Text>
           </View>
-        </View>
+        </Y2KWindow>
 
       </View>
     </View>
@@ -200,7 +202,7 @@ const y = StyleSheet.create({
   titleText: { fontFamily: FontFamily.markerBold, fontSize: sf(9), color: '#fff', textTransform: 'uppercase', letterSpacing: 0.4 },
   dots: { flexDirection: 'row', gap: 3 },
   dot: { width: 5, height: 5, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.7)' },
-  body: {},
+  body: { flex: 1 },
 });
 
 const s = StyleSheet.create({
@@ -227,7 +229,7 @@ const s = StyleSheet.create({
   hearts: { fontFamily: FontFamily.script, fontSize: sf(14), color: '#fff', opacity: 0.85, marginTop: 2 },
   row2: { flexDirection: 'row', gap: 8 },
   windowText: { fontFamily: FontFamily.ja, fontSize: sf(9), color: '#fff', lineHeight: 12 },
-  chatInput: { height: 54, textAlignVertical: 'top', fontFamily: FontFamily.ja, fontSize: sf(9), color: '#fff', backgroundColor: 'transparent', borderColor: 'transparent' },
+  chatInput: { height: undefined, minHeight: 54, maxHeight: 100, textAlignVertical: 'top', fontFamily: FontFamily.ja, fontSize: sf(9), color: '#fff', backgroundColor: 'transparent', borderColor: 'transparent' },
   chatBar: { marginTop: 4, height: 12, backgroundColor: '#fff', borderRadius: 6, borderWidth: 1, borderColor: Colors.sakuraInk },
   aboutRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'nowrap' },
   aboutKey: { fontFamily: FontFamily.ja, fontSize: sf(9), color: '#fff' },
@@ -239,23 +241,19 @@ const s = StyleSheet.create({
   phoneInner: { backgroundColor: '#fff', borderRadius: 6, overflow: 'hidden', width: 84, height: 106 },
   phoneNub: { width: 18, height: 6, backgroundColor: Colors.sakuraInk, borderRadius: 6, marginTop: 4 },
   rowBottom: { flexDirection: 'row', gap: 8 },
-  sharingHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 2 },
-  sharingWarn: { fontSize: sf(12), fontWeight: '700', color: '#fff' },
-  sharingLabel: { fontFamily: FontFamily.markerBold, fontSize: sf(9), color: '#fff', letterSpacing: 0.4 },
-  sharingBox: { backgroundColor: '#fff', borderRadius: 6, paddingHorizontal: 10, paddingVertical: 4, alignSelf: 'stretch', alignItems: 'center', borderWidth: 1.2, borderColor: Colors.sakuraInk, marginTop: 4 },
+  sharingBox: { backgroundColor: '#fff', borderRadius: 6, paddingHorizontal: 10, paddingVertical: 4, alignSelf: 'stretch', alignItems: 'center', borderWidth: 1.2, borderColor: Colors.sakuraInk },
   sharingBoxText: { fontFamily: FontFamily.ja, fontSize: sf(9), color: Colors.sakuraInk, textAlign: 'center' },
-  sharingPills: { flexDirection: 'column', gap: 4, marginTop: 4, width: '100%' },
+  sharingPills: { flexDirection: 'column', gap: 4, width: '100%' },
   sPill: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, borderWidth: 1.2, alignItems: 'center', justifyContent: 'center' },
   sPillOn: {},
   sPillText: { fontFamily: FontFamily.ja, fontSize: sf(9), textAlign: 'center' },
   sPillTextOn: {},
-  freeInput: { height: 50, textAlignVertical: 'top', fontFamily: FontFamily.script, fontSize: sf(11), backgroundColor: 'transparent', borderColor: 'transparent', color: '#fff' },
+  freeInput: { height: undefined, minHeight: 50, maxHeight: 90, textAlignVertical: 'top', fontFamily: FontFamily.script, fontSize: sf(11), backgroundColor: 'transparent', borderColor: 'transparent', color: '#fff' },
   freeText: { fontFamily: FontFamily.script, fontSize: sf(13), color: '#fff', lineHeight: 15 },
-  bulletRow: { flexDirection: 'row', gap: 4, marginTop: 4 },
-  songBar: { borderWidth: 1.5, borderColor: Colors.sakuraInk, borderRadius: 10, padding: 8, gap: 4 },
+  bulletRow: { flexDirection: 'row', gap: 4 },
   songTitle: { fontFamily: FontFamily.script, fontSize: sf(13), color: '#fff', textAlign: 'center' },
   songPill: { alignSelf: 'stretch' },
-  progressRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  progressRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 },
   timeText: { fontFamily: FontFamily.marker, fontSize: sf(8), color: '#fff' },
   progressTrack: { flex: 1, height: 3, backgroundColor: '#fff', borderRadius: 2, position: 'relative' },
   progressFill: { position: 'absolute', left: 0, top: 0, bottom: 0, width: '40%', backgroundColor: Colors.sakuraInk, borderRadius: 2 },

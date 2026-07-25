@@ -118,8 +118,9 @@ type BlankPillProps = {
   onChangeText?: (t: string) => void;
   placeholder?: string;
   style?: any;
+  multiline?: boolean;
 };
-export function BlankPill({ width = '100%' as number | string, value, onChangeText, placeholder = '——', style }: BlankPillProps) {
+export function BlankPill({ width = '100%' as number | string, value, onChangeText, placeholder = '——', style, multiline = false }: BlankPillProps) {
   const ink = useThemedInk();
   if (onChangeText !== undefined) {
     return (
@@ -128,6 +129,7 @@ export function BlankPill({ width = '100%' as number | string, value, onChangeTe
         onChangeText={onChangeText}
         placeholder={placeholder}
         placeholderTextColor={ink + '88'}
+        multiline={multiline}
         style={[s.blankPill, s.blankPillInput, typeof width === 'number' ? { width } : { flex: 1 }, { color: ink, borderColor: ink }, style]}
       />
     );
@@ -330,6 +332,175 @@ export function PolarSlider({ left, right, value = 0.5, onValueChange }: PolarSl
         <View style={[s.polarSliderThumb, { left: `${value * 100}%` as any, borderColor: ink }]} />
       </View>
       <Text style={[s.polarSliderLabel, s.polarSliderLabelRight, { color: ink }]} numberOfLines={2}>{right}</Text>
+    </View>
+  );
+}
+
+// ─── HeartMark ────────────────────────────────────────────────
+// Small filled heart used as a two-person marker (DualPolarSlider
+// thumbs, QuadrantPicker dots) instead of a plain circle.
+const HEART_MARK_PATH = "M8 14 C 3 11 1 8.5 1 5.5 C 1 3.5 2.5 2 4.5 2 C 6 2 7.3 2.9 8 4.3 C 8.7 2.9 10 2 11.5 2 C 13.5 2 15 3.5 15 5.5 C 15 8.5 13 11 8 14 Z";
+function HeartMark({ size = 14, color, ink }: { size?: number; color: string; ink: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 16 16">
+      <Path d={HEART_MARK_PATH} fill={color} stroke={ink} strokeWidth={0.6} />
+    </Svg>
+  );
+}
+
+// ─── DualPolarSlider ───────────────────────────────────────────
+// Two independent thumbs on one trait-pole track — each person gets
+// their own value on the same axis (e.g. how jealous "me" is vs how
+// jealous "them" is on the same Jealous↔Chill line). Touch grabs
+// whichever thumb is nearer, then drags only that one.
+type DualPolarSliderProps = {
+  left: string; right: string;
+  meValue?: number; foValue?: number;
+  onMeChange?: (v: number) => void; onFoChange?: (v: number) => void;
+  meColor?: string; foColor?: string;
+};
+export function DualPolarSlider({ left, right, meValue = 0.5, foValue = 0.5, onMeChange, onFoChange, meColor, foColor }: DualPolarSliderProps) {
+  const ink = useThemedInk();
+  const trackRef = useRef<View>(null);
+  const geo = useRef({ x: 0, w: 0 });
+  const active = useRef<'me' | 'fo' | null>(null);
+  const clamp = (n: number) => Math.max(0, Math.min(1, n));
+  const canDrag = !!(onMeChange || onFoChange);
+  const responder = canDrag ? {
+    onStartShouldSetResponderCapture: () => true,
+    onMoveShouldSetResponderCapture: () => true,
+    onResponderTerminationRequest: () => false,
+    onResponderGrant: (e: any) => {
+      const px = e.nativeEvent.pageX;
+      (trackRef.current as any)?.measureInWindow?.((x: number, _y: number, w: number) => {
+        geo.current = { x, w };
+        if (w > 0) {
+          const nv = clamp((px - x) / w);
+          active.current = Math.abs(nv - meValue) <= Math.abs(nv - foValue) ? 'me' : 'fo';
+          if (active.current === 'me') onMeChange?.(nv); else onFoChange?.(nv);
+        }
+      });
+    },
+    onResponderMove: (e: any) => {
+      const { x, w } = geo.current;
+      if (w > 0 && active.current) {
+        const nv = clamp((e.nativeEvent.pageX - x) / w);
+        if (active.current === 'me') onMeChange?.(nv); else onFoChange?.(nv);
+      }
+    },
+    onResponderRelease: () => { active.current = null; },
+  } : {};
+  return (
+    <View style={s.polarSliderRow}>
+      <Text style={[s.polarSliderLabel, s.polarSliderLabelLeft, { color: ink }]} numberOfLines={2}>{left}</Text>
+      <View ref={trackRef} style={[s.polarSliderTrack, { borderColor: ink }]} {...responder}>
+        <View style={[s.polarSliderHeartWrap, { left: `${meValue * 100}%` as any }]}>
+          <HeartMark size={13} color={meColor || ink} ink={ink} />
+        </View>
+        <View style={[s.polarSliderHeartWrap, { left: `${foValue * 100}%` as any }]}>
+          <HeartMark size={13} color={foColor || ink + '66'} ink={ink} />
+        </View>
+      </View>
+      <Text style={[s.polarSliderLabel, s.polarSliderLabelRight, { color: ink }]} numberOfLines={2}>{right}</Text>
+    </View>
+  );
+}
+
+// ─── QuadrantPicker ───────────────────────────────────────────
+// N draggable dots on a 2-axis grid (e.g. Similar↔Opposites by
+// Harmonious↔Strained). Mirrors poly-chart's AlignGrid touch mechanic:
+// touch grabs whichever point is nearest, then drags only that one.
+export type QuadrantPoint = { id: string; x: number; y: number; color?: string; filled?: boolean };
+type QuadrantPickerProps = {
+  top: string; bottom: string; left: string; right: string;
+  points: QuadrantPoint[]; // x: 0(left)-1(right), y: 0(top)-1(bottom)
+  onPointChange?: (id: string, v: { x: number; y: number }) => void;
+};
+export function QuadrantPicker({ top, bottom, left, right, points, onPointChange }: QuadrantPickerProps) {
+  const ink = useThemedInk();
+  const ref = useRef<View>(null);
+  const geo = useRef({ x: 0, y: 0, w: 0, h: 0 });
+  const active = useRef<string | null>(null);
+  const clamp01 = (n: number) => Math.max(0, Math.min(1, n));
+  const nearest = (x: number, y: number) => {
+    let best: string | null = null, bd = Infinity;
+    points.forEach((p) => { const d = (p.x - x) ** 2 + (p.y - y) ** 2; if (d < bd) { bd = d; best = p.id; } });
+    return best;
+  };
+  const responder = onPointChange ? {
+    onStartShouldSetResponderCapture: () => true,
+    onMoveShouldSetResponderCapture: () => true,
+    onResponderTerminationRequest: () => false,
+    onResponderGrant: (e: any) => {
+      const { pageX, pageY } = e.nativeEvent;
+      (ref.current as any)?.measureInWindow?.((x: number, y: number, w: number, h: number) => {
+        geo.current = { x, y, w, h };
+        if (w > 0 && h > 0) {
+          const nx = clamp01((pageX - x) / w), ny = clamp01((pageY - y) / h);
+          active.current = nearest(nx, ny);
+          if (active.current) onPointChange(active.current, { x: nx, y: ny });
+        }
+      });
+    },
+    onResponderMove: (e: any) => {
+      const { x, y, w, h } = geo.current;
+      if (w > 0 && h > 0 && active.current) {
+        onPointChange(active.current, { x: clamp01((e.nativeEvent.pageX - x) / w), y: clamp01((e.nativeEvent.pageY - y) / h) });
+      }
+    },
+    onResponderRelease: () => { active.current = null; },
+  } : {};
+  return (
+    <View style={s.quadrantWrap}>
+      <View ref={ref} style={[s.quadrantBox, { borderColor: ink }]} {...responder}>
+        <View style={[s.quadrantVLine, { backgroundColor: ink + '33' }]} />
+        <View style={[s.quadrantHLine, { backgroundColor: ink + '33' }]} />
+        <Text style={[s.quadrantAxis, s.quadrantTop, { color: ink }]}>{top}</Text>
+        <Text style={[s.quadrantAxis, s.quadrantBottom, { color: ink }]}>{bottom}</Text>
+        <Text style={[s.quadrantAxis, s.quadrantLeft, { color: ink }]}>{left}</Text>
+        <Text style={[s.quadrantAxis, s.quadrantRight, { color: ink }]}>{right}</Text>
+        {points.map((p) => (
+          <View key={p.id} style={[s.quadrantHeartWrap, { left: `${p.x * 100}%` as any, top: `${p.y * 100}%` as any }]}>
+            <HeartMark size={16} color={p.color || (p.filled === false ? ink + '66' : ink)} ink={ink} />
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+// ─── ChoiceRow ────────────────────────────────────────────────
+// Label + N single-select pills, e.g. "Me" / "Them" / "Both" for a
+// relationship-firsts or role checklist row.
+type ChoiceRowProps = {
+  label: string;
+  options: readonly string[];
+  value?: string;
+  onChange?: (v: string) => void;
+  /** per-option fill color when selected, parallel to `options` (falls back to ink when absent) */
+  optionColors?: readonly (string | undefined)[];
+};
+export function ChoiceRow({ label, options, value, onChange, optionColors }: ChoiceRowProps) {
+  const ink = useThemedInk();
+  return (
+    <View style={s.choiceRow}>
+      <Text style={[s.choiceLabel, { color: ink }]} numberOfLines={2}>{label}</Text>
+      <View style={s.choiceOpts}>
+        {options.map((opt, i) => {
+          const on = value === opt;
+          const fill = optionColors?.[i] || ink;
+          return (
+            <Pressable
+              key={opt}
+              disabled={!onChange}
+              onPress={onChange ? () => onChange(on ? '' : opt) : undefined}
+              style={[s.choicePill, { borderColor: ink }, on && { backgroundColor: fill, borderColor: fill }]}
+            >
+              <Text style={[s.choicePillText, { color: on ? getContrastColor(fill) : ink }]}>{opt}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
     </View>
   );
 }
@@ -989,6 +1160,23 @@ const s = StyleSheet.create({
   polarSliderTrack: { flex: 1, height: 8, backgroundColor: '#fff', borderWidth: 1.2, borderRadius: 999, position: 'relative' },
   polarSliderFill: { position: 'absolute', left: 0, top: 0, bottom: 0, borderRadius: 999, opacity: 0.75 },
   polarSliderThumb: { position: 'absolute', top: '50%' as any, marginTop: -5, marginLeft: -5, width: 10, height: 10, backgroundColor: '#fff', borderWidth: 1.2, borderRadius: 999 },
+  polarSliderHeartWrap: { position: 'absolute', top: '50%' as any, marginTop: -6.5, marginLeft: -6.5 },
+  quadrantWrap: { alignItems: 'center' },
+  quadrantBox: { width: 150, height: 150, backgroundColor: '#fffdfb', borderWidth: 1.5, borderColor: INK, borderRadius: 8, position: 'relative' },
+  quadrantVLine: { position: 'absolute', left: '50%', top: 8, bottom: 8, width: 1 },
+  quadrantHLine: { position: 'absolute', top: '50%', left: 8, right: 8, height: 1 },
+  quadrantAxis: { position: 'absolute', fontFamily: FontFamily.markerBold, fontSize: sf(8), textTransform: 'uppercase', letterSpacing: 0.4 },
+  quadrantTop: { top: 4, alignSelf: 'center', left: 0, right: 0, textAlign: 'center' },
+  quadrantBottom: { bottom: 4, alignSelf: 'center', left: 0, right: 0, textAlign: 'center' },
+  quadrantLeft: { left: 4, top: '46%' },
+  quadrantRight: { right: 4, top: '46%' },
+  quadrantDot: { position: 'absolute', width: 14, height: 14, marginLeft: -7, marginTop: -7, borderRadius: 999, borderWidth: 1.5 },
+  quadrantHeartWrap: { position: 'absolute', marginLeft: -8, marginTop: -8 },
+  choiceRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  choiceLabel: { flex: 1, fontFamily: FontFamily.ui, fontSize: sf(11) },
+  choiceOpts: { flexDirection: 'row', gap: 5 },
+  choicePill: { borderWidth: 1, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3 },
+  choicePillText: { fontFamily: FontFamily.marker, fontSize: sf(9) },
   photoBox: {
     backgroundColor: FILL_GRAY,
     borderWidth: 1.5,

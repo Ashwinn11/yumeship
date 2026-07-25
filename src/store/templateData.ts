@@ -58,7 +58,7 @@ const FIELD_MAP: Record<string, Record<string, string>> = {
   'kawaii-ui':   { ...MEMORY_FIELDS, shipName: 'shipName', foName: 'theirName', myName: 'myName', sharing: 'sharing', anniv: 'anniv', mainPhoto: 'theirPortrait', myPhoto: 'myPortrait' },
   'heart-frame': { foName: 'themName', myName: 'meName', sharing: 'sharing', anniv: 'anniv', mainPhoto: 'themPhoto', myPhoto: 'mePhoto' },
   'love-letter': { foName: 'dearName', myName: 'signName' },
-  'aesthetic':   { ...MEMORY_FIELDS, shipName: 'shipName', song: 'song', mainPhoto: 'photo0', photo1: 'photo1', photo2: 'photo2' },
+  'aesthetic':   { foName: 'foName', myName: 'meName', mainPhoto: 'foPhoto', myPhoto: 'mePhoto' },
   'this-or-that': { foName: 'name' },
   'headcanons':  { foName: 'fo' },
   'talking-about': { ...MEMORY_FIELDS, foName: 'foName', myName: 'meName', sharing: 'sharing', song: 'song', mainPhoto: 'photoL', myPhoto: 'photoR' },
@@ -153,6 +153,14 @@ export function buildPreFill(ship: Ship, templateKey: string): Record<string, st
       if (foSeed)         base['dearName'] = foSeed;
       if (userName)       base['signName'] = userName;
       break;
+    case 'aesthetic':
+      if (foSeed)         base['foName'] = foSeed;
+      if (userName)       base['meName'] = userName;
+      if (fo?.photoUri)   base['foPhoto'] = fo.photoUri;
+      if (userPhoto)      base['mePhoto'] = userPhoto;
+      if (fo?.height)     base['foHeight'] = fo.height;
+      if (userHeight)     base['meHeight'] = userHeight;
+      break;
     case 'this-or-that':
       if (foSeed)         base['name'] = foSeed;
       break;
@@ -173,6 +181,7 @@ export function buildPreFill(ship: Ship, templateKey: string): Record<string, st
       break;
     case 'flip-phone':
       if (foSeed)         base['name'] = foSeed;
+      if (foSeed)         base['chat'] = `${foSeed} says:\ni miss you\n${foSeed} says:\ncome over?\n${foSeed} says:\n♡♡♡`;
       if (ship.shareType) base['sharing'] = shareMap[ship.shareType] ?? '';
       if (userName)       base['myName'] = userName;
       break;
