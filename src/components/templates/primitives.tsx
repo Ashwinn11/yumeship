@@ -358,8 +358,10 @@ type DualPolarSliderProps = {
   meValue?: number; foValue?: number;
   onMeChange?: (v: number) => void; onFoChange?: (v: number) => void;
   meColor?: string; foColor?: string;
+  /** marker glyph — 'heart' (default, used by aesthetic) or a plain colored 'dot' */
+  markerShape?: 'heart' | 'dot';
 };
-export function DualPolarSlider({ left, right, meValue = 0.5, foValue = 0.5, onMeChange, onFoChange, meColor, foColor }: DualPolarSliderProps) {
+export function DualPolarSlider({ left, right, meValue = 0.5, foValue = 0.5, onMeChange, onFoChange, meColor, foColor, markerShape = 'heart' }: DualPolarSliderProps) {
   const ink = useThemedInk();
   const trackRef = useRef<View>(null);
   const geo = useRef({ x: 0, w: 0 });
@@ -395,10 +397,18 @@ export function DualPolarSlider({ left, right, meValue = 0.5, foValue = 0.5, onM
       <Text style={[s.polarSliderLabel, s.polarSliderLabelLeft, { color: ink }]} numberOfLines={2}>{left}</Text>
       <View ref={trackRef} style={[s.polarSliderTrack, { borderColor: ink }]} {...responder}>
         <View style={[s.polarSliderHeartWrap, { left: `${meValue * 100}%` as any }]}>
-          <HeartMark size={13} color={meColor || ink} ink={ink} />
+          {markerShape === 'dot' ? (
+            <View style={[s.polarSliderDot, { backgroundColor: meColor || ink, borderColor: ink }]} />
+          ) : (
+            <HeartMark size={13} color={meColor || ink} ink={ink} />
+          )}
         </View>
         <View style={[s.polarSliderHeartWrap, { left: `${foValue * 100}%` as any }]}>
-          <HeartMark size={13} color={foColor || ink + '66'} ink={ink} />
+          {markerShape === 'dot' ? (
+            <View style={[s.polarSliderDot, { backgroundColor: foColor || ink + '66', borderColor: ink }]} />
+          ) : (
+            <HeartMark size={13} color={foColor || ink + '66'} ink={ink} />
+          )}
         </View>
       </View>
       <Text style={[s.polarSliderLabel, s.polarSliderLabelRight, { color: ink }]} numberOfLines={2}>{right}</Text>
@@ -1176,6 +1186,7 @@ const s = StyleSheet.create({
   polarSliderFill: { position: 'absolute', left: 0, top: 0, bottom: 0, borderRadius: 999, opacity: 0.75 },
   polarSliderThumb: { position: 'absolute', top: '50%' as any, marginTop: -5, marginLeft: -5, width: 10, height: 10, backgroundColor: '#fff', borderWidth: 1.2, borderRadius: 999 },
   polarSliderHeartWrap: { position: 'absolute', top: '50%' as any, marginTop: -6.5, marginLeft: -6.5 },
+  polarSliderDot: { width: 13, height: 13, borderRadius: 999, borderWidth: 1.2 },
   quadrantWrap: { alignItems: 'center' },
   quadrantBox: { width: 150, height: 150, backgroundColor: '#fffdfb', borderWidth: 1.5, borderColor: INK, borderRadius: 8, position: 'relative' },
   quadrantVLine: { position: 'absolute', left: '50%', top: 8, bottom: 8, width: 1 },

@@ -63,7 +63,7 @@ const FIELD_MAP: Record<string, Record<string, string>> = {
   'headcanons':  { foName: 'fo' },
   'talking-about': { ...MEMORY_FIELDS, foName: 'foName', myName: 'meName', sharing: 'sharing', song: 'song', mainPhoto: 'photoL', myPhoto: 'photoR' },
   'flip-phone':  { ...MEMORY_FIELDS, foName: 'name', myName: 'myName', sharing: 'sharing', song: 'song' },
-  'bond-banner': { myName: 'meName', foName: 'foName' },
+  'bond-banner': { myName: 'meName', foName: 'foName', sharing: 'sharing', anniv: 'anniv', mainPhoto: 'shieldPhoto' },
   'ask-meme':    { sharing: 'sharing' },
   'playlist':    {},
   'bucket-list': {},
@@ -188,6 +188,10 @@ export function buildPreFill(ship: Ship, templateKey: string): Record<string, st
     case 'bond-banner':
       if (foSeed)         base['foName'] = foSeed;
       if (userName)       base['meName'] = userName;
+      if (fo?.pronouns)   base['foPronouns'] = fo.pronouns;
+      if (userPronouns)   base['mePronouns'] = userPronouns;
+      if (fo?.photoUri)   base['shieldPhoto'] = fo.photoUri;
+      if (ship.shareType) base['sharing'] = shareMap[ship.shareType] ?? '';
       break;
     case 'how-we-met':
       if (foSeed)         base['foName'] = foSeed;
