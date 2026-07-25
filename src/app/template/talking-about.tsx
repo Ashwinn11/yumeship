@@ -3,7 +3,7 @@ import { View, Text, TextInput, StyleSheet, Pressable, Modal, TouchableWithoutFe
 import { useLocalSearchParams } from 'expo-router';
 import Svg, { Path } from 'react-native-svg';
 import { TemplateScreenWrapper } from '@/components/templates/TemplateScreenWrapper';
-import { PhotoBox, MarkerCard, MemoriesFooter, DualSlider, INK, useThemedInk, getContrastColor } from '@/components/templates/primitives';
+import { PhotoBox, MarkerCard, DualSlider, INK, useThemedInk, getContrastColor } from '@/components/templates/primitives';
 import { Sparkle } from '@/components/deco';
 import { useTemplateCtx } from '@/store/templateData';
 import { Colors, FontFamily, Radius, SheetColumn, Spacing ,sf } from '@/constants/theme';
@@ -21,6 +21,7 @@ const PALETTE_OPTIONS = [
 
 const ME_DEFAULT_PAL  = ['#2b1a26','#6b4a3a','#fad7c0','#f3b6c4','#8b3a4a'];
 const FO_DEFAULT_PAL  = ['#1f1e3d','#3a3d6a','#fad7c0','#8b6fc4','#4d3982'];
+const PIN_ROTATE = [-5, 3, -7];
 
 // ─── Checkbox ─────────────────────────────────────────────────
 function Checkbox({ on = false, onPress }: { on?: boolean; onPress?: () => void }) {
@@ -262,6 +263,7 @@ export function TalkingAboutContent({ editing = false }: { editing?: boolean }) 
   // Color picker state: { pfx: 'me'|'fo', idx: 0-4 } | null
   const [picking, setPicking] = useState<{ pfx: string; idx: number } | null>(null);
   const [doodleOpen, setDoodleOpen] = useState(false);
+  const [playing, setPlaying] = useState(false);
 
   const relTypes: string[] = JSON.parse(vals.relTypes || '[]');
   const endings:  string[] = JSON.parse(vals.endings  || '[]');
@@ -448,19 +450,72 @@ export function TalkingAboutContent({ editing = false }: { editing?: boolean }) 
         ))}
       </View>
 
-      <MemoriesFooter
-        editing={e}
-        photos={[
-          { uri: vals.memPhoto0, caption: vals.memCap0 },
-          { uri: vals.memPhoto1, caption: vals.memCap1 },
-          { uri: vals.memPhoto2, caption: vals.memCap2 },
-        ]}
-        onPhotoChange={e ? (i, u) => setVal(`memPhoto${i}`, u) : undefined}
-        onCaptionChange={e ? (i, c) => setVal(`memCap${i}`, c) : undefined}
-        song={vals.song}
-        onSongChange={e ? (v) => setVal('song', v) : undefined}
-        transparentBg={!!customBg}
-      />
+      {/* Corkboard — pinned photos */}
+      <View style={s.corkBoard}>
+        <Text style={[s.colTitle, { color: ink, alignSelf: 'center' }]}>pinned memories</Text>
+        <View style={s.corkRow}>
+          {[0, 1, 2].map((i) => {
+            const pinColor = i === 1 ? foColor : meColor;
+            return (
+              <View key={i} style={[s.pinnedPhoto, { transform: [{ rotate: `${PIN_ROTATE[i]}deg` }] }]}>
+                <View style={[s.pin, { backgroundColor: pinColor, borderColor: ink }]}>
+                  <View style={s.pinShine} />
+                </View>
+                <PhotoBox
+                  size={72}
+                  style={s.corkPhotoBox}
+                  editing={e}
+                  uri={vals[`memPhoto${i}`]}
+                  onUriChange={e ? (u) => setVal(`memPhoto${i}`, u) : undefined}
+                />
+                {e ? (
+                  <TextInput
+                    value={vals[`memCap${i}`] ?? ''}
+                    onChangeText={(v) => setVal(`memCap${i}`, v)}
+                    placeholder="memo~"
+                    placeholderTextColor={ink + '77'}
+                    style={[s.corkCaption, { color: ink }]}
+                  />
+                ) : vals[`memCap${i}`] ? (
+                  <Text style={[s.corkCaption, { color: ink }]} numberOfLines={1}>{vals[`memCap${i}`]}</Text>
+                ) : null}
+              </View>
+            );
+          })}
+        </View>
+      </View>
+
+      {/* Mixtape — hand-doodled song label */}
+      <View style={s.mixtapeWrap}>
+        <Text style={[s.tropesLabel, { color: ink + '88' }]}>♪ mixtape</Text>
+        <View style={[s.mixtape, { borderColor: ink }, customBg ? { backgroundColor: 'transparent' } : null]}>
+          {e ? (
+            <TextInput
+              value={vals.song}
+              onChangeText={(v) => setVal('song', v)}
+              placeholder="side A: our song"
+              placeholderTextColor={ink + '88'}
+              style={[s.mixtapeText, { color: ink }]}
+            />
+          ) : (
+            <Text style={[s.mixtapeText, { color: ink }]}>{vals.song || 'side A: our song'}</Text>
+          )}
+
+          <View style={[s.mixtapeDivider, { backgroundColor: ink + '40' }]} />
+
+          <View style={s.reelRow}>
+            <View style={[s.reel, { borderColor: ink }]}>
+              <Text style={[s.reelIcon, { color: ink }]}>♪</Text>
+            </View>
+            <Pressable style={[s.playBtn, { borderColor: ink }]} onPress={() => setPlaying((p) => !p)} hitSlop={8}>
+              <Text style={[s.playIcon, { color: ink }]}>{playing ? '❚❚' : '▶'}</Text>
+            </Pressable>
+            <View style={[s.reel, { borderColor: ink }]}>
+              <Text style={[s.reelIcon, { color: ink }]}>♪</Text>
+            </View>
+          </View>
+        </View>
+      </View>
 
       {doodleOpen && (
         <DoodleModal
@@ -576,6 +631,47 @@ const s = StyleSheet.create({
   tropesInput:{ fontFamily: FontFamily.script, fontSize: sf(13), color: INK, lineHeight: 15, textAlign: 'center', width: '100%' },
   tropesText: { fontFamily: FontFamily.script, fontSize: sf(13), color: INK, lineHeight: 15, textAlign: 'center' },
   sliderBlock:{ gap: 8 },
+  corkBoard:  { marginTop: 4, gap: 8 },
+  corkRow:    { flexDirection: 'row', justifyContent: 'center', gap: 14, paddingTop: 10 },
+  pinnedPhoto:{ alignItems: 'center', position: 'relative' },
+  pin: {
+    position: 'absolute',
+    top: -7,
+    width: 14,
+    height: 14,
+    borderRadius: 999,
+    borderWidth: 1,
+    zIndex: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pinShine:   { width: 4, height: 4, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.7)', marginBottom: 4, marginLeft: -3 },
+  corkPhotoBox: { borderRadius: 2 },
+  corkCaption: { fontFamily: FontFamily.script, fontSize: sf(13), marginTop: 2, maxWidth: 72, textAlign: 'center' },
+  mixtapeWrap: { alignItems: 'center', marginTop: 4, gap: 4 },
+  mixtape: {
+    width: 210,
+    borderWidth: 1.2,
+    borderStyle: 'dashed',
+    borderRadius: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: '#fff',
+    gap: 8,
+  },
+  mixtapeDivider: { height: 1, width: '100%' },
+  reelRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  reel: {
+    width: 22, height: 22, borderRadius: 999, borderWidth: 1.2,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  reelIcon: { fontSize: sf(10) },
+  playBtn: {
+    width: 22, height: 22, borderRadius: 999, borderWidth: 1.2,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  playIcon: { fontSize: sf(8) },
+  mixtapeText: { width: '100%', textAlign: 'center', fontFamily: FontFamily.script, fontSize: sf(14) },
 });
 
 const m = StyleSheet.create({

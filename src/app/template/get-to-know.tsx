@@ -1,14 +1,19 @@
 import { useState } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, Text, TextInput, StyleSheet } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { TemplateScreenWrapper } from '@/components/templates/TemplateScreenWrapper';
 import {
   MarkerCard, MarkerHeader, SharingRow,
-  BlankPill, ProfileBlock, PhotoBox, MemoriesFooter, INK, useThemedInk,
+  BlankPill, ProfileBlock, PhotoBox, INK, useThemedInk,
 } from '@/components/templates/primitives';
 import { Heart } from '@/components/deco/Heart';
+import { Sparkle } from '@/components/deco';
+import { StickerCassette } from '@/components/deco/Stickers';
 import { useTemplateCtx } from '@/store/templateData';
 import { FontFamily, Spacing } from '@/constants/theme';
+
+const STICKER_ROTATE = [-6, 4, -3];
+const STICKER_BADGE = ['★', '♡', '✧'];
 
 type FilledState = Partial<{ age: string; height: string; occupation: string; good: string }>;
 type DichoState = Partial<{ spoon: 'left' | 'right'; energy: 'left' | 'right'; pda: 'left' | 'right' }>;
@@ -145,19 +150,56 @@ export function GetToKnowContent({ editing = false }: { editing?: boolean }) {
         transparent={!!customBg}
       />
 
-      <MemoriesFooter
-        editing={e}
-        photos={[
-          { uri: vals.memPhoto0, caption: vals.memCap0 },
-          { uri: vals.memPhoto1, caption: vals.memCap1 },
-          { uri: vals.memPhoto2, caption: vals.memCap2 },
-        ]}
-        onPhotoChange={e ? (i, u) => setVal(`memPhoto${i}`, u) : undefined}
-        onCaptionChange={e ? (i, c) => setVal(`memCap${i}`, c) : undefined}
-        song={vals.song}
-        onSongChange={e ? (v) => setVal('song', v) : undefined}
-        transparentBg={!!customBg}
-      />
+      <View style={s.boothWrap}>
+        <MarkerHeader size={13} style={s.boothLabel}>♡ photo booth ✧</MarkerHeader>
+        <View style={s.boothStrip}>
+          <View style={s.sparkTL} pointerEvents="none"><Sparkle size={12} color={ink} /></View>
+          <View style={s.sparkBR} pointerEvents="none"><Sparkle size={16} color={ink} /></View>
+          {[0, 1, 2].map((i) => (
+            <View key={i} style={[s.sticker, { transform: [{ rotate: `${STICKER_ROTATE[i]}deg` }] }]}>
+              <View style={[s.stickerBadge, { borderColor: ink }]}>
+                <Text style={{ fontSize: 10 }}>{STICKER_BADGE[i]}</Text>
+              </View>
+              <PhotoBox
+                size={78}
+                style={s.stickerPhoto}
+                editing={e}
+                uri={vals[`memPhoto${i}`]}
+                onUriChange={e ? (u) => setVal(`memPhoto${i}`, u) : undefined}
+              />
+              {e ? (
+                <TextInput
+                  value={vals[`memCap${i}`] ?? ''}
+                  onChangeText={(v) => setVal(`memCap${i}`, v)}
+                  placeholder="caption~"
+                  placeholderTextColor={ink + '77'}
+                  style={[s.stickerCaption, { color: ink }]}
+                />
+              ) : vals[`memCap${i}`] ? (
+                <Text style={[s.stickerCaption, { color: ink }]} numberOfLines={1}>{vals[`memCap${i}`]}</Text>
+              ) : null}
+            </View>
+          ))}
+        </View>
+      </View>
+
+      <View style={s.nudgeWrap}>
+        <View style={[s.nudgeBubble, { borderColor: ink }, customBg ? { backgroundColor: 'transparent' } : null]}>
+          <StickerCassette size={22} />
+          {e ? (
+            <TextInput
+              value={vals.song}
+              onChangeText={(v) => setVal('song', v)}
+              placeholder="our song..."
+              placeholderTextColor={ink + '77'}
+              style={[s.nudgeText, { color: ink }]}
+            />
+          ) : (
+            <Text style={[s.nudgeText, { color: ink }]}>{vals.song || 'our song...'}</Text>
+          )}
+        </View>
+        <View style={[s.nudgeTail, { borderTopColor: ink }]} />
+      </View>
     </MarkerCard>
   );
 }
@@ -187,4 +229,58 @@ const s = StyleSheet.create({
   mt14: { marginTop: 14 },
   namePills: { flexDirection: 'row', gap: 8, alignItems: 'center', marginTop: 14 },
   pillHalf: { flex: 1 },
+  boothWrap: { marginTop: 18, position: 'relative' },
+  boothLabel: { fontSize: 13, textAlign: 'center', marginBottom: 10 },
+  boothStrip: { flexDirection: 'row', justifyContent: 'center', gap: 10, paddingVertical: 10, position: 'relative' },
+  sparkTL: { position: 'absolute', top: -4, left: 8 },
+  sparkBR: { position: 'absolute', bottom: -2, right: 10 },
+  sticker: {
+    backgroundColor: '#fff',
+    padding: 5,
+    paddingBottom: 8,
+    borderRadius: 4,
+    position: 'relative',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  stickerPhoto: { borderRadius: 2, borderWidth: 0 },
+  stickerBadge: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    width: 20,
+    height: 20,
+    borderRadius: 999,
+    borderWidth: 1.2,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 2,
+  },
+  stickerCaption: { fontFamily: FontFamily.script, fontSize: 13, marginTop: 2, maxWidth: 78, textAlign: 'center' },
+  nudgeWrap: { alignItems: 'center', marginTop: 16 },
+  nudgeBubble: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderWidth: 1.5,
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    minWidth: 140,
+  },
+  nudgeText: { flex: 1, fontFamily: FontFamily.ja, fontSize: 12 },
+  nudgeTail: {
+    width: 0,
+    height: 0,
+    borderLeftWidth: 6,
+    borderRightWidth: 6,
+    borderTopWidth: 8,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    marginTop: -1,
+  },
 });
