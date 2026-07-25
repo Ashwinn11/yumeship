@@ -3,7 +3,7 @@ import { View, Text, TextInput, StyleSheet, Pressable, Modal, TouchableWithoutFe
 import { useLocalSearchParams } from 'expo-router';
 import Svg, { Path } from 'react-native-svg';
 import { TemplateScreenWrapper } from '@/components/templates/TemplateScreenWrapper';
-import { PhotoBox, MarkerCard, MemoriesFooter, INK, useSliderTrack, useThemedInk, getContrastColor } from '@/components/templates/primitives';
+import { PhotoBox, MarkerCard, MemoriesFooter, DualSlider, INK, useThemedInk, getContrastColor } from '@/components/templates/primitives';
 import { Sparkle } from '@/components/deco';
 import { useTemplateCtx } from '@/store/templateData';
 import { Colors, FontFamily, Radius, SheetColumn, Spacing ,sf } from '@/constants/theme';
@@ -28,25 +28,6 @@ function Checkbox({ on = false, onPress }: { on?: boolean; onPress?: () => void 
   const box = <View style={[cb.box, { borderColor: ink }, on && cb.filled]} />;
   if (onPress) return <Pressable onPress={onPress} hitSlop={8}>{box}</Pressable>;
   return box;
-}
-
-// ─── DualSlider ────────────────────────────────────────────────
-function DualSlider({ label, value = 0.5, onValueChange, leftColor, rightColor }: { label: string; value?: number; onValueChange?: (v: number) => void; leftColor?: string; rightColor?: string }) {
-  const ink = useThemedInk();
-  const { trackRef, responder } = useSliderTrack(onValueChange);
-  const pct = `${Math.round(value * 100)}%` as any;
-  const rest = `${Math.round((1 - value) * 100)}%` as any;
-  return (
-    <View style={sl.wrap}>
-      <Text style={[sl.label, { color: ink }]}>{label}</Text>
-      <View ref={trackRef} style={[sl.track, { borderColor: ink }]}
-        {...responder}>
-        <View style={[sl.left, { width: pct }, leftColor ? { backgroundColor: leftColor + 'cc' } : null]} />
-        <View style={[sl.right, { width: rest }, rightColor ? { backgroundColor: rightColor + 'cc' } : null]} />
-        <View style={[sl.divider, { left: pct, backgroundColor: ink }]} />
-      </View>
-    </View>
-  );
 }
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -537,15 +518,6 @@ export default function TemplateTalkingAbout() {
 const cb = StyleSheet.create({
   box:    { width: 11, height: 11, borderWidth: 1.2, borderColor: INK, borderRadius: 2, backgroundColor: '#fff' },
   filled: { backgroundColor: INK },
-});
-
-const sl = StyleSheet.create({
-  wrap:    { gap: 2 },
-  label:   { fontFamily: FontFamily.markerBold, fontSize: sf(10), color: INK, textAlign: 'center' },
-  track:   { height: 9, flexDirection: 'row', borderWidth: 1.2, borderColor: INK, borderRadius: 999, overflow: 'hidden', position: 'relative' },
-  left:    { height: '100%', backgroundColor: INK },
-  right:   { flex: 1, height: '100%', backgroundColor: INK + '44' },
-  divider: { position: 'absolute', top: -2, bottom: -2, width: 1.5, backgroundColor: INK },
 });
 
 const dc = StyleSheet.create({

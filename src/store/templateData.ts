@@ -55,8 +55,8 @@ const MEMORY_FIELDS: Record<string, string> = {
 // mainPhoto = primary portrait/photo of the F/O
 const FIELD_MAP: Record<string, Record<string, string>> = {
   'get-to-know': { ...MEMORY_FIELDS, foName: 'themName', myName: 'meName', sharing: 'sharing', song: 'song', mainPhoto: 'themPhoto', myPhoto: 'mePhoto' },
-  'kawaii-ui':   { ...MEMORY_FIELDS, shipName: 'shipName', foName: 'theirName', myName: 'myName', sharing: 'sharing', song: 'song', anniv: 'anniv', mainPhoto: 'theirPortrait', myPhoto: 'myPortrait' },
-  'heart-frame': { ...MEMORY_FIELDS, foName: 'themName', myName: 'meName', sharing: 'sharing', song: 'song', anniv: 'anniv', mainPhoto: 'themPhoto', myPhoto: 'mePhoto' },
+  'kawaii-ui':   { ...MEMORY_FIELDS, shipName: 'shipName', foName: 'theirName', myName: 'myName', sharing: 'sharing', anniv: 'anniv', mainPhoto: 'theirPortrait', myPhoto: 'myPortrait' },
+  'heart-frame': { foName: 'themName', myName: 'meName', sharing: 'sharing', anniv: 'anniv', mainPhoto: 'themPhoto', myPhoto: 'mePhoto' },
   'love-letter': { foName: 'dearName', myName: 'signName' },
   'aesthetic':   { ...MEMORY_FIELDS, shipName: 'shipName', song: 'song', mainPhoto: 'photo0', photo1: 'photo1', photo2: 'photo2' },
   'this-or-that': { foName: 'name' },
@@ -132,9 +132,11 @@ export function buildPreFill(ship: Ship, templateKey: string): Record<string, st
       if (ship.relType)   base['type'] = ship.relType;
       if (foSeed)         base['theirName'] = foSeed;
       if (fo?.pronouns)   base['theirPronouns'] = fo.pronouns;
+      if (fo?.height)     base['theirHeight'] = fo.height;
       if (fo?.photoUri)   base['theirPortrait'] = fo.photoUri;
       if (userName)       base['myName'] = userName;
       if (userPronouns)   base['myPronouns'] = userPronouns;
+      if (userHeight)     base['myHeight'] = userHeight;
       if (userPhoto)      base['myPortrait'] = userPhoto;
       break;
     case 'heart-frame':
@@ -143,8 +145,8 @@ export function buildPreFill(ship: Ship, templateKey: string): Record<string, st
       if (fo?.photoUri)   base['themPhoto'] = fo.photoUri;
       if (userPhoto)      base['mePhoto'] = userPhoto;
       if (fo?.pronouns || userPronouns) {
-        base['themInfo'] = JSON.stringify(['', fo?.pronouns ?? '', '', '']);
-        base['meInfo'] = JSON.stringify(['', userPronouns, '', '']);
+        base['themInfo'] = JSON.stringify([fo?.pronouns ?? '', '', '', '']);
+        base['meInfo'] = JSON.stringify([userPronouns ?? '', '', '', '']);
       }
       break;
     case 'love-letter':

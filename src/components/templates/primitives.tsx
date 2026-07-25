@@ -291,6 +291,49 @@ export function AttrSlider({ label, value = 0, onValueChange }: { label: string;
   );
 }
 
+// ─── DualSlider ───────────────────────────────────────────────
+// Two-person comparison slider: one 0-1 value where the divider position
+// shows how far a trait leans toward either person; each side tints with
+// that person's color when provided. `ink` overrides the themed default for
+// templates that key their own fallback ink (e.g. kawaii-ui's pink).
+type DualSliderProps = { label: string; value?: number; onValueChange?: (v: number) => void; leftColor?: string; rightColor?: string; ink?: string };
+export function DualSlider({ label, value = 0.5, onValueChange, leftColor, rightColor, ink: inkOverride }: DualSliderProps) {
+  const themedInk = useThemedInk();
+  const ink = inkOverride || themedInk;
+  const { trackRef, responder } = useSliderTrack(onValueChange);
+  const pct = `${Math.round(value * 100)}%` as any;
+  const rest = `${Math.round((1 - value) * 100)}%` as any;
+  return (
+    <View style={s.dualSliderWrap}>
+      <Text style={[s.dualSliderLabel, { color: ink }]}>{label}</Text>
+      <View ref={trackRef} style={[s.dualSliderTrack, { borderColor: ink }]} {...responder}>
+        <View style={[s.dualSliderLeft, { width: pct }, { backgroundColor: leftColor ? leftColor + 'cc' : ink }]} />
+        <View style={[s.dualSliderRight, { width: rest }, { backgroundColor: rightColor ? rightColor + 'cc' : ink + '44' }]} />
+        <View style={[s.dualSliderDivider, { left: pct, backgroundColor: ink }]} />
+      </View>
+    </View>
+  );
+}
+
+// ─── PolarSlider ──────────────────────────────────────────────
+// Single-person trait slider flanked by two opposite-pole labels
+// (e.g. "Friendly" ←→ "Aloof"), value 0-1 leaning toward right pole.
+type PolarSliderProps = { left: string; right: string; value?: number; onValueChange?: (v: number) => void };
+export function PolarSlider({ left, right, value = 0.5, onValueChange }: PolarSliderProps) {
+  const ink = useThemedInk();
+  const { trackRef, responder } = useSliderTrack(onValueChange);
+  return (
+    <View style={s.polarSliderRow}>
+      <Text style={[s.polarSliderLabel, s.polarSliderLabelLeft, { color: ink }]} numberOfLines={2}>{left}</Text>
+      <View ref={trackRef} style={[s.polarSliderTrack, { borderColor: ink }]} {...responder}>
+        <View style={[s.polarSliderFill, { width: `${value * 100}%` as any, backgroundColor: ink }]} />
+        <View style={[s.polarSliderThumb, { left: `${value * 100}%` as any, borderColor: ink }]} />
+      </View>
+      <Text style={[s.polarSliderLabel, s.polarSliderLabelRight, { color: ink }]} numberOfLines={2}>{right}</Text>
+    </View>
+  );
+}
+
 // ─── PhotoBox ─────────────────────────────────────────────────
 type PhotoBoxProps = {
   size?: number;
@@ -933,6 +976,19 @@ const s = StyleSheet.create({
     borderColor: INK,
     borderRadius: 999,
   },
+  dualSliderWrap:    { gap: 2 },
+  dualSliderLabel:   { fontFamily: FontFamily.markerBold, fontSize: sf(10), color: INK, textAlign: 'center' },
+  dualSliderTrack:   { height: 9, flexDirection: 'row', borderWidth: 1.2, borderColor: INK, borderRadius: 999, overflow: 'hidden', position: 'relative' },
+  dualSliderLeft:    { height: '100%', backgroundColor: INK },
+  dualSliderRight:   { flex: 1, height: '100%', backgroundColor: INK + '44' },
+  dualSliderDivider: { position: 'absolute', top: -2, bottom: -2, width: 1.5, backgroundColor: INK },
+  polarSliderRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  polarSliderLabel: { fontFamily: FontFamily.markerBold, fontSize: sf(8), textTransform: 'uppercase', letterSpacing: 0.3, lineHeight: sf(10) },
+  polarSliderLabelLeft: { width: 78, textAlign: 'right' },
+  polarSliderLabelRight: { width: 78, textAlign: 'left' },
+  polarSliderTrack: { flex: 1, height: 8, backgroundColor: '#fff', borderWidth: 1.2, borderRadius: 999, position: 'relative' },
+  polarSliderFill: { position: 'absolute', left: 0, top: 0, bottom: 0, borderRadius: 999, opacity: 0.75 },
+  polarSliderThumb: { position: 'absolute', top: '50%' as any, marginTop: -5, marginLeft: -5, width: 10, height: 10, backgroundColor: '#fff', borderWidth: 1.2, borderRadius: 999 },
   photoBox: {
     backgroundColor: FILL_GRAY,
     borderWidth: 1.5,
