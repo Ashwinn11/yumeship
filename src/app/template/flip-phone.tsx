@@ -10,6 +10,9 @@ import { Bullets } from '@/components/deco';
 import { useTemplateCtx } from '@/store/templateData';
 import { Colors, FontFamily ,sf } from '@/constants/theme';
 
+const REL_TYPES = ['Married', 'Engaged', 'Dating', 'Platonic'] as const;
+const ENDINGS = ['Happy', 'Bad', 'Neutral'] as const;
+
 // Y2K OS-style window chrome — faithful port of design/templates.jsx Y2KWindow
 function Y2KWindow({ title, children, tint, ink, mini = false }: { title: string; children: React.ReactNode; tint: string; ink: string; mini?: boolean }) {
   return (
@@ -37,10 +40,16 @@ export function FlipPhoneContent({ editing = false }: { editing?: boolean }) {
       chat:     ctx.get('chat', `${foName} says:\ni miss you\n${foName} says:\ncome over?\n${foName} says:\n♡♡♡`),
       name:     ctx.get('name', ''),
       myName:   ctx.get('myName', ''),
-      nickname: ctx.get('nickname', ''),
-      age:      ctx.get('age', ''),
-      bday:     ctx.get('bday', ''),
-      occ:      ctx.get('occ', ''),
+      myNickname: ctx.get('myNickname', ''),
+      myAge:      ctx.get('myAge', ''),
+      myBday:     ctx.get('myBday', ''),
+      myOcc:      ctx.get('myOcc', ''),
+      foNickname: ctx.get('foNickname', ''),
+      foAge:      ctx.get('foAge', ''),
+      foBday:     ctx.get('foBday', ''),
+      foOcc:      ctx.get('foOcc', ''),
+      relTypes: ctx.get('relTypes', '[]'),
+      endings:  ctx.get('endings', '[]'),
       sharing:  ctx.get('sharing', 'Selective'),
       free:     ctx.get('free', ''),
       song:     ctx.get('song', '♪ Theme Song'),
@@ -52,6 +61,12 @@ export function FlipPhoneContent({ editing = false }: { editing?: boolean }) {
     setVals(p => ({ ...p, [key]: v }));
     ctx.set(key, v);
   };
+  const toggleArr = (key: 'relTypes' | 'endings', item: string) => {
+    const arr: string[] = JSON.parse(vals[key] || '[]');
+    setVal(key, JSON.stringify(arr.includes(item) ? arr.filter(x => x !== item) : [...arr, item]));
+  };
+  const relTypes: string[] = JSON.parse(vals.relTypes || '[]');
+  const endings: string[] = JSON.parse(vals.endings || '[]');
 
   const e = editing;
   const tint = customBg ? 'rgba(0,0,0,0.18)' : Colors.sakura + 'b0';
@@ -83,10 +98,10 @@ export function FlipPhoneContent({ editing = false }: { editing?: boolean }) {
           <Y2KWindow title="About Me" tint={tint} ink={ink}>
             {[
               ['Name', 'myName'],
-              ['Nickname', 'nickname'],
-              ['Age', 'age'],
-              ['Birthday', 'bday'],
-              ['Occupation', 'occ'],
+              ['Nickname', 'myNickname'],
+              ['Age', 'myAge'],
+              ['Birthday', 'myBday'],
+              ['Occupation', 'myOcc'],
             ].map(([label, key]) => (
               <View key={key} style={s.aboutRow}>
                 <Text style={[s.aboutKey, { color: ink }]}>{label}: </Text>
@@ -104,6 +119,46 @@ export function FlipPhoneContent({ editing = false }: { editing?: boolean }) {
               ) : (
                 <Text style={[s.aboutVal2, { color: ink, marginTop: 4 }]}>{vals.name || '——'}</Text>
               )}
+            </View>
+          </Y2KWindow>
+        </View>
+
+        {/* Second row: About F/O + Our Type */}
+        <View style={s.row2}>
+          <Y2KWindow title="About F/O" tint={tint} ink={ink}>
+            {[
+              ['Name', 'name'],
+              ['Nickname', 'foNickname'],
+              ['Age', 'foAge'],
+              ['Birthday', 'foBday'],
+              ['Occupation', 'foOcc'],
+            ].map(([label, key]) => (
+              <View key={key} style={s.aboutRow}>
+                <Text style={[s.aboutKey, { color: ink }]}>{label}: </Text>
+                {e ? (
+                  <BlankPill value={vals[key]} onChangeText={v => setVal(key, v)} placeholder="——" style={[s.aboutVal, { color: ink }]} />
+                ) : (
+                  <Text style={[s.aboutVal2, { color: ink }]}>{vals[key] || '——'}</Text>
+                )}
+              </View>
+            ))}
+          </Y2KWindow>
+          <Y2KWindow title="Our Type" tint={tint} ink={ink}>
+            <Text style={[s.typeLabel, { color: ink }]}>type:</Text>
+            <View style={s.typePills}>
+              {REL_TYPES.map(r => (
+                <Pressable key={r} onPress={e ? () => toggleArr('relTypes', r) : undefined} style={[s.tPill, { borderColor: ink }, relTypes.includes(r) && { backgroundColor: ink }]}>
+                  <Text style={[s.tPillText, { color: ink }, relTypes.includes(r) && { color: getContrastColor(ink) }]}>{r}</Text>
+                </Pressable>
+              ))}
+            </View>
+            <Text style={[s.typeLabel, { color: ink, marginTop: 4 }]}>this has:</Text>
+            <View style={s.typePills}>
+              {ENDINGS.map(r => (
+                <Pressable key={r} onPress={e ? () => toggleArr('endings', r) : undefined} style={[s.tPill, { borderColor: ink }, endings.includes(r) && { backgroundColor: ink }]}>
+                  <Text style={[s.tPillText, { color: ink }, endings.includes(r) && { color: getContrastColor(ink) }]}>{r}</Text>
+                </Pressable>
+              ))}
             </View>
           </Y2KWindow>
         </View>
@@ -248,6 +303,10 @@ const s = StyleSheet.create({
   sPillOn: {},
   sPillText: { fontFamily: FontFamily.ja, fontSize: sf(9), textAlign: 'center' },
   sPillTextOn: {},
+  typeLabel: { fontFamily: FontFamily.markerBold, fontSize: sf(8), letterSpacing: 0.4, textTransform: 'uppercase', opacity: 0.85 },
+  typePills: { flexDirection: 'row', flexWrap: 'wrap', gap: 3, marginTop: 3 },
+  tPill: { paddingHorizontal: 6, paddingVertical: 3, borderRadius: 6, borderWidth: 1.2 },
+  tPillText: { fontFamily: FontFamily.ja, fontSize: sf(8) },
   freeInput: { height: undefined, minHeight: 50, maxHeight: 90, textAlignVertical: 'top', fontFamily: FontFamily.script, fontSize: sf(11), backgroundColor: 'transparent', borderColor: 'transparent', color: '#fff' },
   freeText: { fontFamily: FontFamily.script, fontSize: sf(13), color: '#fff', lineHeight: 15 },
   bulletRow: { flexDirection: 'row', gap: 4 },
