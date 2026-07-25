@@ -662,25 +662,40 @@ type MemoriesFooterProps = {
   /** song card shows the template's own background through instead of solid white */
   transparentBg?: boolean;
 };
+// Just the captioned-photo strip, no song — for templates that want the
+// memories gallery without the (now largely-deprecated) theme-song feature.
+type MemoriesPhotoRowProps = {
+  editing?: boolean;
+  photos: MemoryPhoto[]; // length 3
+  onPhotoChange?: (i: number, uri: string) => void;
+  onCaptionChange?: (i: number, caption: string) => void;
+  style?: object;
+};
+export function MemoriesPhotoRow({ editing, photos, onPhotoChange, onCaptionChange, style }: MemoriesPhotoRowProps) {
+  return (
+    <View style={[s.memoriesRow, style]}>
+      {[0, 1, 2].map((i) => (
+        <Polaroid
+          key={i}
+          size={92}
+          rotate={MEMORY_ROTATE[i]}
+          tapeColor={MEMORY_TAPE[i]}
+          editing={editing}
+          uri={photos[i]?.uri}
+          onUriChange={onPhotoChange ? (u) => onPhotoChange(i, u) : undefined}
+          caption={photos[i]?.caption}
+          onCaptionChange={onCaptionChange ? (c) => onCaptionChange(i, c) : undefined}
+        />
+      ))}
+    </View>
+  );
+}
+
 export function MemoriesFooter({ editing, photos, onPhotoChange, onCaptionChange, song, onSongChange, style, transparentBg }: MemoriesFooterProps) {
   const ink = useThemedInk();
   return (
     <View style={[s.memoriesWrap, style]}>
-      <View style={s.memoriesRow}>
-        {[0, 1, 2].map((i) => (
-          <Polaroid
-            key={i}
-            size={92}
-            rotate={MEMORY_ROTATE[i]}
-            tapeColor={MEMORY_TAPE[i]}
-            editing={editing}
-            uri={photos[i]?.uri}
-            onUriChange={onPhotoChange ? (u) => onPhotoChange(i, u) : undefined}
-            caption={photos[i]?.caption}
-            onCaptionChange={onCaptionChange ? (c) => onCaptionChange(i, c) : undefined}
-          />
-        ))}
-      </View>
+      <MemoriesPhotoRow editing={editing} photos={photos} onPhotoChange={onPhotoChange} onCaptionChange={onCaptionChange} />
       <WindowFrame title="Our song" style={transparentBg ? { backgroundColor: 'transparent' } : undefined}>
         <View style={{ padding: 2 }}>
           {editing ? (

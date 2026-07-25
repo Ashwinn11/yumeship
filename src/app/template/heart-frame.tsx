@@ -4,7 +4,7 @@ import { useLocalSearchParams } from 'expo-router';
 import Svg, { Path } from 'react-native-svg';
 import { TemplateScreenWrapper } from '@/components/templates/TemplateScreenWrapper';
 import {
-  MarkerCard, TitleHeader, SharingRow, TwinProfile, HeartClipPhoto, BlankPill, PolarSlider, INK, FILL_GRAY,
+  MarkerCard, TitleHeader, SharingRow, TwinProfile, HeartClipPhoto, BlankPill, PolarSlider, MemoriesPhotoRow, INK, FILL_GRAY,
 } from '@/components/templates/primitives';
 import { Heart } from '@/components/deco/Heart';
 import { FontFamily ,sf } from '@/constants/theme';
@@ -39,6 +39,8 @@ export function HeartFrameContent({ editing = false }: { editing?: boolean }) {
     anniv: string;
     mePhoto: string;
     themPhoto: string;
+    memPhoto0: string; memPhoto1: string; memPhoto2: string;
+    memCap0: string; memCap1: string; memCap2: string;
   }>(() => {
     const sharingRaw = ctx.get('sharing');
     return {
@@ -52,6 +54,8 @@ export function HeartFrameContent({ editing = false }: { editing?: boolean }) {
       anniv: ctx.get('anniv'),
       mePhoto: ctx.get('mePhoto'),
       themPhoto: ctx.get('themPhoto'),
+      memPhoto0: ctx.get('memPhoto0'), memPhoto1: ctx.get('memPhoto1'), memPhoto2: ctx.get('memPhoto2'),
+      memCap0: ctx.get('memCap0'), memCap1: ctx.get('memCap1'), memCap2: ctx.get('memCap2'),
     };
   });
 
@@ -220,6 +224,21 @@ export function HeartFrameContent({ editing = false }: { editing?: boolean }) {
           ))}
         </View>
       </View>
+
+      <View style={s.sliderDivider}>
+        <Heart size={12} color={ink} outline />
+      </View>
+
+      <MemoriesPhotoRow
+        editing={e}
+        photos={[
+          { uri: vals.memPhoto0, caption: vals.memCap0 },
+          { uri: vals.memPhoto1, caption: vals.memCap1 },
+          { uri: vals.memPhoto2, caption: vals.memCap2 },
+        ]}
+        onPhotoChange={e ? (i, u) => setMem(`memPhoto${i}`, u) : undefined}
+        onCaptionChange={e ? (i, c) => setMem(`memCap${i}`, c) : undefined}
+      />
     </MarkerCard>
   );
 }

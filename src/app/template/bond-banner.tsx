@@ -3,7 +3,7 @@ import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { TemplateScreenWrapper } from '@/components/templates/TemplateScreenWrapper';
 import {
-  MarkerCard, MarkerHeader, BlankPill, AttrSlider, MemoriesFooter, INK,
+  MarkerCard, MarkerHeader, BlankPill, AttrSlider, INK,
 } from '@/components/templates/primitives';
 import Svg, { Path, Defs, ClipPath, Image as SvgImage } from 'react-native-svg';
 import * as ImagePicker from 'expo-image-picker';
@@ -38,9 +38,6 @@ export function BondBannerContent({ editing = false }: { editing?: boolean }) {
     anniv:      ctx.get('anniv', ''),
     shieldPhoto: ctx.get('shieldPhoto', ''),
     sliders: ctx.get('sliders', JSON.stringify(SLIDERS.map(() => 0.5))),
-    memPhoto0: ctx.get('memPhoto0', ''), memPhoto1: ctx.get('memPhoto1', ''), memPhoto2: ctx.get('memPhoto2', ''),
-    memCap0: ctx.get('memCap0', ''), memCap1: ctx.get('memCap1', ''), memCap2: ctx.get('memCap2', ''),
-    song: ctx.get('song', ''),
   }));
 
   const setVal = (key: string, v: string) => {
@@ -181,20 +178,6 @@ export function BondBannerContent({ editing = false }: { editing?: boolean }) {
           </View>
         ))}
       </View>
-
-      <MemoriesFooter
-        editing={e}
-        photos={[
-          { uri: vals.memPhoto0, caption: vals.memCap0 },
-          { uri: vals.memPhoto1, caption: vals.memCap1 },
-          { uri: vals.memPhoto2, caption: vals.memCap2 },
-        ]}
-        onPhotoChange={e ? (i, u) => setVal(`memPhoto${i}`, u) : undefined}
-        onCaptionChange={e ? (i, c) => setVal(`memCap${i}`, c) : undefined}
-        song={vals.song}
-        onSongChange={e ? (v) => setVal('song', v) : undefined}
-        transparentBg={!!customBg}
-      />
     </MarkerCard>
   );
 }
