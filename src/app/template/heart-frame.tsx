@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { View, Text, TextInput, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
+import Svg, { Path } from 'react-native-svg';
 import { TemplateScreenWrapper } from '@/components/templates/TemplateScreenWrapper';
 import {
-  MarkerCard, TitleHeader, TemplateField, SharingRow, TwinProfile, HeartClipPhoto, BlankPill, INK, FILL_GRAY,
+  MarkerCard, TitleHeader, SharingRow, TwinProfile, HeartClipPhoto, BlankPill, PolarSlider, MemoriesPhotoRow, INK, FILL_GRAY,
 } from '@/components/templates/primitives';
 import { Heart } from '@/components/deco/Heart';
 import { FontFamily ,sf } from '@/constants/theme';
@@ -11,11 +12,21 @@ import { useTemplateCtx } from '@/store/templateData';
 import { DateField, calcElapsed } from '@/components/ui/DateField';
 
 const BLANK_INFO = ['', '', '', ''];
-const INFO_LABELS = ['age', 'pronouns', 'pet name', 'love language'];
+const INFO_LABELS = ['pronouns', 'mbti', 'relationship vibe', 'sexuality'];
+const BLANK_SLIDERS = [0.5, 0.5, 0.5, 0.5, 0.5, 0.5];
+const SLIDER_PAIRS = [
+  ['Friendly', 'Aloof'],
+  ['Emotional', 'Logical'],
+  ['Romantic', 'Allergic to Affection'],
+  ['Pure', 'High Libido'],
+  ['Clingy', 'Distant'],
+  ['Jealous', 'Chill'],
+] as const;
 
 export function HeartFrameContent({ editing = false }: { editing?: boolean }) {
   const ctx = useTemplateCtx();
   const customBg = ctx.bgColor || ctx.bgImage;
+  const ink = ctx.textColor || INK;
 
   const [vals, setVals] = useState<{
     sharing: 'Yes' | 'No' | 'Selective' | undefined;
@@ -23,10 +34,13 @@ export function HeartFrameContent({ editing = false }: { editing?: boolean }) {
     themName: string;
     meInfo: string[];
     themInfo: string[];
-    metText: string;
+    meSliders: string;
+    themSliders: string;
     anniv: string;
     mePhoto: string;
     themPhoto: string;
+    memPhoto0: string; memPhoto1: string; memPhoto2: string;
+    memCap0: string; memCap1: string; memCap2: string;
   }>(() => {
     const sharingRaw = ctx.get('sharing');
     return {
@@ -35,16 +49,24 @@ export function HeartFrameContent({ editing = false }: { editing?: boolean }) {
       themName: ctx.get('themName'),
       meInfo: JSON.parse(ctx.get('meInfo', 'null')) ?? [...BLANK_INFO],
       themInfo: JSON.parse(ctx.get('themInfo', 'null')) ?? [...BLANK_INFO],
-      metText: ctx.get('metText'),
+      meSliders: ctx.get('meSliders', JSON.stringify(BLANK_SLIDERS)),
+      themSliders: ctx.get('themSliders', JSON.stringify(BLANK_SLIDERS)),
       anniv: ctx.get('anniv'),
       mePhoto: ctx.get('mePhoto'),
       themPhoto: ctx.get('themPhoto'),
+      memPhoto0: ctx.get('memPhoto0'), memPhoto1: ctx.get('memPhoto1'), memPhoto2: ctx.get('memPhoto2'),
+      memCap0: ctx.get('memCap0'), memCap1: ctx.get('memCap1'), memCap2: ctx.get('memCap2'),
     };
   });
 
+  const setMem = (key: string, v: string) => {
+    setVals((p) => ({ ...p, [key]: v }));
+    ctx.set(key, v);
+  };
+
   const e = editing;
 
-  const set = (key: 'meName' | 'themName' | 'metText' | 'anniv') => (v: string) => {
+  const set = (key: 'meName' | 'themName' | 'anniv') => (v: string) => {
     setVals((p) => ({ ...p, [key]: v }));
     ctx.set(key, v);
   };
@@ -70,10 +92,23 @@ export function HeartFrameContent({ editing = false }: { editing?: boolean }) {
     });
   };
 
-  const { sharing, meName, themName, meInfo, themInfo, metText, anniv, mePhoto, themPhoto } = vals;
+  const { sharing, meName, themName, meInfo, themInfo, anniv, mePhoto, themPhoto } = vals;
 
   const meInfoPairs: [string, string?][] = INFO_LABELS.map((l, i) => [l, meInfo[i]]);
   const themInfoPairs: [string, string?][] = INFO_LABELS.map((l, i) => [l, themInfo[i]]);
+
+  const meSliders = JSON.parse(vals.meSliders || JSON.stringify(BLANK_SLIDERS)) as number[];
+  const themSliders = JSON.parse(vals.themSliders || JSON.stringify(BLANK_SLIDERS)) as number[];
+  const setMeSlider = (i: number, v: number) => {
+    const next = [...meSliders];
+    next[i] = v;
+    setMem('meSliders', JSON.stringify(next));
+  };
+  const setThemSlider = (i: number, v: number) => {
+    const next = [...themSliders];
+    next[i] = v;
+    setMem('themSliders', JSON.stringify(next));
+  };
 
   return (
     <MarkerCard tint={customBg ? 'transparent' : '#fff5f6'}>
@@ -84,6 +119,10 @@ export function HeartFrameContent({ editing = false }: { editing?: boolean }) {
       </View>
 
       <View style={s.heartPhotoRow}>
+        <Svg width={90} height={56} viewBox="0 0 90 56" style={s.bowDeco}>
+          <Path d="M6 26 Q 24 4, 45 22 Q 66 4, 84 26 L 45 42 Z" fill={ink} opacity={0.85} />
+          <Path d="M45 42 L 35 56 L 45 49 L 55 56 Z" fill={ink} opacity={0.85} />
+        </Svg>
         <HeartClipPhoto
           width={180}
           height={160}
@@ -96,54 +135,42 @@ export function HeartFrameContent({ editing = false }: { editing?: boolean }) {
       </View>
 
       <View style={s.namesRow}>
-        <Text style={s.nameLabel}>ME</Text>
         <View style={s.namePillContainer}>
-          <BlankPill value={meName} onChangeText={e ? set('meName') : undefined} width={80} />
+          <BlankPill value={meName} onChangeText={e ? set('meName') : undefined} placeholder="your name" width={92} style={customBg ? { backgroundColor: 'transparent' } : undefined} />
         </View>
-        <Heart size={16} color={INK} />
-        <Text style={s.nameLabel}>THEM</Text>
+        <Heart size={16} color={ink} />
         <View style={s.namePillContainer}>
-          <BlankPill value={themName} onChangeText={e ? set('themName') : undefined} width={80} />
+          <BlankPill value={themName} onChangeText={e ? set('themName') : undefined} placeholder="their name" width={92} style={customBg ? { backgroundColor: 'transparent' } : undefined} />
         </View>
       </View>
 
       <View style={s.twinGrid}>
         <View style={s.twinCol}>
           <TwinProfile
-            who="ME"
+            who={meName || 'ME'}
             info={meInfoPairs}
             onInfoChange={e ? (i, v) => setMeInfo(i, v) : undefined}
+            transparent={!!customBg}
           />
         </View>
+
         <View style={s.twinCol}>
           <TwinProfile
-            who="THEM"
+            who={themName || 'THEM'}
             info={themInfoPairs}
             onInfoChange={e ? (i, v) => setThemInfo(i, v) : undefined}
+            transparent={!!customBg}
           />
         </View>
       </View>
 
-      <View style={[s.metBox, customBg ? { backgroundColor: 'transparent' } : null]}>
-        <Text style={s.metLabel}>how we met</Text>
-        {e ? (
-          <TextInput
-            value={metText}
-            onChangeText={set('metText')}
-            placeholder="our story..."
-            placeholderTextColor={INK + '88'}
-            multiline
-            underlineColorAndroid="transparent"
-            style={s.metText}
-          />
-        ) : (
-          <Text style={s.metText}>{metText || 'our story...'}</Text>
-        )}
+      <View style={s.sliderDivider}>
+        <Heart size={12} color={ink} outline />
       </View>
 
-      <View style={[s.anniversaryPill, customBg ? { backgroundColor: 'transparent' } : null]}>
-        <Text style={s.anniversaryLabel}>♡ anniversary</Text>
-        <View style={{ alignItems: 'flex-end' }}>
+      <View style={s.annivRow}>
+        <Text style={[s.annivLabel, { color: ink }]}>♥ anniversary ♥</Text>
+        <View style={[s.annivBox, { borderColor: ink }, customBg ? { backgroundColor: 'transparent' } : null]}>
           {e ? (
             <DateField
               value={anniv}
@@ -159,8 +186,9 @@ export function HeartFrameContent({ editing = false }: { editing?: boolean }) {
               }}
               textStyle={{
                 fontFamily: FontFamily.ja,
-                fontSize: sf(13),
-                color: INK,
+                fontSize: sf(12),
+                color: ink,
+                textAlign: 'center',
               }}
               displayValue={(() => {
                 const el = calcElapsed(anniv);
@@ -168,12 +196,49 @@ export function HeartFrameContent({ editing = false }: { editing?: boolean }) {
               })()}
             />
           ) : (
-            <Text style={{ fontFamily: FontFamily.ja, fontSize: sf(13), color: INK }}>
+            <Text style={{ fontFamily: FontFamily.ja, fontSize: sf(12), color: ink, textAlign: 'center' }}>
               {anniv ? `${calcElapsed(anniv)?.since} · ${calcElapsed(anniv)?.label}` : '——'}
             </Text>
           )}
         </View>
       </View>
+
+      <View style={s.sliderDivider}>
+        <Heart size={12} color={ink} outline />
+      </View>
+
+      <View style={s.slidersBlock}>
+        <Text style={[s.nameLabel, { color: ink }]}>♥ about me ♥</Text>
+        <View style={s.slidersCol}>
+          {SLIDER_PAIRS.map(([l, r], i) => (
+            <PolarSlider key={l} left={l} right={r} value={meSliders[i]} onValueChange={e ? (v) => setMeSlider(i, v) : undefined} />
+          ))}
+        </View>
+      </View>
+
+      <View style={s.slidersBlock}>
+        <Text style={[s.nameLabel, { color: ink }]}>♥ about my f/o ♥</Text>
+        <View style={s.slidersCol}>
+          {SLIDER_PAIRS.map(([l, r], i) => (
+            <PolarSlider key={l} left={l} right={r} value={themSliders[i]} onValueChange={e ? (v) => setThemSlider(i, v) : undefined} />
+          ))}
+        </View>
+      </View>
+
+      <View style={s.sliderDivider}>
+        <Heart size={12} color={ink} outline />
+      </View>
+
+      <MemoriesPhotoRow
+        editing={e}
+        photos={[
+          { uri: vals.memPhoto0, caption: vals.memCap0 },
+          { uri: vals.memPhoto1, caption: vals.memCap1 },
+          { uri: vals.memPhoto2, caption: vals.memCap2 },
+        ]}
+        onPhotoChange={e ? (i, u) => setMem(`memPhoto${i}`, u) : undefined}
+        onCaptionChange={e ? (i, c) => setMem(`memCap${i}`, c) : undefined}
+      />
     </MarkerCard>
   );
 }
@@ -189,49 +254,35 @@ export default function TemplateHeartFrame() {
 
 const s = StyleSheet.create({
   mt6: { marginTop: 6, marginBottom: 12 },
-  heartPhotoRow: { alignItems: 'center', marginVertical: 10 },
+  heartPhotoRow: { alignItems: 'center', marginVertical: 10, position: 'relative' },
+  bowDeco: { position: 'absolute', top: -14, left: '50%', marginLeft: -45, zIndex: 5 },
   namesRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 14, marginBottom: 12 },
-  twinGrid: { flexDirection: 'row', gap: 10 },
+  twinGrid: { flexDirection: 'row', gap: 10, alignItems: 'flex-start' },
   twinCol: { flex: 1 },
-  metBox: {
-    marginTop: 10,
-    padding: 12,
-    backgroundColor: '#fff',
-    borderWidth: 1.5,
-    borderColor: INK,
-    borderRadius: 8,
-  },
-  metLabel: {
+  annivRow: { alignItems: 'center' },
+  annivLabel: {
     fontFamily: FontFamily.markerBold,
-    fontSize: sf(9),
-    letterSpacing: 1,
+    fontSize: sf(10),
+    letterSpacing: 0.5,
     textTransform: 'uppercase',
     color: INK,
-    opacity: 0.7,
-    marginBottom: 4,
+    textAlign: 'center',
+    marginBottom: 6,
   },
-  metText: {
-    fontFamily: FontFamily.ja,
-    fontSize: sf(12),
-    color: INK,
-    lineHeight: 18,
-    minHeight: 60,
-    textAlignVertical: 'top',
-  },
-  anniversaryPill: {
-    marginTop: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+  annivBox: {
+    width: 180,
+    minHeight: 56,
     backgroundColor: FILL_GRAY,
     borderWidth: 1.5,
-    borderColor: INK,
-    borderRadius: 999,
-    gap: 10,
+    borderColor: INK, // overridden inline with live ink
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 8,
   },
-  anniversaryLabel: { fontFamily: FontFamily.markerBold, fontSize: sf(10), color: INK, letterSpacing: 0.8, textTransform: 'uppercase' },
+  sliderDivider: { alignItems: 'center', marginVertical: 12 },
+  slidersBlock: { marginBottom: 6 },
+  slidersCol: { gap: 8, marginTop: 6 },
   nameLabel: {
     fontFamily: FontFamily.markerBold,
     fontSize: sf(12),

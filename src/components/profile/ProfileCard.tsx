@@ -1,12 +1,18 @@
 import { Image } from 'expo-image';
-import { ImageBackground, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { ImageBackground, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { FlagIcon } from '@/components/deco/FlagIcon';
 import { Heart } from '@/components/deco/Heart';
+import { Sakura } from '@/components/deco/Sakura';
 import { Sparkle } from '@/components/deco/Sparkle';
+import { Star } from '@/components/deco/Star';
 import { StickerCassette } from '@/components/deco/Stickers';
+import { TornEdge } from '@/components/deco/TornEdge';
 import { WashiTape } from '@/components/deco/WashiTape';
 import { Polaroid } from '@/components/templates/primitives';
 import { Colors, FontFamily, Radius, Shadow, Spacing, sf } from '@/constants/theme';
+import { findSexualityOption } from '@/constants/sexualities';
 import type { GalleryPhoto } from '@/store/fo';
 
 const POLAROID_TAPES = [Colors.sakura, Colors.lavender, Colors.butter, Colors.sage, Colors.peach];
@@ -39,8 +45,116 @@ type Props = {
   /** hero-card presentation customization */
   cardBgColor?: string;
   cardBgImage?: string;
+  /** two comma-joined hex colors — wins over cardBgColor when set */
+  cardBgGradient?: string;
+  /** no hero fill at all — the page background shows through */
+  cardTransparent?: boolean;
   textColor?: string;
+  /** '' default dashed-avatar look | 'dashed' | 'double' | 'torn' | 'polaroid' */
+  borderStyle?: string;
+  /** '' classic washi+sparkles | 'sparkles' | 'hearts' | 'stars' | 'floral' | 'washi' | 'none' */
+  decoration?: string;
+  /** '' default display font | 'script' | 'marker' */
+  nameFont?: string;
+  /** sexuality badge under the name, e.g. "bisexual" — free text, this person's own words */
+  statusLabel?: string;
+  /** "profile identify" — show [me] ♡ [F/O] paired avatars instead of the solo one */
+  showPairedIdentity?: boolean;
+  pairedName?: string;
+  pairedPronouns?: string;
+  pairedAvatarUri?: string;
+  pairedFallbackColor?: string;
+  pairedStatusLabel?: string;
 };
+
+const NAME_FONT_MAP: Record<string, string> = {
+  script: FontFamily.script,
+  marker: FontFamily.uiSemiBold,
+};
+
+// Each preset is a set of absolutely-positioned corner/edge ornaments layered
+// over the hero. '' keeps the original hardcoded washi-tape + two sparkles.
+function HeroDecoration({ decoration }: { decoration: string }) {
+  if (decoration === 'none') return null;
+  if (decoration === 'sparkles') {
+    return (
+      <>
+        <View style={[styles.decoPos, { top: 12, right: 14 }]} pointerEvents="none"><Sparkle size={16} color={Colors.lavenderDeep} /></View>
+        <View style={[styles.decoPos, { top: 30, right: 34 }]} pointerEvents="none"><Sparkle size={9} color={Colors.butterDeep} /></View>
+        <View style={[styles.decoPos, { bottom: 14, left: 14 }]} pointerEvents="none"><Sparkle size={13} color={Colors.sakuraDeep} /></View>
+        <View style={[styles.decoPos, { bottom: 32, left: 32 }]} pointerEvents="none"><Sparkle size={8} color={Colors.lavenderDeep} /></View>
+      </>
+    );
+  }
+  if (decoration === 'hearts') {
+    return (
+      <>
+        <View style={[styles.decoPos, { top: 12, left: 14, transform: [{ rotate: '-14deg' }] }]} pointerEvents="none"><Heart size={14} color={Colors.sakuraDeep} /></View>
+        <View style={[styles.decoPos, { top: 26, right: 16, transform: [{ rotate: '10deg' }] }]} pointerEvents="none"><Heart size={11} color={Colors.sakura} /></View>
+        <View style={[styles.decoPos, { bottom: 14, right: 30, transform: [{ rotate: '-8deg' }] }]} pointerEvents="none"><Heart size={9} color={Colors.sakuraDeep} outline /></View>
+        <View style={[styles.decoPos, { bottom: 24, left: 20, transform: [{ rotate: '12deg' }] }]} pointerEvents="none"><Heart size={12} color={Colors.sakura} /></View>
+      </>
+    );
+  }
+  if (decoration === 'stars') {
+    return (
+      <>
+        <View style={[styles.decoPos, { top: 12, right: 14, transform: [{ rotate: '12deg' }] }]} pointerEvents="none"><Star size={14} color={Colors.butterDeep} /></View>
+        <View style={[styles.decoPos, { top: 34, left: 18, transform: [{ rotate: '-10deg' }] }]} pointerEvents="none"><Star size={10} color={Colors.butter} /></View>
+        <View style={[styles.decoPos, { bottom: 16, left: 32 }]} pointerEvents="none"><Sparkle size={9} color={Colors.butterDeep} /></View>
+        <View style={[styles.decoPos, { bottom: 12, right: 24, transform: [{ rotate: '8deg' }] }]} pointerEvents="none"><Star size={12} color={Colors.butterDeep} /></View>
+      </>
+    );
+  }
+  if (decoration === 'floral') {
+    return (
+      <>
+        <View style={[styles.decoPos, { top: 10, left: 12 }]} pointerEvents="none"><Sakura size={18} /></View>
+        <View style={[styles.decoPos, { top: 26, left: 30 }]} pointerEvents="none"><Sakura size={11} color={Colors.lavender} /></View>
+        <View style={[styles.decoPos, { bottom: 12, right: 14 }]} pointerEvents="none"><Sakura size={16} /></View>
+        <View style={[styles.decoPos, { bottom: 30, right: 32 }]} pointerEvents="none"><Sakura size={10} color={Colors.lavender} /></View>
+      </>
+    );
+  }
+  if (decoration === 'washi') {
+    return (
+      <>
+        <View style={[styles.decoPos, { top: -8, left: 18 }]} pointerEvents="none">
+          <WashiTape width={64} height={14} pattern="stripe" color={Colors.lavender} rotate={-6} />
+        </View>
+        <View style={[styles.decoPos, { top: -8, right: 18 }]} pointerEvents="none">
+          <WashiTape width={64} height={14} pattern="dot" color={Colors.sakura} rotate={5} />
+        </View>
+      </>
+    );
+  }
+  // classic default
+  return (
+    <>
+      <View style={styles.tape} pointerEvents="none">
+        <WashiTape width={72} height={14} pattern="floral" color={Colors.sakura} rotate={-4} />
+      </View>
+      <View style={styles.sparkleTR} pointerEvents="none">
+        <Sparkle size={14} color={Colors.lavenderDeep} />
+      </View>
+      <View style={styles.sparkleBL} pointerEvents="none">
+        <Sparkle size={10} color={Colors.butterDeep} />
+      </View>
+    </>
+  );
+}
+
+function StatusPill({ label, style }: { label: string; style?: object }) {
+  const matched = findSexualityOption(label);
+  return (
+    <View style={[styles.statusPill, style]}>
+      {matched?.colors && (
+        <View style={styles.statusPillFlag}><FlagIcon colors={matched.colors} width={16} height={11} /></View>
+      )}
+      <Text style={styles.statusPillText}>{label}</Text>
+    </View>
+  );
+}
 
 function SectionLabel({ children }: { children: string }) {
   return (
@@ -68,7 +182,19 @@ export function ProfileCard({
   gallery = [],
   cardBgColor,
   cardBgImage,
+  cardBgGradient,
+  cardTransparent,
   textColor,
+  borderStyle = '',
+  decoration = '',
+  nameFont = '',
+  statusLabel,
+  showPairedIdentity,
+  pairedName,
+  pairedPronouns,
+  pairedAvatarUri,
+  pairedFallbackColor = Colors.lavender,
+  pairedStatusLabel,
 }: Props) {
   const stats = [
     type ? { label: 'type', value: type.label, color: type.color } : null,
@@ -78,48 +204,119 @@ export function ProfileCard({
   ].filter(Boolean) as { label: string; value: string; color?: string }[];
 
   const textStyle = textColor ? { color: textColor } : null;
+  const nameFontStyle = nameFont && NAME_FONT_MAP[nameFont] ? { fontFamily: NAME_FONT_MAP[nameFont] } : null;
+
+  const gradientColors = cardBgGradient ? (cardBgGradient.split(',').filter(Boolean) as string[]) : null;
+  // best-effort match so the torn strip reads as this card's own paper, not a random overlay
+  const tornColor = cardTransparent ? Colors.paper
+    : cardBgColor || (gradientColors && gradientColors[gradientColors.length - 1]) || Colors.vellum;
+
+  // border frame treatment for the hero card
+  const heroBorderStyle =
+    borderStyle === 'dashed' ? { borderWidth: 1.5, borderStyle: 'dashed' as const, borderColor: Colors.lineStrong } :
+    borderStyle === 'polaroid' ? { borderWidth: 10, borderColor: '#ffffff' } :
+    borderStyle === 'torn' ? { borderBottomWidth: 0 } :
+    null; // 'double' and '' keep the default 1px solid border
 
   // ── Hero: identity only — everything else lives in its own section below ──
   const heroContent = (
     <>
-      <View style={styles.tape} pointerEvents="none">
-        <WashiTape width={72} height={14} pattern="floral" color={Colors.sakura} rotate={-4} />
-      </View>
-      <View style={styles.sparkleTR} pointerEvents="none">
-        <Sparkle size={14} color={Colors.lavenderDeep} />
-      </View>
-      <View style={styles.sparkleBL} pointerEvents="none">
-        <Sparkle size={10} color={Colors.butterDeep} />
-      </View>
+      <HeroDecoration decoration={decoration} />
 
-      <View style={styles.avatarWrap}>
-        <View style={[styles.avatar, { backgroundColor: fallbackColor }]}>
-          {photoUri ? (
-            <Image source={{ uri: photoUri }} style={styles.avatarImg} contentFit="cover" />
-          ) : (
-            <Text style={styles.avatarInitial}>{name.trim().charAt(0).toUpperCase() || '♡'}</Text>
-          )}
+      {showPairedIdentity ? (
+        <View style={styles.pairedWrap}>
+          <View style={[styles.pairedAvatar, { backgroundColor: fallbackColor }]}>
+            {photoUri ? (
+              <Image source={{ uri: photoUri }} style={styles.pairedAvatarImg} contentFit="cover" />
+            ) : (
+              <Text style={styles.pairedAvatarInitial}>{name.trim().charAt(0).toUpperCase() || '♡'}</Text>
+            )}
+          </View>
+          <View style={styles.pairedHeartBadge}>
+            <Heart size={13} color={Colors.sakuraDeep} />
+          </View>
+          <View style={[styles.pairedAvatar, { backgroundColor: pairedFallbackColor }]}>
+            {pairedAvatarUri ? (
+              <Image source={{ uri: pairedAvatarUri }} style={styles.pairedAvatarImg} contentFit="cover" />
+            ) : (
+              <Text style={styles.pairedAvatarInitial}>{(pairedName ?? '').trim().charAt(0).toUpperCase() || '♡'}</Text>
+            )}
+          </View>
         </View>
-      </View>
+      ) : (
+        <View style={styles.avatarWrap}>
+          <View style={[styles.avatar, { backgroundColor: fallbackColor }]}>
+            {photoUri ? (
+              <Image source={{ uri: photoUri }} style={styles.avatarImg} contentFit="cover" />
+            ) : (
+              <Text style={styles.avatarInitial}>{name.trim().charAt(0).toUpperCase() || '♡'}</Text>
+            )}
+          </View>
+        </View>
+      )}
 
-      <View style={styles.nameRow}>
-        <Text style={[styles.name, textStyle]} numberOfLines={1}>{name || '—'}</Text>
-        {!!username && <Text style={[styles.username, textStyle]}>@{username}</Text>}
-      </View>
-      {!!pronouns && <Text style={[styles.pronouns, textStyle]}>{pronouns}</Text>}
-      {!!subtitle && <Text style={[styles.subtitle, textStyle]}>{subtitle}</Text>}
+      {showPairedIdentity ? (
+        <View style={styles.pairedNameRow}>
+          <View style={styles.pairedNameCol}>
+            <Text style={[styles.pairedNameText, nameFontStyle, textStyle]} numberOfLines={1}>{name || '—'}</Text>
+            {!!pronouns && <Text style={[styles.pairedPronounsText, textStyle]}>{pronouns}</Text>}
+            {!!statusLabel && <StatusPill label={statusLabel} style={styles.pairedStatusPill} />}
+          </View>
+          <Heart size={10} color={Colors.sakuraDeep} />
+          <View style={styles.pairedNameCol}>
+            <Text style={[styles.pairedNameText, nameFontStyle, textStyle]} numberOfLines={1}>{pairedName || '—'}</Text>
+            {!!pairedPronouns && <Text style={[styles.pairedPronounsText, textStyle]}>{pairedPronouns}</Text>}
+            {!!pairedStatusLabel && <StatusPill label={pairedStatusLabel} style={styles.pairedStatusPill} />}
+          </View>
+        </View>
+      ) : (
+        <>
+          <View style={styles.nameRow}>
+            <Text style={[styles.name, nameFontStyle, textStyle]} numberOfLines={1}>{name || '—'}</Text>
+            {!!username && <Text style={[styles.username, textStyle]}>@{username}</Text>}
+          </View>
+          {!!pronouns && <Text style={[styles.pronouns, textStyle]}>{pronouns}</Text>}
+          {!!subtitle && <Text style={[styles.subtitle, textStyle]}>{subtitle}</Text>}
+          {!!statusLabel && <StatusPill label={statusLabel} />}
+        </>
+      )}
+
+      {borderStyle === 'double' && (
+        <View style={styles.doubleBorderOverlay} pointerEvents="none" />
+      )}
+      {borderStyle === 'torn' && (
+        <View style={styles.tornOverlay} pointerEvents="none">
+          <TornEdge width={340} height={12} color={tornColor} />
+        </View>
+      )}
     </>
   );
 
   return (
     <View style={styles.page}>
       {cardBgImage ? (
-        <ImageBackground source={{ uri: cardBgImage }} style={styles.hero} imageStyle={styles.heroBgImage}>
+        <ImageBackground source={{ uri: cardBgImage }} style={[styles.hero, heroBorderStyle]} imageStyle={styles.heroBgImage}>
           <View style={styles.heroImageOverlay} />
           {heroContent}
         </ImageBackground>
+      ) : gradientColors && gradientColors.length >= 2 ? (
+        <LinearGradient
+          colors={gradientColors as [string, string, ...string[]]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.hero, heroBorderStyle]}
+        >
+          {heroContent}
+        </LinearGradient>
       ) : (
-        <View style={[styles.hero, cardBgColor ? { backgroundColor: cardBgColor } : null]}>
+        <View
+          style={[
+            styles.hero,
+            cardTransparent ? styles.heroTransparent : null,
+            cardBgColor ? { backgroundColor: cardBgColor } : null,
+            heroBorderStyle,
+          ]}
+        >
           {heroContent}
         </View>
       )}
@@ -216,9 +413,29 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(255,255,255,0.55)',
   },
+  heroTransparent: { backgroundColor: 'transparent', ...Platform.select({ ios: { shadowOpacity: 0 }, default: {} }), elevation: 0 },
   tape: { position: 'absolute', top: -8, alignSelf: 'center' },
   sparkleTR: { position: 'absolute', top: 14, right: 16 },
   sparkleBL: { position: 'absolute', bottom: 14, left: 16 },
+  decoPos: { position: 'absolute' },
+  doubleBorderOverlay: {
+    position: 'absolute', top: 5, left: 5, right: 5, bottom: 5,
+    borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.r4 - 5,
+  },
+  tornOverlay: { position: 'absolute', left: 0, right: 0, bottom: -1 },
+  statusPill: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    marginTop: Spacing.s2,
+    paddingHorizontal: Spacing.s3, paddingVertical: 4,
+    borderRadius: Radius.pill,
+    backgroundColor: 'rgba(255,255,255,0.55)',
+    borderWidth: 1, borderColor: Colors.line,
+  },
+  statusPillFlag: { borderRadius: 2, overflow: 'hidden' },
+  statusPillText: {
+    fontFamily: FontFamily.uiMedium, fontSize: sf(10), color: Colors.ink2,
+    letterSpacing: 0.4,
+  },
   avatarWrap: {
     padding: 3,
     borderRadius: Radius.pill,
@@ -232,6 +449,33 @@ const styles = StyleSheet.create({
   },
   avatarImg: { width: 96, height: 96, borderRadius: Radius.pill },
   avatarInitial: { fontFamily: FontFamily.displayItalic, fontSize: sf(40), color: '#fff' },
+  pairedWrap: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 2,
+  },
+  pairedAvatar: {
+    width: 74, height: 74, borderRadius: Radius.pill,
+    alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+    borderWidth: 1.4, borderColor: Colors.line,
+  },
+  pairedAvatarImg: { width: 74, height: 74, borderRadius: Radius.pill },
+  pairedAvatarInitial: { fontFamily: FontFamily.displayItalic, fontSize: sf(30), color: '#fff' },
+  pairedHeartBadge: {
+    width: 26, height: 26, borderRadius: Radius.pill,
+    backgroundColor: Colors.vellum, borderWidth: 1.4, borderColor: Colors.line,
+    alignItems: 'center', justifyContent: 'center',
+    marginHorizontal: -7, zIndex: 1,
+    ...Shadow.s1,
+  },
+  pairedNameRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
+    marginTop: Spacing.s3, maxWidth: '100%',
+  },
+  pairedNameCol: { alignItems: 'center', maxWidth: 108, gap: 1 },
+  pairedNameText: {
+    fontFamily: FontFamily.displayItalic, fontSize: sf(19), lineHeight: sf(23), color: Colors.ink,
+  },
+  pairedPronounsText: { fontFamily: FontFamily.ui, fontSize: sf(11), color: Colors.ink2 },
+  pairedStatusPill: { marginTop: 4, paddingHorizontal: Spacing.s2, maxWidth: 108 },
   nameRow: {
     flexDirection: 'row',
     alignItems: 'baseline',

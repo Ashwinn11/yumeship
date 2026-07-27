@@ -274,6 +274,15 @@ export default function SettingsScreen() {
           />
         </SettingGroup>
 
+        <SettingGroup ja="貼" name="Stickers">
+          <SettingRow
+            label="Sticker collection"
+            icon={<Sparkle size={14} color={Colors.lavenderDeep} />}
+            onPress={() => router.push('/stickers' as any)}
+            trailing={<MetaText>›</MetaText>}
+          />
+        </SettingGroup>
+
         <SettingGroup ja="輪" name="Community">
           <SettingRow
             label="Blocked users"

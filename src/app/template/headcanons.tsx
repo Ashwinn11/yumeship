@@ -6,7 +6,7 @@ import {
   INK,
   MarkerCard,
   MarkerHeader, TemplateField,
-  TitleHeader,
+  TitleHeader, useThemedInk,
 } from '@/components/templates/primitives';
 import { FontFamily ,sf } from '@/constants/theme';
 import { useTemplateCtx } from '@/store/templateData';
@@ -25,6 +25,7 @@ const BLANK_CAT_ITEMS = CATS.map(() => Array(ITEMS_PER_CAT).fill('') as string[]
 export function HeadcanonsContent({ editing = false }: { editing?: boolean }) {
   const ctx = useTemplateCtx();
   const customBg = ctx.bgColor || ctx.bgImage;
+  const ink = useThemedInk();
 
   const [vals, setVals] = useState<{ fo: string; source: string; catItems: string[][] }>(() => ({
     fo: ctx.get('fo'),
@@ -71,12 +72,12 @@ export function HeadcanonsContent({ editing = false }: { editing?: boolean }) {
 
       <View style={s.cats}>
         {CATS.map((c, ci) => (
-          <View key={ci} style={s.catCard}>
-            <View style={s.catHeader}>
-              <Text style={s.catJa}>{c.ja}</Text>
+          <View key={ci} style={[s.catCard, { borderColor: ink }]}>
+            <View style={[s.catHeader, { borderBottomColor: ink }]}>
+              <Text style={[s.catJa, { color: ink }]}>{c.ja}</Text>
               <MarkerHeader size={13}>{c.name}</MarkerHeader>
-              <View style={s.countBadge}>
-                <Text style={s.countText}>
+              <View style={[s.countBadge, { borderColor: ink }]}>
+                <Text style={[s.countText, { color: ink }]}>
                   {catItems[ci].filter((x) => x.length > 0).length}
                 </Text>
               </View>
@@ -85,10 +86,10 @@ export function HeadcanonsContent({ editing = false }: { editing?: boolean }) {
               {catItems[ci].map((item, idx) => (
                 <View
                   key={idx}
-                  style={[s.item, idx < catItems[ci].length - 1 && s.itemBorder]}
+                  style={[s.item, idx < catItems[ci].length - 1 && { borderBottomWidth: 1, borderBottomColor: ink + '30' }]}
                 >
                   {item ? (
-                    <Heart size={10} color={INK} outline />
+                    <Heart size={10} color={ink} outline />
                   ) : (
                     <Check on={false} size={11} />
                   )}
@@ -98,15 +99,15 @@ export function HeadcanonsContent({ editing = false }: { editing?: boolean }) {
                         value={item}
                         onChangeText={setItem(ci, idx)}
                         placeholder="something you know..."
-                        placeholderTextColor={INK + '88'}
+                        placeholderTextColor={ink + '88'}
                         underlineColorAndroid="transparent"
-                        style={{ fontFamily: FontFamily.ja, fontSize: sf(11), color: INK, padding: 0, minHeight: 18 }}
+                        style={{ fontFamily: FontFamily.ja, fontSize: sf(11), color: ink, padding: 0, minHeight: 18 }}
                       />
                     ) : (
                       item ? (
-                        <Text style={{ fontFamily: FontFamily.ja, fontSize: sf(11), color: INK }}>{item}</Text>
+                        <Text style={{ fontFamily: FontFamily.ja, fontSize: sf(11), color: ink }}>{item}</Text>
                       ) : (
-                        <Text style={{ fontFamily: FontFamily.ja, fontSize: sf(11), color: INK + '44' }}>——</Text>
+                        <Text style={{ fontFamily: FontFamily.ja, fontSize: sf(11), color: ink + '44' }}>——</Text>
                       )
                     )}
                   </View>

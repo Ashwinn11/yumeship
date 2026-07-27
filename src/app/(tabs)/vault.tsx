@@ -2,7 +2,7 @@ import { useNavigation } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import {
   Image, Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable,
-  ScrollView, StyleSheet, Text, TextInput, TouchableWithoutFeedback, View,
+  ScrollView, StyleSheet, Switch, Text, TextInput, TouchableWithoutFeedback, View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
@@ -29,7 +29,8 @@ import { Mark } from '@/components/ui/Mark';
 import { MockPhoneTop } from '@/components/ui/MockPhone';
 import { Colors, FontFamily, FontSize, Radius, sf, Shadow, SheetColumn, Spacing } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
-import { addFoMessage, deleteFoMessage, toggleFoMessage, updateFoMessage, useFoMessages } from '@/store/foNotifications';
+import { addFoMessage, deleteFoMessage, FoMessage, syncFoMessagesDb, toggleFoMessage, updateFoMessage, useFoMessages } from '@/store/foNotifications';
+import { newId } from '@/db/client';
 import { addHeadcanon, clearCategoryHeadcanons, deleteHeadcanon, getHeadcanons, updateHeadcanon, useHeadcanonCounts, useHeadcanons } from '@/store/headcanons';
 import { requestPermission } from '@/store/notifications';
 import { getGlobalSetting, saveGlobalSetting } from '@/store/onboarding';
@@ -1199,9 +1200,14 @@ const STARTERS = [
 function FoMessagesFeature({ shipId, shipName, setCustomBack }: { shipId: string; shipName: string; setCustomBack: (fn: (() => void) | null) => void }) {
   const messages = useFoMessages(shipId);
   const composeShip = useShip(shipId);
+  const isPremium = usePremium();
   const [composingMsg, setComposingMsg] = useState<FoMessage | 'new' | null>(null);
   const [msgDeleteTarget, setMsgDeleteTarget] = useState<string | null>(null);
   const activeCount = messages.filter((m) => m.active).length;
+
+  useEffect(() => {
+    syncFoMessagesDb();
+  }, []);
 
   if (composingMsg !== null) {
     return (
@@ -1209,11 +1215,22 @@ function FoMessagesFeature({ shipId, shipName, setCustomBack }: { shipId: string
         shipName={shipName}
         ship={composeShip}
         initialMessage={composingMsg === 'new' ? undefined : composingMsg}
-        onQueue={async (body, hour, senderName, minute) => {
+        onQueue={async (queueData, sender) => {
           if (composingMsg === 'new') {
-            await addFoMessage(shipId, body, hour, senderName, minute);
+            for (const item of queueData) {
+              await addFoMessage(shipId, item.body, item.hour, sender, item.minute, item.arrivalDay);
+            }
           } else {
-            await updateFoMessage(composingMsg.id, body, hour, senderName, shipName, minute);
+            const first = queueData[0];
+            if (first) {
+              await updateFoMessage(composingMsg.id, first.body, first.hour, sender, shipName, first.minute, first.arrivalDay);
+            }
+            if (queueData.length > 1) {
+              for (let i = 1; i < queueData.length; i++) {
+                const item = queueData[i];
+                await addFoMessage(shipId, item.body, item.hour, sender, item.minute, item.arrivalDay);
+              }
+            }
           }
           setComposingMsg(null);
           setCustomBack(null);
@@ -1241,8 +1258,12 @@ function FoMessagesFeature({ shipId, shipName, setCustomBack }: { shipId: string
           {messages.length === 0 && <Text style={fo.noSaved}>nothing from them yet.</Text>}
         </View>
         <Pressable style={fo.newBtn} onPress={() => {
-          setComposingMsg('new');
-          setCustomBack(() => () => { setComposingMsg(null); setCustomBack(null); });
+          if (!isPremium && messages.length >= 1) {
+            router.push({ pathname: '/paywall', params: { reason: 'fo-messages' } });
+          } else {
+            setComposingMsg('new');
+            setCustomBack(() => () => { setComposingMsg(null); setCustomBack(null); });
+          }
         }}>
           <IconPlus size={12} color={Colors.sakuraDeep} />
           <Text style={fo.newBtnText}>new</Text>
@@ -1284,15 +1305,33 @@ function FoMessagesFeature({ shipId, shipName, setCustomBack }: { shipId: string
         <View style={fo.list}>
           {messages.map((m) => {
             const hour = m.scheduledHour;
-            let timeLabel = '';
-            if (hour === -1) {
-              timeLabel = 'random ✦';
-            } else if (hour === -2) {
-              timeLabel = 'now';
+            const minute = m.scheduledMinute;
+            const arrivalDay = m.arrivalDay;
+            let bigTimeStr = '';
+            let ampmStr = '';
+            let subtextStr = '';
+
+            if (arrivalDay === 'now' || hour === -2) {
+              bigTimeStr = 'NOW';
+              subtextStr = 'triggers immediately';
+            } else if (arrivalDay === 'random') {
+              bigTimeStr = '❖';
+              ampmStr = '';
+              subtextStr = 'random daily';
             } else {
-              const ampm = hour >= 12 ? 'pm' : 'am';
+              const ampm = hour >= 12 ? 'PM' : 'AM';
               const displayHour = hour % 12 === 0 ? 12 : hour % 12;
-              timeLabel = `${displayHour} ${ampm}`;
+              const displayMin = String(minute).padStart(2, '0');
+              bigTimeStr = `${displayHour}:${displayMin}`;
+              ampmStr = ampm;
+
+              if (arrivalDay === 'today') {
+                subtextStr = 'today only';
+              } else if (arrivalDay === 'tomorrow') {
+                subtextStr = 'tomorrow only';
+              } else {
+                subtextStr = 'every day';
+              }
             }
             const displaySender = m.senderName || shipName;
 
@@ -1308,58 +1347,74 @@ function FoMessagesFeature({ shipId, shipName, setCustomBack }: { shipId: string
               }
             } catch (_) { }
 
+            const isOneShot = arrivalDay === 'now' || arrivalDay === 'today' || arrivalDay === 'tomorrow';
+            let nextScheduledStr = '';
+            if (arrivalDay === 'now') {
+              nextScheduledStr = 'now';
+            } else if (arrivalDay === 'random') {
+              nextScheduledStr = 'random time daily';
+            } else {
+              const displayMin = String(minute).padStart(2, '0');
+              const displayHour = hour % 12 === 0 ? 12 : hour % 12;
+              const ampm = hour >= 12 ? 'pm' : 'am';
+              const timeStr = `${displayHour}:${displayMin} ${ampm}`;
+
+              if (arrivalDay === 'today') {
+                nextScheduledStr = `today at ${timeStr}`;
+              } else if (arrivalDay === 'tomorrow') {
+                nextScheduledStr = `tomorrow at ${timeStr}`;
+              } else {
+                nextScheduledStr = `every day at ${timeStr}`;
+              }
+            }
+
             return (
               <View
                 key={m.id}
                 style={[fo.msgCard, !m.active && fo.msgCardOff]}
               >
-                {/* Washi tape corner accent — per usage-map */}
+                {/* Washi tape corner accent */}
                 <View style={{ position: 'absolute', top: -3, left: 12, zIndex: 10 }} pointerEvents="none">
                   <WashiTape pattern="floral" width={52} height={10} rotate={-4} color={Colors.sakura} />
                 </View>
 
-                {/* Top row: sender name (left) + time eyebrow (right) */}
+                {/* Top row: sender name (left) + Switch (right) */}
                 <View style={fo.msgCardTop}>
                   <Text style={fo.msgSender}>{displaySender}</Text>
-                  <Text style={fo.msgTime}>{timeLabel}</Text>
+                  <Switch
+                    value={m.active}
+                    onValueChange={(val) => toggleFoMessage(m.id, val, m.senderName || shipName)}
+                    trackColor={{ false: Colors.line, true: Colors.sage }}
+                    thumbColor="#ffffff"
+                    ios_backgroundColor={Colors.line}
+                    style={{ transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }], marginTop: -4, marginRight: -4 }}
+                  />
                 </View>
 
                 {/* Message body in Caveat script */}
-                <Text style={[fo.msgBody, !m.active && fo.msgBodyOff]}>{displayBody}</Text>
+                <Text style={[fo.msgBody, !m.active && fo.msgBodyOff]}>"{displayBody}"</Text>
 
-                {variationCount > 1 && (
-                  <Text style={fo.msgVariation}>
-                    + {variationCount - 1} more variation{variationCount > 2 ? 's' : ''}
-                  </Text>
-                )}
-
-                {/* Action row */}
-                <View style={fo.actionRow}>
-                  <Pressable
-                    onPress={() => { toggleFoMessage(m.id, !m.active, m.senderName || shipName); }}
-                    style={[fo.actionBtn, m.active ? fo.actionBtnPause : fo.actionBtnResume]}
-                  >
-                    <Text style={[fo.actionBtnText, m.active ? fo.actionBtnTextPause : fo.actionBtnTextResume]}>
-                      {m.active ? 'pause' : 'wake ♡'}
-                    </Text>
-                  </Pressable>
-
-                  <Pressable
-                    onPress={() => {
-                      setComposingMsg(m);
-                      setCustomBack(() => () => { setComposingMsg(null); setCustomBack(null); });
-                    }}
-                    style={fo.actionBtn}
-                  >
-                    <Text style={fo.actionBtnText}>edit</Text>
-                  </Pressable>
-
-                  <Pressable
-                    onPress={() => setMsgDeleteTarget(m.id)}
-                    style={[fo.actionBtn, fo.actionBtnDelete]}
-                  >
-                    <Text style={[fo.actionBtnText, fo.actionBtnTextDelete]}>delete</Text>
-                  </Pressable>
+                {/* Bottom row: Timing Label (left) + Edit/Delete Links (right) */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8, borderTopWidth: 0.5, borderTopColor: Colors.line + '55', paddingTop: 6 }}>
+                  <Text style={fo.msgTime}>{nextScheduledStr}</Text>
+                  
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                    <Pressable
+                      onPress={() => {
+                        setComposingMsg(m);
+                        setCustomBack(() => () => { setComposingMsg(null); setCustomBack(null); });
+                      }}
+                      style={{ paddingVertical: 4, paddingHorizontal: 6 }}
+                    >
+                      <Text style={{ fontFamily: FontFamily.uiMedium, fontSize: sf(11), color: Colors.ink3 }}>edit</Text>
+                    </Pressable>
+                    <Pressable
+                      onPress={() => setMsgDeleteTarget(m.id)}
+                      style={{ paddingVertical: 4, paddingHorizontal: 6 }}
+                    >
+                      <Text style={{ fontFamily: FontFamily.uiMedium, fontSize: sf(11), color: Colors.ember, opacity: 0.8 }}>delete</Text>
+                    </Pressable>
+                  </View>
                 </View>
               </View>
             );
@@ -1373,7 +1428,7 @@ function FoMessagesFeature({ shipId, shipName, setCustomBack }: { shipId: string
 
 const ARRIVAL_DAYS = [
   { id: 'now', label: 'Now' },
-  { id: 'today', label: 'Later today' },
+  { id: 'today', label: 'Today' },
   { id: 'tomorrow', label: 'Tomorrow' },
   { id: 'everyday', label: 'Every day' },
   { id: 'random', label: 'Random daily' },
@@ -1388,71 +1443,78 @@ const OpenLockIcon = ({ size = 13, color = '#ffffff' }: { size?: number; color?:
   </Svg>
 );
 
-
-import { FoMessage } from '@/store/foNotifications';
+type ComposeOption = {
+  id: string;
+  body: string;
+  arrivalDay: 'now' | 'today' | 'tomorrow' | 'everyday' | 'random';
+  customHour: number;
+  customMinute: number;
+  customAmPm: 'AM' | 'PM';
+  customHourText: string;
+  customMinuteText: string;
+};
 
 function FoCompose({ shipName, ship, initialMessage, onQueue }: {
   shipName: string;
   ship?: Ship;
   initialMessage?: FoMessage;
-  onQueue: (body: string, hour: number, senderName: string, minute: number) => void;
+  onQueue: (options: { body: string; hour: number; minute: number; arrivalDay: 'now' | 'today' | 'tomorrow' | 'everyday' | 'random' }[], senderName: string) => void;
 }) {
+  const isPremium = usePremium();
   const [notifDenied, setNotifDenied] = useState(false);
-  const [pendingQueue, setPendingQueue] = useState<string[] | null>(null);
-  const [options, setOptions] = useState<string[]>(() => {
+  const [pendingQueue, setPendingQueue] = useState<ComposeOption[] | null>(null);
+  
+  const [options, setOptions] = useState<ComposeOption[]>(() => {
     if (initialMessage) {
-      try {
-        if (initialMessage.body.startsWith('[')) {
-          const parsed = JSON.parse(initialMessage.body);
-          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-        }
-      } catch (_) { }
-      return [initialMessage.body];
+      const hr = initialMessage.scheduledHour;
+      const min = initialMessage.scheduledMinute;
+      return [{
+        id: initialMessage.id,
+        body: initialMessage.body,
+        arrivalDay: initialMessage.arrivalDay ?? 'everyday',
+        customHour: hr >= 0 ? (hr % 12 || 12) : 9,
+        customMinute: min,
+        customAmPm: hr >= 12 ? 'PM' : 'AM',
+        customHourText: String(hr >= 0 ? (hr % 12 || 12) : 9),
+        customMinuteText: String(min).padStart(2, '0'),
+      }];
     }
-    return [''];
+    return [{
+      id: newId(),
+      body: '',
+      arrivalDay: 'everyday',
+      customHour: 9,
+      customMinute: 0,
+      customAmPm: 'AM',
+      customHourText: '9',
+      customMinuteText: '00',
+    }];
   });
+
   const [senderName, setSenderName] = useState(
     initialMessage?.senderName || (isPoly(ship) ? (shipPartners(ship)[0]?.name || '') : shipName),
   );
-  const [arrivalDay, setArrivalDay] = useState<'now' | 'today' | 'tomorrow' | 'everyday' | 'random'>(() => {
-    if (!initialMessage) return 'everyday';
-    const hr = initialMessage.scheduledHour;
-    if (hr === -2) return 'now';
-    if (hr === -1) return 'random';
-    return 'everyday';
-  });
-  const [customHour, setCustomHour] = useState(() => {
-    if (!initialMessage || initialMessage.scheduledHour < 0) return 9;
-    return initialMessage.scheduledHour % 12 || 12;
-  });
-  const [customMinute, setCustomMinute] = useState(() => {
-    if (!initialMessage || initialMessage.scheduledHour < 0) return 0;
-    return initialMessage.scheduledMinute;
-  });
-  const [customHourText, setCustomHourText] = useState(() => {
-    if (!initialMessage || initialMessage.scheduledHour < 0) return '9';
-    return String(initialMessage.scheduledHour % 12 || 12);
-  });
-  const [customMinuteText, setCustomMinuteText] = useState(() => {
-    if (!initialMessage || initialMessage.scheduledHour < 0) return '00';
-    return String(initialMessage.scheduledMinute).padStart(2, '0');
-  });
-  const [customAmPm, setCustomAmPm] = useState<'AM' | 'PM'>(() => {
-    if (!initialMessage || initialMessage.scheduledHour < 0) return 'AM';
-    return initialMessage.scheduledHour >= 12 ? 'PM' : 'AM';
-  });
-  const [randomPreviewHour, setRandomPreviewHour] = useState(12);
-  const filteredOptions = options.map(o => o.trim()).filter(Boolean);
+
+  const filteredOptions = options.map(o => o.body.trim()).filter(Boolean);
 
   function pickStarter(presetName: string) {
     const list = STARTER_PRESETS[presetName];
-    if (list) {
-      setOptions([...list]);
+    if (list && list.length > 0) {
+      setOptions([{
+        id: newId(),
+        body: list[0],
+        arrivalDay: 'everyday',
+        customHour: 9,
+        customMinute: 0,
+        customAmPm: 'AM',
+        customHourText: '9',
+        customMinuteText: '00',
+      }]);
     }
   }
 
   async function queue() {
-    const filtered = options.map(o => o.trim()).filter(Boolean);
+    const filtered = options.filter(o => o.body.trim().length > 0);
     if (filtered.length === 0) return;
 
     const granted = await requestPermission();
@@ -1465,53 +1527,60 @@ function FoCompose({ shipName, ship, initialMessage, onQueue }: {
     proceedWithQueue(filtered);
   }
 
-  function proceedWithQueue(filtered: string[]) {
-    let resolvedHour = 9;
-    let resolvedMinute = 0;
-    if (arrivalDay === 'now') {
-      resolvedHour = -2;
-    } else if (arrivalDay === 'random') {
-      resolvedHour = -1;
-    } else {
-      const h = customHour % 12;
-      resolvedHour = customAmPm === 'PM' ? h + 12 : h;
-      resolvedMinute = customMinute;
-    }
+  function proceedWithQueue(filtered: ComposeOption[]) {
+    const queueData = filtered.map((opt) => {
+      let resolvedHour = 9;
+      let resolvedMinute = 0;
+      if (opt.arrivalDay === 'now') {
+        resolvedHour = -2;
+      } else if (opt.arrivalDay === 'random') {
+        // hour/minute are irrelevant for random — scheduling handled in foNotifications
+        resolvedHour = -1;
+      } else {
+        const h = opt.customHour % 12;
+        resolvedHour = opt.customAmPm === 'PM' ? h + 12 : h;
+        resolvedMinute = opt.customMinute;
+      }
+      return {
+        body: opt.body.trim(),
+        hour: resolvedHour,
+        minute: resolvedMinute,
+        arrivalDay: opt.arrivalDay,
+      };
+    });
 
-    // Save as JSON string if multiple options, else save plain string
-    const finalBody = filtered.length > 1 ? JSON.stringify(filtered) : filtered[0];
-    onQueue(finalBody, resolvedHour, senderName.trim() || shipName, resolvedMinute);
+    onQueue(queueData, senderName.trim() || shipName);
   }
 
-  const showAround = arrivalDay !== 'now' && arrivalDay !== 'random';
-
+  const firstOpt = options[0];
+  const hasContent = options.some(o => o.body.trim().length > 0);
   const dateOptions = { weekday: 'long', month: 'long', day: 'numeric' } as const;
   let lockscreenDateText = '';
   let lockscreenTimeText = '';
   const now = new Date();
 
-  if (arrivalDay === 'now') {
-    lockscreenDateText = now.toLocaleDateString('en-US', dateOptions);
-    const hrs = String(now.getHours()).padStart(2, '0');
-    const mins = String(now.getMinutes()).padStart(2, '0');
-    lockscreenTimeText = `${hrs}:${mins}`;
-  } else if (arrivalDay === 'random') {
-    lockscreenDateText = now.toLocaleDateString('en-US', dateOptions);
-    lockscreenTimeText = `${String(randomPreviewHour).padStart(2, '0')}:00`;
-  } else {
-    if (arrivalDay === 'tomorrow') {
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      lockscreenDateText = tomorrow.toLocaleDateString('en-US', dateOptions);
-    } else {
+  if (firstOpt) {
+    if (firstOpt.arrivalDay === 'now') {
       lockscreenDateText = now.toLocaleDateString('en-US', dateOptions);
+      const hrs = String(now.getHours()).padStart(2, '0');
+      const mins = String(now.getMinutes()).padStart(2, '0');
+      lockscreenTimeText = `${hrs}:${mins}`;
+    } else if (firstOpt.arrivalDay === 'random') {
+      lockscreenDateText = now.toLocaleDateString('en-US', dateOptions);
+      lockscreenTimeText = '🎁 surprise';
+    } else {
+      if (firstOpt.arrivalDay === 'tomorrow') {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        lockscreenDateText = tomorrow.toLocaleDateString('en-US', dateOptions);
+      } else {
+        lockscreenDateText = now.toLocaleDateString('en-US', dateOptions);
+      }
+
+      const h = (firstOpt.customHour % 12) + (firstOpt.customAmPm === 'PM' ? 12 : 0);
+      lockscreenTimeText = `${String(h).padStart(2, '0')}:${String(firstOpt.customMinute).padStart(2, '0')}`;
     }
-
-    const h = (customHour % 12) + (customAmPm === 'PM' ? 12 : 0);
-    lockscreenTimeText = `${String(h).padStart(2, '0')}:${String(customMinute).padStart(2, '0')}`;
   }
-
-  const hasContent = options.some(o => o.trim().length > 0);
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={fo.compose} keyboardVerticalOffset={120}>
@@ -1561,107 +1630,178 @@ function FoCompose({ shipName, ship, initialMessage, onQueue }: {
         )}
 
         <Text style={fo.sectionLabel}>WHAT THEY MIGHT SEND</Text>
-        {options.map((opt, index) => (
-          <View key={index} style={[fo.msgInputWrap, { marginBottom: 8, flexDirection: 'row', alignItems: 'center' }]}>
-            <TextInput
-              value={opt}
-              onChangeText={(val) => {
-                const copy = [...options];
-                copy[index] = val;
-                setOptions(copy);
+        {options.map((opt, index) => {
+          const showAround = opt.arrivalDay !== 'now' && opt.arrivalDay !== 'random';
+          return (
+            <View
+              key={opt.id}
+              style={{
+                backgroundColor: Colors.vellum,
+                borderWidth: 1.2,
+                borderColor: Colors.line,
+                borderRadius: Radius.r3,
+                padding: Spacing.s4,
+                marginBottom: 16,
+                gap: 12,
+                position: 'relative',
               }}
-              placeholder={`${senderName || shipName} says...`}
-              placeholderTextColor={Colors.ink3}
-              style={[fo.msgInput, { flex: 1, minHeight: 40 }]}
-              multiline
-              textAlignVertical="top"
-            />
-            {options.length > 1 && (
-              <Pressable
-                onPress={() => {
-                  setOptions(options.filter((_, i) => i !== index));
-                }}
-                style={{ padding: 4, marginLeft: 8 }}
-              >
-                <Text style={{ color: Colors.ember, fontSize: sf(16), fontFamily: FontFamily.uiMedium }}>✕</Text>
-              </Pressable>
-            )}
-          </View>
-        ))}
+            >
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Text style={{ fontFamily: FontFamily.marker, fontSize: sf(10), color: Colors.ink3, textTransform: 'uppercase', letterSpacing: 1 }}>
+                  message option {index + 1}
+                </Text>
+                {options.length > 1 && (
+                  <Pressable
+                    onPress={() => {
+                      setOptions(options.filter((_, i) => i !== index));
+                    }}
+                    style={{ padding: 4 }}
+                  >
+                    <Text style={{ color: Colors.ember, fontSize: sf(11), fontFamily: FontFamily.uiMedium }}>✕ Remove</Text>
+                  </Pressable>
+                )}
+              </View>
+
+              <View style={fo.msgInputWrap}>
+                <TextInput
+                  value={opt.body}
+                  onChangeText={(val) => {
+                    const copy = [...options];
+                    copy[index] = { ...copy[index], body: val };
+                    setOptions(copy);
+                  }}
+                  placeholder={`${senderName || shipName} says...`}
+                  placeholderTextColor={Colors.ink3}
+                  style={[fo.msgInput, { minHeight: 40 }]}
+                  multiline
+                  textAlignVertical="top"
+                />
+              </View>
+
+              <View style={{ borderTopWidth: 0.5, borderTopColor: Colors.line + '77', paddingTop: 8 }}>
+                <Text style={{ fontFamily: FontFamily.marker, fontSize: sf(9), color: Colors.ink3, letterSpacing: 1.2, marginBottom: 8 }}>
+                  WHEN SHOULD THIS ARRIVE?
+                </Text>
+                
+                <View style={[fo.chipRow, { marginBottom: 8 }]}>
+                  {ARRIVAL_DAYS.map((d) => (
+                    <Pressable
+                      key={d.id}
+                      style={[
+                        fo.chip,
+                        opt.arrivalDay === d.id && { backgroundColor: Colors.paperDeep, borderColor: Colors.lineStrong },
+                        { paddingVertical: 6, paddingHorizontal: 12 }
+                      ]}
+                      onPress={() => {
+                        const copy = [...options];
+                        copy[index] = { ...copy[index], arrivalDay: d.id };
+                        setOptions(copy);
+                      }}
+                    >
+                      <Text style={[
+                        fo.chipText,
+                        opt.arrivalDay === d.id && { color: Colors.ink, fontFamily: FontFamily.uiMedium },
+                        { fontSize: sf(11) }
+                      ]}>
+                        {d.label}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </View>
+
+                {showAround && (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 4 }}>
+                    <Text style={{ fontFamily: FontFamily.uiMedium, fontSize: sf(11), color: Colors.ink2 }}>Time:</Text>
+                    <View style={[fo.customTimeRow, { borderTopWidth: 0, paddingVertical: 0, marginTop: 0 }]}>
+                      <TextInput
+                        value={opt.customHourText}
+                        onChangeText={(v) => {
+                          const digits = v.replace(/\D/g, '');
+                          const copy = [...options];
+                          copy[index] = { ...copy[index], customHourText: digits };
+                          const n = parseInt(digits, 10);
+                          if (!isNaN(n) && n >= 1 && n <= 12) {
+                            copy[index].customHour = n;
+                          }
+                          setOptions(copy);
+                        }}
+                        onBlur={() => {
+                          const copy = [...options];
+                          copy[index] = { ...copy[index], customHourText: String(copy[index].customHour).padStart(2, '0') };
+                          setOptions(copy);
+                        }}
+                        keyboardType="number-pad"
+                        maxLength={2}
+                        style={[fo.customTimeInput, { height: 32, width: 38, paddingVertical: 4, fontSize: sf(13) }]}
+                        selectTextOnFocus
+                        placeholder="9"
+                        placeholderTextColor={Colors.ink3}
+                      />
+                      <Text style={[fo.customTimeSep, { fontSize: sf(18) }]}>:</Text>
+                      <TextInput
+                        value={opt.customMinuteText}
+                        onChangeText={(v) => {
+                          const digits = v.replace(/\D/g, '');
+                          const copy = [...options];
+                          copy[index] = { ...copy[index], customMinuteText: digits };
+                          const n = parseInt(digits, 10);
+                          if (!isNaN(n) && n >= 0 && n <= 59) {
+                            copy[index].customMinute = n;
+                          }
+                          setOptions(copy);
+                        }}
+                        onBlur={() => {
+                          const copy = [...options];
+                          copy[index] = { ...copy[index], customMinuteText: String(copy[index].customMinute).padStart(2, '0') };
+                          setOptions(copy);
+                        }}
+                        keyboardType="number-pad"
+                        maxLength={2}
+                        style={[fo.customTimeInput, { height: 32, width: 38, paddingVertical: 4, fontSize: sf(13) }]}
+                        selectTextOnFocus
+                        placeholder="00"
+                        placeholderTextColor={Colors.ink3}
+                      />
+                      <Pressable
+                        style={[fo.customTimeAmPm, { paddingVertical: 6, paddingHorizontal: 10 }]}
+                        onPress={() => {
+                          const copy = [...options];
+                          copy[index] = { ...copy[index], customAmPm: copy[index].customAmPm === 'AM' ? 'PM' : 'AM' };
+                          setOptions(copy);
+                        }}
+                      >
+                        <Text style={[fo.customTimeAmPmText, { fontSize: sf(12) }]}>{opt.customAmPm}</Text>
+                      </Pressable>
+                    </View>
+                  </View>
+                )}
+              </View>
+            </View>
+          );
+        })}
 
         <Pressable
-          onPress={() => setOptions([...options, ''])}
+          onPress={() => {
+            if (!isPremium) {
+              router.push({ pathname: '/paywall', params: { reason: 'fo-messages' } });
+            } else {
+              setOptions([...options, {
+                id: newId(),
+                body: '',
+                arrivalDay: 'everyday',
+                customHour: 9,
+                customMinute: 0,
+                customAmPm: 'AM',
+                customHourText: '9',
+                customMinuteText: '00',
+              }]);
+            }
+          }}
           style={fo.addMsgBtn}
         >
           <IconPlus size={12} color={Colors.sakuraDeep} />
           <Text style={fo.addMsgBtnText}>Add another message option</Text>
         </Pressable>
-
-        <Text style={fo.sectionLabel}>WHEN SHOULD THIS ARRIVE?</Text>
-        <View style={fo.chipRow}>
-          {ARRIVAL_DAYS.map((d) => (
-            <Pressable
-              key={d.id}
-              style={[fo.chip, arrivalDay === d.id && fo.chipActive]}
-              onPress={() => {
-                setArrivalDay(d.id);
-                if (d.id === 'random') {
-                  const pool = [6, 8, 10, 12, 14, 16, 18, 20, 22];
-                  setRandomPreviewHour(pool[Math.floor(Math.random() * pool.length)]);
-                }
-              }}
-            >
-              <Text style={[fo.chipText, arrivalDay === d.id && fo.chipTextActive]}>{d.label}</Text>
-            </Pressable>
-          ))}
-        </View>
-
-        {showAround && (
-          <>
-            <Text style={fo.sectionLabel}>AT WHAT TIME</Text>
-            <View style={fo.customTimeRow}>
-              <TextInput
-                value={customHourText}
-                onChangeText={(v) => {
-                  const digits = v.replace(/\D/g, '');
-                  setCustomHourText(digits);
-                  const n = parseInt(digits, 10);
-                  if (!isNaN(n) && n >= 1 && n <= 12) setCustomHour(n);
-                }}
-                onBlur={() => setCustomHourText(String(customHour).padStart(2, '0'))}
-                keyboardType="number-pad"
-                maxLength={2}
-                style={fo.customTimeInput}
-                selectTextOnFocus
-                placeholder="9"
-                placeholderTextColor={Colors.ink3}
-              />
-              <Text style={fo.customTimeSep}>:</Text>
-              <TextInput
-                value={customMinuteText}
-                onChangeText={(v) => {
-                  const digits = v.replace(/\D/g, '');
-                  setCustomMinuteText(digits);
-                  const n = parseInt(digits, 10);
-                  if (!isNaN(n) && n >= 0 && n <= 59) setCustomMinute(n);
-                }}
-                onBlur={() => setCustomMinuteText(String(customMinute).padStart(2, '0'))}
-                keyboardType="number-pad"
-                maxLength={2}
-                style={fo.customTimeInput}
-                selectTextOnFocus
-                placeholder="00"
-                placeholderTextColor={Colors.ink3}
-              />
-              <Pressable
-                style={fo.customTimeAmPm}
-                onPress={() => setCustomAmPm(p => p === 'AM' ? 'PM' : 'AM')}
-              >
-                <Text style={fo.customTimeAmPmText}>{customAmPm}</Text>
-              </Pressable>
-            </View>
-          </>
-        )}
 
         <Text style={fo.sectionLabel}>PREVIEW</Text>
         <MockPhoneTop>
@@ -1679,7 +1819,7 @@ function FoCompose({ shipName, ship, initialMessage, onQueue }: {
               <Path d="M731.067 39.1506C731.067 37.8787 732.041 36.8476 733.242 36.8476H735.417C736.618 36.8476 737.592 37.8787 737.592 39.1506V57.5744C737.592 58.8463 736.618 59.8773 735.417 59.8773H733.242C732.041 59.8773 731.067 58.8463 731.067 57.5744V39.1506Z" fill="white" />
               <Path d="M741.942 34.5446C741.942 33.2727 742.916 32.2416 744.117 32.2416H746.292C747.493 32.2416 748.467 33.2727 748.467 34.5446V57.5744C748.467 58.8463 747.493 59.8773 746.292 59.8773H744.117C742.916 59.8773 741.942 58.8463 741.942 57.5744V34.5446Z" fill="white" />
               {/* WiFi */}
-              <Path fillRule="evenodd" clipRule="evenodd" d="M777.255 38.3918C782.936 38.392 788.399 40.6199 792.516 44.6151C792.826 44.9235 793.321 44.9196 793.627 44.6063L796.59 41.5536C796.745 41.3947 796.831 41.1794 796.83 40.9555C796.828 40.7316 796.74 40.5174 796.583 40.3604C785.778 29.7902 768.731 29.7902 757.926 40.3604C757.769 40.5173 757.68 40.7314 757.679 40.9553C757.678 41.1793 757.764 41.3946 757.918 41.5536L760.882 44.6063C761.187 44.9201 761.683 44.924 761.993 44.6151C766.111 40.6197 771.574 38.3917 777.255 38.3918ZM777.337 47.6079C780.458 47.6077 783.468 48.7918 785.781 50.9302C786.094 51.2337 786.587 51.2271 786.892 50.9153L789.852 47.8626C790.008 47.7024 790.094 47.4852 790.092 47.2595C790.09 47.0338 789.999 46.8184 789.84 46.6615C782.795 39.9723 771.885 39.9723 764.84 46.6615C764.681 46.8184 764.59 47.0339 764.588 47.2597C764.586 47.4855 764.673 47.7027 764.829 47.8626L767.788 50.9153C768.093 51.2271 768.586 51.2337 768.899 50.9302C771.211 48.7932 774.218 47.6092 777.337 47.6079ZM783.357 53.5665C783.361 53.7928 783.274 54.0111 783.116 54.1696L777.996 59.444C777.846 59.599 777.641 59.6862 777.428 59.6862C777.214 59.6862 777.009 59.599 776.859 59.444L771.738 54.1696C771.58 54.0109 771.493 53.7926 771.498 53.5663C771.502 53.3399 771.598 53.1256 771.763 52.9738C775.033 50.1507 779.822 50.1507 783.092 52.9738C783.257 53.1257 783.352 53.3401 783.357 53.5665Z" fill="white" />
+              <Path fillRule="evenodd" clipRule="evenodd" d="M777.255 38.3918C782.936 38.392 788.399 40.6199 792.516 44.6151C792.826 44.9235 793.321 44.9196 793.627 44.6063L796.59 41.5536C796.745 41.3947 796.831 41.1794 796.83 40.9555C796.828 40.7316 796.74 40.5174 796.583 40.3604C785.778 29.7902 768.731 29.7902 757.926 40.3604C757.769 40.5173 757.68 40.7314 757.679 40.9553C757.678 41.1793 757.764 41.3946 757.918 41.5536L760.882 44.6063C761.187 44.9201 761.683 44.924 761.993 44.6151C766.111 40.6197 771.574 38.3917 777.255 38.3918ZM777.337 47.6079C780.458 47.6077 783.468 48.7918 785.781 50.9302C786.094 51.2337 786.587 51.2271 786.892 50.9153L789.852 47.8626C790.008 47.7024 790.094 47.4852 790.092 47.2595C790.09 47.0338 789.999 46.8184 789.84 46.6615C782.795 39.9723 771.885 39.9723 764.84 46.6615C764.681 46.8184 764.59 47.0339 764.588 47.2597C764.586 47.4855 764.673 47.7027 764.829 47.8626L767.788 50.9153C768.093 51.2271 768.586 51.2337 768.899 50.9302C771.211 48.7932 774.218 47.6092 777.337 47.6079ZM783.357 53.5665C783.361 53.7928 783.274 54.0111 783.116 54.1696L777.996 59.444C777.846 59.599 777.641 59.6862 777.428 59.6862C777.214 59.6862 777.009 59.599 776.859 59.444L771.738 54.1696C771.738 54.0109 771.493 53.7926 771.498 53.5663C771.502 53.3399 771.598 53.1256 771.763 52.9738C775.033 50.1507 779.822 50.1507 783.092 52.9738C783.257 53.1257 783.352 53.3401 783.357 53.5665Z" fill="white" />
               {/* Battery outline */}
               <Rect x="806.041" y="31.0901" width="57.5744" height="29.9387" rx="9.2119" fill="white" fillOpacity="0.4" />
               {/* Battery fill */}
@@ -1697,7 +1837,10 @@ function FoCompose({ shipName, ship, initialMessage, onQueue }: {
 
             <View style={fo.lockscreenClockContainer}>
               <Text style={fo.lockscreenDate}>{lockscreenDateText}</Text>
-              <Text style={fo.lockscreenTime}>{lockscreenTimeText}</Text>
+              <Text style={[
+                fo.lockscreenTime,
+                firstOpt?.arrivalDay === 'random' && { fontSize: sf(28), letterSpacing: 0 },
+              ]}>{lockscreenTimeText}</Text>
             </View>
 
             <View style={[fo.notifStackContainer, filteredOptions.length > 1 && fo.notifStackActive]}>
@@ -1721,8 +1864,6 @@ function FoCompose({ shipName, ship, initialMessage, onQueue }: {
 
           </LinearGradient>
         </MockPhoneTop>
-
-
 
         <Pressable
           style={[fo.queueBtn, !hasContent && fo.queueBtnDisabled]}

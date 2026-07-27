@@ -9,7 +9,8 @@ import { WashiTape } from '@/components/deco/WashiTape';
 import { CozyModal } from '@/components/ui/CozyModal';
 import { IconEdit, IconExport, IconTrashSolid } from '@/components/ui/Icon';
 import { Colors, FontFamily, Radius, Shadow, SheetColumn, Spacing ,sf } from '@/constants/theme';
-import { BG_COLORS } from '@/constants/bgPalette';
+import { BG_COLORS, TEXT_COLORS } from '@/constants/bgPalette';
+import { TemplateTextColorCtx } from '@/components/templates/primitives';
 import { usePremium } from '@/store/premium';
 import { askForReview } from '@/store/review';
 import { deleteShip, getShip, isPoly, updateShip } from '@/store/ships';
@@ -57,6 +58,7 @@ export function TemplateScreenWrapper({ templateKey, shipId, children }: Props) 
   const [confirming, setConfirming] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [showBgPicker, setShowBgPicker] = useState(false);
+  const [bgSheetTab, setBgSheetTab] = useState<'background' | 'text'>('background');
   const [confirmDelete, setConfirmDelete] = useState(false);
   const exportRef = useRef<View>(null);
 
@@ -68,6 +70,14 @@ export function TemplateScreenWrapper({ templateKey, shipId, children }: Props) 
   const bgRef = useRef(initBg());
   const [bgColor, setBgColor] = useState(bgRef.current.color);
   const [bgImage, setBgImage] = useState(bgRef.current.image);
+
+  const initTextColor = () => {
+    if (!shipId) return '';
+    const saved = loadTemplateData(shipId, templateKey);
+    return saved['_textColor'] ?? '';
+  };
+  const textColorRef = useRef(initTextColor());
+  const [textColor, setTextColor] = useState(textColorRef.current);
 
   const initData = (): Record<string, string> => {
     if (!shipId) return {};
@@ -98,7 +108,8 @@ export function TemplateScreenWrapper({ templateKey, shipId, children }: Props) 
     },
     bgColor,
     bgImage,
-  }), [shipId, templateKey, bgColor, bgImage]);
+    textColor,
+  }), [shipId, templateKey, bgColor, bgImage, textColor]);
 
   async function exportImage() {
     if (!exportRef.current) return;
@@ -128,6 +139,11 @@ export function TemplateScreenWrapper({ templateKey, shipId, children }: Props) 
     setBgImage('');
   }
 
+  function saveTextColor(color: string) {
+    ctx.set('_textColor', color);
+    setTextColor(color);
+  }
+
   async function pickBgImage() {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'] as ImagePicker.MediaType[],
@@ -145,6 +161,11 @@ export function TemplateScreenWrapper({ templateKey, shipId, children }: Props) 
 
   function applyTemplate() {
     if (!shipId || selected === templateKey) { setShowPicker(false); return; }
+    if (!premium) {
+      setShowPicker(false);
+      router.push('/paywall?reason=switch-template' as any);
+      return;
+    }
     migrateTemplateData(shipId, templateKey, selected);
     updateShip(shipId, { templateKey: selected });
     router.replace(`/template/${selected}?shipId=${shipId}` as any);
@@ -219,13 +240,7 @@ export function TemplateScreenWrapper({ templateKey, shipId, children }: Props) 
               return (
                 <Pressable
                   style={s.styleChip}
-                  onPress={() => {
-                    if (!premium) {
-                      router.push('/paywall?reason=switch-template' as any);
-                      return;
-                    }
-                    setShowPicker(true);
-                  }}
+                  onPress={() => setShowPicker(true)}
                 >
                   <View style={[s.styleChipDot, { backgroundColor: tpl?.color ?? Colors.sakuraDeep }]} />
                   <Text style={s.styleChipText}>{tpl?.label ?? 'style'}</Text>
@@ -303,7 +318,9 @@ export function TemplateScreenWrapper({ templateKey, shipId, children }: Props) 
             ) : bgColor ? (
               <View style={[StyleSheet.absoluteFill, { backgroundColor: bgColor }]} />
             ) : null}
-            {children}
+            <TemplateTextColorCtx.Provider value={textColor}>
+              {children}
+            </TemplateTextColorCtx.Provider>
           </View>
         </ScrollView>
 
@@ -316,55 +333,97 @@ export function TemplateScreenWrapper({ templateKey, shipId, children }: Props) 
           <View style={[s.sheet, SheetColumn]}>
             <View style={s.sheetHandle} />
             <View style={s.sheetHeader}>
-              <Text style={s.sheetTitle}>background</Text>
+              <Text style={s.sheetTitle}>customize</Text>
               <Pressable onPress={() => setShowBgPicker(false)} hitSlop={8}>
                 <Text style={s.sheetClose}>✕</Text>
               </Pressable>
             </View>
 
-            <ScrollView contentContainerStyle={s.bgSheetContent} showsVerticalScrollIndicator={false}>
-              {/* Action row */}
-              <View style={s.bgActionRow}>
-                <Pressable style={s.bgActionBtn} onPress={pickBgImage}>
-                  <Svg width={22} height={22} viewBox="0 0 22 22" fill="none">
-                    <Rect x="2" y="4" width="18" height="14" rx="2" stroke={Colors.ink} strokeWidth="1.4" />
-                    <Path d="M2 15l5-5 4 4 3-3 6 6" stroke={Colors.ink} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-                    <Circle cx="15" cy="8.5" r="1.5" fill={Colors.ink} />
-                  </Svg>
-                  <Text style={s.bgActionLabel}>image</Text>
+            <View style={s.bgTabRow}>
+              {(['background', 'text'] as const).map((t) => (
+                <Pressable
+                  key={t}
+                  onPress={() => setBgSheetTab(t)}
+                  style={[s.bgTabBtn, bgSheetTab === t && s.bgTabBtnActive]}
+                >
+                  <Text style={[s.bgTabText, bgSheetTab === t && s.bgTabTextActive]}>{t}</Text>
                 </Pressable>
-                <Pressable style={[s.bgActionBtn, (!bgColor && !bgImage) && s.bgActionBtnActive]} onPress={clearBg}>
-                  <Svg width={22} height={22} viewBox="0 0 22 22" fill="none">
-                    <Path d="M4 11a7 7 0 1 1 1.5 4.5" stroke={Colors.ink} strokeWidth="1.4" strokeLinecap="round" />
-                    <Path d="M4 15.5V11h4.5" stroke={Colors.ink} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-                  </Svg>
-                  <Text style={s.bgActionLabel}>default</Text>
-                </Pressable>
-                {bgImage ? (
-                  <View style={[s.bgActionBtn, s.bgActionBtnActive]}>
-                    <Image source={{ uri: bgImage }} style={s.bgActionThumb} />
-                    <Text style={s.bgActionLabel}>current</Text>
-                  </View>
-                ) : null}
-              </View>
+              ))}
+            </View>
 
-              <Text style={s.bgSectionLabel}>colors</Text>
-              <View style={s.bgSwatchGrid}>
-                {BG_COLORS.map((c) => (
-                  <Pressable
-                    key={c}
-                    onPress={() => saveBgColor(c)}
-                    style={[
-                      s.bgSwatch,
-                      { backgroundColor: c },
-                      c === '#ffffff' && s.bgSwatchBordered,
-                      bgColor === c && s.bgSwatchSelected,
-                    ]}
-                  >
-                    {bgColor === c && <View style={s.bgSwatchCheck}><Text style={s.bgSwatchCheckText}>✓</Text></View>}
-                  </Pressable>
-                ))}
-              </View>
+            <ScrollView contentContainerStyle={s.bgSheetContent} showsVerticalScrollIndicator={false}>
+              {bgSheetTab === 'text' ? (
+                <>
+                  <Text style={s.bgSectionLabel}>text color</Text>
+                  <View style={s.bgSwatchGrid}>
+                    <Pressable
+                      onPress={() => saveTextColor('')}
+                      style={[s.bgResetSwatch, !textColor && s.bgSwatchSelected]}
+                    >
+                      <Text style={s.bgResetSwatchText}>Aa</Text>
+                    </Pressable>
+                    {TEXT_COLORS.map((c) => (
+                      <Pressable
+                        key={c}
+                        onPress={() => saveTextColor(c)}
+                        style={[
+                          s.bgSwatch,
+                          { backgroundColor: c },
+                          c === '#ffffff' && s.bgSwatchBordered,
+                          textColor === c && s.bgSwatchSelected,
+                        ]}
+                      >
+                        {textColor === c && <View style={s.bgSwatchCheck}><Text style={s.bgSwatchCheckText}>✓</Text></View>}
+                      </Pressable>
+                    ))}
+                  </View>
+                </>
+              ) : (
+                <>
+                  {/* Action row */}
+                  <View style={s.bgActionRow}>
+                    <Pressable style={s.bgActionBtn} onPress={pickBgImage}>
+                      <Svg width={22} height={22} viewBox="0 0 22 22" fill="none">
+                        <Rect x="2" y="4" width="18" height="14" rx="2" stroke={Colors.ink} strokeWidth="1.4" />
+                        <Path d="M2 15l5-5 4 4 3-3 6 6" stroke={Colors.ink} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                        <Circle cx="15" cy="8.5" r="1.5" fill={Colors.ink} />
+                      </Svg>
+                      <Text style={s.bgActionLabel}>image</Text>
+                    </Pressable>
+                    <Pressable style={[s.bgActionBtn, (!bgColor && !bgImage) && s.bgActionBtnActive]} onPress={clearBg}>
+                      <Svg width={22} height={22} viewBox="0 0 22 22" fill="none">
+                        <Path d="M4 11a7 7 0 1 1 1.5 4.5" stroke={Colors.ink} strokeWidth="1.4" strokeLinecap="round" />
+                        <Path d="M4 15.5V11h4.5" stroke={Colors.ink} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                      </Svg>
+                      <Text style={s.bgActionLabel}>default</Text>
+                    </Pressable>
+                    {bgImage ? (
+                      <View style={[s.bgActionBtn, s.bgActionBtnActive]}>
+                        <Image source={{ uri: bgImage }} style={s.bgActionThumb} />
+                        <Text style={s.bgActionLabel}>current</Text>
+                      </View>
+                    ) : null}
+                  </View>
+
+                  <Text style={s.bgSectionLabel}>colors</Text>
+                  <View style={s.bgSwatchGrid}>
+                    {BG_COLORS.map((c) => (
+                      <Pressable
+                        key={c}
+                        onPress={() => saveBgColor(c)}
+                        style={[
+                          s.bgSwatch,
+                          { backgroundColor: c },
+                          c === '#ffffff' && s.bgSwatchBordered,
+                          bgColor === c && s.bgSwatchSelected,
+                        ]}
+                      >
+                        {bgColor === c && <View style={s.bgSwatchCheck}><Text style={s.bgSwatchCheckText}>✓</Text></View>}
+                      </Pressable>
+                    ))}
+                  </View>
+                </>
+              )}
             </ScrollView>
           </View>
           </View>
@@ -420,7 +479,15 @@ export function TemplateScreenWrapper({ templateKey, shipId, children }: Props) 
             <View style={s.sheetActions}>
               <Pressable
                 style={[s.applyBtn, selected === templateKey && s.applyBtnDisabled]}
-                onPress={() => selected !== templateKey ? setConfirming(true) : setShowPicker(false)}
+                onPress={() => {
+                  if (selected === templateKey) { setShowPicker(false); return; }
+                  if (!premium) {
+                    setShowPicker(false);
+                    router.push('/paywall?reason=switch-template' as any);
+                    return;
+                  }
+                  setConfirming(true);
+                }}
               >
                 <Text style={s.applyBtnText}>
                   {selected === templateKey ? 'no changes' : `switch to ${pickerTemplates.find(t => t.key === selected)?.label}`}
@@ -501,6 +568,21 @@ const s = StyleSheet.create({
   bgBtnThumb: { width: 32, height: 32 },
 
   // bg picker sheet content
+  bgTabRow: { flexDirection: 'row', gap: 8, paddingHorizontal: Spacing.s5, paddingTop: Spacing.s3 },
+  bgTabBtn: {
+    flex: 1, alignItems: 'center', paddingVertical: 8,
+    borderRadius: Radius.pill, backgroundColor: Colors.paperDeep,
+    borderWidth: 1, borderColor: Colors.line,
+  },
+  bgTabBtnActive: { backgroundColor: Colors.sakuraSoft, borderColor: Colors.sakuraDeep },
+  bgTabText: { fontFamily: FontFamily.uiMedium, fontSize: sf(12), color: Colors.ink2, textTransform: 'capitalize' },
+  bgTabTextActive: { color: Colors.sakuraDeep },
+  bgResetSwatch: {
+    width: 42, height: 42, borderRadius: Radius.r2,
+    borderWidth: 1, borderColor: Colors.line, backgroundColor: Colors.paperDeep,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  bgResetSwatchText: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(13), color: Colors.ink },
   bgSheetContent: { padding: Spacing.s5, paddingBottom: 40 },
   bgActionRow: { flexDirection: 'row', gap: 10, marginBottom: Spacing.s4 },
   bgActionBtn: {

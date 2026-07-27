@@ -2,24 +2,27 @@ import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Keyboard, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Sparkle } from '@/components/deco/Sparkle';
 import { StickerSakuraBranch } from '@/components/deco';
 import { GalleryPicker } from '@/components/profile/GalleryPicker';
+import { SexualityPicker } from '@/components/profile/SexualityPicker';
 import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
+import { EditSection, styles as editSection } from '@/components/ui/EditSection';
 import { Field } from '@/components/ui/Field';
 import { Mark } from '@/components/ui/Mark';
 import { Row } from '@/components/ui/Row';
 import { StepDots } from '@/components/ui/StepDots';
+import { Toggle } from '@/components/ui/Toggle';
 import { UnderInput } from '@/components/ui/UnderInput';
 import { CalloutBubble } from '@/components/ui';
 import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing ,sf } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
 import { getGlobalSetting, saveGlobalSetting, setOnbField } from '@/store/onboarding';
-import { parseGallery, type GalleryPhoto } from '@/store/fo';
+import { parseGallery, useFos, type GalleryPhoto } from '@/store/fo';
 import { pushOwnProfile } from '@/store/community';
 
 const PRONOUNS = ['she/her', 'he/him', 'they/them', '+'];
@@ -51,6 +54,10 @@ export default function OnbPersona() {
   const [song, setSong] = useState(() => getGlobalSetting('user_song'));
   const [songLink, setSongLink] = useState(() => getGlobalSetting('user_song_link'));
   const [gallery, setGallery] = useState<GalleryPhoto[]>(() => parseGallery(getGlobalSetting('user_gallery')));
+  const [sexuality, setSexuality] = useState(() => getGlobalSetting('user_status_label'));
+  const [identifyFoId, setIdentifyFoId] = useState(() => getGlobalSetting('user_identify_fo_id'));
+  const [showFoPicker, setShowFoPicker] = useState(false);
+  const fos = useFos();
 
   const handleNameChange = (v: string) => { setName(v); setOnbField('userName', v); };
   const handleBioChange = (v: string) => { setBio(v); saveGlobalSetting('user_bio', v); };
@@ -59,6 +66,7 @@ export default function OnbPersona() {
   const handleSongChange = (v: string) => { setSong(v); saveGlobalSetting('user_song', v); };
   const handleSongLinkChange = (v: string) => { setSongLink(v); saveGlobalSetting('user_song_link', v); };
   const handleGalleryChange = (g: GalleryPhoto[]) => { setGallery(g); saveGlobalSetting('user_gallery', JSON.stringify(g)); };
+  const handleSexualityChange = (v: string) => { setSexuality(v); saveGlobalSetting('user_status_label', v); };
   const handlePronounChange = (p: string) => {
     setPronoun(p);
     setOnbField('pronouns', p);
@@ -70,6 +78,25 @@ export default function OnbPersona() {
     setAvatar('');
     saveGlobalSetting('user_avatar', '');
   };
+
+  function selectIdentifyFo(id: string) {
+    setIdentifyFoId(id);
+    saveGlobalSetting('user_identify_fo_id', id);
+    setShowFoPicker(false);
+  }
+
+  function handleIdentifyToggle(v: boolean) {
+    if (!v) {
+      setIdentifyFoId('');
+      saveGlobalSetting('user_identify_fo_id', '');
+      return;
+    }
+    if (fos.length === 1) {
+      selectIdentifyFo(fos[0].id);
+      return;
+    }
+    setShowFoPicker(true);
+  }
 
   async function pickAvatar() {
     const res = await ImagePicker.launchImageLibraryAsync({
@@ -264,6 +291,76 @@ export default function OnbPersona() {
           )}
         </View>
 
+        {isEdit && (
+          <View style={editSection.sectionsWrap}>
+            <EditSection label="about you">
+              <TextInput
+                value={bio}
+                onChangeText={handleBioChange}
+                placeholder="a few soft lines about you…"
+                placeholderTextColor={Colors.ink3}
+                multiline
+                style={styles.bioInput}
+              />
+            </EditSection>
+
+            <EditSection label="details">
+              <Row gap={14}>
+                <Field label="Height (optional)" style={{ flex: 1 }}>
+                  <UnderInput value={height} onChangeText={handleHeightChange} placeholder="e.g. 165 cm" />
+                </Field>
+                <Field label="Weight (optional)" style={{ flex: 1 }}>
+                  <UnderInput value={weight} onChangeText={handleWeightChange} placeholder="optional" />
+                </Field>
+              </Row>
+            </EditSection>
+
+            <EditSection label="theme song">
+              <Field label="Song title">
+                <UnderInput value={song} onChangeText={handleSongChange} placeholder="the song that feels like you" />
+              </Field>
+              <View style={editSection.innerSpacer} />
+              <Field label="Song link (optional)" hint="Spotify, YouTube, Apple Music…">
+                <UnderInput
+                  value={songLink}
+                  onChangeText={handleSongLinkChange}
+                  placeholder="https://…"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  keyboardType="url"
+                />
+              </Field>
+            </EditSection>
+
+            <EditSection label="sexuality">
+              <SexualityPicker value={sexuality} onChange={handleSexualityChange} />
+            </EditSection>
+
+            <EditSection label="gallery">
+              <GalleryPicker photos={gallery} onChange={handleGalleryChange} />
+            </EditSection>
+
+            {fos.length > 0 && (
+              <EditSection label="profile identify">
+                <Text style={editSection.sectionHint}>
+                  show you + your F/O's avatar together, with a heart between, on your profile card
+                </Text>
+                <View style={editSection.innerSpacer} />
+                <Row gap={10}>
+                  <Toggle value={!!identifyFoId} onValueChange={handleIdentifyToggle} />
+                  {!!identifyFoId && fos.length > 1 && (
+                    <Pressable onPress={() => setShowFoPicker(true)}>
+                      <Text style={styles.identifyChangeText}>
+                        with {fos.find((f) => f.id === identifyFoId)?.name || '…'} ›
+                      </Text>
+                    </Pressable>
+                  )}
+                </Row>
+              </EditSection>
+            )}
+          </View>
+        )}
+
         {/* Reassurance note */}
         {!isEdit && (
           <View style={{ marginTop: 24, alignItems: 'center' }}>
@@ -286,6 +383,27 @@ export default function OnbPersona() {
           {!name.trim() ? 'enter your name first' : (isEdit ? 'save changes' : 'continue · meet them')}
         </Button>
       </View>
+
+      <Modal visible={showFoPicker} transparent animationType="fade" onRequestClose={() => setShowFoPicker(false)}>
+        <Pressable style={styles.pickOverlay} onPress={() => setShowFoPicker(false)} />
+        <View style={styles.pickSheetWrap} pointerEvents="box-none">
+          <View style={[styles.pickSheet, column]}>
+            <Text style={styles.pickTitle}>pair with which F/O?</Text>
+            {fos.map((fo) => (
+              <Pressable key={fo.id} style={styles.pickRow} onPress={() => selectIdentifyFo(fo.id)}>
+                <View style={[styles.pickAvatar, { backgroundColor: Colors.lavender }]}>
+                  {fo.photoUri ? (
+                    <Image source={{ uri: fo.photoUri }} style={styles.pickAvatarImg} contentFit="cover" />
+                  ) : (
+                    <Text style={styles.pickAvatarInitial}>{fo.name.trim().charAt(0).toUpperCase() || '♡'}</Text>
+                  )}
+                </View>
+                <Text style={styles.pickRowName}>{fo.name || 'untitled'}</Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -404,4 +522,37 @@ const styles = StyleSheet.create({
     bottom: 140,
     left: 24,
   },
+  identifyChangeText: {
+    fontFamily: FontFamily.uiMedium, fontSize: sf(12), color: Colors.sakuraDeep,
+  },
+  pickOverlay: {
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+  },
+  pickSheetWrap: {
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+    justifyContent: 'center', alignItems: 'center', padding: Spacing.s6,
+  },
+  pickSheet: {
+    width: '100%', maxWidth: 360,
+    backgroundColor: Colors.paper, borderRadius: Radius.r4,
+    padding: Spacing.s5, gap: 4,
+    ...Shadow.s2,
+  },
+  pickTitle: {
+    fontFamily: FontFamily.displayItalic, fontSize: sf(17), color: Colors.ink,
+    textAlign: 'center', marginBottom: Spacing.s3,
+  },
+  pickRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    paddingVertical: Spacing.s3, paddingHorizontal: Spacing.s2,
+    borderRadius: Radius.r3,
+  },
+  pickAvatar: {
+    width: 40, height: 40, borderRadius: Radius.pill,
+    alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+  },
+  pickAvatarImg: { width: 40, height: 40, borderRadius: Radius.pill },
+  pickAvatarInitial: { fontFamily: FontFamily.displayItalic, fontSize: sf(17), color: '#fff' },
+  pickRowName: { fontFamily: FontFamily.uiMedium, fontSize: sf(14), color: Colors.ink },
 });

@@ -32,7 +32,13 @@ function readMe() {
     pageBgImage: getGlobalSetting('user_page_bg_image'),
     cardBgColor: getGlobalSetting('user_card_bg_color'),
     cardBgImage: getGlobalSetting('user_card_bg_image'),
+    cardBgGradient: getGlobalSetting('user_card_bg_gradient'),
+    cardTransparent: getGlobalSetting('user_card_transparent') === 'true',
     textColor: getGlobalSetting('user_text_color'),
+    borderStyle: getGlobalSetting('user_border_style'),
+    decoration: getGlobalSetting('user_decoration'),
+    nameFont: getGlobalSetting('user_name_font'),
+    statusLabel: getGlobalSetting('user_status_label'),
   };
 }
 
@@ -53,15 +59,18 @@ export default function MyProfileScreen() {
   }
 
   function handleThemeChange(patch: Partial<{
-    pageBgColor: string; pageBgImage: string; cardBgColor: string; cardBgImage: string; textColor: string;
+    pageBgColor: string; pageBgImage: string; cardBgColor: string; cardBgImage: string; cardBgGradient: string;
+    cardTransparent: boolean; textColor: string; borderStyle: string; decoration: string; nameFont: string; statusLabel: string;
   }>) {
     const keyMap = {
       pageBgColor: 'user_page_bg_color', pageBgImage: 'user_page_bg_image',
       cardBgColor: 'user_card_bg_color', cardBgImage: 'user_card_bg_image',
-      textColor: 'user_text_color',
+      cardBgGradient: 'user_card_bg_gradient', cardTransparent: 'user_card_transparent',
+      textColor: 'user_text_color', borderStyle: 'user_border_style',
+      decoration: 'user_decoration', nameFont: 'user_name_font', statusLabel: 'user_status_label',
     } as const;
     for (const [k, v] of Object.entries(patch)) {
-      saveGlobalSetting(keyMap[k as keyof typeof keyMap], v as string);
+      saveGlobalSetting(keyMap[k as keyof typeof keyMap], String(v));
     }
     setMe((p) => ({ ...p, ...patch }));
   }
@@ -122,10 +131,13 @@ export default function MyProfileScreen() {
       <CardThemeSheet
         visible={showCustomize}
         onClose={() => setShowCustomize(false)}
+        premium={premium}
         theme={{
           pageBgColor: me.pageBgColor, pageBgImage: me.pageBgImage,
           cardBgColor: me.cardBgColor, cardBgImage: me.cardBgImage,
-          textColor: me.textColor,
+          cardBgGradient: me.cardBgGradient, cardTransparent: me.cardTransparent,
+          textColor: me.textColor, borderStyle: me.borderStyle,
+          decoration: me.decoration, nameFont: me.nameFont, statusLabel: me.statusLabel,
         }}
         onChange={handleThemeChange}
       />

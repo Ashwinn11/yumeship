@@ -3,7 +3,7 @@ import { View, Text, TextInput, StyleSheet, Pressable, Modal, TouchableWithoutFe
 import { useLocalSearchParams } from 'expo-router';
 import Svg, { Path } from 'react-native-svg';
 import { TemplateScreenWrapper } from '@/components/templates/TemplateScreenWrapper';
-import { PhotoBox, MarkerCard, INK, useSliderTrack } from '@/components/templates/primitives';
+import { PhotoBox, MarkerCard, DualSlider, INK, useThemedInk, getContrastColor } from '@/components/templates/primitives';
 import { Sparkle } from '@/components/deco';
 import { useTemplateCtx } from '@/store/templateData';
 import { Colors, FontFamily, Radius, SheetColumn, Spacing ,sf } from '@/constants/theme';
@@ -21,30 +21,14 @@ const PALETTE_OPTIONS = [
 
 const ME_DEFAULT_PAL  = ['#2b1a26','#6b4a3a','#fad7c0','#f3b6c4','#8b3a4a'];
 const FO_DEFAULT_PAL  = ['#1f1e3d','#3a3d6a','#fad7c0','#8b6fc4','#4d3982'];
+const PIN_ROTATE = [-5, 3, -7];
 
 // ─── Checkbox ─────────────────────────────────────────────────
 function Checkbox({ on = false, onPress }: { on?: boolean; onPress?: () => void }) {
-  const box = <View style={[cb.box, on && cb.filled]} />;
+  const ink = useThemedInk();
+  const box = <View style={[cb.box, { borderColor: ink }, on && cb.filled]} />;
   if (onPress) return <Pressable onPress={onPress} hitSlop={8}>{box}</Pressable>;
   return box;
-}
-
-// ─── DualSlider ────────────────────────────────────────────────
-function DualSlider({ label, value = 0.5, onValueChange, leftColor, rightColor }: { label: string; value?: number; onValueChange?: (v: number) => void; leftColor?: string; rightColor?: string }) {
-  const { trackRef, responder } = useSliderTrack(onValueChange);
-  const pct = `${Math.round(value * 100)}%` as any;
-  const rest = `${Math.round((1 - value) * 100)}%` as any;
-  return (
-    <View style={sl.wrap}>
-      <Text style={sl.label}>{label}</Text>
-      <View ref={trackRef} style={sl.track}
-        {...responder}>
-        <View style={[sl.left, { width: pct }, leftColor ? { backgroundColor: leftColor + 'cc' } : null]} />
-        <View style={[sl.right, { width: rest }, rightColor ? { backgroundColor: rightColor + 'cc' } : null]} />
-        <View style={[sl.divider, { left: pct }]} />
-      </View>
-    </View>
-  );
 }
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -192,7 +176,11 @@ function parsePath(raw: string): { d: string; color: string; width: number } {
 }
 
 function DoodleThumb({ paths, editing, onOpen, transparent }: { paths: string[]; editing: boolean; onOpen: () => void; transparent?: boolean }) {
-  const parsed = paths.map(parsePath);
+  const ink = useThemedInk();
+  const parsed = paths.map(raw => {
+    const p = parsePath(raw);
+    return p.color === INK ? { ...p, color: ink } : p;
+  });
   const hasPaths = paths.length > 0;
   return (
     <Pressable style={[dc.wrap, hasPaths && (transparent ? null : dc.wrapFilled)]} onPress={editing ? onOpen : undefined}>
@@ -203,19 +191,20 @@ function DoodleThumb({ paths, editing, onOpen, transparent }: { paths: string[];
         ))}
       </Svg>
       {paths.length === 0 ? (
-        <Text style={dc.hint}>your ship art ♡{editing ? '\ntap to draw' : ''}</Text>
+        <Text style={[dc.hint, { color: ink }]}>your ship art ♡{editing ? '\ntap to draw' : ''}</Text>
       ) : editing ? (
-        <View style={dc.editBadge}><Text style={dc.editBadgeText}>tap to edit</Text></View>
+        <View style={dc.editBadge}><Text style={[dc.editBadgeText, { color: ink }]}>tap to edit</Text></View>
       ) : null}
     </Pressable>
   );
 }
 
 function HeartDot({ color, onPress }: { color: string; onPress?: () => void }) {
+  const ink = useThemedInk();
   const svg = (
     <Svg width={14} height={14} viewBox="0 0 16 16">
       <Path d="M8 14 C 3 11 1 8.5 1 5.5 C 1 3.5 2.5 2 4.5 2 C 6 2 7.3 2.9 8 4.3 C 8.7 2.9 10 2 11.5 2 C 13.5 2 15 3.5 15 5.5 C 15 8.5 13 11 8 14 Z"
-        fill={color} stroke={INK} strokeWidth={0.6} />
+        fill={color} stroke={ink} strokeWidth={0.6} />
     </Svg>
   );
   if (onPress) return <Pressable onPress={onPress} hitSlop={6}>{svg}</Pressable>;
@@ -226,6 +215,7 @@ function HeartDot({ color, onPress }: { color: string; onPress?: () => void }) {
 export function TalkingAboutContent({ editing = false }: { editing?: boolean }) {
   const ctx = useTemplateCtx();
   const customBg = ctx.bgColor || ctx.bgImage;
+  const ink = useThemedInk();
 
   const [vals, setVals] = useState<Record<string, string>>(() => ({
     relTypes:  ctx.get('relTypes', '["Married"]'),
@@ -259,6 +249,9 @@ export function TalkingAboutContent({ editing = false }: { editing?: boolean }) 
     doodle:    ctx.get('doodle',   '[]'),
     tropes:    ctx.get('tropes',   ''),
     sliders:   ctx.get('sliders',  '[0.7,0.55,0.35]'),
+    memPhoto0: ctx.get('memPhoto0', ''), memPhoto1: ctx.get('memPhoto1', ''), memPhoto2: ctx.get('memPhoto2', ''),
+    memCap0:   ctx.get('memCap0',   ''), memCap1:   ctx.get('memCap1',   ''), memCap2:   ctx.get('memCap2',   ''),
+    song:      ctx.get('song',      ''),
   }));
 
   const setVal = (key: string, v: string) => { setVals(p => ({ ...p, [key]: v })); ctx.set(key, v); };
@@ -270,17 +263,18 @@ export function TalkingAboutContent({ editing = false }: { editing?: boolean }) 
   // Color picker state: { pfx: 'me'|'fo', idx: 0-4 } | null
   const [picking, setPicking] = useState<{ pfx: string; idx: number } | null>(null);
   const [doodleOpen, setDoodleOpen] = useState(false);
+  const [playing, setPlaying] = useState(false);
 
   const relTypes: string[] = JSON.parse(vals.relTypes || '[]');
   const endings:  string[] = JSON.parse(vals.endings  || '[]');
   const sliders = JSON.parse(vals.sliders) as [number, number, number];
-  const meColor = vals.meColor || Colors.sakuraInk;
-  const foColor = vals.foColor || Colors.lavenderDeep;
+  const meColor = vals.meColor || ink;
+  const foColor = vals.foColor || ink;
   const e = editing;
 
   const chars = [
-    { pfx: 'me', label: 'ME / MY OC', defColor: Colors.sakuraInk },
-    { pfx: 'fo', label: 'MY F/O',     defColor: Colors.lavenderDeep },
+    { pfx: 'me', label: 'ME / MY OC', defColor: ink },
+    { pfx: 'fo', label: 'MY F/O',     defColor: ink },
   ];
 
   return (
@@ -291,35 +285,35 @@ export function TalkingAboutContent({ editing = false }: { editing?: boolean }) 
           onUriChange={e ? u => setVal('photoL', u) : undefined} style={s.headerStL} />
         <PhotoBox size={48} editing={e} uri={vals.photoR}
           onUriChange={e ? u => setVal('photoR', u) : undefined} style={s.headerStR} />
-        <Text style={s.eyebrow}>TALKING ABOUT MY</Text>
-        <Text style={s.title}>YUME</Text>
+        <Text style={[s.eyebrow, { color: ink + '88' }]}>TALKING ABOUT MY</Text>
+        <Text style={[s.title, { color: ink }]}>YUME</Text>
         <View style={s.rule}>
-          <View style={s.ruleLine} />
-          <Sparkle size={8} color={INK} />
-          <View style={s.ruleLine} />
+          <View style={[s.ruleLine, { backgroundColor: ink + '55' }]} />
+          <Sparkle size={8} color={ink} />
+          <View style={[s.ruleLine, { backgroundColor: ink + '55' }]} />
         </View>
       </View>
 
       {/* Category columns */}
       <View style={s.row2}>
         <View style={s.col}>
-          <Text style={s.colTitle}>Type of relationship ♡</Text>
+          <Text style={[s.colTitle, { color: ink }]}>Type of relationship ♡</Text>
           {(['Married','Engaged','Boy/girlfriends','Platonic/QPR'] as const).map(r => (
             <View key={r} style={s.checkRow}>
               <Checkbox on={relTypes.includes(r)} onPress={e ? () => toggleArr('relTypes', r) : undefined} />
-              <Text style={s.checkLabel}>{r}</Text>
+              <Text style={[s.checkLabel, { color: ink }]}>{r}</Text>
             </View>
           ))}
-          <Text style={[s.colTitle, { marginTop: 12 }]}>♡ This has...</Text>
+          <Text style={[s.colTitle, { color: ink, marginTop: 12 }]}>♡ This has...</Text>
           {(['Happy ending','Bad ending','Neutral ending'] as const).map(r => (
             <View key={r} style={s.checkRow}>
               <Checkbox on={endings.includes(r)} onPress={e ? () => toggleArr('endings', r) : undefined} />
-              <Text style={s.checkLabel}>{r}</Text>
+              <Text style={[s.checkLabel, { color: ink }]}>{r}</Text>
             </View>
           ))}
         </View>
         <View style={s.col}>
-          <Text style={s.colTitle}>Yume category ♡</Text>
+          <Text style={[s.colTitle, { color: ink }]}>Yume category ♡</Text>
           {[
             { key: 'OC × canon', subs: '— OC\n— Fan character' },
             { key: 'Selfinsert × canon', subs: '— Avatar\n— Sona\n— Persona' },
@@ -327,9 +321,9 @@ export function TalkingAboutContent({ editing = false }: { editing?: boolean }) 
             <View key={key} style={{ marginTop: 6 }}>
               <View style={s.checkRow}>
                 <Checkbox on={vals.yumeCat === key} onPress={e ? () => setVal('yumeCat', vals.yumeCat === key ? '' : key) : undefined} />
-                <Text style={s.checkLabel}>{key}</Text>
+                <Text style={[s.checkLabel, { color: ink }]}>{key}</Text>
               </View>
-              <Text style={s.subItems}>{subs}</Text>
+              <Text style={[s.subItems, { color: ink + '88' }]}>{subs}</Text>
             </View>
           ))}
         </View>
@@ -343,20 +337,20 @@ export function TalkingAboutContent({ editing = false }: { editing?: boolean }) 
           onOpen={() => setDoodleOpen(true)}
           transparent={!!customBg}
         />
-        <View style={s.sparkBL} pointerEvents="none"><Sparkle size={12} color={INK} /></View>
-        <View style={s.sparkTR} pointerEvents="none"><Sparkle size={14} color={INK} /></View>
+        <View style={s.sparkBL} pointerEvents="none"><Sparkle size={12} color={ink} /></View>
+        <View style={s.sparkTR} pointerEvents="none"><Sparkle size={14} color={ink} /></View>
       </View>
 
       {/* Sharing status */}
       <View style={s.sharingWrap}>
-        <Text style={s.sharingTitle}>Sharing status</Text>
+        <Text style={[s.sharingTitle, { color: ink }]}>Sharing status</Text>
         <View style={s.sharingRow}>
           {(['Yes','No','Selective'] as const).map(opt => {
             const on = vals.sharing === opt;
             return (
               <Pressable key={opt} onPress={() => e && setVal('sharing', opt)} style={s.sharingOpt}>
-                <Text style={[s.sharingText, on && s.sharingOn]}>{opt}</Text>
-                <View style={[s.sharingDot, on ? s.sharingDotOn : s.sharingDotOff]} />
+                <Text style={[s.sharingText, { color: ink }, on && { color: ink }]}>{opt}</Text>
+                <View style={[s.sharingDot, on ? { width: 13, height: 13, backgroundColor: ink } : { width: 8, height: 8, borderWidth: 1.2, borderColor: ink }]} />
               </Pressable>
             );
           })}
@@ -372,76 +366,74 @@ export function TalkingAboutContent({ editing = false }: { editing?: boolean }) 
           return (
             <View key={pfx} style={s.charCol}>
               {/* Emoji */}
-              <View style={[s.emojiBox, customBg ? { backgroundColor: 'transparent' } : null]}>
+              <View style={[s.emojiBox, { borderColor: ink }, customBg ? { backgroundColor: 'transparent' } : null]}>
                 <TextInput
                   value={vals[`${pfx}Emoji`]}
                   onChangeText={e ? v => setVal(`${pfx}Emoji`, v) : undefined}
                   editable={e}
                   placeholder="🍒💌💗"
-                  placeholderTextColor={INK + '55'}
-                  style={s.emojiInput}
+                  placeholderTextColor={ink + '55'}
+                  style={[s.emojiInput, { color: ink }]}
                   textAlign="center"
                 />
               </View>
-              <Text style={s.emojiLabel}>Emoji</Text>
+              <Text style={[s.emojiLabel, { color: ink + '88' }]}>Emoji</Text>
 
               {/* Avatar circle — tap to recolor */}
               <Pressable
                 onPress={e ? () => setPicking({ pfx, idx: -1 }) : undefined}
-                style={[s.avatar, { backgroundColor: color }]}
+                style={[s.avatar, { backgroundColor: color, borderColor: ink }]}
               >
-                <Text style={s.avatarLetter}>{(name || '?')[0]}</Text>
+                <Text style={[s.avatarLetter, { color: getContrastColor(color) }]}>{(name || '?')[0]}</Text>
               </Pressable>
-
-
 
               {/* Name — prefilled from ship */}
               {e ? (
                 <TextInput value={name} onChangeText={v => setVal(`${pfx}Name`, v)}
-                  placeholder="Name" placeholderTextColor={INK + '55'}
-                  style={[s.charName, { color }]} textAlign="center" />
+                  placeholder="Name" placeholderTextColor={ink + '55'}
+                  style={[s.charName, { color: ink }]} textAlign="center" />
               ) : (
-                <Text style={[s.charName, { color }]}>{name || '——'}</Text>
+                <Text style={[s.charName, { color: ink }]}>{name || '——'}</Text>
               )}
 
               {/* Pronouns / Height / MBTI */}
               {[['Pronouns', `${pfx}Pron`], ['Height', `${pfx}H`], ['MBTI', `${pfx}Mbti`]].map(([label, key]) => (
                 <View key={key} style={s.charField}>
-                  <Text style={s.charFieldKey}>{label}: </Text>
+                  <Text style={[s.charFieldKey, { color: ink }]}>{label}: </Text>
                   {e ? (
                     <TextInput value={vals[key]} onChangeText={v => setVal(key, v)}
-                      placeholder="——" placeholderTextColor={INK + '55'}
-                      style={[s.charFieldVal, { color }]} />
+                      placeholder="——" placeholderTextColor={ink + '55'}
+                      style={[s.charFieldVal, { color: ink }]} />
                   ) : (
-                    <Text style={[s.charFieldVal, { color }]}>{vals[key] || '——'}</Text>
+                    <Text style={[s.charFieldVal, { color: ink }]}>{vals[key] || '——'}</Text>
                   )}
                 </View>
               ))}
 
               {/* Color palette — tappable hearts */}
-              <Text style={[s.charFieldKey, { marginTop: 6 }]}>Color palette</Text>
+              <Text style={[s.charFieldKey, { color: ink, marginTop: 6 }]}>Color palette</Text>
               <View style={s.paletteRow}>
                 {pal.map((col, ci) => (
                   <HeartDot key={ci} color={col}
                     onPress={e ? () => setPicking({ pfx, idx: ci }) : undefined} />
                 ))}
               </View>
-              {e && <Text style={s.palHint}>tap to change</Text>}
+              {e && <Text style={[s.palHint, { color: ink + '60' }]}>tap to change</Text>}
             </View>
           );
         })}
       </View>
 
       {/* Tropes box */}
-      <View style={[s.tropesBox, customBg ? { backgroundColor: 'transparent' } : null]}>
-        <Text style={s.tropesLabel}>Tropes</Text>
+      <View style={[s.tropesBox, { borderColor: ink }, customBg ? { backgroundColor: 'transparent' } : null]}>
+        <Text style={[s.tropesLabel, { color: ink + '88' }]}>Tropes</Text>
         {e ? (
           <TextInput value={vals.tropes} onChangeText={v => setVal('tropes', v)}
             placeholder={'slowburn · annoyance to lovers\nsunshine × grumpy'}
-            placeholderTextColor={INK + '55'} multiline
-            style={s.tropesInput} textAlign="center" />
+            placeholderTextColor={ink + '55'} multiline
+            style={[s.tropesInput, { color: ink }]} textAlign="center" />
         ) : (
-          <Text style={s.tropesText}>{vals.tropes || 'slowburn · annoyance to lovers\nsunshine × grumpy'}</Text>
+          <Text style={[s.tropesText, { color: ink }]}>{vals.tropes || 'slowburn · annoyance to lovers\nsunshine × grumpy'}</Text>
         )}
       </View>
 
@@ -456,6 +448,73 @@ export function TalkingAboutContent({ editing = false }: { editing?: boolean }) 
               setVal('sliders', JSON.stringify(next));
             } : undefined} />
         ))}
+      </View>
+
+      {/* Corkboard — pinned photos */}
+      <View style={s.corkBoard}>
+        <Text style={[s.colTitle, { color: ink, alignSelf: 'center' }]}>pinned memories</Text>
+        <View style={s.corkRow}>
+          {[0, 1, 2].map((i) => {
+            const pinColor = i === 1 ? foColor : meColor;
+            return (
+              <View key={i} style={[s.pinnedPhoto, { transform: [{ rotate: `${PIN_ROTATE[i]}deg` }] }]}>
+                <View style={[s.pin, { backgroundColor: pinColor, borderColor: ink }]}>
+                  <View style={s.pinShine} />
+                </View>
+                <PhotoBox
+                  size={72}
+                  style={s.corkPhotoBox}
+                  editing={e}
+                  uri={vals[`memPhoto${i}`]}
+                  onUriChange={e ? (u) => setVal(`memPhoto${i}`, u) : undefined}
+                />
+                {e ? (
+                  <TextInput
+                    value={vals[`memCap${i}`] ?? ''}
+                    onChangeText={(v) => setVal(`memCap${i}`, v)}
+                    placeholder="memo~"
+                    placeholderTextColor={ink + '77'}
+                    style={[s.corkCaption, { color: ink }]}
+                  />
+                ) : vals[`memCap${i}`] ? (
+                  <Text style={[s.corkCaption, { color: ink }]} numberOfLines={1}>{vals[`memCap${i}`]}</Text>
+                ) : null}
+              </View>
+            );
+          })}
+        </View>
+      </View>
+
+      {/* Mixtape — hand-doodled song label */}
+      <View style={s.mixtapeWrap}>
+        <Text style={[s.tropesLabel, { color: ink + '88' }]}>♪ mixtape</Text>
+        <View style={[s.mixtape, { borderColor: ink }, customBg ? { backgroundColor: 'transparent' } : null]}>
+          {e ? (
+            <TextInput
+              value={vals.song}
+              onChangeText={(v) => setVal('song', v)}
+              placeholder="side A: our song"
+              placeholderTextColor={ink + '88'}
+              style={[s.mixtapeText, { color: ink }]}
+            />
+          ) : (
+            <Text style={[s.mixtapeText, { color: ink }]}>{vals.song || 'side A: our song'}</Text>
+          )}
+
+          <View style={[s.mixtapeDivider, { backgroundColor: ink + '40' }]} />
+
+          <View style={s.reelRow}>
+            <View style={[s.reel, { borderColor: ink }]}>
+              <Text style={[s.reelIcon, { color: ink }]}>♪</Text>
+            </View>
+            <Pressable style={[s.playBtn, { borderColor: ink }]} onPress={() => setPlaying((p) => !p)} hitSlop={8}>
+              <Text style={[s.playIcon, { color: ink }]}>{playing ? '❚❚' : '▶'}</Text>
+            </Pressable>
+            <View style={[s.reel, { borderColor: ink }]}>
+              <Text style={[s.reelIcon, { color: ink }]}>♪</Text>
+            </View>
+          </View>
+        </View>
       </View>
 
       {doodleOpen && (
@@ -513,16 +572,7 @@ export default function TemplateTalkingAbout() {
 // ─── Styles ───────────────────────────────────────────────────
 const cb = StyleSheet.create({
   box:    { width: 11, height: 11, borderWidth: 1.2, borderColor: INK, borderRadius: 2, backgroundColor: '#fff' },
-  filled: { backgroundColor: Colors.sakura },
-});
-
-const sl = StyleSheet.create({
-  wrap:    { gap: 2 },
-  label:   { fontFamily: FontFamily.markerBold, fontSize: sf(10), color: INK, textAlign: 'center' },
-  track:   { height: 9, flexDirection: 'row', borderWidth: 1.2, borderColor: INK, borderRadius: 999, overflow: 'hidden', position: 'relative' },
-  left:    { height: '100%', backgroundColor: Colors.sakura + 'cc' },
-  right:   { flex: 1, height: '100%', backgroundColor: Colors.lavenderDeep + 'cc' },
-  divider: { position: 'absolute', top: -2, bottom: -2, width: 1.5, backgroundColor: INK },
+  filled: { backgroundColor: INK },
 });
 
 const dc = StyleSheet.create({
@@ -559,10 +609,10 @@ const s = StyleSheet.create({
   sharingRow: { flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 4 },
   sharingOpt: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   sharingText: { fontFamily: FontFamily.marker, fontSize: sf(10), color: INK },
-  sharingOn:  { color: Colors.sakuraInk },
+  sharingOn:  { color: INK },
   sharingDot:   { borderRadius: 999 },
   sharingDotOff: { width: 8, height: 8, borderWidth: 1.2, borderColor: INK },
-  sharingDotOn:  { width: 13, height: 13, backgroundColor: Colors.sakuraInk },
+  sharingDotOn:  { width: 13, height: 13, backgroundColor: INK },
   charCol:   { flex: 1, alignItems: 'center', gap: 2 },
   emojiBox:  { paddingHorizontal: 8, paddingVertical: 2, borderWidth: 1.2, borderStyle: 'dashed', borderColor: INK, borderRadius: 4, backgroundColor: '#fff' },
   emojiInput:{ fontFamily: FontFamily.ja, fontSize: sf(12), color: INK, minWidth: 60 },
@@ -581,15 +631,56 @@ const s = StyleSheet.create({
   tropesInput:{ fontFamily: FontFamily.script, fontSize: sf(13), color: INK, lineHeight: 15, textAlign: 'center', width: '100%' },
   tropesText: { fontFamily: FontFamily.script, fontSize: sf(13), color: INK, lineHeight: 15, textAlign: 'center' },
   sliderBlock:{ gap: 8 },
+  corkBoard:  { marginTop: 4, gap: 8 },
+  corkRow:    { flexDirection: 'row', justifyContent: 'center', gap: 14, paddingTop: 10 },
+  pinnedPhoto:{ alignItems: 'center', position: 'relative' },
+  pin: {
+    position: 'absolute',
+    top: -7,
+    width: 14,
+    height: 14,
+    borderRadius: 999,
+    borderWidth: 1,
+    zIndex: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pinShine:   { width: 4, height: 4, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.7)', marginBottom: 4, marginLeft: -3 },
+  corkPhotoBox: { borderRadius: 2 },
+  corkCaption: { fontFamily: FontFamily.script, fontSize: sf(13), marginTop: 2, maxWidth: 72, textAlign: 'center' },
+  mixtapeWrap: { alignItems: 'center', marginTop: 4, gap: 4 },
+  mixtape: {
+    width: 210,
+    borderWidth: 1.2,
+    borderStyle: 'dashed',
+    borderRadius: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: '#fff',
+    gap: 8,
+  },
+  mixtapeDivider: { height: 1, width: '100%' },
+  reelRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  reel: {
+    width: 22, height: 22, borderRadius: 999, borderWidth: 1.2,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  reelIcon: { fontSize: sf(10) },
+  playBtn: {
+    width: 22, height: 22, borderRadius: 999, borderWidth: 1.2,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  playIcon: { fontSize: sf(8) },
+  mixtapeText: { width: '100%', textAlign: 'center', fontFamily: FontFamily.script, fontSize: sf(14) },
 });
 
 const m = StyleSheet.create({
   overlay:     { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.4)' },
-  sheet:       { backgroundColor: Colors.paper ?? '#fffbf6', borderTopLeftRadius: Radius.r5, borderTopRightRadius: Radius.r5, padding: Spacing.s5, paddingBottom: 40 },
-  handle:      { width: 40, height: 4, backgroundColor: Colors.line ?? '#e0d4cc', borderRadius: 2, alignSelf: 'center', marginBottom: Spacing.s4 },
+  sheet:       { backgroundColor: '#fffbf6', borderTopLeftRadius: Radius.r5, borderTopRightRadius: Radius.r5, padding: Spacing.s5, paddingBottom: 40 },
+  handle:      { width: 40, height: 4, backgroundColor: '#e0d4cc', borderRadius: 2, alignSelf: 'center', marginBottom: Spacing.s4 },
   title:       { fontFamily: FontFamily.displayItalic, fontSize: sf(16), color: INK, marginBottom: Spacing.s4 },
   grid:        { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  swatch:      { width: 36, height: 36, borderRadius: 6, borderWidth: 1.5, borderColor: Colors.line ?? '#e0d4cc' },
+  swatch:      { width: 36, height: 36, borderRadius: 6, borderWidth: 1.5, borderColor: '#e0d4cc' },
   swatchActive:{ borderColor: INK, borderWidth: 2.5 },
 });
 
@@ -600,7 +691,7 @@ const dd = StyleSheet.create({
   topBar:          { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   toolTitle:       { fontFamily: FontFamily.script, fontSize: sf(18), color: INK },
   toolBtn:         { paddingHorizontal: 12, paddingVertical: 5, borderRadius: 20, borderWidth: 1.2, borderColor: INK + '44' },
-  doneBtn:         { backgroundColor: Colors.sakura, borderColor: Colors.sakura },
+  doneBtn:         { backgroundColor: INK, borderColor: INK },
   toolText:        { fontFamily: FontFamily.marker, fontSize: sf(11), color: INK },
   canvasWrap:      { alignItems: 'center' },
   drawZone:        { width: '100%', aspectRatio: 2.6, backgroundColor: CANVAS_BG, borderWidth: 1.5, borderColor: INK, borderRadius: 6, overflow: 'hidden' },

@@ -31,6 +31,7 @@ export function StorylineTab({ shipId, shipName }: { shipId: string; shipName: s
     },
     bgColor: '',
     bgImage: '',
+    textColor: '',
   }), [shipId]);
 
   return (

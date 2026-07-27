@@ -316,3 +316,35 @@ export function IconLockSolid({ size = 14, color = Colors.sakuraDeep }: IconProp
     </Svg>
   );
 }
+
+export function IconPhoto({ size = 14, color = Colors.ink }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 16 16" fill="none">
+      <Rect
+        x="1.5"
+        y="1.5"
+        width="13"
+        height="13"
+        rx="2"
+        stroke={color}
+        strokeWidth="1.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Circle
+        cx="5"
+        cy="5"
+        r="1.2"
+        stroke={color}
+        strokeWidth="1.3"
+      />
+      <Path
+        d="M1.5 11l4-4 4.5 4.5M8 9.5l3.5-3.5 3 3"
+        stroke={color}
+        strokeWidth="1.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}

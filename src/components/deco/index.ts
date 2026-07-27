@@ -1,9 +1,11 @@
 export { Cloud } from './Cloud';
+export { FlagIcon } from './FlagIcon';
 export { Heart } from './Heart';
 export { Ribbon } from './Ribbon';
 export { Sakura } from './Sakura';
 export { Sparkle } from './Sparkle';
 export { Star } from './Star';
+export { TornEdge } from './TornEdge';
 export { WashiTape } from './WashiTape';
 export { Bullets } from './Bullets';
 export * from './Stickers';

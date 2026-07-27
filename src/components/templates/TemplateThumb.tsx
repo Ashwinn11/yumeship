@@ -68,7 +68,7 @@ export function TemplateThumb({ templateKey, width, height, data }: Props) {
   let content = <Content editing={false} />;
   if (data) {
     content = (
-      <TemplateDataCtx.Provider value={{ get: (k, fb = '') => data[k] ?? fb, set: () => {}, bgColor: '', bgImage: '' }}>
+      <TemplateDataCtx.Provider value={{ get: (k, fb = '') => data[k] ?? fb, set: () => {}, bgColor: '', bgImage: '', textColor: '' }}>
         {content}
       </TemplateDataCtx.Provider>
     );
