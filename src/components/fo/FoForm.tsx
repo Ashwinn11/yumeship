@@ -2,6 +2,7 @@ import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
+import { persistImage } from '@/lib/localMedia';
 import { GalleryPicker } from '@/components/profile/GalleryPicker';
 import { SexualityPicker } from '@/components/profile/SexualityPicker';
 import { Button } from '@/components/ui/Button';
@@ -64,7 +65,8 @@ export function FoForm({ value, onChange, onSave, saveLabel = 'save them', onDel
       quality: 0.85,
     });
     if (!res.canceled && res.assets[0]) {
-      set('photoUri', res.assets[0].uri);
+      // copy out of the picker's cache directory before storing the reference
+      set('photoUri', await persistImage(res.assets[0].uri));
     }
   }
 

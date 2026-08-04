@@ -21,7 +21,8 @@ import { UnderInput } from '@/components/ui/UnderInput';
 import { CalloutBubble } from '@/components/ui';
 import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing ,sf } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
-import { getGlobalSetting, saveGlobalSetting, setOnbField } from '@/store/onboarding';
+import { galleryToRefs, persistImage, resolveMedia } from '@/lib/localMedia';
+import { getGlobalSetting, getMediaSetting, saveGlobalSetting, saveMediaSetting, setOnbField } from '@/store/onboarding';
 import { parseGallery, useFos, type GalleryPhoto } from '@/store/fo';
 import { pushOwnProfile, syncIdentifyFoPublish, unpublishFoProfile } from '@/store/community';
 
@@ -47,13 +48,13 @@ export default function OnbPersona() {
     const i = (COLOR_OPTIONS as string[]).indexOf(getGlobalSetting('user_color'));
     return i >= 0 ? i : 0;
   });
-  const [avatar, setAvatar] = useState(() => getGlobalSetting('user_avatar'));
+  const [avatar, setAvatar] = useState(() => getMediaSetting('user_avatar'));
   const [bio, setBio] = useState(() => getGlobalSetting('user_bio'));
   const [height, setHeight] = useState(() => getGlobalSetting('user_height'));
   const [weight, setWeight] = useState(() => getGlobalSetting('user_weight'));
   const [song, setSong] = useState(() => getGlobalSetting('user_song'));
   const [songLink, setSongLink] = useState(() => getGlobalSetting('user_song_link'));
-  const [gallery, setGallery] = useState<GalleryPhoto[]>(() => parseGallery(getGlobalSetting('user_gallery')));
+  const [gallery, setGallery] = useState<GalleryPhoto[]>(() => parseGallery(getGlobalSetting('user_gallery')).map((g) => ({ ...g, uri: resolveMedia(g.uri) })));
   const [sexuality, setSexuality] = useState(() => getGlobalSetting('user_status_label'));
   const [identifyFoId, setIdentifyFoId] = useState(() => getGlobalSetting('user_identify_fo_id'));
   const [showFoPicker, setShowFoPicker] = useState(false);
@@ -65,7 +66,7 @@ export default function OnbPersona() {
   const handleWeightChange = (v: string) => { setWeight(v); saveGlobalSetting('user_weight', v); };
   const handleSongChange = (v: string) => { setSong(v); saveGlobalSetting('user_song', v); };
   const handleSongLinkChange = (v: string) => { setSongLink(v); saveGlobalSetting('user_song_link', v); };
-  const handleGalleryChange = (g: GalleryPhoto[]) => { setGallery(g); saveGlobalSetting('user_gallery', JSON.stringify(g)); };
+  const handleGalleryChange = (g: GalleryPhoto[]) => { setGallery(g); saveGlobalSetting('user_gallery', JSON.stringify(galleryToRefs(g))); };
   const handleSexualityChange = (v: string) => { setSexuality(v); saveGlobalSetting('user_status_label', v); };
   const handlePronounChange = (p: string) => {
     setPronoun(p);
@@ -118,14 +119,15 @@ export default function OnbPersona() {
       quality: 0.85,
     });
     if (!res.canceled && res.assets[0]) {
-      setAvatar(res.assets[0].uri);
-      saveGlobalSetting('user_avatar', res.assets[0].uri);
+      const stored = await persistImage(res.assets[0].uri);
+      setAvatar(stored);
+      saveMediaSetting('user_avatar', stored);
       pushOwnProfile().catch(() => {}); // fire-and-forget — no-op while signed out
     }
   }
 
   return (
-    <View style={[styles.screen, { paddingTop: insets.top + Spacing.s1, paddingBottom: insets.bottom + Spacing.s1 }]}>
+    <View style={[styles.screen, { paddingTop: insets.top + Spacing.s1, paddingBottom: Spacing.s1 }]}>
       {isEdit ? (
         <View style={styles.header}>
           <Pressable onPress={() => router.back()} style={styles.closeBtn}>

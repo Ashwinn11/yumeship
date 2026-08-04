@@ -78,7 +78,7 @@ export default function FoDetailScreen() {
   const pageBg = fo.pageBgImage || fo.pageBgColor;
 
   const body = (
-    <View style={[styles.screen, !pageBg && { backgroundColor: Colors.paper }, { paddingTop: insets.top + Spacing.s1, paddingBottom: insets.bottom + Spacing.s1 }]}>
+    <View style={[styles.screen, !pageBg && { backgroundColor: Colors.paper }, { paddingTop: insets.top + Spacing.s1, paddingBottom: Spacing.s1 }]}>
       <View style={styles.header}>
         <Pressable onPress={() => (editing ? setEditing(false) : router.back())} style={styles.headerBtn}>
           <Text style={styles.headerBtnText}>{editing ? '✕' : '‹'}</Text>

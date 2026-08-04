@@ -35,6 +35,9 @@ export function initDb() {
   try { db.execSync(`ALTER TABLE dates ADD COLUMN notif_id TEXT NOT NULL DEFAULT ''`); } catch (_) {}
   try { db.execSync(`ALTER TABLE messages ADD COLUMN image_uri TEXT NOT NULL DEFAULT ''`); } catch (_) {}
   try { db.execSync(`ALTER TABLE fo_messages ADD COLUMN arrival_day TEXT NOT NULL DEFAULT 'everyday'`); } catch (_) {}
+  // notification face, kept apart from the profile photo so a user can show a
+  // different picture on the lock screen than on the F/O's card
+  try { db.execSync(`ALTER TABLE fo ADD COLUMN notif_photo_uri TEXT NOT NULL DEFAULT ''`); } catch (_) {}
   db.execSync(`
     CREATE TABLE IF NOT EXISTS ships (
       id TEXT PRIMARY KEY,
@@ -70,6 +73,7 @@ export function initDb() {
       height TEXT NOT NULL DEFAULT '',
       weight TEXT NOT NULL DEFAULT '',
       photo_uri TEXT NOT NULL DEFAULT '',
+      notif_photo_uri TEXT NOT NULL DEFAULT '',
       page_bg_color TEXT NOT NULL DEFAULT '',
       page_bg_image TEXT NOT NULL DEFAULT '',
       card_bg_color TEXT NOT NULL DEFAULT '',

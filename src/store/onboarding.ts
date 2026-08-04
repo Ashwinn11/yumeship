@@ -14,6 +14,7 @@ export type OnbState = {
   kind: 'single' | 'poly';
 };
 
+import { resolveMedia, toMediaRef } from '@/lib/localMedia';
 import { getDb } from '@/db/client';
 
 export function saveGlobalSetting(key: string, val: string) {
@@ -34,6 +35,24 @@ export function getGlobalSetting(key: string, fallback = ''): string {
   } catch (_) {
     return fallback;
   }
+}
+
+/**
+ * Settings holding a picked image are stored as container-independent refs, so
+ * they must be resolved before anything tries to render or read the file.
+ * Legacy absolute paths pass through untouched.
+ */
+export function getMediaSetting(key: string, fallback = ''): string {
+  return resolveMedia(getGlobalSetting(key, fallback));
+}
+
+/**
+ * Counterpart to getMediaSetting: stores the container-independent ref rather
+ * than whatever absolute path the UI happened to be holding. Saving the
+ * displayed uri directly is what silently re-breaks these on reinstall.
+ */
+export function saveMediaSetting(key: string, value: string) {
+  saveGlobalSetting(key, toMediaRef(value));
 }
 
 let state: OnbState = {

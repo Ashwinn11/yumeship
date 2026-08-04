@@ -1,6 +1,98 @@
 import { useEffect, useState } from 'react';
 import { getDb, newId } from '@/db/client';
+import { getAllFos, getFo } from './fo';
+import { getShip } from './ships';
 import { cancelNotification, getScheduledNotifications, scheduleFoNotification, scheduleOneShotAtDate } from './notifications';
+
+export type SenderOption = {
+  id: string;
+  name: string;
+  /** profile photo — what the picker chip shows */
+  photoUri: string;
+  /** notification face, when this sender is an F/O with one set */
+  notifPhotoUri: string;
+  /** false for ship members with no F/O record — nothing to attach a face to */
+  isFo: boolean;
+};
+
+/** The picture a notification from this sender should wear. */
+export function senderFace(o: SenderOption | undefined): string {
+  return o ? o.notifPhotoUri || o.photoUri : '';
+}
+
+/**
+ * Who a message can be "from", and the face that goes with each.
+ *
+ * Ordered by closeness to this ship — its own roster and linked F/O first —
+ * but every other F/O follows, because a message is not required to come from
+ * someone already on the ship. Deduped by name since that is what the avatar
+ * lookup matches on.
+ */
+export function senderOptions(shipId: string, shipName = ''): SenderOption[] {
+  const ship = getShip(shipId);
+  const out: SenderOption[] = [];
+  const byName = new Map<string, SenderOption>();
+
+  // Ship members are listed first for ordering, but they rarely carry a photo —
+  // ShipMember.photoUri is only ever set on the poly-dynamics screen. So a
+  // duplicate name is not skipped outright: if the later entry (usually the F/O
+  // record) has the face this one is missing, it fills the gap in place.
+  const push = (o: SenderOption) => {
+    const key = o.name.trim().toLowerCase();
+    if (!key) return;
+    const existing = byName.get(key);
+    if (!existing) {
+      byName.set(key, o);
+      out.push(o);
+      return;
+    }
+    // an F/O record arriving after a same-named ship member supplies the face
+    // and identity that member entry lacks
+    if (o.isFo && !existing.isFo) {
+      existing.id = o.id;
+      existing.isFo = true;
+      existing.notifPhotoUri = o.notifPhotoUri;
+      if (!existing.photoUri) existing.photoUri = o.photoUri;
+    } else if (!existing.photoUri && o.photoUri) {
+      existing.photoUri = o.photoUri;
+    }
+  };
+
+  for (const m of ship?.members ?? []) {
+    if (!m.isMe) {
+      push({ id: m.id, name: m.name, photoUri: m.photoUri ?? '', notifPhotoUri: '', isFo: false });
+    }
+  }
+  const linked = getFo(ship?.foId ?? '');
+  if (linked) {
+    push({ id: linked.id, name: linked.name, photoUri: linked.photoUri, notifPhotoUri: linked.notifPhotoUri, isFo: true });
+  }
+  for (const fo of getAllFos()) {
+    push({ id: fo.id, name: fo.name, photoUri: fo.photoUri, notifPhotoUri: fo.notifPhotoUri, isFo: true });
+  }
+
+  if (out.length === 0) {
+    const name = shipName || ship?.shipName || ship?.name || '';
+    if (name) push({ id: shipId, name, photoUri: '', notifPhotoUri: '', isFo: false });
+  }
+
+  return out;
+}
+
+/**
+ * The face for a specific sender. Matching on name (rather than the ship's one
+ * linked F/O) is what keeps a polyship honest — a message from one partner must
+ * not arrive wearing another's photo. No match means no avatar, and the
+ * scheduler quietly falls back to a plain notification.
+ */
+function foIdentity(shipId: string, senderName: string): { avatarUri: string; conversationId: string } {
+  const match = senderOptions(shipId).find(
+    (o) => o.name.trim().toLowerCase() === senderName.trim().toLowerCase(),
+  );
+  const face = senderFace(match);
+  if (face) return { avatarUri: face, conversationId: match!.id };
+  return { avatarUri: '', conversationId: match?.id ?? shipId };
+}
 
 export type FoMessage = {
   id: string;
@@ -187,7 +279,8 @@ export async function addFoMessage(
       const targetHour = scheduledHour === -2 ? 0 : scheduledHour;
       const targetMinute = scheduledHour === -2 ? 0 : scheduledMinute;
 
-      const nid = await scheduleFoNotification(triggerBody, senderName, arrivalDay, targetHour, targetMinute, staggerIndex);
+      const { avatarUri, conversationId } = foIdentity(shipId, senderName);
+      const nid = await scheduleFoNotification(triggerBody, senderName, arrivalDay, targetHour, targetMinute, staggerIndex, avatarUri, conversationId);
       if (nid) notifId = nid;
     }
 
@@ -240,7 +333,8 @@ export async function toggleFoMessage(id: string, active: boolean, foName = ''):
       const targetHour = msg.scheduledHour === -2 ? 0 : msg.scheduledHour;
       const targetMinute = msg.scheduledHour === -2 ? 0 : msg.scheduledMinute;
 
-      const nid = await scheduleFoNotification(triggerBody, msg.senderName || foName, msg.arrivalDay, targetHour, targetMinute, staggerIndex);
+      const { avatarUri, conversationId } = foIdentity(msg.shipId, msg.senderName || foName);
+      const nid = await scheduleFoNotification(triggerBody, msg.senderName || foName, msg.arrivalDay, targetHour, targetMinute, staggerIndex, avatarUri, conversationId);
       if (nid) newNotifId = nid;
     }
 
@@ -302,7 +396,8 @@ export async function updateFoMessage(
       const targetHour = scheduledHour === -2 ? 0 : scheduledHour;
       const targetMinute = scheduledHour === -2 ? 0 : scheduledMinute;
 
-      notifId = await scheduleFoNotification(triggerBody, senderName, arrivalDay, targetHour, targetMinute, staggerIndex) ?? '';
+      const { avatarUri, conversationId } = foIdentity(msg.shipId, senderName);
+      notifId = await scheduleFoNotification(triggerBody, senderName, arrivalDay, targetHour, targetMinute, staggerIndex, avatarUri, conversationId) ?? '';
     }
 
     newIndex = parsedLength > 1 ? 1 : 0;

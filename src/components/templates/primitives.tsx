@@ -1,5 +1,8 @@
 import { useState, useRef, createContext, useContext } from 'react';
-import { View, Text, TextInput, Pressable, Image, StyleSheet } from 'react-native';
+import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
+import { Image } from 'expo-image';
+import { persistImage } from '@/lib/localMedia';
+import { MEDIA_IMAGE } from '@/lib/imageProps';
 import * as ImagePicker from 'expo-image-picker';
 import Svg, {
   Defs, ClipPath, Path, Rect, Circle, G,
@@ -545,7 +548,8 @@ export function PhotoBox({ size, round, label, style, width, height, onPress, ed
       quality: 0.85,
     });
     if (!result.canceled && result.assets[0]) {
-      const u = result.assets[0].uri;
+      // copy out of the picker cache so the photo outlives the next reinstall
+      const u = await persistImage(result.assets[0].uri);
       if (onUriChange) onUriChange(u);
       else setLocalUri(u);
     }
@@ -633,7 +637,7 @@ export function Polaroid({ size = 130, rotate = -4, caption, onCaptionChange, ta
       <Pressable onPress={editing ? handlePhotoPress : undefined} disabled={!editing}>
         <View style={[s.polaroidPhoto, { width: size - 16, borderColor: ink }]}>
           {imageUri && (
-            <Image source={{ uri: imageUri }} style={[StyleSheet.absoluteFill, { borderRadius: 2 }]} resizeMode="cover" />
+            <Image source={{ uri: imageUri }} style={[StyleSheet.absoluteFill, { borderRadius: 2 }]} contentFit="cover" {...MEDIA_IMAGE} />
           )}
           {editing && !imageUri && <Text style={[s.photoBoxLabel, { color: ink, position: 'absolute', alignSelf: 'center', top: '40%' as any }]}>tap</Text>}
         </View>

@@ -1,0 +1,9 @@
+{
+  "platforms": ["ios", "android"],
+  "ios": {
+    "modules": ["AvatarNotificationsModule"]
+  },
+  "android": {
+    "modules": ["expo.modules.avatarnotifications.AvatarNotificationsModule"]
+  }
+}

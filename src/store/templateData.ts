@@ -2,7 +2,7 @@ import { createContext, useContext } from 'react';
 import { getDb } from '@/db/client';
 import type { Ship } from './ships';
 import { isPoly } from './ships';
-import { getGlobalSetting } from './onboarding';
+import { getGlobalSetting, getMediaSetting } from './onboarding';
 import { getFo } from './fo';
 
 type TemplateCtx = {
@@ -112,7 +112,7 @@ export function buildPreFill(ship: Ship, templateKey: string): Record<string, st
   const userName = ship.myName || getGlobalSetting('user_name');
   const userPronouns = getGlobalSetting('user_pronouns');
   const userHeight = getGlobalSetting('user_height');
-  const userPhoto = getGlobalSetting('user_avatar');
+  const userPhoto = getMediaSetting('user_avatar');
   // For polyship, `ship.name` is the ship label, not an F/O — never seed it as a character name.
   const foSeed = isPoly(ship) ? '' : ship.name;
   const fo = !isPoly(ship) && ship.foId ? getFo(ship.foId) : undefined;

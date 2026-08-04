@@ -1,3 +1,4 @@
+import { persistImage } from '@/lib/localMedia';
 import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
@@ -50,7 +51,7 @@ async function pickImage(): Promise<string | undefined> {
     allowsEditing: false,
     quality: 0.8,
   });
-  if (!result.canceled && result.assets[0]) return result.assets[0].uri;
+  if (!result.canceled && result.assets[0]) return persistImage(result.assets[0].uri);
   return undefined;
 }
 

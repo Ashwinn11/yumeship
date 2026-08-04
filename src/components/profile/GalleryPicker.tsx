@@ -1,4 +1,5 @@
 import { Image } from 'expo-image';
+import { persistImage } from '@/lib/localMedia';
 import * as ImagePicker from 'expo-image-picker';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
@@ -21,7 +22,8 @@ export function GalleryPicker({ photos, onChange }: Props) {
       quality: 0.8,
     });
     if (!res.canceled && res.assets[0]) {
-      onChange([...photos, { uri: res.assets[0].uri, caption: '' }].slice(0, GALLERY_MAX));
+      const uri = await persistImage(res.assets[0].uri);
+      onChange([...photos, { uri, caption: '' }].slice(0, GALLERY_MAX));
     }
   }
 

@@ -13,7 +13,6 @@ import { Star } from '@/components/deco/Star';
 import { FILL_GRAY, TitleHeader } from '@/components/templates/primitives';
 
 import { StickerEnvelope, StickerSakuraBranch, StickerWaxSeal, WashiTape } from '@/components/deco';
-import { MemberPicker } from '@/components/nav/MemberPicker';
 import { AlbumsTab } from '@/components/tabs/AlbumsTab';
 import { DatesTab } from '@/components/tabs/DatesTab';
 import { IncorrectQuotesTab } from '@/components/tabs/IncorrectQuotesTab';
@@ -29,7 +28,7 @@ import { Mark } from '@/components/ui/Mark';
 import { MockPhoneTop } from '@/components/ui/MockPhone';
 import { Colors, FontFamily, FontSize, Radius, sf, Shadow, SheetColumn, Spacing } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
-import { addFoMessage, deleteFoMessage, FoMessage, syncFoMessagesDb, toggleFoMessage, updateFoMessage, useFoMessages } from '@/store/foNotifications';
+import { addFoMessage, deleteFoMessage, FoMessage, senderFace, senderOptions, syncFoMessagesDb, toggleFoMessage, updateFoMessage, useFoMessages } from '@/store/foNotifications';
 import { newId } from '@/db/client';
 import { addHeadcanon, clearCategoryHeadcanons, deleteHeadcanon, getHeadcanons, updateHeadcanon, useHeadcanonCounts, useHeadcanons } from '@/store/headcanons';
 import { requestPermission } from '@/store/notifications';
@@ -37,7 +36,12 @@ import { getGlobalSetting, saveGlobalSetting } from '@/store/onboarding';
 import { usePremium } from '@/store/premium';
 import { addCustomPrompt, CustomPrompt, deleteCustomPrompt, getBuiltinDeck, useCustomPrompts } from '@/store/scenarioPrompts';
 import { addScenario, deleteScenario, updateScenario, useScenarios } from '@/store/scenarios';
-import { getMembers, isPoly, membersLabel, Ship, shipPartners, useShip, useShips } from '@/store/ships';
+import { Image as ExpoImage } from 'expo-image';
+import { AVATAR_IMAGE } from '@/lib/imageProps';
+import * as ImagePicker from 'expo-image-picker';
+import { persistImage } from '@/lib/localMedia';
+import { updateFo, useFos } from '@/store/fo';
+import { isPoly, membersLabel, Ship, useShip, useShips } from '@/store/ships';
 import { loadTemplateData, saveTemplateData } from '@/store/templateData';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
@@ -1491,9 +1495,41 @@ function FoCompose({ shipName, ship, initialMessage, onQueue }: {
     }];
   });
 
-  const [senderName, setSenderName] = useState(
-    initialMessage?.senderName || (isPoly(ship) ? (shipPartners(ship)[0]?.name || '') : shipName),
+  // subscribed so a newly added F/O (or a new photo on one) shows up here
+  // without leaving the composer
+  const allFos = useFos();
+  const fromOptions = useMemo(
+    () => senderOptions(ship?.id ?? '', shipName),
+    [ship?.id, ship?.members, shipName, allFos],
   );
+  const [senderName, setSenderName] = useState(
+    // an edited message keeps its sender even if that member was since renamed
+    initialMessage?.senderName || fromOptions[0]?.name || shipName,
+  );
+
+  const selectedSender = fromOptions.find((o) => o.name === senderName);
+  const notifFace = senderFace(selectedSender);
+
+  async function pickNotifPhoto() {
+    if (!selectedSender?.isFo) return;
+    if (!isPremium) {
+      router.push({ pathname: '/paywall', params: { reason: 'notification-photo' } });
+      return;
+    }
+    const res = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'] as ImagePicker.MediaType[],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.85,
+    });
+    if (!res.canceled && res.assets[0]) {
+      updateFo(selectedSender.id, { notifPhotoUri: await persistImage(res.assets[0].uri) });
+    }
+  }
+
+  function clearNotifPhoto() {
+    if (selectedSender?.isFo) updateFo(selectedSender.id, { notifPhotoUri: '' });
+  }
 
   const filteredOptions = options.map(o => o.body.trim()).filter(Boolean);
 
@@ -1609,24 +1645,66 @@ function FoCompose({ shipName, ship, initialMessage, onQueue }: {
         </View>
 
         <Text style={fo.sectionLabel}>FROM</Text>
-        {isPoly(ship) && shipPartners(ship).length > 0 ? (
-          <View style={{ marginBottom: 8 }}>
-            <MemberPicker
-              ship={ship}
-              selectedId={getMembers(ship).find((m) => m.name === senderName)?.id}
-              onSelect={(_, name) => setSenderName(name)}
-            />
-          </View>
-        ) : (
-          <View style={fo.fromInputWrap}>
-            <TextInput
-              value={senderName}
-              onChangeText={setSenderName}
-              placeholder={shipName}
-              placeholderTextColor={Colors.ink3}
-              style={fo.fromInput}
-            />
-          </View>
+        <View style={fo.fromInputWrap}>
+          <TextInput
+            value={senderName}
+            onChangeText={setSenderName}
+            placeholder={shipName}
+            placeholderTextColor={Colors.ink3}
+            style={fo.fromInput}
+          />
+        </View>
+
+        {/* The notification face is deliberately its own choice: the photo that
+            suits a profile card is often not the one you want filling the lock
+            screen. Empty falls back to the profile photo. */}
+        {selectedSender?.isFo && (
+          <>
+            <Text style={fo.sectionLabel}>THEIR NOTIFICATION PHOTO</Text>
+            <View style={fo.notifPhotoRow}>
+              <View style={fo.notifPhotoPreview}>
+                {notifFace ? (
+                  <ExpoImage
+                    source={{ uri: notifFace }}
+                    style={fo.notifPhotoImg}
+                    contentFit="cover"
+                    {...AVATAR_IMAGE}
+                  />
+                ) : (
+                  <Text style={fo.notifPhotoInitial}>
+                    {senderName.trim().charAt(0).toUpperCase() || '♡'}
+                  </Text>
+                )}
+              </View>
+              <View style={fo.notifPhotoCol}>
+                <Text style={fo.notifPhotoHint}>
+                  {selectedSender.notifPhotoUri
+                    ? 'a photo just for notifications'
+                    : notifFace
+                      ? 'using their profile photo'
+                      : 'no photo — the app icon shows instead'}
+                </Text>
+                <View style={fo.notifPhotoBtns}>
+                  {/* marked before it's tapped — a paywall you saw coming reads
+                      as a locked feature, one you didn't reads as a bait */}
+                  <Pressable
+                    onPress={pickNotifPhoto}
+                    style={[fo.notifPhotoBtn, !isPremium && fo.notifPhotoBtnLocked]}
+                  >
+                    <Text style={fo.notifPhotoBtnText}>
+                      {selectedSender.notifPhotoUri ? 'change' : 'choose photo'}
+                      {!isPremium ? ' ✦' : ''}
+                    </Text>
+                  </Pressable>
+                  {!!selectedSender.notifPhotoUri && (
+                    <Pressable onPress={clearNotifPhoto} style={fo.notifPhotoBtn}>
+                      <Text style={fo.notifPhotoBtnText}>use profile photo</Text>
+                    </Pressable>
+                  )}
+                </View>
+              </View>
+            </View>
+          </>
         )}
 
         <Text style={fo.sectionLabel}>WHAT THEY MIGHT SEND</Text>
@@ -2247,11 +2325,33 @@ const fo = StyleSheet.create({
   fromInputWrap: {
     backgroundColor: Colors.vellum, borderWidth: 1, borderColor: Colors.line,
     borderRadius: Radius.r3, paddingHorizontal: Spacing.s3, paddingVertical: 10,
+    marginBottom: 8,
   },
   fromInput: {
-    fontFamily: FontFamily.script, fontSize: sf(15), color: Colors.ink,
-    padding: 0,
+    fontFamily: FontFamily.script, fontSize: sf(15), color: Colors.ink, padding: 0,
   },
+  notifPhotoInitial: { fontFamily: FontFamily.displayItalic, fontSize: sf(22), color: '#fff' },
+
+  notifPhotoRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: Colors.vellum, borderWidth: 1, borderColor: Colors.line,
+    borderRadius: Radius.r3, padding: Spacing.s3, marginBottom: 8,
+  },
+  notifPhotoPreview: {
+    width: 52, height: 52, borderRadius: Radius.pill,
+    backgroundColor: Colors.sakura,
+    alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+  },
+  notifPhotoImg: { width: 52, height: 52, borderRadius: Radius.pill },
+  notifPhotoCol: { flex: 1, gap: 6 },
+  notifPhotoHint: { fontFamily: FontFamily.ui, fontSize: sf(11), color: Colors.ink3, lineHeight: sf(15) },
+  notifPhotoBtns: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  notifPhotoBtn: {
+    paddingHorizontal: 12, paddingVertical: 6, borderRadius: Radius.pill,
+    backgroundColor: Colors.paperDeep, borderWidth: 1, borderColor: Colors.line,
+  },
+  notifPhotoBtnLocked: { borderColor: Colors.butterDeep, backgroundColor: Colors.butter + '33' },
+  notifPhotoBtnText: { fontFamily: FontFamily.uiMedium, fontSize: sf(11), color: Colors.ink2 },
 
   // Compose
   compose: { flex: 1, backgroundColor: Colors.paper },

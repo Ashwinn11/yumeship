@@ -52,6 +52,7 @@
     "plugins": [
       "expo-router",
       "./plugins/withPhoneOnly",
+      "./plugins/withAvatarNotifications",
       [
         "expo-splash-screen",
         {
