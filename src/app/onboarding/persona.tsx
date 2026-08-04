@@ -23,7 +23,7 @@ import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing ,sf } from '@/con
 import { useIPad } from '@/hooks/use-ipad';
 import { getGlobalSetting, saveGlobalSetting, setOnbField } from '@/store/onboarding';
 import { parseGallery, useFos, type GalleryPhoto } from '@/store/fo';
-import { pushOwnProfile } from '@/store/community';
+import { pushOwnProfile, syncIdentifyFoPublish, unpublishFoProfile } from '@/store/community';
 
 const PRONOUNS = ['she/her', 'he/him', 'they/them', '+'];
 const COLOR_OPTIONS = [
@@ -83,12 +83,24 @@ export default function OnbPersona() {
     setIdentifyFoId(id);
     saveGlobalSetting('user_identify_fo_id', id);
     setShowFoPicker(false);
+    // publish them, then re-push the profile so its identify_fo_id can point at
+    // a row that now exists — the reverse order would drop the pairing
+    (async () => {
+      await syncIdentifyFoPublish(id);
+      await pushOwnProfile();
+    })().catch(() => {});
   }
 
   function handleIdentifyToggle(v: boolean) {
     if (!v) {
+      const prevId = identifyFoId;
       setIdentifyFoId('');
       saveGlobalSetting('user_identify_fo_id', '');
+      // clear the profile's pointer before deleting the row it references
+      (async () => {
+        await pushOwnProfile();
+        if (prevId) await unpublishFoProfile(prevId);
+      })().catch(() => {});
       return;
     }
     if (fos.length === 1) {

@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, ImageBackground, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { FollowButton } from '@/components/community/FollowButton';
@@ -9,13 +9,23 @@ import { CozyModal } from '@/components/ui/CozyModal';
 import { Mark } from '@/components/ui/Mark';
 import { Colors, FontFamily, FontSize, Radius, Spacing, sf } from '@/constants/theme';
 import { useAuthUser } from '@/store/auth';
-import { blockUser, fetchProfile, fetchRelationship, unblockUser, type CommunityProfile } from '@/store/community';
+import {
+  blockUser,
+  fetchFoProfile,
+  fetchProfile,
+  fetchRelationship,
+  subscribeProfile,
+  unblockUser,
+  type CommunityFoProfile,
+  type CommunityProfile,
+} from '@/store/community';
 
 export default function PublicUserProfileScreen() {
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const me = useAuthUser();
   const [profile, setProfile] = useState<CommunityProfile | null>(null);
+  const [pairedFo, setPairedFo] = useState<CommunityFoProfile | null>(null);
   const [relationship, setRelationship] = useState({ following: false, blocked: false });
   const [loading, setLoading] = useState(true);
   const [confirmBlock, setConfirmBlock] = useState(false);
@@ -23,15 +33,29 @@ export default function PublicUserProfileScreen() {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    Promise.all([fetchProfile(id), fetchRelationship(id)]).then(([p, r]) => {
+    Promise.all([fetchProfile(id), fetchRelationship(id)]).then(async ([p, r]) => {
       if (cancelled) return;
       setProfile(p);
       setRelationship(r);
       setLoading(false);
+      // their paired F/O lives in its own row — fetch it after the card is up
+      // rather than blocking the whole screen on a second round trip
+      if (p?.identifyFoId) {
+        const fo = await fetchFoProfile(p.identifyFoId);
+        if (!cancelled) setPairedFo(fo);
+      } else {
+        setPairedFo(null);
+      }
     });
     return () => {
       cancelled = true;
     };
+  }, [id]);
+
+  useEffect(() => {
+    return subscribeProfile(id, (patch) =>
+      setProfile((p) => (p ? { ...p, followerCount: patch.followerCount, followingCount: patch.followingCount } : p)),
+    );
   }, [id]);
 
   const isMe = me?.id === id;
@@ -73,8 +97,10 @@ export default function PublicUserProfileScreen() {
     );
   }
 
-  return (
-    <View style={[styles.screen, { paddingTop: insets.top }]}>
+  const pageBg = profile.pageBgImage || profile.pageBgColor;
+
+  const body = (
+    <View style={[styles.screen, !pageBg && styles.screenDefaultBg, { paddingTop: insets.top }]}>
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} style={styles.headerBtn}>
           <Text style={styles.headerBtnText}>‹</Text>
@@ -104,24 +130,34 @@ export default function PublicUserProfileScreen() {
           username={profile.username}
           bio={profile.bio}
           photoUri={profile.avatarUrl}
+          fallbackColor={profile.color || Colors.sakura}
+          statusLabel={profile.statusLabel}
+          height={profile.height}
+          weight={profile.weight}
+          song={profile.song}
+          songLink={profile.songLink}
+          gallery={profile.gallery}
+          cardBgColor={profile.cardBgColor}
+          cardBgImage={profile.cardBgImage}
+          cardBgGradient={profile.cardBgGradient}
+          cardTransparent={profile.cardTransparent}
+          textColor={profile.textColor}
+          borderStyle={profile.borderStyle}
+          decoration={profile.decoration}
+          nameFont={profile.nameFont}
+          showPairedIdentity={!!pairedFo}
+          pairedName={pairedFo?.name}
+          pairedPronouns={pairedFo?.pronouns}
+          pairedAvatarUri={pairedFo?.avatarUrl}
+          pairedStatusLabel={pairedFo?.statusLabel}
+          followerCount={profile.followerCount}
+          followingCount={profile.followingCount}
+          followAction={
+            !isMe && !relationship.blocked ? (
+              <FollowButton userId={profile.id} initialFollowing={relationship.following} />
+            ) : undefined
+          }
         />
-
-        <View style={styles.statsRow}>
-          <View style={styles.stat}>
-            <Text style={styles.statValue}>{profile.followerCount}</Text>
-            <Text style={styles.statLabel}>followers</Text>
-          </View>
-          <View style={styles.stat}>
-            <Text style={styles.statValue}>{profile.followingCount}</Text>
-            <Text style={styles.statLabel}>following</Text>
-          </View>
-        </View>
-
-        {!isMe && !relationship.blocked && (
-          <View style={styles.followRow}>
-            <FollowButton userId={profile.id} initialFollowing={relationship.following} />
-          </View>
-        )}
       </ScrollView>
 
       <CozyModal
@@ -136,10 +172,21 @@ export default function PublicUserProfileScreen() {
       />
     </View>
   );
+
+  // their page styling travels with the profile, same as on their own device
+  if (profile.pageBgImage) {
+    return <ImageBackground source={{ uri: profile.pageBgImage }} style={styles.fill}>{body}</ImageBackground>;
+  }
+  if (profile.pageBgColor) {
+    return <View style={[styles.fill, { backgroundColor: profile.pageBgColor }]}>{body}</View>;
+  }
+  return body;
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: Colors.paper },
+  fill: { flex: 1 },
+  screen: { flex: 1 },
+  screenDefaultBg: { backgroundColor: Colors.paper },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: Spacing.s5, paddingVertical: Spacing.s2,
@@ -161,9 +208,4 @@ const styles = StyleSheet.create({
   notFound: {
     fontFamily: FontFamily.script, fontSize: sf(16), color: Colors.ink3, textAlign: 'center', marginTop: 60,
   },
-  statsRow: { flexDirection: 'row', justifyContent: 'center', gap: 36, marginTop: Spacing.s5 },
-  stat: { alignItems: 'center' },
-  statValue: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(16), color: Colors.ink },
-  statLabel: { fontFamily: FontFamily.ui, fontSize: sf(10.5), color: Colors.ink3, marginTop: 1 },
-  followRow: { alignItems: 'center', marginTop: Spacing.s4 },
 });

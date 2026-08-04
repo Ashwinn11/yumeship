@@ -13,6 +13,7 @@ import { Mark } from '@/components/ui/Mark';
 import { Colors, FontFamily, FontSize, RelationshipColors, SharingColors, Radius, Spacing, sf } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
 import { deleteFo, updateFo, useFo } from '@/store/fo';
+import { pushFoProfile } from '@/store/community';
 import { usePremium } from '@/store/premium';
 import { shipTitle, useShips } from '@/store/ships';
 
@@ -61,6 +62,7 @@ export default function FoDetailScreen() {
     updateFo(fo!.id, { ...draft, name: draft.name.trim() });
     setEditing(false);
     setDraft(null);
+    if (fo!.isPublic) pushFoProfile(fo!.id).catch(() => {});
   }
 
   function handleDelete() {

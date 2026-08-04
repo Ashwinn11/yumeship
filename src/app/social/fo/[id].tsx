@@ -1,12 +1,15 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, ImageBackground, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ProfileCard } from '@/components/profile/ProfileCard';
 import { Mark } from '@/components/ui/Mark';
-import { Colors, FontFamily, FontSize, Radius, Spacing, sf } from '@/constants/theme';
+import { Colors, FontFamily, FontSize, RelationshipColors, SharingColors, Radius, Spacing, sf } from '@/constants/theme';
 import { fetchFoProfile, type CommunityFoProfile } from '@/store/community';
+
+const REL_LABEL: Record<string, string> = { romantic: 'romantic', platonic: 'platonic', familial: 'familial' };
+const SHARE_LABEL: Record<string, string> = { yes: 'Yes', no: 'No', selective: 'Selective' };
 
 export default function PublicFoProfileScreen() {
   const insets = useSafeAreaInsets();
@@ -28,8 +31,10 @@ export default function PublicFoProfileScreen() {
     };
   }, [id]);
 
-  return (
-    <View style={[styles.screen, { paddingTop: insets.top }]}>
+  const pageBg = profile?.pageBgImage || profile?.pageBgColor;
+
+  const body = (
+    <View style={[styles.screen, !pageBg && styles.screenDefaultBg, { paddingTop: insets.top }]}>
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} style={styles.headerBtn}>
           <Text style={styles.headerBtnText}>‹</Text>
@@ -50,17 +55,46 @@ export default function PublicFoProfileScreen() {
           <ProfileCard
             name={profile.name || 'untitled'}
             pronouns={profile.pronouns}
+            subtitle={profile.fandom}
             bio={profile.bio}
             photoUri={profile.avatarUrl}
+            fallbackColor={Colors.lavender}
+            statusLabel={profile.statusLabel}
+            type={{ label: REL_LABEL[profile.relStatus] ?? profile.relStatus, color: RelationshipColors[profile.relStatus] }}
+            sharing={{ label: SHARE_LABEL[profile.shareStatus] ?? profile.shareStatus, color: SharingColors[profile.shareStatus] }}
+            height={profile.height}
+            weight={profile.weight}
+            song={profile.song}
+            songLink={profile.songLink}
+            gallery={profile.gallery}
+            cardBgColor={profile.cardBgColor}
+            cardBgImage={profile.cardBgImage}
+            cardBgGradient={profile.cardBgGradient}
+            cardTransparent={profile.cardTransparent}
+            textColor={profile.textColor}
+            borderStyle={profile.borderStyle}
+            decoration={profile.decoration}
+            nameFont={profile.nameFont}
           />
         </ScrollView>
       )}
     </View>
   );
+
+  // the owner styled their page too, so mirror it here rather than always paper
+  if (profile?.pageBgImage) {
+    return <ImageBackground source={{ uri: profile.pageBgImage }} style={styles.fill}>{body}</ImageBackground>;
+  }
+  if (profile?.pageBgColor) {
+    return <View style={[styles.fill, { backgroundColor: profile.pageBgColor }]}>{body}</View>;
+  }
+  return body;
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: Colors.paper },
+  fill: { flex: 1 },
+  screen: { flex: 1 },
+  screenDefaultBg: { backgroundColor: Colors.paper },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: Spacing.s5, paddingVertical: Spacing.s2,

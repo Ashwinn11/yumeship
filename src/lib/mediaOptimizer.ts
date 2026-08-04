@@ -12,14 +12,39 @@ function assertLocalFileExists(uri: string) {
   }
 }
 
-export async function compressImage(uri: string): Promise<string> {
+// Supabase's render/image transform endpoint is Pro-only (403 FeatureNotEnabled on
+// this project), so there is no server-side resizing to fall back on: whatever we
+// upload is exactly what every screen downloads. Size each upload for its largest
+// real display instead of shipping one 1600px original to a 30px comment avatar.
+const PRESETS = {
+  /** avatars — biggest on-screen use is ProfileCard's 96pt hero, so 512 covers 3x */
+  avatar: { maxWidth: 512, maxHeight: 512, quality: 0.8 },
+  /** post photos — full-bleed card media is ~400pt wide, so 1280 covers 3x */
+  post: { maxWidth: 1280, maxHeight: 1280, quality: 0.82 },
+  /**
+   * Feed thumbnails. A 2x2 grid cell is ~180pt, so 480 covers it at ~3x for a
+   * fraction of the bytes — the feed never has a reason to pull the full photo.
+   */
+  thumb: { maxWidth: 480, maxHeight: 480, quality: 0.7 },
+  /** gallery polaroids render small but open larger, so keep some headroom */
+  gallery: { maxWidth: 1024, maxHeight: 1024, quality: 0.8 },
+} as const;
+
+export type ImagePreset = keyof typeof PRESETS;
+
+export async function compressImage(uri: string, preset: ImagePreset = 'post'): Promise<string> {
   assertLocalFileExists(uri);
-  return ImageCompressor.compress(uri, { maxWidth: 1600, maxHeight: 1600, quality: 0.85 });
+  return ImageCompressor.compress(uri, PRESETS[preset]);
 }
 
 export async function compressVideo(uri: string): Promise<{ uri: string; thumbnailUri: string }> {
   assertLocalFileExists(uri);
-  const compressedUri = await VideoCompressor.compress(uri, { compressionMethod: 'auto' });
+  // cap the long edge at 720p: these are short in-feed clips, and an uncapped
+  // 4K source uploads slowly and takes far longer to buffer on playback
+  const compressedUri = await VideoCompressor.compress(uri, {
+    compressionMethod: 'auto',
+    maxSize: 1280,
+  });
   const thumb = await createVideoThumbnail(compressedUri, { quality: 0.8 });
   return { uri: compressedUri, thumbnailUri: thumb.path };
 }
@@ -35,6 +60,7 @@ export async function syncMediaMap(
   currentLocalUris: string[],
   previousMap: Record<string, string>,
   upload: (compressedUri: string) => Promise<string>,
+  preset: ImagePreset = 'gallery',
 ): Promise<Record<string, string>> {
   const next: Record<string, string> = {};
   const toUpload = currentLocalUris.filter((uri) => {
@@ -49,7 +75,7 @@ export async function syncMediaMap(
   await Promise.all(
     toUpload.map(async (uri) => {
       try {
-        const compressed = await compressImage(uri);
+        const compressed = await compressImage(uri, preset);
         next[uri] = await upload(compressed);
       } catch (_) {
         // one missing/broken local photo shouldn't block syncing the rest of the gallery

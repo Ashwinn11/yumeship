@@ -27,7 +27,7 @@ import { useIPad } from '@/hooks/use-ipad';
 import Svg, { Path } from 'react-native-svg';
 import { CozyModal } from '@/components/ui/CozyModal';
 import { PostCard } from '@/components/community/PostCard';
-import { checkUsernameAvailable, claimUsername, fetchProfile, pushOwnProfile, useCommunityFeed } from '@/store/community';
+import { checkUsernameAvailable, claimUsername, fetchProfile, pushOwnProfile, syncIdentifyFoPublish, useCommunityFeed } from '@/store/community';
 import { getGlobalSetting, saveGlobalSetting } from '@/store/onboarding';
 
 // ─── Google Icon ──────────────────────────────────────────────────────────────
@@ -155,6 +155,12 @@ function Feed({ insets }: { insets: { top: number } }) {
         onEndReached={loadMore}
         onEndReachedThreshold={0.4}
         showsVerticalScrollIndicator={false}
+        // posts carry photos, so keep the mounted window tight — offscreen cards
+        // hold decoded bitmaps that add up fast on older devices
+        initialNumToRender={6}
+        maxToRenderPerBatch={6}
+        windowSize={7}
+        removeClippedSubviews
         ListEmptyComponent={
           loading ? (
             <ActivityIndicator style={{ marginTop: 40 }} color={Colors.sakuraDeep} />
@@ -192,7 +198,13 @@ export default function CommunityScreen() {
 
   useEffect(() => {
     if (!user) return;
-    pushOwnProfile().catch(() => {});
+    // publish the paired F/O first: the profile row points at it with a foreign
+    // key, so pushing the profile before the F/O exists would drop the pairing
+    (async () => {
+      const identifyFoId = getGlobalSetting('user_identify_fo_id');
+      if (identifyFoId) await syncIdentifyFoPublish(identifyFoId).catch(() => {});
+      await pushOwnProfile().catch(() => {});
+    })();
     const local = getGlobalSetting('user_username');
     if (local) {
       setUsername(local);

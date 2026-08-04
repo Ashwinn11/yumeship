@@ -1,6 +1,7 @@
 import { Image } from 'expo-image';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { AVATAR_IMAGE } from '@/lib/imageProps';
 import { Colors, FontFamily, Radius, Shadow, Spacing, sf } from '@/constants/theme';
 import type { CommunityComment } from '@/store/community';
 
@@ -44,7 +45,13 @@ function CommentNode({ comment, byParent, depth, parentAuthorName, onReply }: No
       <View style={styles.row}>
         <View style={[styles.avatar, { backgroundColor: Colors.sakura }]}>
           {comment.author.avatarUrl ? (
-            <Image source={{ uri: comment.author.avatarUrl }} style={styles.avatarImg} contentFit="cover" />
+            <Image
+              source={{ uri: comment.author.avatarUrl }}
+              style={styles.avatarImg}
+              contentFit="cover"
+              recyclingKey={comment.author.avatarUrl}
+              {...AVATAR_IMAGE}
+            />
           ) : (
             <Text style={styles.avatarInitial}>{comment.author.name.trim().charAt(0).toUpperCase() || '♡'}</Text>
           )}

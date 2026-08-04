@@ -1,35 +1,58 @@
+import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { MediaComposer } from '@/components/community/MediaComposer';
-import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
-import { Field } from '@/components/ui/Field';
-import { Mark } from '@/components/ui/Mark';
 import { Row } from '@/components/ui/Row';
-import { UnderInput } from '@/components/ui/UnderInput';
-import { Colors, FontFamily, FontSize, Radius, Spacing, sf } from '@/constants/theme';
+import { AVATAR_IMAGE } from '@/lib/imageProps';
+import { Colors, FontFamily, Radius, Spacing, sf } from '@/constants/theme';
 import { createPost, type LocalPickedMedia } from '@/store/community';
+import { getGlobalSetting } from '@/store/onboarding';
 import { useFos } from '@/store/fo';
+
+const MAX_BODY = 4000;
 
 export default function NewPostScreen() {
   const insets = useSafeAreaInsets();
   const fos = useFos().filter((f) => f.isPublic);
-  const [title, setTitle] = useState('');
+  const identifyFoId = getGlobalSetting('user_identify_fo_id');
+  const me = {
+    name: getGlobalSetting('user_name'),
+    avatar: getGlobalSetting('user_avatar'),
+    color: getGlobalSetting('user_color') || Colors.sakura,
+  };
+
   const [body, setBody] = useState('');
   const [media, setMedia] = useState<LocalPickedMedia[]>([]);
-  const [foId, setFoId] = useState<string | undefined>(undefined);
+  const [foId, setFoId] = useState<string | undefined>(
+    () => fos.find((f) => f.id === identifyFoId)?.id,
+  );
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState('');
 
+  // a post just needs *something* in it — words or a photo, either is enough
+  const canPost = (body.trim().length > 0 || media.length > 0) && !posting;
+  const remaining = MAX_BODY - body.length;
+
   async function submit() {
-    if (!title.trim() || !body.trim()) return;
+    if (!canPost) return;
     setPosting(true);
     setError('');
     try {
-      await createPost({ title, body, media, foProfileId: foId });
+      await createPost({ body, media, foProfileId: foId });
       router.back();
     } catch (e: any) {
       setError(e?.message ?? 'something went wrong — try again');
@@ -39,16 +62,29 @@ export default function NewPostScreen() {
   }
 
   return (
-    <View style={[styles.screen, { paddingTop: insets.top + Spacing.s1, paddingBottom: insets.bottom + Spacing.s1 }]}>
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.headerBtn}>
-          <Text style={styles.headerBtnText}>✕</Text>
+    <KeyboardAvoidingView
+      style={styles.screen}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <View style={[styles.header, { paddingTop: insets.top + Spacing.s1 }]}>
+        <Pressable onPress={() => router.back()} hitSlop={8}>
+          <Text style={styles.cancel}>cancel</Text>
         </Pressable>
-        <View style={styles.headerCenter}>
-          <Mark size={22} />
-          <Text style={styles.headerTitle}>new post</Text>
-        </View>
-        <View style={{ width: 32 }} />
+        <Pressable
+          onPress={submit}
+          disabled={!canPost}
+          style={({ pressed }) => [
+            styles.postBtn,
+            !canPost && styles.postBtnDisabled,
+            pressed && canPost && styles.postBtnPressed,
+          ]}
+        >
+          {posting ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <Text style={styles.postBtnText}>post</Text>
+          )}
+        </Pressable>
       </View>
 
       <ScrollView
@@ -56,70 +92,66 @@ export default function NewPostScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="on-drag"
-        onScrollBeginDrag={() => Keyboard.dismiss()}
       >
-        <Field label="Title">
-          <UnderInput value={title} onChangeText={setTitle} placeholder="what's this about?" />
-        </Field>
+        <View style={styles.composerRow}>
+          <View style={[styles.avatar, { backgroundColor: me.color }]}>
+            {me.avatar ? (
+              <Image source={{ uri: me.avatar }} style={styles.avatarImg} contentFit="cover" {...AVATAR_IMAGE} />
+            ) : (
+              <Text style={styles.avatarInitial}>{me.name.trim().charAt(0).toUpperCase() || '♡'}</Text>
+            )}
+          </View>
 
-        <View style={styles.spacer} />
-
-        <Field label="Body">
           <TextInput
             value={body}
             onChangeText={setBody}
-            placeholder="share what's on your mind…"
+            placeholder="what's on your mind?"
             placeholderTextColor={Colors.ink3}
             multiline
+            autoFocus
+            maxLength={MAX_BODY}
             style={styles.bodyInput}
           />
-        </Field>
+        </View>
 
-        <View style={styles.spacer} />
-
-        <Field label="Photos or video (optional)">
+        <View style={styles.mediaWrap}>
           <MediaComposer media={media} onChange={setMedia} />
-        </Field>
+        </View>
 
         {fos.length > 0 && (
-          <>
-            <View style={styles.spacer} />
-            <Field label="Post with (optional)" hint="pair this post with one of your public F/Os">
-              <Row gap={6} wrap>
+          <View style={styles.foSection}>
+            <Text style={styles.foLabel}>with</Text>
+            <Row gap={6} wrap>
+              <Chip
+                color={!foId ? Colors.sakuraDeep : Colors.ink2}
+                bg={!foId ? Colors.sakuraSoft : Colors.paperDeep}
+                active={!foId}
+                onPress={() => setFoId(undefined)}
+              >
+                just me
+              </Chip>
+              {fos.map((f) => (
                 <Chip
-                  color={!foId ? Colors.sakuraDeep : Colors.ink2}
-                  bg={!foId ? Colors.sakuraSoft : Colors.paperDeep}
-                  active={!foId}
-                  onPress={() => setFoId(undefined)}
+                  key={f.id}
+                  color={foId === f.id ? Colors.sakuraDeep : Colors.ink2}
+                  bg={foId === f.id ? Colors.sakuraSoft : Colors.paperDeep}
+                  active={foId === f.id}
+                  onPress={() => setFoId(f.id)}
                 >
-                  just me
+                  {f.name}
                 </Chip>
-                {fos.map((f) => (
-                  <Chip
-                    key={f.id}
-                    color={foId === f.id ? Colors.sakuraDeep : Colors.ink2}
-                    bg={foId === f.id ? Colors.sakuraSoft : Colors.paperDeep}
-                    active={foId === f.id}
-                    onPress={() => setFoId(f.id)}
-                  >
-                    {f.name}
-                  </Chip>
-                ))}
-              </Row>
-            </Field>
-          </>
+              ))}
+            </Row>
+          </View>
         )}
 
         {!!error && <Text style={styles.error}>{error}</Text>}
-
-        <View style={styles.spacer2} />
-
-        <Button variant="primary" size="lg" full disabled={!title.trim() || !body.trim() || posting} onPress={submit}>
-          {posting ? 'posting…' : 'post'}
-        </Button>
       </ScrollView>
-    </View>
+
+      {remaining < 200 && (
+        <Text style={[styles.counter, remaining < 0 && styles.counterOver]}>{remaining}</Text>
+      )}
+    </KeyboardAvoidingView>
   );
 }
 
@@ -127,24 +159,47 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: Colors.paper },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: Spacing.s5, paddingVertical: Spacing.s2,
+    paddingHorizontal: Spacing.s5, paddingBottom: Spacing.s3,
+    borderBottomWidth: 1, borderBottomColor: Colors.line,
   },
-  headerBtn: {
-    width: 32, height: 32, borderRadius: Radius.pill,
-    backgroundColor: Colors.paperDeep, alignItems: 'center', justifyContent: 'center',
+  cancel: { fontFamily: FontFamily.ui, fontSize: sf(14), color: Colors.ink2 },
+  postBtn: {
+    minWidth: 68, height: 34, borderRadius: Radius.pill,
+    backgroundColor: Colors.sakuraDeep,
+    alignItems: 'center', justifyContent: 'center',
+    paddingHorizontal: Spacing.s4,
   },
-  headerBtnText: { fontSize: sf(14), color: Colors.ink2, fontFamily: FontFamily.ui },
-  headerCenter: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  headerTitle: { fontFamily: FontFamily.displayItalic, fontSize: FontSize.h6, color: Colors.ink },
+  postBtnDisabled: { opacity: 0.35 },
+  postBtnPressed: { opacity: 0.8, transform: [{ scale: 0.96 }] },
+  postBtnText: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(13), color: '#fff' },
+
   scroll: { flex: 1 },
-  content: { paddingHorizontal: Spacing.s6, paddingTop: Spacing.s4, paddingBottom: Spacing.s6 },
-  spacer: { height: 16 },
-  spacer2: { height: 26 },
-  bodyInput: {
-    borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.r3,
-    backgroundColor: Colors.paperDeep,
-    padding: Spacing.s3, minHeight: 110, textAlignVertical: 'top',
-    fontFamily: FontFamily.ui, fontSize: sf(13), color: Colors.ink, lineHeight: sf(19),
+  content: { paddingHorizontal: Spacing.s5, paddingTop: Spacing.s4, paddingBottom: Spacing.s6 },
+
+  composerRow: { flexDirection: 'row', gap: 10 },
+  avatar: {
+    width: 38, height: 38, borderRadius: Radius.pill,
+    alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
   },
-  error: { fontFamily: FontFamily.ui, fontSize: sf(12), color: Colors.ember, marginTop: 12, textAlign: 'center' },
+  avatarImg: { width: 38, height: 38, borderRadius: Radius.pill },
+  avatarInitial: { fontFamily: FontFamily.displayItalic, fontSize: sf(16), color: '#fff' },
+  bodyInput: {
+    flex: 1, minHeight: 90, paddingTop: 8, textAlignVertical: 'top',
+    fontFamily: FontFamily.ui, fontSize: sf(15), color: Colors.ink, lineHeight: sf(22),
+  },
+
+  mediaWrap: { marginTop: Spacing.s3, paddingLeft: 48 },
+
+  foSection: { marginTop: Spacing.s5, paddingLeft: 48, gap: 8 },
+  foLabel: {
+    fontFamily: FontFamily.marker, fontSize: sf(9), color: Colors.ink3,
+    letterSpacing: 1.4, textTransform: 'uppercase',
+  },
+
+  error: { fontFamily: FontFamily.ui, fontSize: sf(12), color: Colors.ember, marginTop: 16, textAlign: 'center' },
+  counter: {
+    position: 'absolute', right: Spacing.s5, bottom: Spacing.s4,
+    fontFamily: FontFamily.uiMedium, fontSize: sf(11), color: Colors.ink3,
+  },
+  counterOver: { color: Colors.ember },
 });

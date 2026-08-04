@@ -9,7 +9,8 @@ dist/
 web-build/
 expo-env.d.ts
 apple/*
-aso/*
+aso-audit-results/*
+
 
 # Native
 .kotlin/

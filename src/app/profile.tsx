@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Sakura } from '@/components/deco/Sakura';
 import { Sparkle } from '@/components/deco/Sparkle';
 import { CardThemeSheet } from '@/components/profile/CardThemeSheet';
+import type { CardTheme } from '@/components/profile/cardTheme';
 import { ProfileCard } from '@/components/profile/ProfileCard';
 import { IconEdit, IconPalette } from '@/components/ui/Icon';
 import { Mark } from '@/components/ui/Mark';
@@ -13,7 +14,7 @@ import { Colors, FontFamily, FontSize, Radius, Spacing, sf } from '@/constants/t
 import { useIPad } from '@/hooks/use-ipad';
 import { getGlobalSetting, saveGlobalSetting } from '@/store/onboarding';
 import { usePremium } from '@/store/premium';
-import { parseGallery } from '@/store/fo';
+import { parseGallery, useFos } from '@/store/fo';
 
 function readMe() {
   return {
@@ -33,12 +34,13 @@ function readMe() {
     cardBgColor: getGlobalSetting('user_card_bg_color'),
     cardBgImage: getGlobalSetting('user_card_bg_image'),
     cardBgGradient: getGlobalSetting('user_card_bg_gradient'),
-    cardTransparent: getGlobalSetting('user_card_transparent') === 'true',
+    cardTransparent: getGlobalSetting('user_card_transparent') === '1',
     textColor: getGlobalSetting('user_text_color'),
     borderStyle: getGlobalSetting('user_border_style'),
     decoration: getGlobalSetting('user_decoration'),
     nameFont: getGlobalSetting('user_name_font'),
     statusLabel: getGlobalSetting('user_status_label'),
+    identifyFoId: getGlobalSetting('user_identify_fo_id'),
   };
 }
 
@@ -49,28 +51,27 @@ export default function MyProfileScreen() {
   useFocusEffect(useCallback(() => { setMe(readMe()); }, []));
   const premium = usePremium();
   const [showCustomize, setShowCustomize] = useState(false);
+  const fos = useFos();
+  const pairedFo = fos.find((f) => f.id === me.identifyFoId);
 
-  function handleCustomize() {
-    if (!premium) {
-      router.push('/paywall?reason=customize-theme' as any);
-      return;
-    }
-    setShowCustomize(true);
-  }
-
-  function handleThemeChange(patch: Partial<{
-    pageBgColor: string; pageBgImage: string; cardBgColor: string; cardBgImage: string; cardBgGradient: string;
-    cardTransparent: boolean; textColor: string; borderStyle: string; decoration: string; nameFont: string; statusLabel: string;
-  }>) {
+  function handleThemeChange(patch: Partial<CardTheme>) {
     const keyMap = {
       pageBgColor: 'user_page_bg_color', pageBgImage: 'user_page_bg_image',
       cardBgColor: 'user_card_bg_color', cardBgImage: 'user_card_bg_image',
-      cardBgGradient: 'user_card_bg_gradient', cardTransparent: 'user_card_transparent',
-      textColor: 'user_text_color', borderStyle: 'user_border_style',
-      decoration: 'user_decoration', nameFont: 'user_name_font', statusLabel: 'user_status_label',
+      cardBgGradient: 'user_card_bg_gradient',
+      textColor: 'user_text_color',
+      borderStyle: 'user_border_style',
+      decoration: 'user_decoration',
+      nameFont: 'user_name_font',
+      statusLabel: 'user_status_label',
     } as const;
     for (const [k, v] of Object.entries(patch)) {
-      saveGlobalSetting(keyMap[k as keyof typeof keyMap], String(v));
+      if (k === 'cardTransparent') {
+        saveGlobalSetting('user_card_transparent', v ? '1' : '');
+        continue;
+      }
+      const mappedKey = keyMap[k as keyof typeof keyMap];
+      if (mappedKey) saveGlobalSetting(mappedKey, (v as string) ?? '');
     }
     setMe((p) => ({ ...p, ...patch }));
   }
@@ -95,7 +96,7 @@ export default function MyProfileScreen() {
           <Text style={styles.headerTitle}>my profile</Text>
         </View>
         <View style={styles.headerActions}>
-          <Pressable onPress={handleCustomize} style={styles.headerBtn}>
+          <Pressable onPress={() => setShowCustomize(true)} style={styles.headerBtn}>
             <IconPalette size={13} color={Colors.ink2} />
           </Pressable>
           <Pressable onPress={() => router.push('/onboarding/persona?mode=edit' as any)} style={styles.headerBtn}>
@@ -123,7 +124,18 @@ export default function MyProfileScreen() {
           gallery={me.gallery}
           cardBgColor={me.cardBgColor}
           cardBgImage={me.cardBgImage}
+          cardBgGradient={me.cardBgGradient}
+          cardTransparent={me.cardTransparent}
           textColor={me.textColor}
+          borderStyle={me.borderStyle}
+          decoration={me.decoration}
+          nameFont={me.nameFont}
+          statusLabel={me.statusLabel}
+          showPairedIdentity={!!pairedFo}
+          pairedName={pairedFo?.name}
+          pairedPronouns={pairedFo?.pronouns}
+          pairedAvatarUri={pairedFo?.photoUri}
+          pairedStatusLabel={pairedFo?.statusLabel}
         />
         <Text style={styles.footnote}>this is you, in their world ♡</Text>
       </ScrollView>
@@ -131,15 +143,16 @@ export default function MyProfileScreen() {
       <CardThemeSheet
         visible={showCustomize}
         onClose={() => setShowCustomize(false)}
-        premium={premium}
         theme={{
           pageBgColor: me.pageBgColor, pageBgImage: me.pageBgImage,
           cardBgColor: me.cardBgColor, cardBgImage: me.cardBgImage,
           cardBgGradient: me.cardBgGradient, cardTransparent: me.cardTransparent,
-          textColor: me.textColor, borderStyle: me.borderStyle,
-          decoration: me.decoration, nameFont: me.nameFont, statusLabel: me.statusLabel,
+          textColor: me.textColor,
+          borderStyle: me.borderStyle, decoration: me.decoration,
+          nameFont: me.nameFont, statusLabel: me.statusLabel,
         }}
         onChange={handleThemeChange}
+        premium={premium}
       />
     </View>
   );

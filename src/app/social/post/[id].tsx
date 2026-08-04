@@ -1,9 +1,11 @@
+import { useEvent } from 'expo';
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useVideoPlayer, VideoView } from 'expo-video';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -14,11 +16,13 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Svg, { Path } from 'react-native-svg';
 
 import { CommentThread } from '@/components/community/CommentThread';
 import { LikeButton } from '@/components/community/LikeButton';
 import { PostAuthorHeader } from '@/components/community/PostAuthorHeader';
 import { Mark } from '@/components/ui/Mark';
+import { MEDIA_IMAGE } from '@/lib/imageProps';
 import { Colors, FontFamily, FontSize, Radius, Spacing, sf } from '@/constants/theme';
 import { addComment, useCommunityPost } from '@/store/community';
 
@@ -29,18 +33,38 @@ export default function PostDetailScreen() {
   const [draft, setDraft] = useState('');
   const [replyTo, setReplyTo] = useState<{ id: string; name: string } | null>(null);
   const [sending, setSending] = useState(false);
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
 
-  const isVideo = !!post && post.media.length === 1 && post.media[0].type === 'video';
-  const videoUrl = isVideo && post ? (post.media[0] as Extract<typeof post.media[number], { type: 'video' }>).url : null;
-  const player = useVideoPlayer(videoUrl ?? null);
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const show = Keyboard.addListener(showEvent, () => setKeyboardOpen(true));
+    const hide = Keyboard.addListener(hideEvent, () => setKeyboardOpen(false));
+    return () => { show.remove(); hide.remove(); };
+  }, []);
+
+  const videoMedia =
+    post && post.media.length === 1 && post.media[0].type === 'video' ? post.media[0] : null;
+  const isVideo = !!videoMedia;
+  const player = useVideoPlayer(videoMedia?.url ?? null);
+  // the clip's thumbnail already loaded in the feed, so hold it over the player
+  // until there are real frames to show instead of flashing an empty black box
+  const { status } = useEvent(player, 'statusChange', { status: player.status });
+  const videoReady = status === 'readyToPlay';
 
   async function send() {
     if (!draft.trim() || !post) return;
+    // clear straight away so the composer feels instant — the sent text is held
+    // aside and put back only if the insert actually fails
+    const body = draft;
+    const parent = replyTo?.id;
+    setDraft('');
+    setReplyTo(null);
     setSending(true);
     try {
-      await addComment(post.id, draft, replyTo?.id);
-      setDraft('');
-      setReplyTo(null);
+      await addComment(post.id, body, parent);
+    } catch {
+      setDraft(body);
     } finally {
       setSending(false);
     }
@@ -63,7 +87,9 @@ export default function PostDetailScreen() {
     <KeyboardAvoidingView
       style={styles.screen}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={insets.top}
+      // this view already starts at the top of the window, so any offset here is
+      // added straight onto the keyboard gap — it must stay 0
+      keyboardVerticalOffset={0}
     >
       <View style={[styles.header, { paddingTop: insets.top + Spacing.s1 }]}>
         <Pressable onPress={() => router.back()} style={styles.headerBtn}>
@@ -84,12 +110,23 @@ export default function PostDetailScreen() {
       >
         <PostAuthorHeader author={post.author} fo={post.fo} createdAt={post.createdAt} size="lg" />
 
-        <Text style={styles.title}>{post.title}</Text>
-        {!!post.body && <Text style={styles.body}>{post.body}</Text>}
+        {!!post.title && <Text style={styles.title}>{post.title}</Text>}
+        {!!post.body && (
+          <Text style={[styles.body, !post.title && styles.bodyNoTitle]}>{post.body}</Text>
+        )}
 
         {isVideo ? (
           <View style={styles.videoWrap}>
             <VideoView player={player} style={styles.videoView} contentFit="contain" nativeControls />
+            {!videoReady && !!videoMedia?.thumbnailUrl && (
+              <Image
+                source={{ uri: videoMedia.thumbnailUrl }}
+                style={styles.videoPoster}
+                contentFit="contain"
+                pointerEvents="none"
+                {...MEDIA_IMAGE}
+              />
+            )}
           </View>
         ) : post.media.length > 0 ? (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.mediaScroll}>
@@ -99,6 +136,14 @@ export default function PostDetailScreen() {
                 source={{ uri: m.type === 'image' ? m.url : '' }}
                 style={styles.mediaImage}
                 contentFit="cover"
+                {...MEDIA_IMAGE}
+                // the feed already cached this thumb, so it paints immediately and
+                // the full-size photo sharpens in over it instead of a blank frame
+                placeholder={
+                  m.type === 'image' && m.thumbnailUrl
+                    ? { uri: m.thumbnailUrl }
+                    : MEDIA_IMAGE.placeholder
+                }
               />
             ))}
           </ScrollView>
@@ -114,7 +159,14 @@ export default function PostDetailScreen() {
         <CommentThread comments={comments} onReply={(pid, name) => setReplyTo({ id: pid, name })} />
       </ScrollView>
 
-      <View style={[styles.composerWrap, { paddingBottom: insets.bottom + Spacing.s2 }]}>
+      {/* the raised keyboard already covers the home indicator, so the safe-area
+          inset would sit as dead space between the bar and the keys */}
+      <View
+        style={[
+          styles.composerWrap,
+          { paddingBottom: (keyboardOpen ? 0 : insets.bottom) + Spacing.s2 },
+        ]}
+      >
         {replyTo && (
           <View style={styles.replyBanner}>
             <Text style={styles.replyBannerText}>replying to {replyTo.name}</Text>
@@ -135,9 +187,23 @@ export default function PostDetailScreen() {
           <Pressable
             onPress={send}
             disabled={!draft.trim() || sending}
-            style={[styles.sendBtn, (!draft.trim() || sending) && styles.sendBtnDisabled]}
+            hitSlop={6}
+            style={({ pressed }) => [
+              styles.sendBtn,
+              (!draft.trim() || sending) && styles.sendBtnDisabled,
+              pressed && styles.sendBtnPressed,
+            ]}
           >
-            <Text style={styles.sendBtnText}>send</Text>
+            <Svg width={16} height={16} viewBox="0 0 16 16">
+              <Path
+                d="M8 13.5V3M8 3L3.5 7.5M8 3l4.5 4.5"
+                stroke="#fff"
+                strokeWidth={1.8}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                fill="none"
+              />
+            </Svg>
           </Pressable>
         </View>
       </View>
@@ -162,8 +228,13 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: Spacing.s6, paddingTop: Spacing.s3, paddingBottom: Spacing.s6 },
   title: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(20), color: Colors.ink, marginTop: Spacing.s4 },
   body: { fontFamily: FontFamily.ui, fontSize: sf(14), color: Colors.ink2, lineHeight: sf(21), marginTop: 8 },
+  bodyNoTitle: { marginTop: Spacing.s4, fontSize: sf(15), color: Colors.ink, lineHeight: sf(23) },
   videoWrap: { marginTop: Spacing.s4, width: '100%', aspectRatio: 4 / 3 },
   videoView: { width: '100%', height: '100%', borderRadius: Radius.r3, backgroundColor: Colors.paperDeep },
+  videoPoster: {
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+    borderRadius: Radius.r3,
+  },
   mediaScroll: { marginTop: Spacing.s4 },
   mediaImage: { width: 240, height: 240, borderRadius: Radius.r3, marginRight: 8, backgroundColor: Colors.paperDeep },
   likeRow: { marginTop: Spacing.s4 },
@@ -189,7 +260,11 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.paperDeep, paddingHorizontal: 12, paddingVertical: 8,
     fontFamily: FontFamily.ui, fontSize: sf(13), color: Colors.ink,
   },
-  sendBtn: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: Radius.pill, backgroundColor: Colors.sakuraDeep },
-  sendBtnDisabled: { opacity: 0.5 },
-  sendBtnText: { fontFamily: FontFamily.uiMedium, fontSize: sf(12), color: '#fff' },
+  sendBtn: {
+    width: 36, height: 36, borderRadius: Radius.pill,
+    backgroundColor: Colors.sakuraDeep,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  sendBtnDisabled: { opacity: 0.35 },
+  sendBtnPressed: { opacity: 0.75, transform: [{ scale: 0.94 }] },
 });

@@ -58,6 +58,11 @@ type Props = {
   nameFont?: string;
   /** sexuality badge under the name, e.g. "bisexual" — free text, this person's own words */
   statusLabel?: string;
+  /** community follower/following counts, rendered under pronouns */
+  followerCount?: number;
+  followingCount?: number;
+  /** follow/unfollow button slot, rendered under the counts — caller owns its state/handlers */
+  followAction?: React.ReactNode;
   /** "profile identify" — show [me] ♡ [F/O] paired avatars instead of the solo one */
   showPairedIdentity?: boolean;
   pairedName?: string;
@@ -189,6 +194,9 @@ export function ProfileCard({
   decoration = '',
   nameFont = '',
   statusLabel,
+  followerCount,
+  followingCount,
+  followAction,
   showPairedIdentity,
   pairedName,
   pairedPronouns,
@@ -276,6 +284,19 @@ export function ProfileCard({
             {!!username && <Text style={[styles.username, textStyle]}>@{username}</Text>}
           </View>
           {!!pronouns && <Text style={[styles.pronouns, textStyle]}>{pronouns}</Text>}
+          {(followerCount !== undefined || followingCount !== undefined) && (
+            <View style={styles.socialStatsRow}>
+              <View style={styles.socialStat}>
+                <Text style={[styles.socialStatValue, textStyle]}>{followerCount ?? 0}</Text>
+                <Text style={styles.socialStatLabel}>followers</Text>
+              </View>
+              <View style={styles.socialStat}>
+                <Text style={[styles.socialStatValue, textStyle]}>{followingCount ?? 0}</Text>
+                <Text style={styles.socialStatLabel}>following</Text>
+              </View>
+            </View>
+          )}
+          {!!followAction && <View style={styles.followActionRow}>{followAction}</View>}
           {!!subtitle && <Text style={[styles.subtitle, textStyle]}>{subtitle}</Text>}
           {!!statusLabel && <StatusPill label={statusLabel} />}
         </>
@@ -494,6 +515,11 @@ const styles = StyleSheet.create({
   username: { fontFamily: FontFamily.uiMedium, fontSize: sf(13), color: Colors.sakuraDeep, flexShrink: 0 },
   pronouns: { fontFamily: FontFamily.ui, fontSize: sf(12), color: Colors.ink2, marginTop: 2 },
   subtitle: { fontFamily: FontFamily.marker, fontSize: sf(10), color: Colors.ink3, letterSpacing: 1.2, marginTop: 5, textTransform: 'uppercase' },
+  socialStatsRow: { flexDirection: 'row', justifyContent: 'center', gap: 28, marginTop: Spacing.s3 },
+  socialStat: { alignItems: 'center' },
+  socialStatValue: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(15), color: Colors.ink },
+  socialStatLabel: { fontFamily: FontFamily.ui, fontSize: sf(10), color: Colors.ink3, marginTop: 1 },
+  followActionRow: { alignItems: 'center', marginTop: Spacing.s3 },
 
   section: { gap: 6 },
   sectionLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingLeft: 2 },

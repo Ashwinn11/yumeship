@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
 import { Sparkle } from '@/components/deco/Sparkle';
+import { MEDIA_IMAGE } from '@/lib/imageProps';
 import { Colors, FontFamily, Radius, Shadow, Spacing, sf } from '@/constants/theme';
 import type { CommunityPost } from '@/store/community';
 
@@ -39,9 +40,9 @@ export function PostCard({ post, onToggleLike }: Props) {
 
       <PostAuthorHeader author={post.author} fo={post.fo} createdAt={post.createdAt} />
 
-      <Text style={styles.title}>{post.title}</Text>
+      {!!post.title && <Text style={styles.title}>{post.title}</Text>}
       {!!post.body && (
-        <Text style={styles.body} numberOfLines={4}>
+        <Text style={styles.body} numberOfLines={6}>
           {post.body}
         </Text>
       )}
@@ -50,7 +51,13 @@ export function PostCard({ post, onToggleLike }: Props) {
         <View style={styles.mediaGrid}>
           {firstMedia.type === 'video' ? (
             <View style={styles.videoThumb}>
-              <Image source={{ uri: firstMedia.thumbnailUrl }} style={StyleSheet.absoluteFill} contentFit="cover" />
+              <Image
+                source={{ uri: firstMedia.thumbnailUrl }}
+                style={StyleSheet.absoluteFill}
+                contentFit="cover"
+                recyclingKey={firstMedia.thumbnailUrl}
+                {...MEDIA_IMAGE}
+              />
               <View style={styles.playBadge}>
                 <Svg width={14} height={14} viewBox="0 0 16 16">
                   <Path d="M4 2.5 L13 8 L4 13.5 Z" fill="#fff" />
@@ -62,9 +69,12 @@ export function PostCard({ post, onToggleLike }: Props) {
               m.type === 'image' ? (
                 <Image
                   key={i}
-                  source={{ uri: m.url }}
+                  // older posts have no thumbnail — fall back to the full photo
+                  source={{ uri: m.thumbnailUrl || m.url }}
                   style={[styles.mediaImage, post.media.length === 1 && styles.mediaImageFull]}
                   contentFit="cover"
+                  recyclingKey={m.thumbnailUrl || m.url}
+                  {...MEDIA_IMAGE}
                 />
               ) : null,
             )

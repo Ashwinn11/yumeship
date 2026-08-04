@@ -4,7 +4,7 @@ import { compressImage, compressVideo, syncMediaMap } from '@/lib/mediaOptimizer
 import { uploadToBucket } from '@/lib/storage';
 import { supabase } from '@/lib/supabase';
 
-import { getFo, parseGallery, updateFo } from './fo';
+import { getFo, parseGallery, updateFo, type Fo, type GalleryPhoto } from './fo';
 import { getGlobalSetting, saveGlobalSetting } from './onboarding';
 
 export const MAX_IMAGES = 4;
@@ -12,27 +12,64 @@ export const MAX_VIDEO_DURATION_MS = 20_000;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export type CommunityProfile = {
+/** Card presentation shared by both public profile shapes — mirrors CardTheme. */
+export type CommunityCardTheme = {
+  color: string;
+  height: string;
+  weight: string;
+  pageBgColor: string;
+  pageBgImage: string;
+  cardBgColor: string;
+  cardBgImage: string;
+  cardBgGradient: string;
+  cardTransparent: boolean;
+  textColor: string;
+  borderStyle: string;
+  decoration: string;
+  nameFont: string;
+};
+
+export type CommunityProfile = CommunityCardTheme & {
   id: string;
   username: string;
   name: string;
   pronouns: string;
   bio: string;
   avatarUrl: string;
+  statusLabel: string;
+  song: string;
+  songLink: string;
+  gallery: GalleryPhoto[];
+  /** published F/O shown paired on this card, when "profile identify" is on */
+  identifyFoId: string | null;
   followerCount: number;
   followingCount: number;
 };
 
-export type CommunityFoProfile = {
+export type CommunityFoProfile = CommunityCardTheme & {
   id: string;
   name: string;
   pronouns: string;
   bio: string;
   avatarUrl: string;
+  statusLabel: string;
+  song: string;
+  songLink: string;
+  gallery: GalleryPhoto[];
+  fandom: string;
+  relStatus: Fo['relStatus'];
+  shareStatus: Fo['shareStatus'];
 };
 
 export type PostMedia =
-  | { type: 'image'; url: string; width: number; height: number }
+  | {
+      type: 'image';
+      url: string;
+      /** small variant for the feed grid — absent on posts made before thumbnails existed */
+      thumbnailUrl?: string;
+      width: number;
+      height: number;
+    }
   | {
       type: 'video';
       url: string;
@@ -76,14 +113,46 @@ export type CommunityComment = {
 
 // ─── Row mappers ──────────────────────────────────────────────────────────────
 
+function rowToCardTheme(row: Record<string, any>): CommunityCardTheme {
+  return {
+    color: row.color ?? '',
+    height: row.height ?? '',
+    weight: row.weight ?? '',
+    pageBgColor: row.page_bg_color ?? '',
+    pageBgImage: row.page_bg_image ?? '',
+    cardBgColor: row.card_bg_color ?? '',
+    cardBgImage: row.card_bg_image ?? '',
+    cardBgGradient: row.card_bg_gradient ?? '',
+    cardTransparent: !!row.card_transparent,
+    textColor: row.text_color ?? '',
+    borderStyle: row.border_style ?? '',
+    decoration: row.decoration ?? '',
+    nameFont: row.name_font ?? '',
+  };
+}
+
+/** Remote gallery rows are already {url, caption} — reshape to the local {uri, caption}. */
+function rowToGallery(raw: unknown): GalleryPhoto[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((g) => g && typeof g.url === 'string')
+    .map((g) => ({ uri: g.url as string, caption: (g.caption as string) ?? '' }));
+}
+
 function rowToProfile(row: Record<string, any>): CommunityProfile {
   return {
+    ...rowToCardTheme(row),
     id: row.id,
     username: row.username ?? '',
     name: row.name ?? '',
     pronouns: row.pronouns ?? '',
     bio: row.bio ?? '',
     avatarUrl: row.avatar_url ?? '',
+    statusLabel: row.status_label ?? '',
+    song: row.song ?? '',
+    songLink: row.song_link ?? '',
+    gallery: rowToGallery(row.gallery),
+    identifyFoId: row.identify_fo_id ?? null,
     followerCount: row.follower_count ?? 0,
     followingCount: row.following_count ?? 0,
   };
@@ -91,11 +160,19 @@ function rowToProfile(row: Record<string, any>): CommunityProfile {
 
 function rowToFoProfile(row: Record<string, any>): CommunityFoProfile {
   return {
+    ...rowToCardTheme(row),
     id: row.id,
     name: row.name ?? '',
     pronouns: row.pronouns ?? '',
     bio: row.bio ?? '',
     avatarUrl: row.avatar_url ?? '',
+    statusLabel: row.status_label ?? '',
+    song: row.song ?? '',
+    songLink: row.song_link ?? '',
+    gallery: rowToGallery(row.gallery),
+    fandom: row.fandom ?? '',
+    relStatus: (row.rel_status as Fo['relStatus']) ?? 'romantic',
+    shareStatus: (row.share_status as Fo['shareStatus']) ?? 'selective',
   };
 }
 
@@ -134,17 +211,40 @@ function parseSyncMap(raw: string): Record<string, string> {
   }
 }
 
-const PROFILE_FIELDS = 'id, username, name, pronouns, bio, avatar_url, follower_count, following_count';
-const FO_PROFILE_FIELDS = 'id, name, pronouns, bio, avatar_url';
-const POST_SELECT = `
+/** Everything a full profile card needs to render as its owner styled it. */
+const CARD_THEME_FIELDS =
+  'height, weight, page_bg_color, page_bg_image, card_bg_color, card_bg_image, ' +
+  'card_bg_gradient, card_transparent, text_color, border_style, decoration, name_font';
+/**
+ * PostgREST silently ignores a `select` that starts with whitespace and returns
+ * *every* column instead — so a readable multi-line list quietly turns into
+ * `select=*`. Collapse to one line before the value ever leaves here.
+ */
+const cols = (s: string) => s.replace(/\s+/g, ' ').trim();
+
+const PROFILE_FIELDS = cols(`
+  id, username, name, pronouns, bio, avatar_url, status_label, song, song_link, gallery,
+  color, identify_fo_id, follower_count, following_count, ${CARD_THEME_FIELDS}
+`);
+const FO_PROFILE_FIELDS = cols(`
+  id, name, pronouns, bio, avatar_url, status_label, song, song_link, gallery,
+  fandom, rel_status, share_status, ${CARD_THEME_FIELDS}
+`);
+
+// Feed rows only ever draw an avatar + name, so post embeds stay on this narrow
+// set — pulling every author's gallery and theme per post would balloon the feed
+// payload for data no card in the list renders. rowToProfile tolerates the gaps.
+const PROFILE_SUMMARY_FIELDS = 'id, username, name, pronouns, avatar_url';
+const FO_SUMMARY_FIELDS = 'id, name, pronouns, avatar_url';
+const POST_SELECT = cols(`
   id, author_id, fo_profile_id, title, body, media, like_count, comment_count, created_at,
-  author:profiles!posts_author_id_fkey(${PROFILE_FIELDS}),
-  fo:fo_profiles!posts_fo_profile_id_fkey(${FO_PROFILE_FIELDS})
-`;
-const COMMENT_SELECT = `
+  author:profiles!posts_author_id_fkey(${PROFILE_SUMMARY_FIELDS}),
+  fo:fo_profiles!posts_fo_profile_id_fkey(${FO_SUMMARY_FIELDS})
+`);
+const COMMENT_SELECT = cols(`
   id, post_id, parent_comment_id, body, created_at,
-  author:profiles!comments_author_id_fkey(${PROFILE_FIELDS})
-`;
+  author:profiles!comments_author_id_fkey(${PROFILE_SUMMARY_FIELDS})
+`);
 
 // ─── Identity / profile sync ──────────────────────────────────────────────────
 
@@ -198,24 +298,67 @@ export async function pushOwnProfile(): Promise<void> {
     bio: getGlobalSetting('user_bio'),
     song: getGlobalSetting('user_song'),
     song_link: getGlobalSetting('user_song_link'),
+    status_label: getGlobalSetting('user_status_label'),
+    height: getGlobalSetting('user_height'),
+    weight: getGlobalSetting('user_weight'),
+    color: getGlobalSetting('user_color'),
+    page_bg_color: getGlobalSetting('user_page_bg_color'),
+    card_bg_color: getGlobalSetting('user_card_bg_color'),
+    card_bg_gradient: getGlobalSetting('user_card_bg_gradient'),
+    card_transparent: getGlobalSetting('user_card_transparent') === '1',
+    text_color: getGlobalSetting('user_text_color'),
+    border_style: getGlobalSetting('user_border_style'),
+    decoration: getGlobalSetting('user_decoration'),
+    name_font: getGlobalSetting('user_name_font'),
   };
+
+  // identify_fo_id is a real FK, so confirm the row is actually there rather than
+  // trusting the local isPublic flag — the two can disagree (publish still in
+  // flight, or an unpublish that raced this save) and a bad id fails the upsert
+  const identifyFoId = getGlobalSetting('user_identify_fo_id');
+  if (identifyFoId) {
+    const { data: foRow } = await supabase
+      .from('fo_profiles')
+      .select('id')
+      .eq('id', identifyFoId)
+      .maybeSingle();
+    patch.identify_fo_id = foRow?.id ?? null;
+  } else {
+    patch.identify_fo_id = null;
+  }
+
+  // The local "already uploaded this file" marker can't be trusted on its own:
+  // the remote row may have lost its avatar since (an unpublish, or an upsert
+  // that failed after the marker was written). Re-upload whenever it has none.
+  const { data: existingRow } = await supabase
+    .from('profiles')
+    .select('avatar_url')
+    .eq('id', user.id)
+    .maybeSingle();
 
   const localAvatar = getGlobalSetting('user_avatar');
   const lastSyncedAvatar = getGlobalSetting('user_avatar_synced_uri');
-  if (localAvatar && localAvatar !== lastSyncedAvatar) {
+  let uploadedAvatarFor = '';
+  if (localAvatar && (localAvatar !== lastSyncedAvatar || !existingRow?.avatar_url)) {
     try {
-      const compressed = await compressImage(localAvatar);
+      const compressed = await compressImage(localAvatar, 'avatar');
       patch.avatar_url = await uploadToBucket('avatars', `${user.id}/${Date.now()}.jpg`, compressed, 'image/jpeg');
-      saveGlobalSetting('user_avatar_synced_uri', localAvatar);
+      uploadedAvatarFor = localAvatar;
     } catch (_) {
       // stale/missing local avatar file — skip syncing it this time, rest of the profile still saves
     }
+  } else if (!localAvatar) {
+    patch.avatar_url = '';
   }
 
+  // gallery and the two background images ride the same {localUri: remoteUrl}
+  // map, so a background picked once is never re-uploaded on later saves
   const localGallery = parseGallery(getGlobalSetting('user_gallery'));
+  const cardBgImage = getGlobalSetting('user_card_bg_image');
+  const pageBgImage = getGlobalSetting('user_page_bg_image');
   const prevGalleryMap = parseSyncMap(getGlobalSetting('user_gallery_sync_map'));
   const galleryMap = await syncMediaMap(
-    localGallery.map((p) => p.uri),
+    [...localGallery.map((p) => p.uri), cardBgImage, pageBgImage].filter(Boolean),
     prevGalleryMap,
     (compressedUri) =>
       uploadToBucket(
@@ -227,8 +370,13 @@ export async function pushOwnProfile(): Promise<void> {
   );
   saveGlobalSetting('user_gallery_sync_map', JSON.stringify(galleryMap));
   patch.gallery = localGallery.map((p) => ({ url: galleryMap[p.uri], caption: p.caption })).filter((g) => g.url);
+  patch.card_bg_image = (cardBgImage && galleryMap[cardBgImage]) || '';
+  patch.page_bg_image = (pageBgImage && galleryMap[pageBgImage]) || '';
 
-  await supabase.from('profiles').upsert(patch);
+  const { error } = await supabase.from('profiles').upsert(patch);
+  if (error) throw error;
+  // only remember the upload once the row that references it actually landed
+  if (uploadedAvatarFor) saveGlobalSetting('user_avatar_synced_uri', uploadedAvatarFor);
 }
 
 export async function fetchProfile(id: string): Promise<CommunityProfile | null> {
@@ -257,25 +405,50 @@ export async function pushFoProfile(foId: string): Promise<void> {
     bio: fo.bio,
     song: fo.song,
     song_link: fo.songLink,
+    status_label: fo.statusLabel,
+    height: fo.height,
+    weight: fo.weight,
+    fandom: fo.fandom,
+    rel_status: fo.relStatus,
+    share_status: fo.shareStatus,
+    page_bg_color: fo.pageBgColor,
+    card_bg_color: fo.cardBgColor,
+    card_bg_gradient: fo.cardBgGradient,
+    card_transparent: fo.cardTransparent,
+    text_color: fo.textColor,
+    border_style: fo.borderStyle,
+    decoration: fo.decoration,
+    name_font: fo.nameFont,
   };
 
-  if (fo.photoUri && fo.photoUri !== fo.avatarSyncedUri) {
+  // See pushOwnProfile: unpublishing deletes the row outright, so a re-publish
+  // would otherwise trust a stale avatarSyncedUri and leave the F/O faceless.
+  const { data: existingRow } = await supabase
+    .from('fo_profiles')
+    .select('avatar_url')
+    .eq('id', fo.id)
+    .maybeSingle();
+
+  let uploadedAvatarFor = '';
+  if (fo.photoUri && (fo.photoUri !== fo.avatarSyncedUri || !existingRow?.avatar_url)) {
     try {
-      const compressed = await compressImage(fo.photoUri);
+      const compressed = await compressImage(fo.photoUri, 'avatar');
       patch.avatar_url = await uploadToBucket(
         'avatars',
         `${user.id}/fo/${fo.id}/${Date.now()}.jpg`,
         compressed,
         'image/jpeg',
       );
-      updateFo(fo.id, { avatarSyncedUri: fo.photoUri });
+      uploadedAvatarFor = fo.photoUri;
     } catch (_) {
       // stale/missing local photo — publish the rest of their profile without a synced avatar this time
     }
+  } else if (!fo.photoUri) {
+    patch.avatar_url = '';
   }
 
   const galleryMap = await syncMediaMap(
-    fo.gallery.map((p) => p.uri),
+    [...fo.gallery.map((p) => p.uri), fo.cardBgImage, fo.pageBgImage].filter(Boolean),
     fo.gallerySyncMap,
     (compressedUri) =>
       uploadToBucket(
@@ -286,22 +459,49 @@ export async function pushFoProfile(foId: string): Promise<void> {
       ),
   );
   patch.gallery = fo.gallery.map((p) => ({ url: galleryMap[p.uri], caption: p.caption })).filter((g) => g.url);
+  patch.card_bg_image = (fo.cardBgImage && galleryMap[fo.cardBgImage]) || '';
+  patch.page_bg_image = (fo.pageBgImage && galleryMap[fo.pageBgImage]) || '';
 
   const { error } = await supabase.from('fo_profiles').upsert(patch);
   if (error) throw error;
 
-  updateFo(fo.id, { gallerySyncMap: galleryMap, isPublic: true });
+  updateFo(fo.id, {
+    gallerySyncMap: galleryMap,
+    isPublic: true,
+    // committed only now that the row referencing the upload exists
+    ...(uploadedAvatarFor ? { avatarSyncedUri: uploadedAvatarFor } : null),
+  });
 }
 
 export async function unpublishFoProfile(foId: string): Promise<void> {
-  updateFo(foId, { isPublic: false });
   await supabase.from('fo_profiles').delete().eq('id', foId);
+  // the row is gone, so every uploaded-already marker is now a lie — clearing
+  // them makes the next publish re-upload the avatar and gallery from scratch
+  updateFo(foId, { isPublic: false, avatarSyncedUri: '', gallerySyncMap: {} });
 }
 
 export async function fetchFoProfile(id: string): Promise<CommunityFoProfile | null> {
   const { data, error } = await supabase.from('fo_profiles').select(FO_PROFILE_FIELDS).eq('id', id).maybeSingle();
   if (error || !data) return null;
   return rowToFoProfile(data);
+}
+
+/**
+ * "Profile identify" doubles as the community publish switch: whoever is picked
+ * there goes public the moment the user is signed in, and comes back down if
+ * unpaired. Called both right after the toggle/picker changes and on sign-in,
+ * since either order (pair-then-sign-in or sign-in-then-pair) must end up published.
+ */
+export async function syncIdentifyFoPublish(foId: string): Promise<void> {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session?.user) return;
+
+  const fo = getFo(foId);
+  if (!fo) return;
+  if (fo.isPublic) return;
+  await pushFoProfile(foId);
 }
 
 // ─── Feed / posts ─────────────────────────────────────────────────────────────
@@ -352,7 +552,8 @@ export async function fetchPost(id: string): Promise<CommunityPost | null> {
 }
 
 export async function createPost(input: {
-  title: string;
+  /** optional — posts are body/media-first, a title is just an extra flourish */
+  title?: string;
   body: string;
   media: LocalPickedMedia[];
   foProfileId?: string;
@@ -389,11 +590,20 @@ export async function createPost(input: {
         })()
       : await Promise.all(
           input.media.map(async (item, i) => {
-            const compressed = await compressImage(item.uri);
-            const url = await uploadToBucket('post-media', `${user.id}/${batchId}/${i}.jpg`, compressed, 'image/jpeg');
+            // full + thumb are compressed and uploaded side by side so the feed
+            // can stay on the small one and only the detail view pays for the full
+            const [full, thumb] = await Promise.all([
+              compressImage(item.uri, 'post'),
+              compressImage(item.uri, 'thumb'),
+            ]);
+            const [url, thumbnailUrl] = await Promise.all([
+              uploadToBucket('post-media', `${user.id}/${batchId}/${i}.jpg`, full, 'image/jpeg'),
+              uploadToBucket('post-media', `${user.id}/${batchId}/${i}-thumb.jpg`, thumb, 'image/jpeg'),
+            ]);
             return {
               type: 'image' as const,
               url,
+              thumbnailUrl,
               width: item.width,
               height: item.height,
             };
@@ -405,7 +615,7 @@ export async function createPost(input: {
     .insert({
       author_id: user.id,
       fo_profile_id: input.foProfileId ?? null,
-      title: input.title.trim(),
+      title: (input.title ?? '').trim(),
       body: input.body.trim(),
       media,
     })
@@ -529,7 +739,7 @@ export async function fetchBlockedUsers(): Promise<CommunityProfile[]> {
   if (!user) return [];
   const { data, error } = await supabase
     .from('blocks')
-    .select(`blocked:profiles!blocks_blocked_id_fkey(${PROFILE_FIELDS})`)
+    .select(`blocked:profiles!blocks_blocked_id_fkey(${PROFILE_SUMMARY_FIELDS})`)
     .eq('blocker_id', user.id);
   if (error || !data) return [];
   return data.map((r: any) => rowToProfile(r.blocked));
@@ -570,6 +780,31 @@ export function subscribeFeed(
       const row = payload.old as { id: string };
       handlers.onDelete(row.id);
     })
+    .subscribe();
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}
+
+export function subscribeProfile(
+  id: string,
+  onUpdate: (patch: { followerCount: number; followingCount: number }) => void,
+): () => void {
+  const channel = supabase
+    .channel(`community-profile-${id}`)
+    .on(
+      'postgres_changes',
+      {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'profiles',
+        filter: `id=eq.${id}`,
+      },
+      (payload) => {
+        const row = payload.new as { follower_count: number; following_count: number };
+        onUpdate({ followerCount: row.follower_count, followingCount: row.following_count });
+      },
+    )
     .subscribe();
   return () => {
     supabase.removeChannel(channel);
