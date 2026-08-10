@@ -1,8 +1,8 @@
 import { router, useLocalSearchParams } from 'expo-router';
+import { Image } from 'expo-image';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Image,
   Platform,
   Pressable,
   ScrollView,
@@ -233,7 +233,7 @@ export default function PaywallScreen() {
             <Image
               source={require('../../assets/images/icon.png')}
               style={styles.heroIcon}
-              resizeMode="cover"
+              contentFit="cover"
             />
           </View>
         </View>

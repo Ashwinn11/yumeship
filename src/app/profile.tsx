@@ -1,7 +1,8 @@
 import { router, useFocusEffect } from 'expo-router';
-import { resolveMedia } from '@/lib/localMedia';
+import { MEDIA_IMAGE } from '@/lib/imageProps';
+import { Image } from 'expo-image';
 import { useCallback, useState } from 'react';
-import { ImageBackground, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Sakura } from '@/components/deco/Sakura';
@@ -13,7 +14,7 @@ import { IconEdit, IconPalette } from '@/components/ui/Icon';
 import { Mark } from '@/components/ui/Mark';
 import { Colors, FontFamily, FontSize, Radius, Spacing, sf } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
-import { getGlobalSetting, getMediaSetting, saveGlobalSetting, saveMediaSetting } from '@/store/onboarding';
+import { getGlobalSetting, saveGlobalSetting } from '@/store/onboarding';
 import { usePremium } from '@/store/premium';
 import { parseGallery, useFos } from '@/store/fo';
 
@@ -23,17 +24,17 @@ function readMe() {
     pronouns: getGlobalSetting('user_pronouns', 'she/her'),
     username: getGlobalSetting('user_username'),
     color: getGlobalSetting('user_color') || Colors.sakura,
-    avatar: getMediaSetting('user_avatar'),
+    avatar: getGlobalSetting('user_avatar'),
     bio: getGlobalSetting('user_bio'),
     height: getGlobalSetting('user_height'),
     weight: getGlobalSetting('user_weight'),
     song: getGlobalSetting('user_song'),
     songLink: getGlobalSetting('user_song_link'),
-    gallery: parseGallery(getGlobalSetting('user_gallery')).map((g) => ({ ...g, uri: resolveMedia(g.uri) })),
+    gallery: parseGallery(getGlobalSetting('user_gallery')),
     pageBgColor: getGlobalSetting('user_page_bg_color'),
-    pageBgImage: getMediaSetting('user_page_bg_image'),
+    pageBgImage: getGlobalSetting('user_page_bg_image'),
     cardBgColor: getGlobalSetting('user_card_bg_color'),
-    cardBgImage: getMediaSetting('user_card_bg_image'),
+    cardBgImage: getGlobalSetting('user_card_bg_image'),
     cardBgGradient: getGlobalSetting('user_card_bg_gradient'),
     cardTransparent: getGlobalSetting('user_card_transparent') === '1',
     textColor: getGlobalSetting('user_text_color'),
@@ -72,12 +73,7 @@ export default function MyProfileScreen() {
         continue;
       }
       const mappedKey = keyMap[k as keyof typeof keyMap];
-      // the two image keys hold picked files, so they store a ref, not the path
-      if (mappedKey === 'user_page_bg_image' || mappedKey === 'user_card_bg_image') {
-        saveMediaSetting(mappedKey, (v as string) ?? '');
-      } else if (mappedKey) {
-        saveGlobalSetting(mappedKey, (v as string) ?? '');
-      }
+      if (mappedKey) saveGlobalSetting(mappedKey, (v as string) ?? '');
     }
     setMe((p) => ({ ...p, ...patch }));
   }
@@ -164,7 +160,12 @@ export default function MyProfileScreen() {
   );
 
   if (me.pageBgImage) {
-    return <ImageBackground source={{ uri: me.pageBgImage }} style={styles.fill}>{body}</ImageBackground>;
+    return (
+      <View style={styles.fill}>
+        <Image source={{ uri: me.pageBgImage }} style={StyleSheet.absoluteFill} contentFit="cover" {...MEDIA_IMAGE} />
+        {body}
+      </View>
+    );
   }
   if (me.pageBgColor) {
     return <View style={[styles.fill, { backgroundColor: me.pageBgColor }]}>{body}</View>;

@@ -21,10 +21,10 @@ import { UnderInput } from '@/components/ui/UnderInput';
 import { CalloutBubble } from '@/components/ui';
 import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing ,sf } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
-import { galleryToRefs, persistImage, resolveMedia } from '@/lib/localMedia';
-import { getGlobalSetting, getMediaSetting, saveGlobalSetting, saveMediaSetting, setOnbField } from '@/store/onboarding';
+import { persistImage } from '@/lib/localMedia';
+import { getGlobalSetting, saveGlobalSetting, setOnbField } from '@/store/onboarding';
 import { parseGallery, useFos, type GalleryPhoto } from '@/store/fo';
-import { pushOwnProfile, syncIdentifyFoPublish, unpublishFoProfile } from '@/store/community';
+import { logSyncFailure, pushOwnProfile, syncIdentifyFoPublish, unpublishFoProfile } from '@/store/community';
 
 const PRONOUNS = ['she/her', 'he/him', 'they/them', '+'];
 const COLOR_OPTIONS = [
@@ -48,13 +48,13 @@ export default function OnbPersona() {
     const i = (COLOR_OPTIONS as string[]).indexOf(getGlobalSetting('user_color'));
     return i >= 0 ? i : 0;
   });
-  const [avatar, setAvatar] = useState(() => getMediaSetting('user_avatar'));
+  const [avatar, setAvatar] = useState(() => getGlobalSetting('user_avatar'));
   const [bio, setBio] = useState(() => getGlobalSetting('user_bio'));
   const [height, setHeight] = useState(() => getGlobalSetting('user_height'));
   const [weight, setWeight] = useState(() => getGlobalSetting('user_weight'));
   const [song, setSong] = useState(() => getGlobalSetting('user_song'));
   const [songLink, setSongLink] = useState(() => getGlobalSetting('user_song_link'));
-  const [gallery, setGallery] = useState<GalleryPhoto[]>(() => parseGallery(getGlobalSetting('user_gallery')).map((g) => ({ ...g, uri: resolveMedia(g.uri) })));
+  const [gallery, setGallery] = useState<GalleryPhoto[]>(() => parseGallery(getGlobalSetting('user_gallery')));
   const [sexuality, setSexuality] = useState(() => getGlobalSetting('user_status_label'));
   const [identifyFoId, setIdentifyFoId] = useState(() => getGlobalSetting('user_identify_fo_id'));
   const [showFoPicker, setShowFoPicker] = useState(false);
@@ -66,7 +66,7 @@ export default function OnbPersona() {
   const handleWeightChange = (v: string) => { setWeight(v); saveGlobalSetting('user_weight', v); };
   const handleSongChange = (v: string) => { setSong(v); saveGlobalSetting('user_song', v); };
   const handleSongLinkChange = (v: string) => { setSongLink(v); saveGlobalSetting('user_song_link', v); };
-  const handleGalleryChange = (g: GalleryPhoto[]) => { setGallery(g); saveGlobalSetting('user_gallery', JSON.stringify(galleryToRefs(g))); };
+  const handleGalleryChange = (g: GalleryPhoto[]) => { setGallery(g); saveGlobalSetting('user_gallery', JSON.stringify(g)); };
   const handleSexualityChange = (v: string) => { setSexuality(v); saveGlobalSetting('user_status_label', v); };
   const handlePronounChange = (p: string) => {
     setPronoun(p);
@@ -89,7 +89,7 @@ export default function OnbPersona() {
     (async () => {
       await syncIdentifyFoPublish(id);
       await pushOwnProfile();
-    })().catch(() => {});
+    })().catch(logSyncFailure('pair F/O'));
   }
 
   function handleIdentifyToggle(v: boolean) {
@@ -101,7 +101,7 @@ export default function OnbPersona() {
       (async () => {
         await pushOwnProfile();
         if (prevId) await unpublishFoProfile(prevId);
-      })().catch(() => {});
+      })().catch(logSyncFailure('unpair F/O'));
       return;
     }
     if (fos.length === 1) {
@@ -121,8 +121,8 @@ export default function OnbPersona() {
     if (!res.canceled && res.assets[0]) {
       const stored = await persistImage(res.assets[0].uri);
       setAvatar(stored);
-      saveMediaSetting('user_avatar', stored);
-      pushOwnProfile().catch(() => {}); // fire-and-forget — no-op while signed out
+      saveGlobalSetting('user_avatar', stored);
+      pushOwnProfile().catch(logSyncFailure('push own profile')); // no-op while signed out
     }
   }
 
@@ -251,58 +251,6 @@ export default function OnbPersona() {
           </Field>
           <Text style={styles.imageHint}>or tap + to use a photo of you</Text>
 
-          {isEdit && (
-            <>
-              <View style={styles.fieldSpacer} />
-
-              <Field label="About you (shows on your profile card)">
-                <TextInput
-                  value={bio}
-                  onChangeText={handleBioChange}
-                  placeholder="a few soft lines about you…"
-                  placeholderTextColor={Colors.ink3}
-                  multiline
-                  style={styles.bioInput}
-                />
-              </Field>
-
-              <View style={styles.fieldSpacer} />
-
-              <Row gap={14}>
-                <Field label="Height (optional)" style={{ flex: 1 }}>
-                  <UnderInput value={height} onChangeText={handleHeightChange} placeholder="e.g. 165 cm" />
-                </Field>
-                <Field label="Weight (optional)" style={{ flex: 1 }}>
-                  <UnderInput value={weight} onChangeText={handleWeightChange} placeholder="optional" />
-                </Field>
-              </Row>
-
-              <View style={styles.fieldSpacer} />
-
-              <Field label="Theme song">
-                <UnderInput value={song} onChangeText={handleSongChange} placeholder="the song that feels like you" />
-              </Field>
-
-              <View style={styles.fieldSpacer} />
-
-              <Field label="Song link (optional)" hint="Spotify, YouTube, Apple Music…">
-                <UnderInput
-                  value={songLink}
-                  onChangeText={handleSongLinkChange}
-                  placeholder="https://…"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  keyboardType="url"
-                />
-              </Field>
-
-              <View style={styles.fieldSpacer} />
-
-              <Field label="Gallery">
-                <GalleryPicker photos={gallery} onChange={handleGalleryChange} />
-              </Field>
-            </>
-          )}
         </View>
 
         {isEdit && (
@@ -392,7 +340,7 @@ export default function OnbPersona() {
           size="lg"
           full
           disabled={name.trim().length === 0}
-          onPress={isEdit ? () => { pushOwnProfile().catch(() => {}); router.back(); } : () => router.push('/onboarding/fo')}
+          onPress={isEdit ? () => { pushOwnProfile().catch(logSyncFailure('push own profile')); router.back(); } : () => router.push('/onboarding/fo')}
         >
           {!name.trim() ? 'enter your name first' : (isEdit ? 'save changes' : 'continue · meet them')}
         </Button>

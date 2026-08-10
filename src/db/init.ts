@@ -1,3 +1,4 @@
+import { mediaUriFor, rescueImageSync } from '@/lib/localMedia';
 import { getDb, newId } from './client';
 
 export function initDb() {
@@ -218,6 +219,7 @@ export function initDb() {
   `);
   migrateShareVocabulary();
   backfillFos();
+  repairMediaPaths();
 }
 
 // One-time rename: sharing status used to be stored as ng/welcome/mirror
@@ -247,5 +249,66 @@ function backfillFos() {
       foId, s.name ?? '', s.fandom ?? '', s.rel_type || 'romantic', s.share_type || 'selective', s.about_text ?? '', Date.now(),
     );
     db.runSync(`UPDATE ships SET fo_id = ? WHERE id = ?`, foId, s.id);
+  }
+}
+
+
+// Runs every launch: iOS regenerates the app container uuid on reinstall, so an
+// absolute path saved before a rebuild points nowhere afterwards even though the
+// file is still sitting there under the same name. Rewriting the prefix here —
+// once, centrally — is what lets every store keep holding a plain uri string
+// with no media-aware read logic. A no-op when the prefixes already match, so
+// it is safe to run on every start.
+function repairMediaPaths() {
+  const db = getDb();
+  const prefix = mediaUriFor('');
+  // matches any container's media folder, plus refs written by an earlier attempt
+  const stale = /file:\/\/\/[^"']*?\/Documents\/media\//g;
+  const legacyRef = /media:\/\//g;
+
+  // Anything still sitting in Caches is readable today and gone tomorrow — iOS
+  // empties that folder whenever it likes, and the container uuid in the path
+  // changes on reinstall regardless. Copy each one somewhere permanent while it
+  // still exists; a file already lost is left alone for the caller to notice.
+  const cachesPath = /file:\/\/\/[^"']*?\/Library\/Caches\/[^"']+/g;
+  const rescue = (v: string) => v.replace(cachesPath, (m) => rescueImageSync(m) ?? m);
+
+  const fix = (v: string) => rescue(v.replace(stale, prefix).replace(legacyRef, prefix));
+
+  // every text column that can hold a picked-image path, including the JSON
+  // blobs — a string-level replace handles those without parsing them
+  // template_data is keyed on a pair, so keys are a list everywhere
+  const targets: [table: string, keys: string[], cols: string[]][] = [
+    ['ships', ['id'], ['cover_uri', 'members']],
+    ['fo', ['id'], ['photo_uri', 'notif_photo_uri', 'page_bg_image', 'card_bg_image', 'gallery']],
+    ['messages', ['id'], ['image_uri']],
+    ['album_photos', ['id'], ['uri']],
+    ['outfits', ['id'], ['uri']],
+    ['custom_stickers', ['id'], ['uri']],
+    ['template_data', ['ship_id', 'template_key'], ['data_json']],
+    ['settings', ['key'], ['value']],
+  ];
+
+  for (const [table, keys, cols] of targets) {
+    let rows: Record<string, string>[];
+    try {
+      rows = db.getAllSync(`SELECT ${[...keys, ...cols].join(', ')} FROM ${table}`) as Record<string, string>[];
+    } catch (e) {
+      // a genuinely absent table is fine; a wrong column name is a bug, and
+      // staying silent about it is how this pass would quietly do nothing
+      console.warn(`[repairMediaPaths] skipped ${table}:`, e);
+      continue;
+    }
+    const where = keys.map((k) => `${k} = ?`).join(' AND ');
+    for (const row of rows) {
+      for (const col of cols) {
+        const before = row[col] ?? '';
+        if (!before) continue;
+        const after = fix(before);
+        if (after !== before) {
+          db.runSync(`UPDATE ${table} SET ${col} = ? WHERE ${where}`, after, ...keys.map((k) => row[k]));
+        }
+      }
+    }
   }
 }

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { persistImage } from '@/lib/localMedia';
 import {
   Keyboard, KeyboardAvoidingView, Platform, Pressable,
   ScrollView, StyleSheet, Text, TextInput, View,
@@ -130,7 +131,7 @@ function ThreadView({
       quality: 0.85,
     });
     if (!result.canceled && result.assets?.[0]?.uri) {
-      addMessage(threadId, sender, '', result.assets[0].uri);
+      addMessage(threadId, sender, '', await persistImage(result.assets[0].uri));
       setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 150);
     }
   }

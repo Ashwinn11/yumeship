@@ -1,4 +1,7 @@
 import { useIPad } from '@/hooks/use-ipad';
+import { MEDIA_IMAGE } from '@/lib/imageProps';
+import { Image } from 'expo-image';
+import { persistImage } from '@/lib/localMedia';
 import { Cloud } from '@/components/deco/Cloud';
 import { Heart } from '@/components/deco/Heart';
 import { Ribbon } from '@/components/deco/Ribbon';
@@ -20,7 +23,7 @@ import Svg, { Circle, Path, Rect } from 'react-native-svg';
 import * as ImagePicker from 'expo-image-picker';
 import * as Sharing from 'expo-sharing';
 import { useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Image, ImageBackground, Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TouchableWithoutFeedback, View } from 'react-native';
+import { ActivityIndicator, Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TouchableWithoutFeedback, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { captureRef } from 'react-native-view-shot';
 
@@ -151,7 +154,7 @@ export function TemplateScreenWrapper({ templateKey, shipId, children }: Props) 
       quality: 0.8,
     });
     if (!result.canceled && result.assets[0]) {
-      const uri = result.assets[0].uri;
+      const uri = await persistImage(result.assets[0].uri);
       ctx.set('_bgImage', uri);
       ctx.set('_bgColor', '');
       setBgImage(uri);
@@ -310,10 +313,11 @@ export function TemplateScreenWrapper({ templateKey, shipId, children }: Props) 
         >
           <View ref={exportRef} style={s.exportCapture} collapsable={false}>
             {bgImage ? (
-              <ImageBackground
+              <Image
                 source={{ uri: bgImage }}
                 style={StyleSheet.absoluteFill}
-                imageStyle={{ resizeMode: 'cover' }}
+                contentFit="cover"
+                {...MEDIA_IMAGE}
               />
             ) : bgColor ? (
               <View style={[StyleSheet.absoluteFill, { backgroundColor: bgColor }]} />

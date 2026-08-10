@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { Image } from 'expo-image';
+import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Heart } from '@/components/deco/Heart';
@@ -38,7 +39,7 @@ export default function OnbWelcome() {
           <Image
             source={require('../../../assets/images/icon.png')}
             style={styles.icon}
-            resizeMode="cover"
+            contentFit="cover"
           />
           <View style={[styles.stickerAbs, { bottom: -10, right: -22, transform: [{ rotate: '12deg' }] }]} pointerEvents="none">
             <StickerWaxSeal size={38} />

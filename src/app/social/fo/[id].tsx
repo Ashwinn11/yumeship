@@ -1,6 +1,8 @@
 import { router, useLocalSearchParams } from 'expo-router';
+import { MEDIA_IMAGE } from '@/lib/imageProps';
+import { Image } from 'expo-image';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, ImageBackground, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ProfileCard } from '@/components/profile/ProfileCard';
@@ -83,7 +85,12 @@ export default function PublicFoProfileScreen() {
 
   // the owner styled their page too, so mirror it here rather than always paper
   if (profile?.pageBgImage) {
-    return <ImageBackground source={{ uri: profile.pageBgImage }} style={styles.fill}>{body}</ImageBackground>;
+    return (
+      <View style={styles.fill}>
+        <Image source={{ uri: profile.pageBgImage }} style={StyleSheet.absoluteFill} contentFit="cover" {...MEDIA_IMAGE} />
+        {body}
+      </View>
+    );
   }
   if (profile?.pageBgColor) {
     return <View style={[styles.fill, { backgroundColor: profile.pageBgColor }]}>{body}</View>;

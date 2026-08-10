@@ -1,25 +1,19 @@
 import { Directory, File, Paths } from 'expo-file-system';
 
 /**
- * Durable storage for images the user picks.
+ * Permanent home for images the user picks.
  *
  * expo-image-picker hands back a path inside `Library/Caches/ImagePicker/`,
- * which is wrong to keep in two separate ways:
+ * which fails in two separate ways: `Caches` is reclaimable, so iOS deletes
+ * from it under storage pressure; and the absolute path embeds the app
+ * container uuid, which is regenerated on reinstall.
  *
- *  1. `Caches` is reclaimable — iOS deletes from it under storage pressure.
- *  2. The absolute path embeds the app container UUID, which is regenerated on
- *     every reinstall, so yesterday's path points nowhere after a rebuild.
- *
- * Storing one of those paths therefore produces an avatar that looks fine until
- * it abruptly doesn't — and worse, fails *silently*, because the compressor and
- * the notification code both treat a missing file as "no avatar" and carry on.
- *
- * So: copy into Documents on pick, and store a container-independent reference
- * (`media://name.jpg`) that is resolved to a real uri at read time.
+ * Copying the file here fixes the first. The second is fixed once at startup by
+ * repairMediaPaths() in db/init — so every store keeps doing what it already
+ * does, holding a plain uri string, with no media-aware read logic anywhere.
  */
 
 const DIR = 'media';
-const REF = 'media://';
 
 function mediaDir(): Directory {
   const dir = new Directory(Paths.document, DIR);
@@ -27,76 +21,52 @@ function mediaDir(): Directory {
   return dir;
 }
 
-/** True for refs this module owns — i.e. produced by persistImage. */
-export function isPersistedRef(value: string): boolean {
-  return typeof value === 'string' && value.startsWith(REF);
+/** Absolute uri for a file in the media folder — `name` may be empty for the folder itself. */
+export function mediaUriFor(name: string): string {
+  const base = mediaDir().uri.replace(/\/?$/, '/');
+  return name ? `${base}${name}` : base;
 }
 
 /**
- * Copies a picked image into Documents and returns a **renderable** uri.
+ * Copies a picked image into permanent storage and returns a plain file uri,
+ * safe both to render and to save as-is.
  *
- * Deliberately not the `media://` ref: callers put this straight into component
- * state and into <Image source>, and a made-up scheme renders as nothing. The
- * ref form only exists at the storage boundary — see toMediaRef.
- *
- * Anything that isn't a local file we can copy — a remote url, an already
- * persisted ref, an empty string — is returned resolved, so this is safe to
- * call on any value. If the copy fails the original uri comes back rather than
- * throwing: a photo that works for this session beats losing the pick outright.
+ * Values that need no copy — remote urls, files already in the media folder,
+ * empty strings — come back unchanged. A failed copy returns the original uri
+ * rather than throwing: a photo that works for this session beats losing the pick.
  */
 export async function persistImage(uri: string): Promise<string> {
-  if (!uri || isPersistedRef(uri) || /^https?:/.test(uri)) return resolveMedia(uri);
+  return copyIntoMediaDir(uri) ?? uri ?? '';
+}
+
+/**
+ * Rescues a file that is readable *right now* but stored somewhere it will not
+ * survive — chiefly `Library/Caches`, which iOS empties at will.
+ *
+ * Returns the new uri, or null when there is nothing to do: already safe, remote,
+ * or the file is already gone. Synchronous so the startup repair pass can use it.
+ */
+export function rescueImageSync(uri: string): string | null {
+  return copyIntoMediaDir(uri);
+}
+
+/** Shared core: copy into Documents/media, or null if not applicable/possible. */
+function copyIntoMediaDir(uri: string): string | null {
+  if (!uri || /^https?:/.test(uri) || isInMediaDir(uri)) return null;
 
   try {
     const src = new File(uri);
-    if (!src.exists) return uri;
+    if (!src.exists) return null;
 
     const ext = (uri.split('?')[0].match(/\.(jpe?g|png|heic|webp)$/i)?.[1] ?? 'jpg').toLowerCase();
     const name = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
     src.copy(new File(mediaDir(), name));
-    return resolveMedia(`${REF}${name}`);
+    return mediaUriFor(name);
   } catch {
-    return uri;
+    return null;
   }
 }
 
-/**
- * Inverse of resolveMedia: collapses an absolute path inside our media folder
- * back to a container-independent ref. Everything written to the database or to
- * settings must go through this, or the absolute path — which embeds the app
- * container UUID — gets baked in and dies at the next reinstall.
- */
-export function toMediaRef(value: string): string {
-  if (!value || isPersistedRef(value) || /^https?:/.test(value)) return value ?? '';
-  try {
-    const dir = mediaDir().uri.replace(/\/?$/, '/');
-    if (value.startsWith(dir)) return `${REF}${value.slice(dir.length)}`;
-  } catch {
-    // fall through — an unconvertible value is stored as-is
-  }
-  return value;
-}
-
-/** toMediaRef across the {uri, caption} gallery shape. */
-export function galleryToRefs<T extends { uri: string }>(photos: T[]): T[] {
-  return photos.map((p) => ({ ...p, uri: toMediaRef(p.uri) }));
-}
-
-/**
- * Turns a stored value into something renderable. Passes through remote urls and
- * legacy absolute paths unchanged, so old records keep working (they just stay
- * as fragile as they were until the photo is re-picked).
- */
-export function resolveMedia(value: string): string {
-  if (!isPersistedRef(value)) return value ?? '';
-  try {
-    return new File(mediaDir(), value.slice(REF.length)).uri;
-  } catch {
-    return '';
-  }
-}
-
-/** Convenience for the {uri, caption} gallery shape used by profiles and F/Os. */
-export async function persistGallery<T extends { uri: string }>(photos: T[]): Promise<T[]> {
-  return Promise.all(photos.map(async (p) => ({ ...p, uri: await persistImage(p.uri) })));
+function isInMediaDir(uri: string): boolean {
+  return /\/Documents\/media\/[^/?#]+$/.test(uri);
 }

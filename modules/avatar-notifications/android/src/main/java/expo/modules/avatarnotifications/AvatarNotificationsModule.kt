@@ -118,9 +118,11 @@ class AvatarNotificationReceiver : BroadcastReceiver() {
       .addMessage(body, System.currentTimeMillis(), sender)
 
     val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-      // the small icon is mandatory and always shows in the status bar; the
-      // avatar from MessagingStyle is what dominates the expanded notification
-      .setSmallIcon(context.applicationInfo.icon)
+      // The small icon is mandatory and always shows in the status bar. It must
+      // be a silhouette: Android keeps only the alpha channel and tints the
+      // rest, so passing applicationInfo.icon here renders as a white blob.
+      .setSmallIcon(R.drawable.ic_notification)
+      .setColor(0xFFD48AA3.toInt())
       .setStyle(style)
       .setAutoCancel(true)
       .setContentIntent(launchIntent(context))

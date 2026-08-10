@@ -1,6 +1,7 @@
 import { Image } from 'expo-image';
+import { MEDIA_IMAGE } from '@/lib/imageProps';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ImageBackground, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { FlagIcon } from '@/components/deco/FlagIcon';
 import { Heart } from '@/components/deco/Heart';
@@ -316,10 +317,16 @@ export function ProfileCard({
   return (
     <View style={styles.page}>
       {cardBgImage ? (
-        <ImageBackground source={{ uri: cardBgImage }} style={[styles.hero, heroBorderStyle]} imageStyle={styles.heroBgImage}>
+        <View style={[styles.hero, heroBorderStyle]}>
+          <Image
+            source={{ uri: cardBgImage }}
+            style={[StyleSheet.absoluteFill, styles.heroBgImage]}
+            contentFit="cover"
+            {...MEDIA_IMAGE}
+          />
           <View style={styles.heroImageOverlay} />
           {heroContent}
-        </ImageBackground>
+        </View>
       ) : gradientColors && gradientColors.length >= 2 ? (
         <LinearGradient
           colors={gradientColors as [string, string, ...string[]]}

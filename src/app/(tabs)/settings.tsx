@@ -29,7 +29,7 @@ import {
 import { manageSubscriptions, restorePurchases } from '@/store/purchases';
 import { openWriteReview } from '@/store/review';
 import { usePremium } from '@/store/premium';
-import { getGlobalSetting, getMediaSetting } from '@/store/onboarding';
+import { getGlobalSetting } from '@/store/onboarding';
 import { deleteAllData } from '@/store/ships';
 
 function readProfile() {
@@ -38,7 +38,7 @@ function readProfile() {
     pronouns: getGlobalSetting('user_pronouns', 'she/her'),
     username: getGlobalSetting('user_username'),
     color: getGlobalSetting('user_color') || Colors.sakura,
-    avatar: getMediaSetting('user_avatar'),
+    avatar: getGlobalSetting('user_avatar'),
   };
 }
 
@@ -279,15 +279,6 @@ export default function SettingsScreen() {
             label="Sticker collection"
             icon={<Sparkle size={14} color={Colors.lavenderDeep} />}
             onPress={() => router.push('/stickers' as any)}
-            trailing={<MetaText>›</MetaText>}
-          />
-        </SettingGroup>
-
-        <SettingGroup ja="輪" name="Community">
-          <SettingRow
-            label="Blocked users"
-            icon={<IconLock size={14} />}
-            onPress={() => router.push('/social/blocked' as any)}
             trailing={<MetaText>›</MetaText>}
           />
         </SettingGroup>

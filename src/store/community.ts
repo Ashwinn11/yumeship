@@ -1,14 +1,15 @@
+import { Image } from 'expo-image';
 import { useCallback, useEffect, useState } from 'react';
 
 import { compressImage, compressVideo, syncMediaMap } from '@/lib/mediaOptimizer';
 import { uploadToBucket } from '@/lib/storage';
 import { supabase } from '@/lib/supabase';
 
-import { getFo, parseGallery, updateFo, type Fo, type GalleryPhoto } from './fo';
+import { getAllFos, getFo, parseGallery, updateFo, type Fo, type GalleryPhoto } from './fo';
 import { getGlobalSetting, saveGlobalSetting } from './onboarding';
 
 export const MAX_IMAGES = 4;
-export const MAX_VIDEO_DURATION_MS = 20_000;
+export const MAX_VIDEO_DURATION_MS = 10_000;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -246,6 +247,26 @@ const COMMENT_SELECT = cols(`
   author:profiles!comments_author_id_fkey(${PROFILE_SUMMARY_FIELDS})
 `);
 
+/**
+ * What a profile push could not carry across.
+ *
+ * These used to be swallowed by a bare `catch (_) {}`, so a profile whose photo
+ * failed to upload saved "successfully" with no avatar and no complaint — which
+ * is how a broken image path went unnoticed for months. Failures that shouldn't
+ * block the rest of the save are reported here instead of discarded.
+ */
+export type PushResult = {
+  /** a local photo existed but could not be read, so the server has none */
+  photoFailed: boolean;
+};
+
+/** Consistent, greppable logging for sync paths that have no UI of their own. */
+export function logSyncFailure(context: string) {
+  return (e: unknown) => {
+    console.warn(`[sync] ${context} failed:`, e instanceof Error ? e.message : e);
+  };
+}
+
 // ─── Identity / profile sync ──────────────────────────────────────────────────
 
 export async function checkUsernameAvailable(username: string): Promise<{ ok: boolean; reason?: string }> {
@@ -284,13 +305,14 @@ export async function claimUsername(username: string): Promise<{ ok: boolean; re
   return { ok: true };
 }
 
-export async function pushOwnProfile(): Promise<void> {
+export async function pushOwnProfile(): Promise<PushResult> {
   const {
     data: { session },
   } = await supabase.auth.getSession();
   const user = session?.user;
-  if (!user) return;
+  if (!user) return { photoFailed: false };
 
+  let photoFailed = false;
   const patch: Record<string, unknown> = {
     id: user.id,
     name: getGlobalSetting('user_name'),
@@ -344,8 +366,10 @@ export async function pushOwnProfile(): Promise<void> {
       const compressed = await compressImage(localAvatar, 'avatar');
       patch.avatar_url = await uploadToBucket('avatars', `${user.id}/${Date.now()}.jpg`, compressed, 'image/jpeg');
       uploadedAvatarFor = localAvatar;
-    } catch (_) {
-      // stale/missing local avatar file — skip syncing it this time, rest of the profile still saves
+    } catch (e) {
+      // the rest of the profile still saves, but the caller is told the photo did not
+      photoFailed = true;
+      logSyncFailure('pushOwnProfile avatar upload')(e);
     }
   } else if (!localAvatar) {
     patch.avatar_url = '';
@@ -377,6 +401,7 @@ export async function pushOwnProfile(): Promise<void> {
   if (error) throw error;
   // only remember the upload once the row that references it actually landed
   if (uploadedAvatarFor) saveGlobalSetting('user_avatar_synced_uri', uploadedAvatarFor);
+  return { photoFailed };
 }
 
 export async function fetchProfile(id: string): Promise<CommunityProfile | null> {
@@ -387,7 +412,7 @@ export async function fetchProfile(id: string): Promise<CommunityProfile | null>
 
 // ─── F/O public profile ───────────────────────────────────────────────────────
 
-export async function pushFoProfile(foId: string): Promise<void> {
+export async function pushFoProfile(foId: string): Promise<PushResult> {
   const {
     data: { session },
   } = await supabase.auth.getSession();
@@ -397,6 +422,7 @@ export async function pushFoProfile(foId: string): Promise<void> {
   if (!fo) throw new Error('f/o not found');
   if (fo.shareStatus === 'no') throw new Error("this f/o's sharing status is set to no — change it first");
 
+  let photoFailed = false;
   const patch: Record<string, unknown> = {
     id: fo.id,
     owner_id: user.id,
@@ -440,8 +466,9 @@ export async function pushFoProfile(foId: string): Promise<void> {
         'image/jpeg',
       );
       uploadedAvatarFor = fo.photoUri;
-    } catch (_) {
-      // stale/missing local photo — publish the rest of their profile without a synced avatar this time
+    } catch (e) {
+      photoFailed = true;
+      logSyncFailure('pushFoProfile avatar upload')(e);
     }
   } else if (!fo.photoUri) {
     patch.avatar_url = '';
@@ -471,6 +498,7 @@ export async function pushFoProfile(foId: string): Promise<void> {
     // committed only now that the row referencing the upload exists
     ...(uploadedAvatarFor ? { avatarSyncedUri: uploadedAvatarFor } : null),
   });
+  return { photoFailed };
 }
 
 export async function unpublishFoProfile(foId: string): Promise<void> {
@@ -492,16 +520,54 @@ export async function fetchFoProfile(id: string): Promise<CommunityFoProfile | n
  * unpaired. Called both right after the toggle/picker changes and on sign-in,
  * since either order (pair-then-sign-in or sign-in-then-pair) must end up published.
  */
-export async function syncIdentifyFoPublish(foId: string): Promise<void> {
+export async function syncIdentifyFoPublish(foId: string): Promise<PushResult> {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const nothingToDo = { photoFailed: false };
+  if (!session?.user) return nothingToDo;
+
+  const fo = getFo(foId);
+  if (!fo) return nothingToDo;
+  if (fo.isPublic) return nothingToDo;
+  return pushFoProfile(foId);
+}
+
+/**
+ * Deletes the account for good.
+ *
+ * The auth record is the thing that has to go — everything else follows from it,
+ * since public.profiles cascades from auth.users and posts, comments, likes,
+ * follows, blocks and published F/O profiles all cascade from profiles.
+ *
+ * That delete needs the service role, which cannot ship in a mobile binary: the
+ * key is extractable from any app bundle and bypasses RLS entirely. So it lives
+ * in the `delete-account` edge function, which identifies the caller from their
+ * own JWT and can therefore only ever delete them.
+ *
+ * Local F/Os and ships are deliberately untouched — they were never community
+ * data and live on the device. The claimed username is released with the row.
+ */
+export async function deleteCommunityAccount(): Promise<void> {
   const {
     data: { session },
   } = await supabase.auth.getSession();
   if (!session?.user) return;
 
-  const fo = getFo(foId);
-  if (!fo) return;
-  if (fo.isPublic) return;
-  await pushFoProfile(foId);
+  const { data, error } = await supabase.functions.invoke('delete-account', { method: 'POST' });
+  if (error) throw error;
+  if (data && (data as { error?: string }).error) {
+    throw new Error((data as { error: string }).error);
+  }
+
+  saveGlobalSetting('user_username', '');
+  saveGlobalSetting('user_avatar_synced_uri', '');
+  saveGlobalSetting('user_gallery_sync_map', '{}');
+  saveGlobalSetting('user_identify_fo_id', '');
+  // the cascade already unpublished every F/O; the local flags must agree
+  for (const fo of getAllFos()) {
+    if (fo.isPublic) updateFo(fo.id, { isPublic: false, avatarSyncedUri: '', gallerySyncMap: {} });
+  }
 }
 
 // ─── Feed / posts ─────────────────────────────────────────────────────────────
@@ -745,6 +811,39 @@ export async function fetchBlockedUsers(): Promise<CommunityProfile[]> {
   return data.map((r: any) => rowToProfile(r.blocked));
 }
 
+/**
+ * Blocks in real time.
+ *
+ * Only the blocker's own rows: the SELECT policy on `blocks` is `blocker_id =
+ * auth.uid()`, so the blocked party cannot read the row at all — and that is
+ * deliberate, not an oversight. Being told "X blocked you" escalates exactly
+ * the situation blocking exists to defuse. Their feed simply stops including
+ * the other person on its next fetch, which RLS already enforces.
+ *
+ * What this buys is consistency across the blocker's own devices, and an
+ * immediate effect on the list already rendered.
+ */
+export function subscribeBlocks(
+  userId: string,
+  onBlocked: (blockedUserId: string) => void,
+): () => void {
+  const channel = supabase
+    .channel(`community-blocks-${userId}`)
+    .on(
+      'postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'blocks', filter: `blocker_id=eq.${userId}` },
+      (payload) => {
+        const row = payload.new as { blocked_id: string };
+        if (row.blocked_id) onBlocked(row.blocked_id);
+      },
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}
+
 // ─── Realtime ─────────────────────────────────────────────────────────────────
 
 export function subscribeFeed(
@@ -873,6 +972,26 @@ export function subscribePost(
   };
 }
 
+/**
+ * Warms the image cache for a page of posts the moment it arrives, rather than
+ * when each row scrolls into view — the same "fetch just ahead of the scroll"
+ * trick feed apps use so media is decoded before it is needed.
+ *
+ * Only the small variants: avatars and the 480px thumbnails the cards actually
+ * draw. Full-size photos stay lazy, since most posts are never opened.
+ */
+function prefetchFeedMedia(posts: CommunityPost[]) {
+  const urls: string[] = [];
+  for (const p of posts) {
+    if (p.author.avatarUrl) urls.push(p.author.avatarUrl);
+    if (p.fo?.avatarUrl) urls.push(p.fo.avatarUrl);
+    const first = p.media[0];
+    if (first?.type === 'video') urls.push(first.thumbnailUrl);
+    else for (const m of p.media) if (m.type === 'image') urls.push(m.thumbnailUrl || m.url);
+  }
+  if (urls.length) Image.prefetch(urls, 'memory-disk').catch(() => {});
+}
+
 // ─── Hooks ────────────────────────────────────────────────────────────────────
 
 export function useCommunityFeed(mode: 'global' | 'following') {
@@ -885,6 +1004,7 @@ export function useCommunityFeed(mode: 'global' | 'following') {
     const page = await fetchFeedPage({ mode });
     setPosts(page);
     setLoading(false);
+    prefetchFeedMedia(page);
   }, [mode]);
 
   useEffect(() => {
@@ -908,6 +1028,24 @@ export function useCommunityFeed(mode: 'global' | 'following') {
       cancelled = true;
     };
   }, [mode]);
+
+  // a block in either direction takes effect on screen, not just on next fetch
+  useEffect(() => {
+    let cancelled = false;
+    let unsubscribe: (() => void) | undefined;
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      const uid = session?.user?.id;
+      if (!uid || cancelled) return;
+      unsubscribe = subscribeBlocks(uid, (otherId) => {
+        setPosts((prev) => prev.filter((p) => p.author.id !== otherId));
+      });
+    })();
+    return () => {
+      cancelled = true;
+      unsubscribe?.();
+    };
+  }, []);
 
   useEffect(() => {
     return subscribeFeed(mode, followingIds, {
@@ -941,6 +1079,7 @@ export function useCommunityFeed(mode: 'global' | 'following') {
       before: posts[posts.length - 1].createdAt,
     });
     setPosts((prev) => [...prev, ...more]);
+    prefetchFeedMedia(more);
   }, [mode, posts]);
 
   const toggleLikeOptimistic = useCallback(

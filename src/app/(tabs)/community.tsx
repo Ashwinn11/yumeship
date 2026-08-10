@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -13,9 +13,9 @@ import {
 } from 'react-native';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 
-import { useAuthUser, signInWithApple, signInWithGoogle, signOut } from '@/store/auth';
+import { useAuthUser, signInWithApple, signInWithGoogle } from '@/store/auth';
 import { Colors, FontFamily, FontSize, Radius, Spacing, sf, Shadow } from '@/constants/theme';
 import { Button } from '@/components/ui/Button';
 import { Mark } from '@/components/ui/Mark';
@@ -26,8 +26,11 @@ import { StickerEnvelope, StickerPolaroid } from '@/components/deco/Stickers';
 import { useIPad } from '@/hooks/use-ipad';
 import Svg, { Path } from 'react-native-svg';
 import { CozyModal } from '@/components/ui/CozyModal';
+import { Image } from 'expo-image';
+import { AccountSheet } from '@/components/community/AccountSheet';
+import { AVATAR_IMAGE } from '@/lib/imageProps';
 import { PostCard } from '@/components/community/PostCard';
-import { checkUsernameAvailable, claimUsername, fetchProfile, pushOwnProfile, syncIdentifyFoPublish, useCommunityFeed } from '@/store/community';
+import { checkUsernameAvailable, claimUsername, fetchProfile, logSyncFailure, pushOwnProfile, syncIdentifyFoPublish, useCommunityFeed } from '@/store/community';
 import { getGlobalSetting, saveGlobalSetting } from '@/store/onboarding';
 
 // ─── Google Icon ──────────────────────────────────────────────────────────────
@@ -195,6 +198,11 @@ export default function CommunityScreen() {
   const [alertModal, setAlertModal] = useState<{ title: string; message: string } | null>(null);
   const [username, setUsername] = useState(() => getGlobalSetting('user_username'));
   const [checkingUsername, setCheckingUsername] = useState(!!user && !getGlobalSetting('user_username'));
+  const [showAccount, setShowAccount] = useState(false);
+  const [avatarUri, setAvatarUri] = useState(() => getGlobalSetting('user_avatar'));
+  // measured rather than derived: header height shifts with safe-area insets
+  const [menuTop, setMenuTop] = useState(0);
+  useFocusEffect(useCallback(() => { setAvatarUri(getGlobalSetting('user_avatar')); }, []));
 
   useEffect(() => {
     if (!user) return;
@@ -202,8 +210,8 @@ export default function CommunityScreen() {
     // key, so pushing the profile before the F/O exists would drop the pairing
     (async () => {
       const identifyFoId = getGlobalSetting('user_identify_fo_id');
-      if (identifyFoId) await syncIdentifyFoPublish(identifyFoId).catch(() => {});
-      await pushOwnProfile().catch(() => {});
+      if (identifyFoId) await syncIdentifyFoPublish(identifyFoId).catch(logSyncFailure('publish paired F/O'));
+      await pushOwnProfile().catch(logSyncFailure('push own profile'));
     })();
     const local = getGlobalSetting('user_username');
     if (local) {
@@ -278,8 +286,23 @@ export default function CommunityScreen() {
             <Sparkle size={18} color={Colors.lavenderDeep} />
           </View>
           {user && (
-            <Pressable style={styles.signOutBtn} onPress={signOut}>
-              <Text style={styles.signOutText}>sign out</Text>
+            <Pressable
+              onPress={() => setShowAccount(true)}
+              hitSlop={8}
+              onLayout={(e) => {
+                const { y, height } = e.nativeEvent.layout;
+                setMenuTop(insets.top + Spacing.s2 + y + height + 8);
+              }}
+            >
+              <View style={[styles.headerAvatar, { backgroundColor: getGlobalSetting('user_color') || Colors.sakura }]}>
+                {avatarUri ? (
+                  <Image source={{ uri: avatarUri }} style={styles.headerAvatarImg} contentFit="cover" {...AVATAR_IMAGE} />
+                ) : (
+                  <Text style={styles.headerAvatarInitial}>
+                    {getGlobalSetting('user_name').trim().charAt(0).toUpperCase() || '♡'}
+                  </Text>
+                )}
+              </View>
             </Pressable>
           )}
         </View>
@@ -344,6 +367,8 @@ export default function CommunityScreen() {
           )}
         </ScrollView>
       )}
+      <AccountSheet visible={showAccount} onClose={() => setShowAccount(false)} anchorTop={menuTop} />
+
       <CozyModal
         visible={!!alertModal}
         title={alertModal?.title}
@@ -393,19 +418,14 @@ const styles = StyleSheet.create({
     letterSpacing: -0.4,
     color: Colors.ink,
   },
-  signOutBtn: {
-    paddingVertical: 5,
-    paddingHorizontal: 12,
-    borderRadius: Radius.pill,
-    backgroundColor: Colors.vellum,
-    borderWidth: 1,
-    borderColor: Colors.line,
+  headerAvatar: {
+    width: 34, height: 34, borderRadius: Radius.pill,
+    alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+    borderWidth: 1.5, borderColor: Colors.vellum,
+    ...Shadow.s1,
   },
-  signOutText: {
-    fontFamily: FontFamily.uiMedium,
-    fontSize: sf(11),
-    color: Colors.ink2,
-  },
+  headerAvatarImg: { width: 34, height: 34, borderRadius: Radius.pill },
+  headerAvatarInitial: { fontFamily: FontFamily.displayItalic, fontSize: sf(15), color: '#fff' },
   emptyContainer: {
     flex: 1,
     alignItems: 'center',

@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { galleryToRefs, resolveMedia, toMediaRef } from '@/lib/localMedia';
 import { getDb, newId } from '@/db/client';
 import { notifyShips } from './ships';
 import { getGlobalSetting, saveGlobalSetting } from './onboarding';
@@ -79,13 +78,12 @@ function rowToFo(row: Record<string, unknown>): Fo {
     bio: (row.bio as string) ?? '',
     height: (row.height as string) ?? '',
     weight: (row.weight as string) ?? '',
-    // resolved on read so every render site keeps using a plain uri
-    photoUri: resolveMedia((row.photo_uri as string) ?? ''),
-    notifPhotoUri: resolveMedia((row.notif_photo_uri as string) ?? ''),
+    photoUri: (row.photo_uri as string) ?? '',
+    notifPhotoUri: (row.notif_photo_uri as string) ?? '',
     pageBgColor: (row.page_bg_color as string) ?? '',
-    pageBgImage: resolveMedia((row.page_bg_image as string) ?? ''),
+    pageBgImage: (row.page_bg_image as string) ?? '',
     cardBgColor: (row.card_bg_color as string) ?? '',
-    cardBgImage: resolveMedia((row.card_bg_image as string) ?? ''),
+    cardBgImage: (row.card_bg_image as string) ?? '',
     cardBgGradient: (row.card_bg_gradient as string) ?? '',
     cardTransparent: !!(row.card_transparent as number),
     textColor: (row.text_color as string) ?? '',
@@ -95,7 +93,7 @@ function rowToFo(row: Record<string, unknown>): Fo {
     statusLabel: (row.status_label as string) ?? '',
     song: (row.song as string) ?? '',
     songLink: (row.song_link as string) ?? '',
-    gallery: parseGallery(row.gallery).map((g) => ({ ...g, uri: resolveMedia(g.uri) })),
+    gallery: parseGallery(row.gallery),
     isPublic: !!(row.is_public as number),
     avatarSyncedUri: (row.avatar_synced_uri as string) ?? '',
     gallerySyncMap: parseSyncMap(row.gallery_sync_map),
@@ -151,10 +149,10 @@ export function addFo(d: {
     d.bio ?? '',
     d.height ?? '',
     d.weight ?? '',
-    toMediaRef(d.photoUri ?? ''),
+    d.photoUri ?? '',
     d.song ?? '',
     d.songLink ?? '',
-    JSON.stringify(galleryToRefs(d.gallery ?? [])),
+    JSON.stringify(d.gallery ?? []),
     Date.now(),
   );
   notify();
@@ -173,12 +171,12 @@ export function updateFo(id: string, d: Partial<Omit<Fo, 'id' | 'createdAt'>>) {
   if (d.bio !== undefined)         { fields.push('bio = ?');          values.push(d.bio); }
   if (d.height !== undefined)      { fields.push('height = ?');       values.push(d.height); }
   if (d.weight !== undefined)      { fields.push('weight = ?');       values.push(d.weight); }
-  if (d.photoUri !== undefined)    { fields.push('photo_uri = ?');    values.push(toMediaRef(d.photoUri)); }
-  if (d.notifPhotoUri !== undefined) { fields.push('notif_photo_uri = ?'); values.push(toMediaRef(d.notifPhotoUri)); }
+  if (d.photoUri !== undefined)    { fields.push('photo_uri = ?');    values.push(d.photoUri); }
+  if (d.notifPhotoUri !== undefined) { fields.push('notif_photo_uri = ?'); values.push(d.notifPhotoUri); }
   if (d.pageBgColor !== undefined) { fields.push('page_bg_color = ?'); values.push(d.pageBgColor); }
-  if (d.pageBgImage !== undefined) { fields.push('page_bg_image = ?'); values.push(toMediaRef(d.pageBgImage)); }
+  if (d.pageBgImage !== undefined) { fields.push('page_bg_image = ?'); values.push(d.pageBgImage); }
   if (d.cardBgColor !== undefined) { fields.push('card_bg_color = ?'); values.push(d.cardBgColor); }
-  if (d.cardBgImage !== undefined) { fields.push('card_bg_image = ?'); values.push(toMediaRef(d.cardBgImage)); }
+  if (d.cardBgImage !== undefined) { fields.push('card_bg_image = ?'); values.push(d.cardBgImage); }
   if (d.cardBgGradient !== undefined) { fields.push('card_bg_gradient = ?'); values.push(d.cardBgGradient); }
   if (d.cardTransparent !== undefined) { fields.push('card_transparent = ?'); values.push(d.cardTransparent ? 1 : 0); }
   if (d.textColor !== undefined)   { fields.push('text_color = ?');   values.push(d.textColor); }
@@ -188,7 +186,7 @@ export function updateFo(id: string, d: Partial<Omit<Fo, 'id' | 'createdAt'>>) {
   if (d.statusLabel !== undefined) { fields.push('status_label = ?'); values.push(d.statusLabel); }
   if (d.song !== undefined)        { fields.push('song = ?');         values.push(d.song); }
   if (d.songLink !== undefined)    { fields.push('song_link = ?');    values.push(d.songLink); }
-  if (d.gallery !== undefined)     { fields.push('gallery = ?');      values.push(JSON.stringify(galleryToRefs(d.gallery))); }
+  if (d.gallery !== undefined)     { fields.push('gallery = ?');      values.push(JSON.stringify(d.gallery)); }
   if (d.isPublic !== undefined)       { fields.push('is_public = ?');         values.push(d.isPublic ? 1 : 0); }
   if (d.avatarSyncedUri !== undefined) { fields.push('avatar_synced_uri = ?'); values.push(d.avatarSyncedUri); }
   if (d.gallerySyncMap !== undefined)  { fields.push('gallery_sync_map = ?');  values.push(JSON.stringify(d.gallerySyncMap)); }

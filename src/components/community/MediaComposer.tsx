@@ -41,7 +41,7 @@ export function MediaComposer({ media, onChange }: Props) {
     const asset = res.assets[0];
     const durationMs = asset.duration ?? 0;
     if (durationMs > MAX_VIDEO_DURATION_MS) {
-      setError('keep it under 20 seconds — pick a shorter clip');
+      setError(`keep it under ${MAX_VIDEO_DURATION_MS / 1000} seconds — pick a shorter clip`);
       return;
     }
     onChange([{ type: 'video', uri: asset.uri, durationMs, width: asset.width ?? 0, height: asset.height ?? 0 }]);

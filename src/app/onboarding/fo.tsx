@@ -1,4 +1,5 @@
 import { Image } from 'expo-image';
+import { persistImage } from '@/lib/localMedia';
 import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -71,8 +72,9 @@ export default function OnbFO() {
       quality: 0.85,
     });
     if (!res.canceled && res.assets[0]) {
-      setCoverUri(res.assets[0].uri);
-      if (!isEdit) setOnbField('coverUri', res.assets[0].uri);
+      const stored = await persistImage(res.assets[0].uri);
+      setCoverUri(stored);
+      if (!isEdit) setOnbField('coverUri', stored);
     }
   }
 

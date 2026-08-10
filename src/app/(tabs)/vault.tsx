@@ -1,7 +1,7 @@
 import { useNavigation } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import {
-  Image, Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable,
+  Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable,
   ScrollView, StyleSheet, Switch, Text, TextInput, TouchableWithoutFeedback, View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -36,7 +36,7 @@ import { getGlobalSetting, saveGlobalSetting } from '@/store/onboarding';
 import { usePremium } from '@/store/premium';
 import { addCustomPrompt, CustomPrompt, deleteCustomPrompt, getBuiltinDeck, useCustomPrompts } from '@/store/scenarioPrompts';
 import { addScenario, deleteScenario, updateScenario, useScenarios } from '@/store/scenarios';
-import { Image as ExpoImage } from 'expo-image';
+import { Image } from 'expo-image';
 import { AVATAR_IMAGE } from '@/lib/imageProps';
 import * as ImagePicker from 'expo-image-picker';
 import { persistImage } from '@/lib/localMedia';
@@ -1664,7 +1664,7 @@ function FoCompose({ shipName, ship, initialMessage, onQueue }: {
             <View style={fo.notifPhotoRow}>
               <View style={fo.notifPhotoPreview}>
                 {notifFace ? (
-                  <ExpoImage
+                  <Image
                     source={{ uri: notifFace }}
                     style={fo.notifPhotoImg}
                     contentFit="cover"

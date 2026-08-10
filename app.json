@@ -67,7 +67,9 @@
       "expo-image",
       "expo-apple-authentication",
       "expo-web-browser",
-      "expo-video"
+      "expo-video",
+      "expo-font",
+      "expo-status-bar"
     ],
     "experiments": {
       "typedRoutes": true,

@@ -1,4 +1,5 @@
 import { Image } from 'expo-image';
+import { persistImage } from '@/lib/localMedia';
 import { useState } from 'react';
 import {
   Linking, Modal, Pressable, ScrollView, StyleSheet,
@@ -171,7 +172,7 @@ export function DecoBar({ editing, itemsJson, onItemsChange }: Props) {
       quality: 0.85,
     });
     if (!result.canceled && result.assets[0]) {
-      addItem({ type: 'photo', uri: result.assets[0].uri });
+      addItem({ type: 'photo', uri: await persistImage(result.assets[0].uri) });
     }
   }
 

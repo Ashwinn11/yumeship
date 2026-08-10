@@ -1,6 +1,8 @@
 import { router, useLocalSearchParams } from 'expo-router';
+import { MEDIA_IMAGE } from '@/lib/imageProps';
+import { Image } from 'expo-image';
 import { useState } from 'react';
-import { ImageBackground, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { FoForm, FoFormValue } from '@/components/fo/FoForm';
@@ -13,7 +15,7 @@ import { Mark } from '@/components/ui/Mark';
 import { Colors, FontFamily, FontSize, RelationshipColors, SharingColors, Radius, Spacing, sf } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
 import { deleteFo, updateFo, useFo } from '@/store/fo';
-import { pushFoProfile } from '@/store/community';
+import { logSyncFailure, pushFoProfile } from '@/store/community';
 import { usePremium } from '@/store/premium';
 import { shipTitle, useShips } from '@/store/ships';
 
@@ -31,6 +33,7 @@ export default function FoDetailScreen() {
   const [draft, setDraft] = useState<FoFormValue | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [showCustomize, setShowCustomize] = useState(false);
+  const [photoWarning, setPhotoWarning] = useState(false);
 
   if (!fo) {
     return (
@@ -62,7 +65,13 @@ export default function FoDetailScreen() {
     updateFo(fo!.id, { ...draft, name: draft.name.trim() });
     setEditing(false);
     setDraft(null);
-    if (fo!.isPublic) pushFoProfile(fo!.id).catch(() => {});
+    // Saving locally always succeeds; the publish is what can partly fail, and
+    // a photo that silently never reached the server is worth saying out loud.
+    if (fo!.isPublic) {
+      pushFoProfile(fo!.id)
+        .then((res) => { if (res.photoFailed) setPhotoWarning(true); })
+        .catch(logSyncFailure('publish F/O'));
+    }
   }
 
   function handleDelete() {
@@ -152,6 +161,14 @@ export default function FoDetailScreen() {
         isDestructive
       />
 
+      <CozyModal
+        visible={photoWarning}
+        title="Their photo didn't upload"
+        message={`${fo.name || 'They'} saved fine, but the photo couldn't be read from your device — so it isn't on their public profile. Pick it again to fix it.`}
+        confirmText="OK"
+        onClose={() => setPhotoWarning(false)}
+      />
+
       <CardThemeSheet
         visible={showCustomize}
         onClose={() => setShowCustomize(false)}
@@ -170,7 +187,12 @@ export default function FoDetailScreen() {
   );
 
   if (fo.pageBgImage) {
-    return <ImageBackground source={{ uri: fo.pageBgImage }} style={styles.fill}>{body}</ImageBackground>;
+    return (
+      <View style={styles.fill}>
+        <Image source={{ uri: fo.pageBgImage }} style={StyleSheet.absoluteFill} contentFit="cover" {...MEDIA_IMAGE} />
+        {body}
+      </View>
+    );
   }
   if (fo.pageBgColor) {
     return <View style={[styles.fill, { backgroundColor: fo.pageBgColor }]}>{body}</View>;

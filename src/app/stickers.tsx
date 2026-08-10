@@ -1,4 +1,5 @@
 import { Image } from 'expo-image';
+import { persistImage } from '@/lib/localMedia';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import { useState } from 'react';
@@ -25,7 +26,7 @@ export default function StickersScreen() {
       quality: 1,
     });
     if (!result.canceled && result.assets[0]) {
-      addCustomSticker(result.assets[0].uri);
+      addCustomSticker(await persistImage(result.assets[0].uri));
     }
   }
 

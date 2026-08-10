@@ -1,7 +1,9 @@
 import * as ImagePicker from 'expo-image-picker';
+import { Image } from 'expo-image';
+import { persistImage } from '@/lib/localMedia';
 import { useState } from 'react';
 import {
-  Dimensions, Image, Pressable,
+  Dimensions, Pressable,
   ScrollView, StyleSheet, Text, TextInput, View,
 } from 'react-native';
 import { useIPad } from '@/hooks/use-ipad';
@@ -169,7 +171,7 @@ function AlbumView({ albumId, albumTitle, onBack }: { albumId: string; albumTitl
     });
     if (!result.canceled) {
       for (const asset of result.assets) {
-        addAlbumPhoto(albumId, asset.uri);
+        addAlbumPhoto(albumId, await persistImage(asset.uri));
       }
     }
   }
@@ -314,7 +316,7 @@ function AlbumView({ albumId, albumTitle, onBack }: { albumId: string; albumTitl
       {/* Lightbox */}
       {lightboxUri && (
         <Pressable style={s.lightbox} onPress={() => setLightboxUri(null)}>
-          <Image source={{ uri: lightboxUri }} style={s.lightboxImg} resizeMode="contain" />
+          <Image source={{ uri: lightboxUri }} style={s.lightboxImg} contentFit="contain" />
         </Pressable>
       )}
     </View>

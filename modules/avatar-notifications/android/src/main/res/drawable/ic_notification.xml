@@ -1,0 +1,17 @@
+<!--
+  Status-bar icon for F/O message notifications.
+
+  Android masks the small icon down to a single colour and discards everything
+  but the alpha channel, so a full-colour launcher icon renders as a filled
+  blob. It has to be a solid silhouette on transparency — this is the same
+  chunky heart the app uses throughout, drawn to the 24dp system grid.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="16"
+    android:viewportHeight="16">
+  <path
+      android:fillColor="#FFFFFFFF"
+      android:pathData="M8,14 C3,11 1,8.5 1,5.5 C1,3.5 2.5,2 4.5,2 C6,2 7.3,2.9 8,4.3 C8.7,2.9 10,2 11.5,2 C13.5,2 15,3.5 15,5.5 C15,8.5 13,11 8,14 Z" />
+</vector>

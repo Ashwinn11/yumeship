@@ -20,7 +20,7 @@ import { Row } from '@/components/ui/Row';
 import { AVATAR_IMAGE } from '@/lib/imageProps';
 import { Colors, FontFamily, Radius, Spacing, sf } from '@/constants/theme';
 import { createPost, type LocalPickedMedia } from '@/store/community';
-import { getGlobalSetting, getMediaSetting } from '@/store/onboarding';
+import { getGlobalSetting } from '@/store/onboarding';
 import { useFos } from '@/store/fo';
 
 const MAX_BODY = 4000;
@@ -31,7 +31,7 @@ export default function NewPostScreen() {
   const identifyFoId = getGlobalSetting('user_identify_fo_id');
   const me = {
     name: getGlobalSetting('user_name'),
-    avatar: getMediaSetting('user_avatar'),
+    avatar: getGlobalSetting('user_avatar'),
     color: getGlobalSetting('user_color') || Colors.sakura,
   };
 

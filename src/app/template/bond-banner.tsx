@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { persistImage } from '@/lib/localMedia';
 import { View, Text, TextInput, Pressable, Modal, TouchableWithoutFeedback, StyleSheet } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { TemplateScreenWrapper } from '@/components/templates/TemplateScreenWrapper';
@@ -182,7 +183,7 @@ export function BondBannerContent({ editing = false }: { editing?: boolean }) {
         <Pressable
           onPress={e ? async () => {
             const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'] as ImagePicker.MediaType[], allowsEditing: true, aspect: [1,1], quality: 0.85 });
-            if (!res.canceled && res.assets[0]) setVal('shieldPhoto', res.assets[0].uri);
+            if (!res.canceled && res.assets[0]) setVal('shieldPhoto', await persistImage(res.assets[0].uri));
           } : undefined}
         >
           <Svg width={100} height={116} viewBox="0 0 120 140">
