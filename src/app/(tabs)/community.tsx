@@ -30,6 +30,7 @@ import { Image } from 'expo-image';
 import { AccountSheet } from '@/components/community/AccountSheet';
 import { AVATAR_IMAGE } from '@/lib/imageProps';
 import { PostCard } from '@/components/community/PostCard';
+import type { CommunityPost } from '@/store/community';
 import { checkUsernameAvailable, claimUsername, fetchProfile, logSyncFailure, pushOwnProfile, syncIdentifyFoPublish, useCommunityFeed } from '@/store/community';
 import { getGlobalSetting, saveGlobalSetting } from '@/store/onboarding';
 
@@ -134,9 +135,21 @@ function UsernameClaim({ onClaimed }: { onClaimed: (username: string) => void })
 
 // ─── Feed ─────────────────────────────────────────────────────────────────────
 
+// Module scope on purpose: an inline `() => <View/>` is a *new component type*
+// every render, so React unmounts and remounts every separator in the list.
+const FeedSeparator = () => <View style={styles.feedSeparator} />;
+const keyExtractor = (p: CommunityPost) => p.id;
+
 function Feed({ insets }: { insets: { top: number } }) {
   const [mode, setMode] = useState<'global' | 'following'>('global');
   const { posts, loading, refreshing, refresh, loadMore, toggleLikeOptimistic } = useCommunityFeed(mode);
+
+  const renderPost = useCallback(
+    ({ item }: { item: CommunityPost }) => (
+      <PostCard post={item} onToggleLike={() => toggleLikeOptimistic(item.id)} />
+    ),
+    [toggleLikeOptimistic],
+  );
 
   return (
     <View style={styles.feedWrap}>
@@ -150,10 +163,10 @@ function Feed({ insets }: { insets: { top: number } }) {
 
       <FlatList
         data={posts}
-        keyExtractor={(p) => p.id}
-        renderItem={({ item }) => <PostCard post={item} onToggleLike={() => toggleLikeOptimistic(item.id)} />}
+        keyExtractor={keyExtractor}
+        renderItem={renderPost}
         contentContainerStyle={styles.feedContent}
-        ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+        ItemSeparatorComponent={FeedSeparator}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={Colors.sakuraDeep} />}
         onEndReached={loadMore}
         onEndReachedThreshold={0.4}
@@ -549,6 +562,7 @@ const styles = StyleSheet.create({
   tabText: { fontFamily: FontFamily.uiMedium, fontSize: sf(12), color: Colors.ink3, textTransform: 'capitalize' },
   tabTextActive: { color: Colors.sakuraDeep },
   feedContent: { paddingHorizontal: Spacing.s5, paddingBottom: Spacing.s8 },
+  feedSeparator: { height: 12 },
   feedEmpty: { alignItems: 'center', paddingTop: 60 },
   fab: {
     position: 'absolute',

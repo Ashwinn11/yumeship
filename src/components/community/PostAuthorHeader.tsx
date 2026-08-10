@@ -5,19 +5,8 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Heart } from '@/components/deco/Heart';
 import { AVATAR_IMAGE } from '@/lib/imageProps';
 import { Colors, FontFamily, Radius, sf } from '@/constants/theme';
+import { timeAgo } from '@/lib/relativeTime';
 import type { CommunityFoProfile, CommunityProfile } from '@/store/community';
-
-function timeAgo(iso: string): string {
-  const diffMs = Date.now() - new Date(iso).getTime();
-  const mins = Math.floor(diffMs / 60000);
-  if (mins < 1) return 'just now';
-  if (mins < 60) return `${mins}m`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h`;
-  const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}d`;
-  return new Date(iso).toLocaleDateString();
-}
 
 type Props = {
   author: CommunityProfile;

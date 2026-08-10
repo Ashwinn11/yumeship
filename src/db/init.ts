@@ -175,33 +175,6 @@ export function initDb() {
       current_index INTEGER NOT NULL DEFAULT 0,
       created_at INTEGER NOT NULL
     );
-    CREATE TABLE IF NOT EXISTS storyline_events (
-      id TEXT PRIMARY KEY,
-      ship_id TEXT NOT NULL,
-      emoji TEXT NOT NULL DEFAULT '✦',
-      title TEXT NOT NULL,
-      date TEXT NOT NULL DEFAULT '',
-      body TEXT NOT NULL DEFAULT '',
-      created_at INTEGER NOT NULL
-    );
-    CREATE TABLE IF NOT EXISTS this_or_that_pairs (
-      id TEXT PRIMARY KEY,
-      ship_id TEXT NOT NULL,
-      left_opt TEXT NOT NULL DEFAULT '',
-      right_opt TEXT NOT NULL DEFAULT '',
-      choice TEXT NOT NULL DEFAULT '',
-      sort_order INTEGER NOT NULL DEFAULT 0,
-      created_at INTEGER NOT NULL
-    );
-    CREATE TABLE IF NOT EXISTS love_letters (
-      id TEXT PRIMARY KEY,
-      ship_id TEXT NOT NULL,
-      title TEXT NOT NULL DEFAULT '',
-      body TEXT NOT NULL DEFAULT '',
-      paper TEXT NOT NULL DEFAULT 'lined',
-      sticker TEXT NOT NULL DEFAULT '',
-      created_at INTEGER NOT NULL
-    );
     CREATE TABLE IF NOT EXISTS scenario_prompts (
       id TEXT PRIMARY KEY,
       label TEXT NOT NULL,
@@ -280,7 +253,11 @@ function repairMediaPaths() {
   // template_data is keyed on a pair, so keys are a list everywhere
   const targets: [table: string, keys: string[], cols: string[]][] = [
     ['ships', ['id'], ['cover_uri', 'members']],
-    ['fo', ['id'], ['photo_uri', 'notif_photo_uri', 'page_bg_image', 'card_bg_image', 'gallery']],
+    // avatar_synced_uri and gallery_sync_map are keyed *by local path*, so they
+    // have to move in lockstep — otherwise a rescued photo no longer matches its
+    // own bookkeeping and the next publish re-uploads everything
+    ['fo', ['id'], ['photo_uri', 'notif_photo_uri', 'page_bg_image', 'card_bg_image', 'gallery',
+                    'avatar_synced_uri', 'gallery_sync_map']],
     ['messages', ['id'], ['image_uri']],
     ['album_photos', ['id'], ['uri']],
     ['outfits', ['id'], ['uri']],

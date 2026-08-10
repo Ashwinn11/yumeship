@@ -24,7 +24,9 @@ import { PostAuthorHeader } from '@/components/community/PostAuthorHeader';
 import { Mark } from '@/components/ui/Mark';
 import { MEDIA_IMAGE } from '@/lib/imageProps';
 import { Colors, FontFamily, FontSize, Radius, Spacing, sf } from '@/constants/theme';
-import { addComment, useCommunityPost } from '@/store/community';
+import { addComment, deleteComment, deletePost, logSyncFailure, useCommunityPost } from '@/store/community';
+import { useAuthUser } from '@/store/auth';
+import { CozyModal } from '@/components/ui/CozyModal';
 
 export default function PostDetailScreen() {
   const insets = useSafeAreaInsets();
@@ -34,6 +36,24 @@ export default function PostDetailScreen() {
   const [replyTo, setReplyTo] = useState<{ id: string; name: string } | null>(null);
   const [sending, setSending] = useState(false);
   const [keyboardOpen, setKeyboardOpen] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const me = useAuthUser();
+  const isMine = !!me && post?.author.id === me.id;
+
+  // realtime removes it from the thread once the delete lands
+  function handleDeleteComment(commentId: string) {
+    deleteComment(commentId).catch(logSyncFailure('delete comment'));
+  }
+
+  async function handleDeletePost() {
+    setConfirmDelete(false);
+    try {
+      await deletePost(id);
+      router.back();
+    } catch (e) {
+      logSyncFailure('delete post')(e);
+    }
+  }
 
   useEffect(() => {
     const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
@@ -99,7 +119,14 @@ export default function PostDetailScreen() {
           <Mark size={20} />
           <Text style={styles.headerTitle}>post</Text>
         </View>
-        <View style={{ width: 32 }} />
+        {/* only the author can delete, and RLS enforces that server-side too */}
+        {isMine ? (
+          <Pressable onPress={() => setConfirmDelete(true)} style={styles.headerBtn} hitSlop={6}>
+            <Text style={styles.headerDelete}>⋯</Text>
+          </Pressable>
+        ) : (
+          <View style={{ width: 32 }} />
+        )}
       </View>
 
       <ScrollView
@@ -156,11 +183,27 @@ export default function PostDetailScreen() {
         <View style={styles.divider} />
 
         <Text style={styles.commentsLabel}>comments · {comments.length}</Text>
-        <CommentThread comments={comments} onReply={(pid, name) => setReplyTo({ id: pid, name })} />
+        <CommentThread
+          comments={comments}
+          onReply={(pid, name) => setReplyTo({ id: pid, name })}
+          viewerId={me?.id}
+          onDelete={handleDeleteComment}
+        />
       </ScrollView>
 
       {/* the raised keyboard already covers the home indicator, so the safe-area
           inset would sit as dead space between the bar and the keys */}
+      <CozyModal
+        visible={confirmDelete}
+        title="Delete this post?"
+        message="It disappears for everyone, along with its likes and comments. This can't be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={handleDeletePost}
+        onClose={() => setConfirmDelete(false)}
+        isDestructive
+      />
+
       <View
         style={[
           styles.composerWrap,
@@ -222,6 +265,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.paperDeep, alignItems: 'center', justifyContent: 'center',
   },
   headerBtnText: { fontSize: sf(20), color: Colors.ink2, fontFamily: FontFamily.ui, lineHeight: sf(22) },
+  headerDelete: { fontSize: sf(18), color: Colors.ink2, fontFamily: FontFamily.ui, lineHeight: sf(20) },
   headerCenter: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   headerTitle: { fontFamily: FontFamily.displayItalic, fontSize: FontSize.h6, color: Colors.ink },
   scroll: { flex: 1 },

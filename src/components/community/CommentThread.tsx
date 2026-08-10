@@ -3,19 +3,10 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AVATAR_IMAGE } from '@/lib/imageProps';
 import { Colors, FontFamily, Radius, Shadow, Spacing, sf } from '@/constants/theme';
+import { timeAgo } from '@/lib/relativeTime';
 import type { CommunityComment } from '@/store/community';
 
 const MAX_VISUAL_DEPTH = 2;
-
-function timeAgo(iso: string): string {
-  const diffMs = Date.now() - new Date(iso).getTime();
-  const mins = Math.floor(diffMs / 60000);
-  if (mins < 1) return 'just now';
-  if (mins < 60) return `${mins}m`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h`;
-  return `${Math.floor(hours / 24)}d`;
-}
 
 function buildTree(comments: CommunityComment[]): Map<string, CommunityComment[]> {
   const byParent = new Map<string, CommunityComment[]>();
@@ -33,9 +24,12 @@ type NodeProps = {
   depth: number;
   parentAuthorName?: string;
   onReply: (parentId: string, authorName: string) => void;
+  /** viewer's id — only their own comments offer a delete */
+  viewerId?: string;
+  onDelete: (commentId: string) => void;
 };
 
-function CommentNode({ comment, byParent, depth, parentAuthorName, onReply }: NodeProps) {
+function CommentNode({ comment, byParent, depth, parentAuthorName, onReply, viewerId, onDelete }: NodeProps) {
   const children = byParent.get(comment.id) ?? [];
   const cappedDepth = Math.min(depth, MAX_VISUAL_DEPTH);
   const flattened = depth > MAX_VISUAL_DEPTH;
@@ -64,9 +58,16 @@ function CommentNode({ comment, byParent, depth, parentAuthorName, onReply }: No
             <Text style={styles.time}>{timeAgo(comment.createdAt)}</Text>
           </View>
           <Text style={styles.body}>{comment.body}</Text>
-          <Pressable onPress={() => onReply(comment.id, comment.author.name)} hitSlop={6}>
-            <Text style={styles.replyAction}>reply</Text>
-          </Pressable>
+          <View style={styles.actions}>
+            <Pressable onPress={() => onReply(comment.id, comment.author.name)} hitSlop={6}>
+              <Text style={styles.replyAction}>reply</Text>
+            </Pressable>
+            {viewerId === comment.author.id && (
+              <Pressable onPress={() => onDelete(comment.id)} hitSlop={6}>
+                <Text style={[styles.replyAction, styles.deleteAction]}>delete</Text>
+              </Pressable>
+            )}
+          </View>
         </View>
       </View>
       {children.map((child) => (
@@ -77,6 +78,8 @@ function CommentNode({ comment, byParent, depth, parentAuthorName, onReply }: No
           depth={depth + 1}
           parentAuthorName={comment.author.name}
           onReply={onReply}
+          viewerId={viewerId}
+          onDelete={onDelete}
         />
       ))}
     </View>
@@ -86,9 +89,11 @@ function CommentNode({ comment, byParent, depth, parentAuthorName, onReply }: No
 type Props = {
   comments: CommunityComment[];
   onReply: (parentId: string, authorName: string) => void;
+  viewerId?: string;
+  onDelete: (commentId: string) => void;
 };
 
-export function CommentThread({ comments, onReply }: Props) {
+export function CommentThread({ comments, onReply, viewerId, onDelete }: Props) {
   const byParent = buildTree(comments);
   const roots = byParent.get('root') ?? [];
 
@@ -99,7 +104,7 @@ export function CommentThread({ comments, onReply }: Props) {
   return (
     <View style={styles.container}>
       {roots.map((c) => (
-        <CommentNode key={c.id} comment={c} byParent={byParent} depth={0} onReply={onReply} />
+        <CommentNode key={c.id} comment={c} byParent={byParent} depth={0} onReply={onReply} viewerId={viewerId} onDelete={onDelete} />
       ))}
     </View>
   );
@@ -130,7 +135,9 @@ const styles = StyleSheet.create({
   time: { fontFamily: FontFamily.ui, fontSize: sf(10), color: Colors.ink3, marginLeft: 'auto' },
   replyingTo: { fontFamily: FontFamily.ui, fontSize: sf(10), color: Colors.sakuraDeep, marginBottom: 2 },
   body: { fontFamily: FontFamily.ui, fontSize: sf(13), color: Colors.ink2, lineHeight: sf(18), marginTop: 2 },
-  replyAction: { fontFamily: FontFamily.uiMedium, fontSize: sf(11), color: Colors.ink3, marginTop: 4 },
+  actions: { flexDirection: 'row', gap: 14, marginTop: 4 },
+  replyAction: { fontFamily: FontFamily.uiMedium, fontSize: sf(11), color: Colors.ink3 },
+  deleteAction: { color: Colors.ember },
   empty: {
     fontFamily: FontFamily.script, fontSize: sf(15), color: Colors.ink3, textAlign: 'center', paddingVertical: Spacing.s4,
   },

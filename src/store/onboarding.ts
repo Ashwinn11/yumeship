@@ -27,6 +27,28 @@ export function saveGlobalSetting(key: string, val: string) {
   }
 }
 
+/**
+ * Batched read for screens that need many settings at once.
+ *
+ * getGlobalSetting issues one SELECT per key, so a screen pulling twenty-odd
+ * values blocks the JS thread on twenty-odd round trips every time it gains
+ * focus. One query instead; missing keys come back as ''.
+ */
+export function getGlobalSettings<K extends string>(keys: readonly K[]): Record<K, string> {
+  const out = Object.fromEntries(keys.map((k) => [k, ''])) as Record<K, string>;
+  if (keys.length === 0) return out;
+  try {
+    const rows = getDb().getAllSync(
+      `SELECT key, value FROM settings WHERE key IN (${keys.map(() => '?').join(', ')})`,
+      ...keys,
+    ) as { key: K; value: string }[];
+    for (const r of rows) out[r.key] = r.value;
+  } catch (_) {
+    // fall through with the empty defaults
+  }
+  return out;
+}
+
 export function getGlobalSetting(key: string, fallback = ''): string {
   try {
     const row = getDb().getFirstSync('SELECT value FROM settings WHERE key = ?', key) as { value: string } | null;

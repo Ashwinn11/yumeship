@@ -14,35 +14,46 @@ import { IconEdit, IconPalette } from '@/components/ui/Icon';
 import { Mark } from '@/components/ui/Mark';
 import { Colors, FontFamily, FontSize, Radius, Spacing, sf } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
-import { getGlobalSetting, saveGlobalSetting } from '@/store/onboarding';
+import { getGlobalSettings, saveGlobalSetting } from '@/store/onboarding';
 import { usePremium } from '@/store/premium';
 import { parseGallery, useFos } from '@/store/fo';
 
+const ME_KEYS = [
+  'user_name', 'user_pronouns', 'user_username', 'user_color', 'user_avatar', 'user_bio',
+  'user_height', 'user_weight', 'user_song', 'user_song_link', 'user_gallery',
+  'user_page_bg_color', 'user_page_bg_image', 'user_card_bg_color', 'user_card_bg_image',
+  'user_card_bg_gradient', 'user_card_transparent', 'user_text_color', 'user_border_style',
+  'user_decoration', 'user_name_font', 'user_status_label', 'user_identify_fo_id',
+] as const;
+
+// One query rather than one per field: this runs on every focus, and 23
+// synchronous SELECTs is a visible stall before the card paints.
 function readMe() {
+  const g = getGlobalSettings(ME_KEYS);
   return {
-    name: getGlobalSetting('user_name'),
-    pronouns: getGlobalSetting('user_pronouns', 'she/her'),
-    username: getGlobalSetting('user_username'),
-    color: getGlobalSetting('user_color') || Colors.sakura,
-    avatar: getGlobalSetting('user_avatar'),
-    bio: getGlobalSetting('user_bio'),
-    height: getGlobalSetting('user_height'),
-    weight: getGlobalSetting('user_weight'),
-    song: getGlobalSetting('user_song'),
-    songLink: getGlobalSetting('user_song_link'),
-    gallery: parseGallery(getGlobalSetting('user_gallery')),
-    pageBgColor: getGlobalSetting('user_page_bg_color'),
-    pageBgImage: getGlobalSetting('user_page_bg_image'),
-    cardBgColor: getGlobalSetting('user_card_bg_color'),
-    cardBgImage: getGlobalSetting('user_card_bg_image'),
-    cardBgGradient: getGlobalSetting('user_card_bg_gradient'),
-    cardTransparent: getGlobalSetting('user_card_transparent') === '1',
-    textColor: getGlobalSetting('user_text_color'),
-    borderStyle: getGlobalSetting('user_border_style'),
-    decoration: getGlobalSetting('user_decoration'),
-    nameFont: getGlobalSetting('user_name_font'),
-    statusLabel: getGlobalSetting('user_status_label'),
-    identifyFoId: getGlobalSetting('user_identify_fo_id'),
+    name: g.user_name,
+    pronouns: g.user_pronouns || 'she/her',
+    username: g.user_username,
+    color: g.user_color || Colors.sakura,
+    avatar: g.user_avatar,
+    bio: g.user_bio,
+    height: g.user_height,
+    weight: g.user_weight,
+    song: g.user_song,
+    songLink: g.user_song_link,
+    gallery: parseGallery(g.user_gallery),
+    pageBgColor: g.user_page_bg_color,
+    pageBgImage: g.user_page_bg_image,
+    cardBgColor: g.user_card_bg_color,
+    cardBgImage: g.user_card_bg_image,
+    cardBgGradient: g.user_card_bg_gradient,
+    cardTransparent: g.user_card_transparent === '1',
+    textColor: g.user_text_color,
+    borderStyle: g.user_border_style,
+    decoration: g.user_decoration,
+    nameFont: g.user_name_font,
+    statusLabel: g.user_status_label,
+    identifyFoId: g.user_identify_fo_id,
   };
 }
 

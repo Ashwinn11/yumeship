@@ -1,5 +1,5 @@
 import { Image } from 'expo-image';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { compressImage, compressVideo, syncMediaMap } from '@/lib/mediaOptimizer';
 import { uploadToBucket } from '@/lib/storage';
@@ -1066,6 +1066,12 @@ export function useCommunityFeed(mode: 'global' | 'following') {
     });
   }, [mode, followingIds]);
 
+  // Reading posts through a ref rather than the dependency array: with [posts]
+  // this callback got a new identity on every list change, which changed every
+  // card's onToggleLike prop and re-rendered the whole feed on a single like.
+  const postsRef = useRef(posts);
+  postsRef.current = posts;
+
   const refresh = useCallback(async () => {
     setRefreshing(true);
     await load();
@@ -1073,49 +1079,43 @@ export function useCommunityFeed(mode: 'global' | 'following') {
   }, [load]);
 
   const loadMore = useCallback(async () => {
-    if (posts.length === 0) return;
+    const current = postsRef.current;
+    if (current.length === 0) return;
     const more = await fetchFeedPage({
       mode,
-      before: posts[posts.length - 1].createdAt,
+      before: current[current.length - 1].createdAt,
     });
     setPosts((prev) => [...prev, ...more]);
     prefetchFeedMedia(more);
-  }, [mode, posts]);
+  }, [mode]);
 
-  const toggleLikeOptimistic = useCallback(
-    async (postId: string) => {
-      const target = posts.find((p) => p.id === postId);
-      if (!target) return;
-      const wasLiked = target.likedByMe;
+  // a double-tap fires twice before the first request resolves; without this the
+  // second inverts the optimistic state and the count ends up wrong
+  const inFlight = useRef<Set<string>>(new Set());
+
+  const toggleLikeOptimistic = useCallback(async (postId: string) => {
+    if (inFlight.current.has(postId)) return;
+    const target = postsRef.current.find((p) => p.id === postId);
+    if (!target) return;
+
+    const wasLiked = target.likedByMe;
+    const apply = (liked: boolean, delta: number) =>
       setPosts((prev) =>
         prev.map((p) =>
-          p.id === postId
-            ? {
-                ...p,
-                likedByMe: !wasLiked,
-                likeCount: p.likeCount + (wasLiked ? -1 : 1),
-              }
-            : p,
+          p.id === postId ? { ...p, likedByMe: liked, likeCount: p.likeCount + delta } : p,
         ),
       );
-      try {
-        await toggleLike(postId, wasLiked);
-      } catch {
-        setPosts((prev) =>
-          prev.map((p) =>
-            p.id === postId
-              ? {
-                  ...p,
-                  likedByMe: wasLiked,
-                  likeCount: p.likeCount + (wasLiked ? 1 : -1),
-                }
-              : p,
-          ),
-        );
-      }
-    },
-    [posts],
-  );
+
+    inFlight.current.add(postId);
+    apply(!wasLiked, wasLiked ? -1 : 1);
+    try {
+      await toggleLike(postId, wasLiked);
+    } catch {
+      apply(wasLiked, wasLiked ? 1 : -1);
+    } finally {
+      inFlight.current.delete(postId);
+    }
+  }, []);
 
   return {
     posts,

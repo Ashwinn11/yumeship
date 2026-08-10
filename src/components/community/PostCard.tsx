@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -29,7 +30,7 @@ type Props = {
   onToggleLike: () => void;
 };
 
-export function PostCard({ post, onToggleLike }: Props) {
+function PostCardImpl({ post, onToggleLike }: Props) {
   const firstMedia = post.media[0];
 
   return (
@@ -126,3 +127,10 @@ const styles = StyleSheet.create({
   commentRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   commentCount: { fontFamily: FontFamily.uiMedium, fontSize: sf(12), color: Colors.ink3 },
 });
+
+/**
+ * Memoised because the feed re-renders on every like, comment count change and
+ * realtime insert. Without this each of those repainted every card in the list;
+ * with stable callbacks upstream, only the card whose post actually changed does.
+ */
+export const PostCard = memo(PostCardImpl);

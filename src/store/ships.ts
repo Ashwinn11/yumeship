@@ -202,7 +202,6 @@ export function deleteShip(id: string) {
   getDb().runSync('DELETE FROM messages WHERE thread_id NOT IN (SELECT id FROM message_threads)', []);
   getDb().runSync('DELETE FROM albums WHERE ship_id = ?', id);
   getDb().runSync('DELETE FROM album_photos WHERE album_id NOT IN (SELECT id FROM albums)', []);
-  getDb().runSync('DELETE FROM storyline_events WHERE ship_id = ?', id);
   getDb().runSync('DELETE FROM fo_messages WHERE ship_id = ?', id);
   getDb().runSync('DELETE FROM template_data WHERE ship_id = ?', id);
   notify();
@@ -222,12 +221,10 @@ export function deleteAllData() {
     DELETE FROM albums;
     DELETE FROM album_photos;
     DELETE FROM outfits;
-    DELETE FROM storyline_events;
     DELETE FROM fo_messages;
     DELETE FROM template_data;
-    DELETE FROM this_or_that_pairs;
-    DELETE FROM love_letters;
     DELETE FROM scenario_prompts;
+    DELETE FROM custom_stickers;
     DELETE FROM settings;
   `);
   notify();
