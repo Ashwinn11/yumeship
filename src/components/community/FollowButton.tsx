@@ -8,9 +8,10 @@ type Props = {
   userId: string;
   initialFollowing: boolean;
   onChange?: (following: boolean) => void;
+  onFailure?: () => void;
 };
 
-export function FollowButton({ userId, initialFollowing, onChange }: Props) {
+export function FollowButton({ userId, initialFollowing, onChange, onFailure }: Props) {
   const [following, setFollowing] = useState(initialFollowing);
   const [busy, setBusy] = useState(false);
 
@@ -29,6 +30,7 @@ export function FollowButton({ userId, initialFollowing, onChange }: Props) {
     } catch {
       setFollowing(!next);
       onChange?.(!next);
+      onFailure?.();
     } finally {
       setBusy(false);
     }

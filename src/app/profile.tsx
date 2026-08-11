@@ -1,22 +1,39 @@
 import { router, useFocusEffect } from 'expo-router';
-import { MEDIA_IMAGE } from '@/lib/imageProps';
-import { Image } from 'expo-image';
-import { useCallback, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Sakura } from '@/components/deco/Sakura';
 import { Sparkle } from '@/components/deco/Sparkle';
 import { CardThemeSheet } from '@/components/profile/CardThemeSheet';
 import type { CardTheme } from '@/components/profile/cardTheme';
+import { pairedProps } from '@/components/profile/cardProps';
+import { PageBackground } from '@/components/profile/PageBackground';
+import { ProfileScreenHeader } from '@/components/profile/ProfileScreenHeader';
+import { PostCard } from '@/components/community/PostCard';
+import { FeedSkeleton } from '@/components/community/PostCardSkeleton';
+import { CozyModal } from '@/components/ui/CozyModal';
+import { InlineToast, useInlineToast } from '@/components/ui/InlineToast';
+import { useAuthUser } from '@/store/auth';
+import {
+  deletePost,
+  fetchProfile,
+  logSyncFailure,
+  pushOwnProfile,
+  subscribeProfile,
+  useUserPosts,
+  type CommunityPost,
+} from '@/store/community';
 import { ProfileCard } from '@/components/profile/ProfileCard';
 import { IconEdit, IconPalette } from '@/components/ui/Icon';
-import { Mark } from '@/components/ui/Mark';
-import { Colors, FontFamily, FontSize, Radius, Spacing, sf } from '@/constants/theme';
+import { Colors, FontFamily, Radius, sf, Spacing } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
 import { getGlobalSettings, saveGlobalSetting } from '@/store/onboarding';
 import { usePremium } from '@/store/premium';
 import { parseGallery, useFos } from '@/store/fo';
+
+const keyExtractor = (p: CommunityPost) => p.id;
+const PostSeparator = () => <View style={styles.postSeparator} />;
 
 const ME_KEYS = [
   'user_name', 'user_pronouns', 'user_username', 'user_color', 'user_avatar', 'user_bio',
@@ -67,6 +84,63 @@ export default function MyProfileScreen() {
   const fos = useFos();
   const pairedFo = fos.find((f) => f.id === me.identifyFoId);
 
+  // Follower/following counts live only on the server — local storage never
+  // had them, which is exactly why this screen showed none while the public
+  // view of the same account did. Fetched once signed in, then kept live the
+  // same way the public profile screen does.
+  const user = useAuthUser();
+  const [counts, setCounts] = useState({ followerCount: 0, followingCount: 0 });
+  useEffect(() => {
+    if (!user) { setCounts({ followerCount: 0, followingCount: 0 }); return; }
+    let cancelled = false;
+    fetchProfile(user.id).then((p) => {
+      if (!cancelled && p) setCounts({ followerCount: p.followerCount, followingCount: p.followingCount });
+    });
+    return () => { cancelled = true; };
+  }, [user?.id]);
+  useEffect(() => {
+    if (!user) return;
+    return subscribeProfile(user.id, (patch) => setCounts(patch));
+  }, [user?.id]);
+
+  const {
+    posts,
+    loading: postsLoading,
+    refreshing,
+    refresh: refreshPosts,
+    loadMore,
+    toggleLikeOptimistic,
+    removePost,
+  } = useUserPosts(user?.id);
+  const { message: toastMsg, nonce: toastNonce, show: showToast } = useInlineToast();
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  async function confirmDeletePost() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await deletePost(deleteTarget);
+      removePost(deleteTarget);
+    } catch {
+      showToast("couldn't delete that post — try again");
+    } finally {
+      setDeleting(false);
+      setDeleteTarget(null);
+    }
+  }
+
+  const renderPost = useCallback(
+    ({ item }: { item: CommunityPost }) => (
+      <PostCard
+        post={item}
+        onToggleLike={() => toggleLikeOptimistic(item.id, () => showToast("couldn't update like — try again"))}
+        onRequestDelete={() => setDeleteTarget(item.id)}
+      />
+    ),
+    [toggleLikeOptimistic, showToast],
+  );
+
   function handleThemeChange(patch: Partial<CardTheme>) {
     const keyMap = {
       pageBgColor: 'user_page_bg_color', pageBgImage: 'user_page_bg_image',
@@ -89,6 +163,13 @@ export default function MyProfileScreen() {
     setMe((p) => ({ ...p, ...patch }));
   }
 
+  // theme edits apply live inside the sheet (one push per tap would be
+  // excessive) — push once, on close, so everyone else actually sees them
+  function handleThemeSheetClose() {
+    setShowCustomize(false);
+    pushOwnProfile().catch(logSyncFailure('push own profile'));
+  }
+
   const pageBg = me.pageBgImage || me.pageBgColor;
 
   const body = (
@@ -100,62 +181,80 @@ export default function MyProfileScreen() {
         <Sparkle size={16} color={Colors.lavenderDeep} />
       </View>
 
-      <View style={[styles.header, { paddingTop: insets.top + Spacing.s1 }]}>
-        <Pressable onPress={() => router.back()} style={styles.headerBtn}>
-          <Text style={styles.headerBtnText}>‹</Text>
-        </Pressable>
-        <View style={styles.headerCenter}>
-          <Mark size={22} />
-          <Text style={styles.headerTitle}>my profile</Text>
-        </View>
-        <View style={styles.headerActions}>
-          <Pressable onPress={() => setShowCustomize(true)} style={styles.headerBtn}>
-            <IconPalette size={13} color={Colors.ink2} />
-          </Pressable>
-          <Pressable onPress={() => router.push('/onboarding/persona?mode=edit' as any)} style={styles.headerBtn}>
-            <IconEdit size={13} color={Colors.ink2} />
-          </Pressable>
-        </View>
+      <ProfileScreenHeader
+        insetsTop={insets.top}
+        onBack={() => router.back()}
+        title="my profile"
+        right={
+          <View style={styles.headerActions}>
+            <Pressable onPress={() => setShowCustomize(true)} style={styles.headerBtn}>
+              <IconPalette size={13} color={Colors.ink2} />
+            </Pressable>
+            <Pressable onPress={() => router.push('/onboarding/persona?mode=edit' as any)} style={styles.headerBtn}>
+              <IconEdit size={13} color={Colors.ink2} />
+            </Pressable>
+          </View>
+        }
+      />
+
+      <View style={[styles.toastWrap, { top: insets.top + Spacing.s2 }]} pointerEvents="none">
+        <InlineToast message={toastMsg} nonce={toastNonce} />
       </View>
 
-      <ScrollView
+      <FlatList
         style={styles.scroll}
         contentContainerStyle={[styles.content, column, { paddingBottom: Spacing.s5 }]}
         showsVerticalScrollIndicator={false}
-      >
-        <ProfileCard
-          name={me.name || 'someone soft'}
-          pronouns={me.pronouns}
-          username={me.username}
-          bio={me.bio}
-          photoUri={me.avatar}
-          fallbackColor={me.color}
-          height={me.height}
-          weight={me.weight}
-          song={me.song}
-          songLink={me.songLink}
-          gallery={me.gallery}
-          cardBgColor={me.cardBgColor}
-          cardBgImage={me.cardBgImage}
-          cardBgGradient={me.cardBgGradient}
-          cardTransparent={me.cardTransparent}
-          textColor={me.textColor}
-          borderStyle={me.borderStyle}
-          decoration={me.decoration}
-          nameFont={me.nameFont}
-          statusLabel={me.statusLabel}
-          showPairedIdentity={!!pairedFo}
-          pairedName={pairedFo?.name}
-          pairedPronouns={pairedFo?.pronouns}
-          pairedAvatarUri={pairedFo?.photoUri}
-          pairedStatusLabel={pairedFo?.statusLabel}
-        />
-        <Text style={styles.footnote}>this is you, in their world ♡</Text>
-      </ScrollView>
+        data={posts}
+        keyExtractor={keyExtractor}
+        renderItem={renderPost}
+        ItemSeparatorComponent={PostSeparator}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refreshPosts} tintColor={Colors.sakuraDeep} />}
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.4}
+        ListHeaderComponent={
+          <>
+            <ProfileCard
+              name={me.name || 'someone soft'}
+              pronouns={me.pronouns}
+              username={me.username}
+              bio={me.bio}
+              photoUri={me.avatar}
+              fallbackColor={me.color}
+              height={me.height}
+              weight={me.weight}
+              song={me.song}
+              songLink={me.songLink}
+              gallery={me.gallery}
+              cardBgColor={me.cardBgColor}
+              cardBgImage={me.cardBgImage}
+              cardBgGradient={me.cardBgGradient}
+              cardTransparent={me.cardTransparent}
+              textColor={me.textColor}
+              borderStyle={me.borderStyle}
+              decoration={me.decoration}
+              nameFont={me.nameFont}
+              statusLabel={me.statusLabel}
+              {...pairedProps(pairedFo && { name: pairedFo.name, pronouns: pairedFo.pronouns, avatarUri: pairedFo.photoUri, statusLabel: pairedFo.statusLabel })}
+              followerCount={counts.followerCount}
+              followingCount={counts.followingCount}
+            />
+            <Text style={styles.footnote}>this is you, in their world ♡</Text>
+            <Text style={styles.postsLabel}>your posts</Text>
+          </>
+        }
+        ListEmptyComponent={
+          postsLoading ? (
+            <FeedSkeleton />
+          ) : (
+            <Text style={styles.postsEmpty}>you haven't posted yet</Text>
+          )
+        }
+      />
 
       <CardThemeSheet
         visible={showCustomize}
-        onClose={() => setShowCustomize(false)}
+        onClose={handleThemeSheetClose}
         theme={{
           pageBgColor: me.pageBgColor, pageBgImage: me.pageBgImage,
           cardBgColor: me.cardBgColor, cardBgImage: me.cardBgImage,
@@ -167,40 +266,46 @@ export default function MyProfileScreen() {
         onChange={handleThemeChange}
         premium={premium}
       />
+
+      <CozyModal
+        visible={!!deleteTarget}
+        title="Delete this post?"
+        message="This can't be undone."
+        confirmText={deleting ? 'deleting…' : 'Delete'}
+        cancelText="Cancel"
+        onConfirm={confirmDeletePost}
+        onClose={() => setDeleteTarget(null)}
+        isDestructive
+      />
     </View>
   );
 
-  if (me.pageBgImage) {
-    return (
-      <View style={styles.fill}>
-        <Image source={{ uri: me.pageBgImage }} style={StyleSheet.absoluteFill} contentFit="cover" {...MEDIA_IMAGE} />
-        {body}
-      </View>
-    );
-  }
-  if (me.pageBgColor) {
-    return <View style={[styles.fill, { backgroundColor: me.pageBgColor }]}>{body}</View>;
-  }
-  return body;
+  return (
+    <PageBackground bgImage={me.pageBgImage} bgColor={me.pageBgColor}>
+      {body}
+    </PageBackground>
+  );
 }
 
 const styles = StyleSheet.create({
-  fill: { flex: 1 },
   screen: { flex: 1, paddingBottom: Spacing.s1 },
-  header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: Spacing.s5, paddingVertical: Spacing.s2,
-  },
   headerActions: { flexDirection: 'row', gap: 8 },
   headerBtn: {
     width: 32, height: 32, borderRadius: Radius.pill,
     backgroundColor: Colors.paperDeep, alignItems: 'center', justifyContent: 'center',
   },
-  headerBtnText: { fontSize: sf(20), color: Colors.ink2, fontFamily: FontFamily.ui, lineHeight: sf(22) },
-  headerCenter: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  headerTitle: { fontFamily: FontFamily.displayItalic, fontSize: FontSize.h6, color: Colors.ink },
+  toastWrap: { position: 'absolute', left: 0, right: 0, zIndex: 10, alignItems: 'center' },
   scroll: { flex: 1 },
   content: { paddingHorizontal: Spacing.s6, paddingTop: Spacing.s6 },
+  postSeparator: { height: 12 },
+  postsLabel: {
+    fontFamily: FontFamily.uiSemiBold, fontSize: sf(11), color: Colors.ink3,
+    textTransform: 'uppercase', letterSpacing: 0.8, marginTop: Spacing.s6, marginBottom: Spacing.s3,
+  },
+  postsEmpty: {
+    fontFamily: FontFamily.script, fontSize: sf(14), color: Colors.ink3,
+    textAlign: 'center', marginTop: Spacing.s3,
+  },
   footnote: {
     fontFamily: FontFamily.script, fontSize: sf(15), color: Colors.ink3,
     textAlign: 'center', marginTop: Spacing.s4,

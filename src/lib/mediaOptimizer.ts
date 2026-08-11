@@ -7,7 +7,17 @@ import { Image as ImageCompressor, Video as VideoCompressor, createVideoThumbnai
 // a previous install. Always verify the file is actually there first, and throw
 // a normal, catchable JS error instead of ever reaching the native call.
 function assertLocalFileExists(uri: string) {
-  if (!new File(uri).exists) {
+  // a directory-shaped or otherwise malformed uri makes the File constructor
+  // itself throw (a native FunctionCallException, not a catchable "missing
+  // file" case) — treat that the same as a missing file rather than let it
+  // escape as an opaque native error
+  let exists: boolean;
+  try {
+    exists = new File(uri).exists;
+  } catch {
+    exists = false;
+  }
+  if (!exists) {
     throw new Error(`local file no longer exists: ${uri}`);
   }
 }
@@ -66,6 +76,13 @@ export async function syncMediaMap(
   const toUpload = currentLocalUris.filter((uri) => {
     if (previousMap[uri]) {
       next[uri] = previousMap[uri];
+      return false;
+    }
+    // already a remote url — the startup repair pass substitutes one of these
+    // in place of a local path once the local copy is gone, so there is
+    // nothing to compress or upload, the url itself is the synced value
+    if (/^https?:\/\//.test(uri)) {
+      next[uri] = uri;
       return false;
     }
     return true;

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -32,6 +32,8 @@ import { AVATAR_IMAGE } from '@/lib/imageProps';
 import { PostCard } from '@/components/community/PostCard';
 import type { CommunityPost } from '@/store/community';
 import { checkUsernameAvailable, claimUsername, fetchProfile, logSyncFailure, pushOwnProfile, syncIdentifyFoPublish, useCommunityFeed } from '@/store/community';
+import { InlineToast, useInlineToast } from '@/components/ui/InlineToast';
+import { FeedSkeleton } from '@/components/community/PostCardSkeleton';
 import { getGlobalSetting, saveGlobalSetting } from '@/store/onboarding';
 
 // ─── Google Icon ──────────────────────────────────────────────────────────────
@@ -143,16 +145,37 @@ const keyExtractor = (p: CommunityPost) => p.id;
 function Feed({ insets }: { insets: { top: number } }) {
   const [mode, setMode] = useState<'global' | 'following'>('global');
   const { posts, loading, refreshing, refresh, loadMore, toggleLikeOptimistic } = useCommunityFeed(mode);
+  const { message: toastMsg, nonce: toastNonce, show: showToast } = useInlineToast();
+
+  // follows aren't realtime, so the "following" list otherwise won't include
+  // someone new until the tab is left and reopened — the moment a follow made
+  // from a profile screen actually needs to show up here. Skip the very first
+  // focus: the mode-change effect inside the hook already loads on mount, so
+  // firing again here would just flash the pull-to-refresh spinner for nothing.
+  const mountedRef = useRef(false);
+  useFocusEffect(
+    useCallback(() => {
+      if (mountedRef.current) refresh();
+      mountedRef.current = true;
+    }, [refresh]),
+  );
 
   const renderPost = useCallback(
     ({ item }: { item: CommunityPost }) => (
-      <PostCard post={item} onToggleLike={() => toggleLikeOptimistic(item.id)} />
+      <PostCard
+        post={item}
+        onToggleLike={() => toggleLikeOptimistic(item.id, () => showToast("couldn't update like — try again"))}
+      />
     ),
-    [toggleLikeOptimistic],
+    [toggleLikeOptimistic, showToast],
   );
 
   return (
     <View style={styles.feedWrap}>
+      <View style={styles.feedToastWrap} pointerEvents="none">
+        <InlineToast message={toastMsg} nonce={toastNonce} />
+      </View>
+
       <View style={styles.tabsRow}>
         {(['global', 'following'] as const).map((m) => (
           <Pressable key={m} onPress={() => setMode(m)} style={[styles.tab, mode === m && styles.tabActive]}>
@@ -179,7 +202,7 @@ function Feed({ insets }: { insets: { top: number } }) {
         removeClippedSubviews
         ListEmptyComponent={
           loading ? (
-            <ActivityIndicator style={{ marginTop: 40 }} color={Colors.sakuraDeep} />
+            <FeedSkeleton />
           ) : (
             <View style={styles.feedEmpty}>
               <Text style={styles.emptyTitle}>
@@ -544,6 +567,7 @@ const styles = StyleSheet.create({
 
   // feed
   feedWrap: { flex: 1 },
+  feedToastWrap: { position: 'absolute', top: 4, left: 0, right: 0, zIndex: 10, alignItems: 'center' },
   tabsRow: {
     flexDirection: 'row',
     gap: 8,

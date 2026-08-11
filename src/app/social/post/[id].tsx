@@ -4,7 +4,6 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
@@ -19,24 +18,28 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 
 import { CommentThread } from '@/components/community/CommentThread';
+import { DoubleTapLike } from '@/components/community/DoubleTapLike';
 import { LikeButton } from '@/components/community/LikeButton';
 import { PostAuthorHeader } from '@/components/community/PostAuthorHeader';
+import { PostDetailSkeleton } from '@/components/community/PostDetailSkeleton';
 import { Mark } from '@/components/ui/Mark';
 import { MEDIA_IMAGE } from '@/lib/imageProps';
 import { Colors, FontFamily, FontSize, Radius, Spacing, sf } from '@/constants/theme';
 import { addComment, deleteComment, deletePost, logSyncFailure, useCommunityPost } from '@/store/community';
+import { InlineToast, useInlineToast } from '@/components/ui/InlineToast';
 import { useAuthUser } from '@/store/auth';
 import { CozyModal } from '@/components/ui/CozyModal';
 
 export default function PostDetailScreen() {
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { post, comments, loading, toggleLikeOptimistic } = useCommunityPost(id);
+  const { post, comments, loading, toggleLikeOptimistic, insertComment } = useCommunityPost(id);
   const [draft, setDraft] = useState('');
   const [replyTo, setReplyTo] = useState<{ id: string; name: string } | null>(null);
   const [sending, setSending] = useState(false);
   const [keyboardOpen, setKeyboardOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const { message: toastMsg, nonce: toastNonce, show: showToast } = useInlineToast();
   const me = useAuthUser();
   const isMine = !!me && post?.author.id === me.id;
 
@@ -82,9 +85,14 @@ export default function PostDetailScreen() {
     setReplyTo(null);
     setSending(true);
     try {
-      await addComment(post.id, body, parent);
+      // shown immediately rather than waiting on the realtime echo, which
+      // never arrives if the channel is down — insertComment already dedupes
+      // by id, so the echo landing later is a harmless no-op
+      const comment = await addComment(post.id, body, parent);
+      insertComment(comment);
     } catch {
       setDraft(body);
+      showToast("couldn't send — try again");
     } finally {
       setSending(false);
     }
@@ -98,7 +106,9 @@ export default function PostDetailScreen() {
             <Text style={styles.headerBtnText}>‹</Text>
           </Pressable>
         </View>
-        <ActivityIndicator style={{ marginTop: 40 }} color={Colors.sakuraDeep} />
+        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          <PostDetailSkeleton />
+        </ScrollView>
       </View>
     );
   }
@@ -111,6 +121,10 @@ export default function PostDetailScreen() {
       // added straight onto the keyboard gap — it must stay 0
       keyboardVerticalOffset={0}
     >
+      <View style={[styles.toastWrap, { top: insets.top + Spacing.s2 }]} pointerEvents="none">
+        <InlineToast message={toastMsg} nonce={toastNonce} />
+      </View>
+
       <View style={[styles.header, { paddingTop: insets.top + Spacing.s1 }]}>
         <Pressable onPress={() => router.back()} style={styles.headerBtn}>
           <Text style={styles.headerBtnText}>‹</Text>
@@ -158,26 +172,38 @@ export default function PostDetailScreen() {
         ) : post.media.length > 0 ? (
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.mediaScroll}>
             {post.media.map((m, i) => (
-              <Image
+              // wrapped per-photo, not around the whole strip, so the burst lands
+              // on the photo actually double-tapped and scrolling stays untouched
+              <DoubleTapLike
                 key={i}
-                source={{ uri: m.type === 'image' ? m.url : '' }}
                 style={styles.mediaImage}
-                contentFit="cover"
-                {...MEDIA_IMAGE}
-                // the feed already cached this thumb, so it paints immediately and
-                // the full-size photo sharpens in over it instead of a blank frame
-                placeholder={
-                  m.type === 'image' && m.thumbnailUrl
-                    ? { uri: m.thumbnailUrl }
-                    : MEDIA_IMAGE.placeholder
-                }
-              />
+                onDoubleTap={() => { if (!post.likedByMe) toggleLikeOptimistic(() => showToast("couldn't update like — try again")); }}
+              >
+                <Image
+                  source={{ uri: m.type === 'image' ? m.url : '' }}
+                  style={styles.mediaImageFill}
+                  contentFit="cover"
+                  {...MEDIA_IMAGE}
+                  // the feed already cached this thumb, so it paints immediately and
+                  // the full-size photo sharpens in over it instead of a blank frame
+                  placeholder={
+                    m.type === 'image' && m.thumbnailUrl
+                      ? { uri: m.thumbnailUrl }
+                      : MEDIA_IMAGE.placeholder
+                  }
+                />
+              </DoubleTapLike>
             ))}
           </ScrollView>
         ) : null}
 
         <View style={styles.likeRow}>
-          <LikeButton liked={post.likedByMe} count={post.likeCount} onToggle={toggleLikeOptimistic} size={19} />
+          <LikeButton
+            liked={post.likedByMe}
+            count={post.likeCount}
+            onToggle={() => toggleLikeOptimistic(() => showToast("couldn't update like — try again"))}
+            size={19}
+          />
         </View>
 
         <View style={styles.divider} />
@@ -280,13 +306,15 @@ const styles = StyleSheet.create({
     borderRadius: Radius.r3,
   },
   mediaScroll: { marginTop: Spacing.s4 },
-  mediaImage: { width: 240, height: 240, borderRadius: Radius.r3, marginRight: 8, backgroundColor: Colors.paperDeep },
+  mediaImage: { width: 240, height: 240, borderRadius: Radius.r3, marginRight: 8, backgroundColor: Colors.paperDeep, overflow: 'hidden' },
+  mediaImageFill: { width: '100%', height: '100%' },
   likeRow: { marginTop: Spacing.s4 },
   divider: { height: 1, backgroundColor: Colors.line, marginTop: Spacing.s5, marginBottom: Spacing.s4 },
   commentsLabel: {
     fontFamily: FontFamily.marker, fontSize: sf(10), color: Colors.ink3,
     letterSpacing: 1.2, textTransform: 'uppercase', marginBottom: 12,
   },
+  toastWrap: { position: 'absolute', left: 0, right: 0, zIndex: 10, alignItems: 'center' },
   composerWrap: {
     borderTopWidth: 1, borderTopColor: Colors.line, backgroundColor: Colors.vellum,
     paddingHorizontal: Spacing.s5, paddingTop: Spacing.s2,

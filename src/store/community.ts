@@ -2,7 +2,8 @@ import { Image } from 'expo-image';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { compressImage, compressVideo, syncMediaMap } from '@/lib/mediaOptimizer';
-import { uploadToBucket } from '@/lib/storage';
+import { deleteFromBucketByUrl, uploadToBucket } from '@/lib/storage';
+import { FunctionsHttpError } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 
 import { getAllFos, getFo, parseGallery, updateFo, type Fo, type GalleryPhoto } from './fo';
@@ -305,6 +306,92 @@ export async function claimUsername(username: string): Promise<{ ok: boolean; re
   return { ok: true };
 }
 
+/**
+ * Shared by pushOwnProfile/pushFoProfile — both need the same "already a
+ * remote url / diff against last-synced marker / fall back to the existing
+ * remote avatar / feed the avatar into the gallery map" logic, just against
+ * different tables, ids and storage paths. Kept in this file (not
+ * mediaOptimizer.ts) since it's specific to those two callers' patch/table/
+ * bucket conventions, not a generic media utility.
+ */
+async function syncAvatarAndGallery(input: {
+  table: 'profiles' | 'fo_profiles';
+  entityId: string;
+  avatarUri: string;
+  avatarSyncedMarker: string;
+  galleryUris: string[];
+  previousGalleryMap: Record<string, string>;
+  avatarPath: string;
+  galleryPathPrefix: string;
+  logContext: string;
+}): Promise<{
+  /** undefined = leave patch.avatar_url unset (unchanged); '' = explicitly cleared */
+  avatarUrl: string | undefined;
+  uploadedAvatarFor: string;
+  photoFailed: boolean;
+  galleryMap: Record<string, string>;
+}> {
+  const { table, entityId, avatarUri, avatarSyncedMarker, galleryUris, previousGalleryMap, avatarPath, galleryPathPrefix, logContext } = input;
+
+  // The local "already uploaded this file" marker can't be trusted on its own:
+  // the remote row may have lost its avatar since (an unpublish, or an upsert
+  // that failed after the marker was written). Re-upload whenever it has none.
+  const { data: existingRow } = await supabase.from(table).select('avatar_url').eq('id', entityId).maybeSingle();
+
+  let avatarUrl: string | undefined;
+  let uploadedAvatarFor = '';
+  let photoFailed = false;
+
+  if (avatarUri && /^https?:\/\//.test(avatarUri)) {
+    // already a remote url — the local file was lost and the startup repair
+    // pass substituted the published copy already sitting on the server, so
+    // there is nothing to compress or upload, just keep it as the avatar
+    avatarUrl = avatarUri;
+  } else if (avatarUri && (avatarUri !== avatarSyncedMarker || !existingRow?.avatar_url)) {
+    try {
+      const compressed = await compressImage(avatarUri, 'avatar');
+      avatarUrl = await uploadToBucket('avatars', avatarPath, compressed, 'image/jpeg');
+      uploadedAvatarFor = avatarUri;
+      // the old copy is now unreferenced the moment the new one lands — clean
+      // it up instead of letting every avatar change leak a file forever;
+      // fire-and-forget so a slow delete never holds up the save
+      if (existingRow?.avatar_url && existingRow.avatar_url !== avatarUrl) {
+        deleteFromBucketByUrl('avatars', existingRow.avatar_url);
+      }
+    } catch (e) {
+      // the rest of the profile still saves, but the caller is told the photo did not
+      photoFailed = true;
+      logSyncFailure(logContext)(e);
+    }
+  } else if (!avatarUri) {
+    avatarUrl = '';
+  }
+
+  // gallery and the two background images ride the same {localUri: remoteUrl}
+  // map, so a background picked once is never re-uploaded on later saves
+  const galleryMap = await syncMediaMap(
+    galleryUris,
+    previousGalleryMap,
+    (compressedUri) =>
+      uploadToBucket(
+        'avatars',
+        `${galleryPathPrefix}/${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`,
+        compressedUri,
+        'image/jpeg',
+      ),
+  );
+  // The avatar rides the same {localUri: remoteUrl} map as the gallery and
+  // backgrounds, rather than a dedicated column — Part B of the media-durability
+  // work: if this exact local file later goes missing (evicted cache, a wipe
+  // mid-flight), the startup repair pass can fall back to the copy already on
+  // the server instead of leaving the profile faceless. Prefer the URL just
+  // uploaded; if this save didn't re-upload, the existing row's URL is that copy.
+  const avatarRemoteUrl = avatarUrl || existingRow?.avatar_url || '';
+  if (avatarUri && avatarRemoteUrl) galleryMap[avatarUri] = avatarRemoteUrl;
+
+  return { avatarUrl, uploadedAvatarFor, photoFailed, galleryMap };
+}
+
 export async function pushOwnProfile(): Promise<PushResult> {
   const {
     data: { session },
@@ -312,7 +399,6 @@ export async function pushOwnProfile(): Promise<PushResult> {
   const user = session?.user;
   if (!user) return { photoFailed: false };
 
-  let photoFailed = false;
   const patch: Record<string, unknown> = {
     id: user.id,
     name: getGlobalSetting('user_name'),
@@ -349,59 +435,33 @@ export async function pushOwnProfile(): Promise<PushResult> {
     patch.identify_fo_id = null;
   }
 
-  // The local "already uploaded this file" marker can't be trusted on its own:
-  // the remote row may have lost its avatar since (an unpublish, or an upsert
-  // that failed after the marker was written). Re-upload whenever it has none.
-  const { data: existingRow } = await supabase
-    .from('profiles')
-    .select('avatar_url')
-    .eq('id', user.id)
-    .maybeSingle();
-
-  const localAvatar = getGlobalSetting('user_avatar');
-  const lastSyncedAvatar = getGlobalSetting('user_avatar_synced_uri');
-  let uploadedAvatarFor = '';
-  if (localAvatar && (localAvatar !== lastSyncedAvatar || !existingRow?.avatar_url)) {
-    try {
-      const compressed = await compressImage(localAvatar, 'avatar');
-      patch.avatar_url = await uploadToBucket('avatars', `${user.id}/${Date.now()}.jpg`, compressed, 'image/jpeg');
-      uploadedAvatarFor = localAvatar;
-    } catch (e) {
-      // the rest of the profile still saves, but the caller is told the photo did not
-      photoFailed = true;
-      logSyncFailure('pushOwnProfile avatar upload')(e);
-    }
-  } else if (!localAvatar) {
-    patch.avatar_url = '';
-  }
-
-  // gallery and the two background images ride the same {localUri: remoteUrl}
-  // map, so a background picked once is never re-uploaded on later saves
   const localGallery = parseGallery(getGlobalSetting('user_gallery'));
   const cardBgImage = getGlobalSetting('user_card_bg_image');
   const pageBgImage = getGlobalSetting('user_page_bg_image');
-  const prevGalleryMap = parseSyncMap(getGlobalSetting('user_gallery_sync_map'));
-  const galleryMap = await syncMediaMap(
-    [...localGallery.map((p) => p.uri), cardBgImage, pageBgImage].filter(Boolean),
-    prevGalleryMap,
-    (compressedUri) =>
-      uploadToBucket(
-        'avatars',
-        `${user.id}/gallery/${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`,
-        compressedUri,
-        'image/jpeg',
-      ),
-  );
-  saveGlobalSetting('user_gallery_sync_map', JSON.stringify(galleryMap));
-  patch.gallery = localGallery.map((p) => ({ url: galleryMap[p.uri], caption: p.caption })).filter((g) => g.url);
-  patch.card_bg_image = (cardBgImage && galleryMap[cardBgImage]) || '';
-  patch.page_bg_image = (pageBgImage && galleryMap[pageBgImage]) || '';
+
+  const sync = await syncAvatarAndGallery({
+    table: 'profiles',
+    entityId: user.id,
+    avatarUri: getGlobalSetting('user_avatar'),
+    avatarSyncedMarker: getGlobalSetting('user_avatar_synced_uri'),
+    galleryUris: [...localGallery.map((p) => p.uri), cardBgImage, pageBgImage].filter(Boolean),
+    previousGalleryMap: parseSyncMap(getGlobalSetting('user_gallery_sync_map')),
+    avatarPath: `${user.id}/${Date.now()}.jpg`,
+    galleryPathPrefix: `${user.id}/gallery`,
+    logContext: 'pushOwnProfile avatar upload',
+  });
+
+  if (sync.avatarUrl !== undefined) patch.avatar_url = sync.avatarUrl;
+  saveGlobalSetting('user_gallery_sync_map', JSON.stringify(sync.galleryMap));
+  patch.gallery = localGallery.map((p) => ({ url: sync.galleryMap[p.uri], caption: p.caption })).filter((g) => g.url);
+  patch.card_bg_image = (cardBgImage && sync.galleryMap[cardBgImage]) || '';
+  patch.page_bg_image = (pageBgImage && sync.galleryMap[pageBgImage]) || '';
 
   const { error } = await supabase.from('profiles').upsert(patch);
   if (error) throw error;
   // only remember the upload once the row that references it actually landed
-  if (uploadedAvatarFor) saveGlobalSetting('user_avatar_synced_uri', uploadedAvatarFor);
-  return { photoFailed };
+  if (sync.uploadedAvatarFor) saveGlobalSetting('user_avatar_synced_uri', sync.uploadedAvatarFor);
+  return { photoFailed: sync.photoFailed };
 }
 
 export async function fetchProfile(id: string): Promise<CommunityProfile | null> {
@@ -422,7 +482,6 @@ export async function pushFoProfile(foId: string): Promise<PushResult> {
   if (!fo) throw new Error('f/o not found');
   if (fo.shareStatus === 'no') throw new Error("this f/o's sharing status is set to no — change it first");
 
-  let photoFailed = false;
   const patch: Record<string, unknown> = {
     id: fo.id,
     owner_id: user.id,
@@ -449,60 +508,40 @@ export async function pushFoProfile(foId: string): Promise<PushResult> {
 
   // See pushOwnProfile: unpublishing deletes the row outright, so a re-publish
   // would otherwise trust a stale avatarSyncedUri and leave the F/O faceless.
-  const { data: existingRow } = await supabase
-    .from('fo_profiles')
-    .select('avatar_url')
-    .eq('id', fo.id)
-    .maybeSingle();
+  const sync = await syncAvatarAndGallery({
+    table: 'fo_profiles',
+    entityId: fo.id,
+    avatarUri: fo.photoUri,
+    avatarSyncedMarker: fo.avatarSyncedUri,
+    galleryUris: [...fo.gallery.map((p) => p.uri), fo.cardBgImage, fo.pageBgImage].filter(Boolean),
+    previousGalleryMap: fo.gallerySyncMap,
+    avatarPath: `${user.id}/fo/${fo.id}/${Date.now()}.jpg`,
+    galleryPathPrefix: `${user.id}/fo/${fo.id}/gallery`,
+    logContext: 'pushFoProfile avatar upload',
+  });
 
-  let uploadedAvatarFor = '';
-  if (fo.photoUri && (fo.photoUri !== fo.avatarSyncedUri || !existingRow?.avatar_url)) {
-    try {
-      const compressed = await compressImage(fo.photoUri, 'avatar');
-      patch.avatar_url = await uploadToBucket(
-        'avatars',
-        `${user.id}/fo/${fo.id}/${Date.now()}.jpg`,
-        compressed,
-        'image/jpeg',
-      );
-      uploadedAvatarFor = fo.photoUri;
-    } catch (e) {
-      photoFailed = true;
-      logSyncFailure('pushFoProfile avatar upload')(e);
-    }
-  } else if (!fo.photoUri) {
-    patch.avatar_url = '';
-  }
-
-  const galleryMap = await syncMediaMap(
-    [...fo.gallery.map((p) => p.uri), fo.cardBgImage, fo.pageBgImage].filter(Boolean),
-    fo.gallerySyncMap,
-    (compressedUri) =>
-      uploadToBucket(
-        'avatars',
-        `${user.id}/fo/${fo.id}/gallery/${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`,
-        compressedUri,
-        'image/jpeg',
-      ),
-  );
-  patch.gallery = fo.gallery.map((p) => ({ url: galleryMap[p.uri], caption: p.caption })).filter((g) => g.url);
-  patch.card_bg_image = (fo.cardBgImage && galleryMap[fo.cardBgImage]) || '';
-  patch.page_bg_image = (fo.pageBgImage && galleryMap[fo.pageBgImage]) || '';
+  if (sync.avatarUrl !== undefined) patch.avatar_url = sync.avatarUrl;
+  patch.gallery = fo.gallery.map((p) => ({ url: sync.galleryMap[p.uri], caption: p.caption })).filter((g) => g.url);
+  patch.card_bg_image = (fo.cardBgImage && sync.galleryMap[fo.cardBgImage]) || '';
+  patch.page_bg_image = (fo.pageBgImage && sync.galleryMap[fo.pageBgImage]) || '';
 
   const { error } = await supabase.from('fo_profiles').upsert(patch);
   if (error) throw error;
 
   updateFo(fo.id, {
-    gallerySyncMap: galleryMap,
+    gallerySyncMap: sync.galleryMap,
     isPublic: true,
     // committed only now that the row referencing the upload exists
-    ...(uploadedAvatarFor ? { avatarSyncedUri: uploadedAvatarFor } : null),
+    ...(sync.uploadedAvatarFor ? { avatarSyncedUri: sync.uploadedAvatarFor } : null),
   });
-  return { photoFailed };
+  return { photoFailed: sync.photoFailed };
 }
 
 export async function unpublishFoProfile(foId: string): Promise<void> {
-  await supabase.from('fo_profiles').delete().eq('id', foId);
+  const { error } = await supabase.from('fo_profiles').delete().eq('id', foId);
+  if (error) throw error;
+  // only flip local state once the remote row is actually gone — otherwise a
+  // failed delete leaves the app believing a still-public profile is private
   // the row is gone, so every uploaded-already marker is now a lie — clearing
   // them makes the next publish re-upload the avatar and gallery from scratch
   updateFo(foId, { isPublic: false, avatarSyncedUri: '', gallerySyncMap: {} });
@@ -555,7 +594,17 @@ export async function deleteCommunityAccount(): Promise<void> {
   if (!session?.user) return;
 
   const { data, error } = await supabase.functions.invoke('delete-account', { method: 'POST' });
-  if (error) throw error;
+  if (error) {
+    // a non-2xx response only ever surfaces as this generic wrapper — the
+    // function's own {error: "..."} body (e.g. "not signed in") is on
+    // error.context and has to be read separately, or every failure looks
+    // like the same unhelpful "non-2xx status code" message to the user
+    if (error instanceof FunctionsHttpError) {
+      const body = await error.context.json().catch(() => null);
+      throw new Error(body?.error || error.message);
+    }
+    throw error;
+  }
   if (data && (data as { error?: string }).error) {
     throw new Error((data as { error: string }).error);
   }
@@ -603,6 +652,25 @@ export async function fetchFeedPage(opts: {
     if (ids.length === 0) return [];
     query = query.in('author_id', ids);
   }
+
+  const { data, error } = await query;
+  if (error || !data) return [];
+  const likedIds = await fetchLikedPostIds(data.map((r: any) => r.id));
+  return data.map((r: any) => rowToPost(r, likedIds));
+}
+
+export async function fetchUserPosts(
+  authorId: string,
+  opts: { before?: string; limit?: number } = {},
+): Promise<CommunityPost[]> {
+  const limit = opts.limit ?? 20;
+  let query = supabase
+    .from('posts')
+    .select(POST_SELECT)
+    .eq('author_id', authorId)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (opts.before) query = query.lt('created_at', opts.before);
 
   const { data, error } = await query;
   if (error || !data) return [];
@@ -692,8 +760,19 @@ export async function createPost(input: {
 }
 
 export async function deletePost(id: string): Promise<void> {
+  // fetched before the row goes away — it's the only place the media urls live
+  const { data: existing } = await supabase.from('posts').select('media').eq('id', id).maybeSingle();
+
   const { error } = await supabase.from('posts').delete().eq('id', id);
   if (error) throw error;
+
+  // best-effort, after the delete the caller asked for has already landed —
+  // a missed cleanup here leaves an orphaned file, not a broken delete
+  const media = (existing?.media ?? []) as PostMedia[];
+  for (const m of media) {
+    if (m.url) deleteFromBucketByUrl('post-media', m.url);
+    if (m.thumbnailUrl) deleteFromBucketByUrl('post-media', m.thumbnailUrl);
+  }
 }
 
 export async function toggleLike(postId: string, currentlyLiked: boolean): Promise<void> {
@@ -703,9 +782,11 @@ export async function toggleLike(postId: string, currentlyLiked: boolean): Promi
   const user = session?.user;
   if (!user) return;
   if (currentlyLiked) {
-    await supabase.from('likes').delete().eq('post_id', postId).eq('user_id', user.id);
+    const { error } = await supabase.from('likes').delete().eq('post_id', postId).eq('user_id', user.id);
+    if (error) throw error;
   } else {
-    await supabase.from('likes').insert({ post_id: postId, user_id: user.id });
+    const { error } = await supabase.from('likes').insert({ post_id: postId, user_id: user.id });
+    if (error) throw error;
   }
 }
 
@@ -754,7 +835,8 @@ export async function followUser(id: string): Promise<void> {
   } = await supabase.auth.getSession();
   const user = session?.user;
   if (!user) return;
-  await supabase.from('follows').insert({ follower_id: user.id, following_id: id });
+  const { error } = await supabase.from('follows').insert({ follower_id: user.id, following_id: id });
+  if (error) throw error;
 }
 
 export async function unfollowUser(id: string): Promise<void> {
@@ -763,7 +845,8 @@ export async function unfollowUser(id: string): Promise<void> {
   } = await supabase.auth.getSession();
   const user = session?.user;
   if (!user) return;
-  await supabase.from('follows').delete().eq('follower_id', user.id).eq('following_id', id);
+  const { error } = await supabase.from('follows').delete().eq('follower_id', user.id).eq('following_id', id);
+  if (error) throw error;
 }
 
 export async function fetchRelationship(id: string): Promise<{ following: boolean; blocked: boolean }> {
@@ -785,7 +868,8 @@ export async function blockUser(id: string): Promise<void> {
   } = await supabase.auth.getSession();
   const user = session?.user;
   if (!user) return;
-  await supabase.from('blocks').insert({ blocker_id: user.id, blocked_id: id });
+  const { error } = await supabase.from('blocks').insert({ blocker_id: user.id, blocked_id: id });
+  if (error) throw error;
 }
 
 export async function unblockUser(id: string): Promise<void> {
@@ -794,7 +878,8 @@ export async function unblockUser(id: string): Promise<void> {
   } = await supabase.auth.getSession();
   const user = session?.user;
   if (!user) return;
-  await supabase.from('blocks').delete().eq('blocker_id', user.id).eq('blocked_id', id);
+  const { error } = await supabase.from('blocks').delete().eq('blocker_id', user.id).eq('blocked_id', id);
+  if (error) throw error;
 }
 
 export async function fetchBlockedUsers(): Promise<CommunityProfile[]> {
@@ -999,9 +1084,13 @@ export function useCommunityFeed(mode: 'global' | 'following') {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
+  // shared by load() and loadMore(): a short page means the feed has run out,
+  // and this stops onEndReached from refetching the tail forever
+  const hasMore = useRef(true);
 
   const load = useCallback(async () => {
-    const page = await fetchFeedPage({ mode });
+    const page = await fetchFeedPage({ mode, limit: 20 });
+    hasMore.current = page.length >= 20;
     setPosts(page);
     setLoading(false);
     prefetchFeedMedia(page);
@@ -1012,6 +1101,19 @@ export function useCommunityFeed(mode: 'global' | 'following') {
     load();
   }, [load]);
 
+  // follows aren't in the realtime publication, so this set only updates when
+  // asked — on mode change, on pull-to-refresh, and on screen focus (below), the
+  // moments a newly-followed person actually needs to show up in this feed
+  const loadFollowingIds = useCallback(async () => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    const user = session?.user;
+    if (!user) return;
+    const { data } = await supabase.from('follows').select('following_id').eq('follower_id', user.id);
+    setFollowingIds(new Set((data ?? []).map((r: any) => r.following_id)));
+  }, []);
+
   useEffect(() => {
     if (mode !== 'following') return;
     let cancelled = false;
@@ -1020,7 +1122,7 @@ export function useCommunityFeed(mode: 'global' | 'following') {
         data: { session },
       } = await supabase.auth.getSession();
       const user = session?.user;
-      if (!user) return;
+      if (!user || cancelled) return;
       const { data } = await supabase.from('follows').select('following_id').eq('follower_id', user.id);
       if (!cancelled) setFollowingIds(new Set((data ?? []).map((r: any) => r.following_id)));
     })();
@@ -1074,26 +1176,46 @@ export function useCommunityFeed(mode: 'global' | 'following') {
 
   const refresh = useCallback(async () => {
     setRefreshing(true);
+    hasMore.current = true;
+    if (mode === 'following') await loadFollowingIds();
     await load();
     setRefreshing(false);
-  }, [load]);
+  }, [load, mode, loadFollowingIds]);
+
+  // onEndReached fires repeatedly while the list is still settling, so without a
+  // guard several requests run concurrently against the same cursor and append
+  // the same page twice.
+  const loadingMore = useRef(false);
 
   const loadMore = useCallback(async () => {
+    if (loadingMore.current || !hasMore.current) return;
     const current = postsRef.current;
     if (current.length === 0) return;
-    const more = await fetchFeedPage({
-      mode,
-      before: current[current.length - 1].createdAt,
-    });
-    setPosts((prev) => [...prev, ...more]);
-    prefetchFeedMedia(more);
+
+    loadingMore.current = true;
+    try {
+      const limit = 20;
+      const more = await fetchFeedPage({
+        mode,
+        before: current[current.length - 1].createdAt,
+        limit,
+      });
+      if (more.length < limit) hasMore.current = false;
+      setPosts((prev) => {
+        const seen = new Set(prev.map((p) => p.id));
+        return [...prev, ...more.filter((p) => !seen.has(p.id))];
+      });
+      prefetchFeedMedia(more);
+    } finally {
+      loadingMore.current = false;
+    }
   }, [mode]);
 
   // a double-tap fires twice before the first request resolves; without this the
   // second inverts the optimistic state and the count ends up wrong
   const inFlight = useRef<Set<string>>(new Set());
 
-  const toggleLikeOptimistic = useCallback(async (postId: string) => {
+  const toggleLikeOptimistic = useCallback(async (postId: string, onFailure?: () => void) => {
     if (inFlight.current.has(postId)) return;
     const target = postsRef.current.find((p) => p.id === postId);
     if (!target) return;
@@ -1112,6 +1234,7 @@ export function useCommunityFeed(mode: 'global' | 'following') {
       await toggleLike(postId, wasLiked);
     } catch {
       apply(wasLiked, wasLiked ? 1 : -1);
+      onFailure?.();
     } finally {
       inFlight.current.delete(postId);
     }
@@ -1124,6 +1247,113 @@ export function useCommunityFeed(mode: 'global' | 'following') {
     refresh,
     loadMore,
     toggleLikeOptimistic,
+  };
+}
+
+/**
+ * A single author's posts — the profile screens' "their posts" section, both
+ * for the signed-in user's own profile and anyone else's public one.
+ *
+ * Deliberately lighter than useCommunityFeed: no following-set or realtime
+ * subscription, since a profile page is a secondary, already-scoped view —
+ * posting/liking elsewhere is reflected next time this list loads, not live.
+ */
+export function useUserPosts(userId: string | undefined) {
+  const [posts, setPosts] = useState<CommunityPost[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const hasMore = useRef(true);
+
+  const load = useCallback(async () => {
+    if (!userId) {
+      setPosts([]);
+      setLoading(false);
+      return;
+    }
+    const page = await fetchUserPosts(userId, { limit: 20 });
+    hasMore.current = page.length >= 20;
+    setPosts(page);
+    setLoading(false);
+    prefetchFeedMedia(page);
+  }, [userId]);
+
+  useEffect(() => {
+    setLoading(true);
+    hasMore.current = true;
+    load();
+  }, [load]);
+
+  const postsRef = useRef(posts);
+  postsRef.current = posts;
+
+  const refresh = useCallback(async () => {
+    setRefreshing(true);
+    hasMore.current = true;
+    await load();
+    setRefreshing(false);
+  }, [load]);
+
+  const loadingMore = useRef(false);
+
+  const loadMore = useCallback(async () => {
+    if (!userId || loadingMore.current || !hasMore.current) return;
+    const current = postsRef.current;
+    if (current.length === 0) return;
+
+    loadingMore.current = true;
+    try {
+      const limit = 20;
+      const more = await fetchUserPosts(userId, { before: current[current.length - 1].createdAt, limit });
+      if (more.length < limit) hasMore.current = false;
+      setPosts((prev) => {
+        const seen = new Set(prev.map((p) => p.id));
+        return [...prev, ...more.filter((p) => !seen.has(p.id))];
+      });
+      prefetchFeedMedia(more);
+    } finally {
+      loadingMore.current = false;
+    }
+  }, [userId]);
+
+  const inFlight = useRef<Set<string>>(new Set());
+
+  const toggleLikeOptimistic = useCallback(async (postId: string, onFailure?: () => void) => {
+    if (inFlight.current.has(postId)) return;
+    const target = postsRef.current.find((p) => p.id === postId);
+    if (!target) return;
+
+    const wasLiked = target.likedByMe;
+    const apply = (liked: boolean, delta: number) =>
+      setPosts((prev) =>
+        prev.map((p) => (p.id === postId ? { ...p, likedByMe: liked, likeCount: p.likeCount + delta } : p)),
+      );
+
+    inFlight.current.add(postId);
+    apply(!wasLiked, wasLiked ? -1 : 1);
+    try {
+      await toggleLike(postId, wasLiked);
+    } catch {
+      apply(wasLiked, wasLiked ? 1 : -1);
+      onFailure?.();
+    } finally {
+      inFlight.current.delete(postId);
+    }
+  }, []);
+
+  // called after a confirmed delete — the row is already gone server-side by
+  // the time this runs, so this is a plain local removal, not optimistic
+  const removePost = useCallback((postId: string) => {
+    setPosts((prev) => prev.filter((p) => p.id !== postId));
+  }, []);
+
+  return {
+    posts,
+    loading,
+    refreshing,
+    refresh,
+    loadMore,
+    toggleLikeOptimistic,
+    removePost,
   };
 }
 
@@ -1165,7 +1395,7 @@ export function useCommunityPost(id: string) {
     });
   }, [id]);
 
-  const toggleLikeOptimistic = useCallback(async () => {
+  const toggleLikeOptimistic = useCallback(async (onFailure?: () => void) => {
     if (!post) return;
     const wasLiked = post.likedByMe;
     const targetId = post.id;
@@ -1190,8 +1420,16 @@ export function useCommunityPost(id: string) {
             }
           : p,
       );
+      onFailure?.();
     }
   }, [post]);
 
-  return { post, comments, loading, toggleLikeOptimistic };
+  // exposed so the composer can show a comment the instant it's created rather
+  // than waiting on the realtime echo — onCommentInsert above already dedupes by
+  // id, so the echo arriving afterwards is a no-op, not a double entry
+  const insertComment = useCallback((c: CommunityComment) => {
+    setComments((prev) => (prev.some((x) => x.id === c.id) ? prev : [...prev, c]));
+  }, []);
+
+  return { post, comments, loading, toggleLikeOptimistic, insertComment };
 }

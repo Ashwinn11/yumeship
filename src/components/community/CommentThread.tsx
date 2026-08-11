@@ -1,4 +1,5 @@
 import { Image } from 'expo-image';
+import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AVATAR_IMAGE } from '@/lib/imageProps';
@@ -37,24 +38,28 @@ function CommentNode({ comment, byParent, depth, parentAuthorName, onReply, view
   return (
     <View style={[styles.node, { marginLeft: cappedDepth * 18 }]}>
       <View style={styles.row}>
-        <View style={[styles.avatar, { backgroundColor: Colors.sakura }]}>
-          {comment.author.avatarUrl ? (
-            <Image
-              source={{ uri: comment.author.avatarUrl }}
-              style={styles.avatarImg}
-              contentFit="cover"
-              recyclingKey={comment.author.avatarUrl}
-              {...AVATAR_IMAGE}
-            />
-          ) : (
-            <Text style={styles.avatarInitial}>{comment.author.name.trim().charAt(0).toUpperCase() || '♡'}</Text>
-          )}
-        </View>
+        <Pressable onPress={() => router.push(`/social/user/${comment.author.id}` as any)}>
+          <View style={[styles.avatar, { backgroundColor: Colors.sakura }]}>
+            {comment.author.avatarUrl ? (
+              <Image
+                source={{ uri: comment.author.avatarUrl }}
+                style={styles.avatarImg}
+                contentFit="cover"
+                recyclingKey={comment.author.avatarUrl}
+                {...AVATAR_IMAGE}
+              />
+            ) : (
+              <Text style={styles.avatarInitial}>{comment.author.name.trim().charAt(0).toUpperCase() || '♡'}</Text>
+            )}
+          </View>
+        </Pressable>
         <View style={styles.bubble}>
           {flattened && !!parentAuthorName && <Text style={styles.replyingTo}>↳ replying to {parentAuthorName}</Text>}
           <View style={styles.bubbleHeader}>
-            <Text style={styles.name} numberOfLines={1}>{comment.author.name || 'someone'}</Text>
-            {!!comment.author.username && <Text style={styles.username}>@{comment.author.username}</Text>}
+            <Pressable onPress={() => router.push(`/social/user/${comment.author.id}` as any)} style={styles.nameRow}>
+              <Text style={styles.name} numberOfLines={1}>{comment.author.name || 'someone'}</Text>
+              {!!comment.author.username && <Text style={styles.username}>@{comment.author.username}</Text>}
+            </Pressable>
             <Text style={styles.time}>{timeAgo(comment.createdAt)}</Text>
           </View>
           <Text style={styles.body}>{comment.body}</Text>
@@ -130,6 +135,7 @@ const styles = StyleSheet.create({
     ...Shadow.s1,
   },
   bubbleHeader: { flexDirection: 'row', alignItems: 'baseline', gap: 6, flexWrap: 'wrap' },
+  nameRow: { flexDirection: 'row', alignItems: 'baseline', gap: 6, flexShrink: 1 },
   name: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(12), color: Colors.ink, flexShrink: 1 },
   username: { fontFamily: FontFamily.uiMedium, fontSize: sf(10.5), color: Colors.sakuraDeep },
   time: { fontFamily: FontFamily.ui, fontSize: sf(10), color: Colors.ink3, marginLeft: 'auto' },

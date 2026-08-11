@@ -26,3 +26,22 @@ export async function uploadToBucket(
   if (error) throw error;
   return supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl;
 }
+
+/**
+ * Deletes a previously-uploaded object given its public URL, so replacing a
+ * photo (a new avatar, a re-saved post) doesn't leave the old copy behind
+ * forever. Best-effort and silent: an orphaned file is far cheaper than
+ * blocking or breaking the save that's replacing it.
+ */
+export async function deleteFromBucketByUrl(bucket: string, publicUrl: string): Promise<void> {
+  const marker = `/object/public/${bucket}/`;
+  const idx = publicUrl.indexOf(marker);
+  if (idx === -1) return;
+  const path = publicUrl.slice(idx + marker.length);
+  if (!path) return;
+  try {
+    await supabase.storage.from(bucket).remove([path]);
+  } catch {
+    // swallowed on purpose — see doc comment
+  }
+}

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { InlineToast, useInlineToast } from '@/components/ui/InlineToast';
 import { Mark } from '@/components/ui/Mark';
 import { Colors, FontFamily, FontSize, Radius, Spacing, sf } from '@/constants/theme';
 import { fetchBlockedUsers, unblockUser, type CommunityProfile } from '@/store/community';
@@ -12,6 +13,7 @@ export default function BlockedUsersScreen() {
   const insets = useSafeAreaInsets();
   const [users, setUsers] = useState<CommunityProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  const { message: toastMsg, nonce: toastNonce, show: showToast } = useInlineToast();
 
   async function load() {
     setLoading(true);
@@ -24,12 +26,22 @@ export default function BlockedUsersScreen() {
   }, []);
 
   async function handleUnblock(id: string) {
+    const removed = users.find((u) => u.id === id);
     setUsers((prev) => prev.filter((u) => u.id !== id));
-    await unblockUser(id);
+    try {
+      await unblockUser(id);
+    } catch {
+      if (removed) setUsers((prev) => [...prev, removed]);
+      showToast("couldn't unblock — try again");
+    }
   }
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]}>
+      <View style={[styles.toastWrap, { top: insets.top + Spacing.s2 }]} pointerEvents="none">
+        <InlineToast message={toastMsg} nonce={toastNonce} />
+      </View>
+
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} style={styles.headerBtn}>
           <Text style={styles.headerBtnText}>‹</Text>
@@ -73,6 +85,7 @@ export default function BlockedUsersScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: Colors.paper },
+  toastWrap: { position: 'absolute', left: 0, right: 0, zIndex: 10, alignItems: 'center' },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: Spacing.s5, paddingVertical: Spacing.s2,

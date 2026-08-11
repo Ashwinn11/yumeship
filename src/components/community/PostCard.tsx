@@ -5,10 +5,12 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
 import { Sparkle } from '@/components/deco/Sparkle';
+import { IconTrashSolid } from '@/components/ui/Icon';
 import { MEDIA_IMAGE } from '@/lib/imageProps';
 import { Colors, FontFamily, Radius, Shadow, Spacing, sf } from '@/constants/theme';
 import type { CommunityPost } from '@/store/community';
 
+import { DoubleTapLike } from './DoubleTapLike';
 import { LikeButton } from './LikeButton';
 import { PostAuthorHeader } from './PostAuthorHeader';
 
@@ -28,16 +30,24 @@ function CommentBubbleIcon({ size = 13, color = Colors.ink3 }: { size?: number; 
 type Props = {
   post: CommunityPost;
   onToggleLike: () => void;
+  /** own-profile posts only — public feed/profile cards never get this */
+  onRequestDelete?: () => void;
 };
 
-function PostCardImpl({ post, onToggleLike }: Props) {
+function PostCardImpl({ post, onToggleLike, onRequestDelete }: Props) {
   const firstMedia = post.media[0];
 
   return (
     <Pressable style={styles.card} onPress={() => router.push(`/social/post/${post.id}` as any)}>
-      <View style={styles.sparkle} pointerEvents="none">
-        <Sparkle size={12} color={Colors.lavenderDeep} />
-      </View>
+      {onRequestDelete ? (
+        <Pressable style={styles.deleteBtn} onPress={onRequestDelete} hitSlop={8}>
+          <IconTrashSolid size={13} color={Colors.ink3} />
+        </Pressable>
+      ) : (
+        <View style={styles.sparkle} pointerEvents="none">
+          <Sparkle size={12} color={Colors.lavenderDeep} />
+        </View>
+      )}
 
       <PostAuthorHeader author={post.author} fo={post.fo} createdAt={post.createdAt} />
 
@@ -49,7 +59,13 @@ function PostCardImpl({ post, onToggleLike }: Props) {
       )}
 
       {post.media.length > 0 && (
-        <View style={styles.mediaGrid}>
+        <DoubleTapLike
+          style={styles.mediaGrid}
+          onSingleTap={() => router.push(`/social/post/${post.id}` as any)}
+          // double-tap only ever likes, never unlikes — the burst always plays,
+          // but a second flourish tap on an already-liked post is a no-op
+          onDoubleTap={() => { if (!post.likedByMe) onToggleLike(); }}
+        >
           {firstMedia.type === 'video' ? (
             <View style={styles.videoThumb}>
               <Image
@@ -80,7 +96,7 @@ function PostCardImpl({ post, onToggleLike }: Props) {
               ) : null,
             )
           )}
-        </View>
+        </DoubleTapLike>
       )}
 
       <View style={styles.divider} />
@@ -109,6 +125,11 @@ const styles = StyleSheet.create({
     ...Shadow.s1,
   },
   sparkle: { position: 'absolute', top: 10, right: 12 },
+  deleteBtn: {
+    position: 'absolute', top: 8, right: 8, zIndex: 1,
+    width: 26, height: 26, borderRadius: Radius.pill,
+    backgroundColor: Colors.paperDeep, alignItems: 'center', justifyContent: 'center',
+  },
   title: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(16), color: Colors.ink, marginTop: 2 },
   body: { fontFamily: FontFamily.ui, fontSize: sf(13), color: Colors.ink2, lineHeight: sf(19) },
   mediaGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 2 },

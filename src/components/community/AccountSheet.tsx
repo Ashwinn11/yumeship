@@ -26,6 +26,7 @@ type Props = {
  * corner controls drop a popover in place.
  */
 export function AccountSheet({ visible, onClose, anchorTop }: Props) {
+  const [confirmSignOut, setConfirmSignOut] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState('');
@@ -41,6 +42,7 @@ export function AccountSheet({ visible, onClose, anchorTop }: Props) {
   }
 
   async function handleSignOut() {
+    setConfirmSignOut(false);
     onClose();
     await signOut().catch(logSyncFailure('sign out'));
   }
@@ -62,9 +64,14 @@ export function AccountSheet({ visible, onClose, anchorTop }: Props) {
     }
   }
 
+  // RN can't reliably show a second native Modal while this one is still
+  // presented — the confirm dialogs below silently fail to appear unless this
+  // one steps aside first
+  const menuVisible = visible && !confirmSignOut && !confirmDelete;
+
   return (
     <>
-      <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <Modal visible={menuVisible} transparent animationType="fade" onRequestClose={onClose}>
         {/* full-bleed catcher: tapping anywhere off the menu closes it */}
         <Pressable style={styles.backdrop} onPress={onClose} />
 
@@ -95,7 +102,7 @@ export function AccountSheet({ visible, onClose, anchorTop }: Props) {
 
             <View style={styles.divider} />
 
-            <Pressable style={styles.row} onPress={handleSignOut}>
+            <Pressable style={styles.row} onPress={() => setConfirmSignOut(true)}>
               <Text style={styles.rowLabel}>sign out</Text>
             </Pressable>
             <Pressable style={styles.row} onPress={() => setConfirmDelete(true)}>
@@ -106,6 +113,16 @@ export function AccountSheet({ visible, onClose, anchorTop }: Props) {
           </View>
         </View>
       </Modal>
+
+      <CozyModal
+        visible={confirmSignOut}
+        title="Sign out?"
+        message="You can sign back in anytime — your F/Os and ships stay on this device either way."
+        confirmText="Sign out"
+        cancelText="Cancel"
+        onConfirm={handleSignOut}
+        onClose={() => setConfirmSignOut(false)}
+      />
 
       <CozyModal
         visible={confirmDelete}

@@ -1,4 +1,4 @@
-import { mediaUriFor, rescueImageSync } from '@/lib/localMedia';
+import { localFileMissing, mediaUriFor, rescueImageSync } from '@/lib/localMedia';
 import { getDb, newId } from './client';
 
 export function initDb() {
@@ -193,6 +193,7 @@ export function initDb() {
   migrateShareVocabulary();
   backfillFos();
   repairMediaPaths();
+  applyRemoteFallbacks();
 }
 
 // One-time rename: sharing status used to be stored as ng/welcome/mirror
@@ -246,7 +247,13 @@ function repairMediaPaths() {
   const cachesPath = /file:\/\/\/[^"']*?\/Library\/Caches\/[^"']+/g;
   const rescue = (v: string) => v.replace(cachesPath, (m) => rescueImageSync(m) ?? m);
 
-  const fix = (v: string) => rescue(v.replace(stale, prefix).replace(legacyRef, prefix));
+  // a legacy `media://` ref that never had a filename (no photo was set when it
+  // was written) rewrites to the bare directory itself — not a usable file, so
+  // strip it back down to empty rather than leave something that throws the
+  // moment any code tries to open it as a file
+  const escapedPrefix = prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const danglingDir = new RegExp(`${escapedPrefix}(?=["'},]|$)`, 'g');
+  const fix = (v: string) => rescue(v.replace(stale, prefix).replace(legacyRef, prefix).replace(danglingDir, ''));
 
   // every text column that can hold a picked-image path, including the JSON
   // blobs — a string-level replace handles those without parsing them
@@ -285,6 +292,130 @@ function repairMediaPaths() {
         if (after !== before) {
           db.runSync(`UPDATE ${table} SET ${col} = ? WHERE ${where}`, after, ...keys.map((k) => row[k]));
         }
+      }
+    }
+  }
+}
+
+// Part B of the media-durability work: a picked photo can still be lost after
+// publish — evicted cache, a device wipe, a rescue that ran too late — even
+// though an exact copy is already sitting on the server. Rather than teach
+// every screen to fall back at read time, resolve it once here: if a stored
+// local path is missing on disk *and* the {localUri: remoteUrl} sync map has a
+// matching entry, swap the column to the remote url outright. From then on the
+// row just holds a normal url, same as any other, and the invariant that
+// stores hold one plain string per field is never broken.
+//
+// Only the two record kinds that are ever published carry a sync map — ships,
+// messages, albums, outfits and stickers have nothing to fall back to, so they
+// are untouched here (the previous pass already rescued what it could of those).
+function applyRemoteFallbacks() {
+  const db = getDb();
+
+  function fallback(value: string, syncMap: Record<string, string>): string {
+    if (!value || !localFileMissing(value)) return value;
+    return syncMap[value] ?? value;
+  }
+
+  function fallbackGallery(raw: string, syncMap: Record<string, string>): string {
+    let photos: { uri?: string; caption?: string }[];
+    try {
+      const parsed = JSON.parse(raw || '[]');
+      if (!Array.isArray(parsed)) return raw;
+      photos = parsed;
+    } catch {
+      return raw;
+    }
+    let changed = false;
+    const next = photos.map((p) => {
+      if (typeof p?.uri !== 'string') return p;
+      const swapped = fallback(p.uri, syncMap);
+      if (swapped !== p.uri) changed = true;
+      return changed ? { ...p, uri: swapped } : p;
+    });
+    return changed ? JSON.stringify(next) : raw;
+  }
+
+  // F/O profiles: one sync map per row
+  let foRows: Record<string, string>[];
+  try {
+    foRows = db.getAllSync(
+      'SELECT id, photo_uri, page_bg_image, card_bg_image, gallery, gallery_sync_map FROM fo',
+    ) as Record<string, string>[];
+  } catch (e) {
+    console.warn('[applyRemoteFallbacks] skipped fo:', e);
+    foRows = [];
+  }
+  for (const row of foRows) {
+    let syncMap: Record<string, string>;
+    try {
+      syncMap = JSON.parse(row.gallery_sync_map || '{}');
+    } catch {
+      continue;
+    }
+    if (!syncMap || Object.keys(syncMap).length === 0) continue;
+
+    const photoUri = fallback(row.photo_uri, syncMap);
+    const pageBgImage = fallback(row.page_bg_image, syncMap);
+    const cardBgImage = fallback(row.card_bg_image, syncMap);
+    const gallery = fallbackGallery(row.gallery, syncMap);
+
+    if (
+      photoUri !== row.photo_uri ||
+      pageBgImage !== row.page_bg_image ||
+      cardBgImage !== row.card_bg_image ||
+      gallery !== row.gallery
+    ) {
+      db.runSync(
+        'UPDATE fo SET photo_uri = ?, page_bg_image = ?, card_bg_image = ?, gallery = ? WHERE id = ?',
+        photoUri, pageBgImage, cardBgImage, gallery, row.id,
+      );
+    }
+  }
+
+  // The user's own profile: settings is a flat key/value table, not one row —
+  // read the handful of keys involved directly rather than looping generically.
+  let settingsRow: { user_avatar: string; user_card_bg_image: string; user_page_bg_image: string; user_gallery: string; user_gallery_sync_map: string } | null = null;
+  try {
+    const rows = db.getAllSync(
+      `SELECT key, value FROM settings WHERE key IN ('user_avatar','user_card_bg_image','user_page_bg_image','user_gallery','user_gallery_sync_map')`,
+    ) as { key: string; value: string }[];
+    const byKey = Object.fromEntries(rows.map((r) => [r.key, r.value]));
+    settingsRow = {
+      user_avatar: byKey.user_avatar ?? '',
+      user_card_bg_image: byKey.user_card_bg_image ?? '',
+      user_page_bg_image: byKey.user_page_bg_image ?? '',
+      user_gallery: byKey.user_gallery ?? '',
+      user_gallery_sync_map: byKey.user_gallery_sync_map ?? '',
+    };
+  } catch (e) {
+    console.warn('[applyRemoteFallbacks] skipped settings:', e);
+  }
+
+  if (settingsRow) {
+    let syncMap: Record<string, string>;
+    try {
+      syncMap = JSON.parse(settingsRow.user_gallery_sync_map || '{}');
+    } catch {
+      syncMap = {};
+    }
+    if (Object.keys(syncMap).length > 0) {
+      const updates: [string, string][] = [];
+
+      const avatar = fallback(settingsRow.user_avatar, syncMap);
+      if (avatar !== settingsRow.user_avatar) updates.push(['user_avatar', avatar]);
+
+      const cardBg = fallback(settingsRow.user_card_bg_image, syncMap);
+      if (cardBg !== settingsRow.user_card_bg_image) updates.push(['user_card_bg_image', cardBg]);
+
+      const pageBg = fallback(settingsRow.user_page_bg_image, syncMap);
+      if (pageBg !== settingsRow.user_page_bg_image) updates.push(['user_page_bg_image', pageBg]);
+
+      const gallery = fallbackGallery(settingsRow.user_gallery, syncMap);
+      if (gallery !== settingsRow.user_gallery) updates.push(['user_gallery', gallery]);
+
+      for (const [key, value] of updates) {
+        db.runSync('UPDATE settings SET value = ? WHERE key = ?', value, key);
       }
     }
   }

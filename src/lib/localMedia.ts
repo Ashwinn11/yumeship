@@ -70,3 +70,17 @@ function copyIntoMediaDir(uri: string): string | null {
 function isInMediaDir(uri: string): boolean {
   return /\/Documents\/media\/[^/?#]+$/.test(uri);
 }
+
+/**
+ * True for a local file reference (never a remote url) whose file is gone —
+ * the case where a photo was published and then genuinely lost, so the only
+ * copy left is the one already sitting on the server.
+ */
+export function localFileMissing(uri: string): boolean {
+  if (!uri || /^https?:/.test(uri)) return false;
+  try {
+    return !new File(uri).exists;
+  } catch {
+    return true;
+  }
+}

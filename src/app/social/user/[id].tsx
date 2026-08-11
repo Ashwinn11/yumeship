@@ -1,15 +1,19 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { MEDIA_IMAGE } from '@/lib/imageProps';
-import { Image } from 'expo-image';
-import { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useState, useCallback } from 'react';
+import { FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { FollowButton } from '@/components/community/FollowButton';
+import { PostCard } from '@/components/community/PostCard';
+import { FeedSkeleton } from '@/components/community/PostCardSkeleton';
+import { pairedProps } from '@/components/profile/cardProps';
+import { InlineToast, useInlineToast } from '@/components/ui/InlineToast';
+import { PageBackground } from '@/components/profile/PageBackground';
 import { ProfileCard } from '@/components/profile/ProfileCard';
+import { ProfileCardSkeleton } from '@/components/profile/ProfileCardSkeleton';
+import { ProfileScreenHeader } from '@/components/profile/ProfileScreenHeader';
 import { CozyModal } from '@/components/ui/CozyModal';
-import { Mark } from '@/components/ui/Mark';
-import { Colors, FontFamily, FontSize, Radius, Spacing, sf } from '@/constants/theme';
+import { Colors, FontFamily, Radius, sf, Spacing } from '@/constants/theme';
 import { useAuthUser } from '@/store/auth';
 import {
   blockUser,
@@ -18,9 +22,14 @@ import {
   fetchRelationship,
   subscribeProfile,
   unblockUser,
+  useUserPosts,
   type CommunityFoProfile,
+  type CommunityPost,
   type CommunityProfile,
 } from '@/store/community';
+
+const keyExtractor = (p: CommunityPost) => p.id;
+const PostSeparator = () => <View style={styles.postSeparator} />;
 
 export default function PublicUserProfileScreen() {
   const insets = useSafeAreaInsets();
@@ -31,6 +40,7 @@ export default function PublicUserProfileScreen() {
   const [relationship, setRelationship] = useState({ following: false, blocked: false });
   const [loading, setLoading] = useState(true);
   const [confirmBlock, setConfirmBlock] = useState(false);
+  const { message: toastMsg, nonce: toastNonce, show: showToast } = useInlineToast();
 
   useEffect(() => {
     let cancelled = false;
@@ -62,38 +72,52 @@ export default function PublicUserProfileScreen() {
 
   const isMe = me?.id === id;
 
+  const { posts, loading: postsLoading, refreshing, refresh: refreshPosts, loadMore, toggleLikeOptimistic } = useUserPosts(id);
+
+  const renderPost = useCallback(
+    ({ item }: { item: CommunityPost }) => (
+      <PostCard
+        post={item}
+        onToggleLike={() => toggleLikeOptimistic(item.id, () => showToast("couldn't update like — try again"))}
+      />
+    ),
+    [toggleLikeOptimistic, showToast],
+  );
+
   async function handleBlock() {
     setConfirmBlock(false);
-    await blockUser(id);
-    router.back();
+    try {
+      await blockUser(id);
+      router.back();
+    } catch {
+      showToast("couldn't block — try again");
+    }
   }
 
   async function handleUnblock() {
-    await unblockUser(id);
-    setRelationship((r) => ({ ...r, blocked: false }));
+    try {
+      await unblockUser(id);
+      setRelationship((r) => ({ ...r, blocked: false }));
+    } catch {
+      showToast("couldn't unblock — try again");
+    }
   }
 
   if (loading) {
     return (
-      <View style={[styles.screen, { paddingTop: insets.top }]}>
-        <View style={styles.header}>
-          <Pressable onPress={() => router.back()} style={styles.headerBtn}>
-            <Text style={styles.headerBtnText}>‹</Text>
-          </Pressable>
-        </View>
-        <ActivityIndicator style={{ marginTop: 40 }} color={Colors.sakuraDeep} />
+      <View style={styles.screen}>
+        <ProfileScreenHeader insetsTop={insets.top} onBack={() => router.back()} title="" />
+        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          <ProfileCardSkeleton />
+        </ScrollView>
       </View>
     );
   }
 
   if (!profile) {
     return (
-      <View style={[styles.screen, { paddingTop: insets.top }]}>
-        <View style={styles.header}>
-          <Pressable onPress={() => router.back()} style={styles.headerBtn}>
-            <Text style={styles.headerBtnText}>‹</Text>
-          </Pressable>
-        </View>
+      <View style={styles.screen}>
+        <ProfileScreenHeader insetsTop={insets.top} onBack={() => router.back()} title="" />
         <Text style={styles.notFound}>this profile isn't available</Text>
       </View>
     );
@@ -102,65 +126,87 @@ export default function PublicUserProfileScreen() {
   const pageBg = profile.pageBgImage || profile.pageBgColor;
 
   const body = (
-    <View style={[styles.screen, !pageBg && styles.screenDefaultBg, { paddingTop: insets.top }]}>
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.headerBtn}>
-          <Text style={styles.headerBtnText}>‹</Text>
-        </Pressable>
-        <View style={styles.headerCenter}>
-          <Mark size={22} />
-          <Text style={styles.headerTitle} numberOfLines={1}>{profile.name || 'their profile'}</Text>
-        </View>
-        {isMe ? (
-          <View style={{ width: 32 }} />
-        ) : (
-          <Pressable
-            onPress={() => (relationship.blocked ? handleUnblock() : setConfirmBlock(true))}
-            style={relationship.blocked ? styles.textBtn : styles.headerBtn}
-          >
-            <Text style={relationship.blocked ? styles.textBtnLabel : styles.headerBtnText}>
-              {relationship.blocked ? 'unblock' : '⋯'}
-            </Text>
-          </Pressable>
-        )}
+    <View style={[styles.screen, !pageBg && styles.screenDefaultBg]}>
+      <View style={[styles.toastWrap, { top: insets.top + Spacing.s2 }]} pointerEvents="none">
+        <InlineToast message={toastMsg} nonce={toastNonce} />
       </View>
 
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <ProfileCard
-          name={profile.name || 'someone soft'}
-          pronouns={profile.pronouns}
-          username={profile.username}
-          bio={profile.bio}
-          photoUri={profile.avatarUrl}
-          fallbackColor={profile.color || Colors.sakura}
-          statusLabel={profile.statusLabel}
-          height={profile.height}
-          weight={profile.weight}
-          song={profile.song}
-          songLink={profile.songLink}
-          gallery={profile.gallery}
-          cardBgColor={profile.cardBgColor}
-          cardBgImage={profile.cardBgImage}
-          cardBgGradient={profile.cardBgGradient}
-          cardTransparent={profile.cardTransparent}
-          textColor={profile.textColor}
-          borderStyle={profile.borderStyle}
-          decoration={profile.decoration}
-          nameFont={profile.nameFont}
-          showPairedIdentity={!!pairedFo}
-          pairedName={pairedFo?.name}
-          pairedPronouns={pairedFo?.pronouns}
-          pairedAvatarUri={pairedFo?.avatarUrl}
-          pairedStatusLabel={pairedFo?.statusLabel}
-          followerCount={profile.followerCount}
-          followingCount={profile.followingCount}
-          followAction={
-            !isMe && !relationship.blocked ? (
-              <FollowButton userId={profile.id} initialFollowing={relationship.following} />
-            ) : undefined
-          }
-        />
-      </ScrollView>
+      <ProfileScreenHeader
+        insetsTop={insets.top}
+        onBack={() => router.back()}
+        title={profile.name || 'their profile'}
+        right={
+          isMe ? undefined : (
+            <Pressable
+              onPress={() => (relationship.blocked ? handleUnblock() : setConfirmBlock(true))}
+              style={relationship.blocked ? styles.textBtn : styles.headerBtn}
+            >
+              <Text style={relationship.blocked ? styles.textBtnLabel : styles.headerBtnText}>
+                {relationship.blocked ? 'unblock' : '⋯'}
+              </Text>
+            </Pressable>
+          )
+        }
+      />
+
+      <FlatList
+        style={styles.scroll}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        data={posts}
+        keyExtractor={keyExtractor}
+        renderItem={renderPost}
+        ItemSeparatorComponent={PostSeparator}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refreshPosts} tintColor={Colors.sakuraDeep} />}
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.4}
+        ListHeaderComponent={
+          <>
+            <ProfileCard
+              name={profile.name || 'someone soft'}
+              pronouns={profile.pronouns}
+              username={profile.username}
+              bio={profile.bio}
+              photoUri={profile.avatarUrl}
+              fallbackColor={profile.color || Colors.sakura}
+              statusLabel={profile.statusLabel}
+              height={profile.height}
+              weight={profile.weight}
+              song={profile.song}
+              songLink={profile.songLink}
+              gallery={profile.gallery}
+              cardBgColor={profile.cardBgColor}
+              cardBgImage={profile.cardBgImage}
+              cardBgGradient={profile.cardBgGradient}
+              cardTransparent={profile.cardTransparent}
+              textColor={profile.textColor}
+              borderStyle={profile.borderStyle}
+              decoration={profile.decoration}
+              nameFont={profile.nameFont}
+              {...pairedProps(pairedFo && { name: pairedFo.name, pronouns: pairedFo.pronouns, avatarUri: pairedFo.avatarUrl, statusLabel: pairedFo.statusLabel })}
+              followerCount={profile.followerCount}
+              followingCount={profile.followingCount}
+              followAction={
+                !isMe && !relationship.blocked ? (
+                  <FollowButton
+                    userId={profile.id}
+                    initialFollowing={relationship.following}
+                    onFailure={() => showToast("couldn't update follow — try again")}
+                  />
+                ) : undefined
+              }
+            />
+            <Text style={styles.postsLabel}>posts</Text>
+          </>
+        }
+        ListEmptyComponent={
+          relationship.blocked ? null : postsLoading ? (
+            <FeedSkeleton />
+          ) : (
+            <Text style={styles.postsEmpty}>no posts yet</Text>
+          )
+        }
+      />
 
       <CozyModal
         visible={confirmBlock}
@@ -176,28 +222,17 @@ export default function PublicUserProfileScreen() {
   );
 
   // their page styling travels with the profile, same as on their own device
-  if (profile.pageBgImage) {
-    return (
-      <View style={styles.fill}>
-        <Image source={{ uri: profile.pageBgImage }} style={StyleSheet.absoluteFill} contentFit="cover" {...MEDIA_IMAGE} />
-        {body}
-      </View>
-    );
-  }
-  if (profile.pageBgColor) {
-    return <View style={[styles.fill, { backgroundColor: profile.pageBgColor }]}>{body}</View>;
-  }
-  return body;
+  return (
+    <PageBackground bgImage={profile.pageBgImage} bgColor={profile.pageBgColor}>
+      {body}
+    </PageBackground>
+  );
 }
 
 const styles = StyleSheet.create({
-  fill: { flex: 1 },
   screen: { flex: 1 },
+  toastWrap: { position: 'absolute', left: 0, right: 0, zIndex: 10, alignItems: 'center' },
   screenDefaultBg: { backgroundColor: Colors.paper },
-  header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: Spacing.s5, paddingVertical: Spacing.s2,
-  },
   headerBtn: {
     width: 32, height: 32, borderRadius: Radius.pill,
     backgroundColor: Colors.paperDeep, alignItems: 'center', justifyContent: 'center',
@@ -208,10 +243,17 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.paperDeep, alignItems: 'center', justifyContent: 'center',
   },
   textBtnLabel: { fontFamily: FontFamily.uiMedium, fontSize: sf(11), color: Colors.ink2 },
-  headerCenter: { flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1 },
-  headerTitle: { fontFamily: FontFamily.displayItalic, fontSize: FontSize.h6, color: Colors.ink },
   scroll: { flex: 1 },
   content: { paddingHorizontal: Spacing.s6, paddingTop: Spacing.s6, paddingBottom: Spacing.s6 },
+  postSeparator: { height: 12 },
+  postsLabel: {
+    fontFamily: FontFamily.uiSemiBold, fontSize: sf(11), color: Colors.ink3,
+    textTransform: 'uppercase', letterSpacing: 0.8, marginTop: Spacing.s6, marginBottom: Spacing.s3,
+  },
+  postsEmpty: {
+    fontFamily: FontFamily.script, fontSize: sf(14), color: Colors.ink3,
+    textAlign: 'center', marginTop: Spacing.s3,
+  },
   notFound: {
     fontFamily: FontFamily.script, fontSize: sf(16), color: Colors.ink3, textAlign: 'center', marginTop: 60,
   },

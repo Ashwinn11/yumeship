@@ -93,7 +93,7 @@ export function MediaComposer({ media, onChange }: Props) {
               <Text style={styles.pickerPlus}>+</Text>
             </View>
             <Text style={styles.pickerLabel}>video</Text>
-            <Text style={styles.pickerSubLabel}>up to 20s</Text>
+            <Text style={styles.pickerSubLabel}>up to {MAX_VIDEO_DURATION_MS / 1000}s</Text>
           </Pressable>
         </View>
       )}
