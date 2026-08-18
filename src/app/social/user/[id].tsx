@@ -211,6 +211,9 @@ export default function PublicUserProfileScreen() {
                       key={f.id}
                       name={f.name}
                       avatarUri={f.avatarUrl}
+                      pronouns={f.pronouns}
+                      bio={f.bio}
+                      statusLabel={f.statusLabel}
                       onPress={() => router.push(`/social/fo/${f.id}` as any)}
                     />
                   ))}

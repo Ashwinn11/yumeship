@@ -239,6 +239,10 @@ const FO_PROFILE_FIELDS = cols(`
 // payload for data no card in the list renders. rowToProfile tolerates the gaps.
 const PROFILE_SUMMARY_FIELDS = 'id, username, name, pronouns, avatar_url';
 const FO_SUMMARY_FIELDS = 'id, name, pronouns, avatar_url';
+// The F/O preview row on a profile shows a real card (bio, pronouns, flag), not
+// just an avatar+name chip — a richer, standalone select so post embeds above
+// stay on the narrow field set.
+const FO_ROW_FIELDS = 'id, name, pronouns, avatar_url, bio, status_label';
 const POST_SELECT = cols(`
   id, author_id, fo_profile_id, title, body, media, like_count, comment_count, created_at,
   kind, featured_date, response_count,
@@ -601,10 +605,24 @@ export async function fetchFoProfile(id: string): Promise<CommunityFoProfile | n
   return rowToFoProfile(data);
 }
 
-export type CommunityFoSummary = { id: string; name: string; avatarUrl: string };
+export type CommunityFoSummary = {
+  id: string;
+  name: string;
+  avatarUrl: string;
+  pronouns: string;
+  bio: string;
+  statusLabel: string;
+};
 
 function rowToFoSummary(row: Record<string, any>): CommunityFoSummary {
-  return { id: row.id, name: row.name ?? '', avatarUrl: row.avatar_url ?? '' };
+  return {
+    id: row.id,
+    name: row.name ?? '',
+    avatarUrl: row.avatar_url ?? '',
+    pronouns: row.pronouns ?? '',
+    bio: row.bio ?? '',
+    statusLabel: row.status_label ?? '',
+  };
 }
 
 /**
@@ -615,7 +633,7 @@ function rowToFoSummary(row: Record<string, any>): CommunityFoSummary {
 export async function fetchUserFoProfiles(ownerId: string): Promise<CommunityFoSummary[]> {
   const { data, error } = await supabase
     .from('fo_profiles')
-    .select(FO_SUMMARY_FIELDS)
+    .select(FO_ROW_FIELDS)
     .eq('owner_id', ownerId)
     .order('created_at', { ascending: true });
   if (error || !data) return [];

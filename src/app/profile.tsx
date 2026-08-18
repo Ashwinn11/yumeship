@@ -296,6 +296,9 @@ export default function MyProfileScreen() {
                       key={f.id}
                       name={f.name}
                       avatarUri={f.photoUri}
+                      pronouns={f.pronouns}
+                      bio={f.bio}
+                      statusLabel={f.statusLabel}
                       onPress={() => router.push(`/fo/${f.id}` as any)}
                     />
                   ))}
