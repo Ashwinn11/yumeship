@@ -1,6 +1,6 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Sakura } from '@/components/deco/Sakura';
@@ -8,6 +8,7 @@ import { Sparkle } from '@/components/deco/Sparkle';
 import { CardThemeSheet } from '@/components/profile/CardThemeSheet';
 import type { CardTheme } from '@/components/profile/cardTheme';
 import { pairedProps } from '@/components/profile/cardProps';
+import { FoAvatarCard } from '@/components/profile/FoAvatarCard';
 import { PageBackground } from '@/components/profile/PageBackground';
 import { ProfileScreenHeader } from '@/components/profile/ProfileScreenHeader';
 import { PostCard } from '@/components/community/PostCard';
@@ -19,8 +20,10 @@ import {
   deletePost,
   fetchProfile,
   logSyncFailure,
+  pushFoProfile,
   pushOwnProfile,
   subscribeProfile,
+  unpublishFoProfile,
   useUserPosts,
   type CommunityPost,
 } from '@/store/community';
@@ -115,6 +118,30 @@ export default function MyProfileScreen() {
   const { message: toastMsg, nonce: toastNonce, show: showToast } = useInlineToast();
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [togglingFosPublic, setTogglingFosPublic] = useState(false);
+  const allFosPublic = fos.length > 0 && fos.every((f) => f.isPublic);
+
+  // one switch for every F/O at once, not a per-F/O toggle — publish/unpublish
+  // whichever ones don't already match, in parallel, and surface anything that
+  // failed (e.g. an F/O whose sharing status is "no" can't be published) rather
+  // than letting the switch silently not do what it looked like it did
+  async function handleToggleAllFosPublic(next: boolean) {
+    setTogglingFosPublic(true);
+    const targets = fos.filter((f) => f.isPublic !== next);
+    const results = await Promise.allSettled(
+      targets.map((f) => (next ? pushFoProfile(f.id) : unpublishFoProfile(f.id))),
+    );
+    const failures = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected');
+    if (failures.length > 0) {
+      failures.forEach((f) => logSyncFailure('toggle all F/Os public')(f.reason));
+      showToast(
+        failures.length === 1 && failures[0].reason?.message
+          ? failures[0].reason.message
+          : `${failures.length} f/o${failures.length > 1 ? 's' : ''} couldn't be updated`,
+      );
+    }
+    setTogglingFosPublic(false);
+  }
 
   async function confirmDeletePost() {
     if (!deleteTarget) return;
@@ -240,6 +267,42 @@ export default function MyProfileScreen() {
               followingCount={counts.followingCount}
             />
             <Text style={styles.footnote}>this is you, in their world ♡</Text>
+
+            {fos.length > 0 && (
+              <>
+                <Text style={styles.postsLabel}>your f/os</Text>
+                {/* publishing is an account feature — offering the switch while
+                    signed out just fails on every f/o with "not signed in" */}
+                {!!user && (
+                  <View style={styles.toggleRow}>
+                    <View style={styles.toggleTextWrap}>
+                      <Text style={styles.toggleLabel}>public profiles</Text>
+                      <Text style={styles.toggleSub}>
+                        {allFosPublic ? 'anyone can view and comment on all your f/os' : 'turn on to make every f/o public at once'}
+                      </Text>
+                    </View>
+                    <Switch
+                      value={allFosPublic}
+                      onValueChange={handleToggleAllFosPublic}
+                      disabled={togglingFosPublic}
+                      trackColor={{ true: Colors.sakuraDeep, false: Colors.line }}
+                      thumbColor={Colors.vellum}
+                    />
+                  </View>
+                )}
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.foRow}>
+                  {fos.map((f) => (
+                    <FoAvatarCard
+                      key={f.id}
+                      name={f.name}
+                      avatarUri={f.photoUri}
+                      onPress={() => router.push(`/fo/${f.id}` as any)}
+                    />
+                  ))}
+                </ScrollView>
+              </>
+            )}
+
             <Text style={styles.postsLabel}>your posts</Text>
           </>
         }
@@ -298,6 +361,15 @@ const styles = StyleSheet.create({
   scroll: { flex: 1 },
   content: { paddingHorizontal: Spacing.s6, paddingTop: Spacing.s6 },
   postSeparator: { height: 12 },
+  foRow: { flexDirection: 'row', gap: 14, paddingBottom: 2, paddingTop: 4 },
+  toggleRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    padding: Spacing.s4, marginBottom: Spacing.s3,
+    backgroundColor: Colors.vellum, borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.r3,
+  },
+  toggleTextWrap: { flex: 1, marginRight: Spacing.s3 },
+  toggleLabel: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(13), color: Colors.ink },
+  toggleSub: { fontFamily: FontFamily.ui, fontSize: sf(11), color: Colors.ink3, marginTop: 2 },
   postsLabel: {
     fontFamily: FontFamily.uiSemiBold, fontSize: sf(11), color: Colors.ink3,
     textTransform: 'uppercase', letterSpacing: 0.8, marginTop: Spacing.s6, marginBottom: Spacing.s3,

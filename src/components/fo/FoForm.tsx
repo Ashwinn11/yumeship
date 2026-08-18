@@ -36,6 +36,8 @@ export type FoFormValue = {
   bio: string;
   height: string;
   weight: string;
+  age: string;
+  birthday: string;
   photoUri: string;
   song: string;
   songLink: string;
@@ -186,6 +188,15 @@ export function FoForm({ value, onChange, onSave, saveLabel = 'save them', onDel
         </EditSection>
 
         <EditSection label="details">
+          <Row gap={14}>
+            <Field label="Age (optional)" style={{ flex: 1 }}>
+              <UnderInput value={value.age} onChangeText={(v) => set('age', v)} placeholder="e.g. 19" />
+            </Field>
+            <Field label="Birthday (optional)" style={{ flex: 1 }}>
+              <UnderInput value={value.birthday} onChangeText={(v) => set('birthday', v)} placeholder="e.g. March 3" />
+            </Field>
+          </Row>
+          <View style={editSection.innerSpacer} />
           <Row gap={14}>
             <Field label="Height (optional)" style={{ flex: 1 }}>
               <UnderInput value={value.height} onChangeText={(v) => set('height', v)} placeholder="e.g. 185 cm" />

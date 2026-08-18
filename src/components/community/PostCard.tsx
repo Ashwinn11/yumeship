@@ -1,17 +1,15 @@
 import { memo } from 'react';
-import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
 import { Sparkle } from '@/components/deco/Sparkle';
 import { IconTrashSolid } from '@/components/ui/Icon';
-import { MEDIA_IMAGE } from '@/lib/imageProps';
 import { Colors, FontFamily, Radius, Shadow, Spacing, sf } from '@/constants/theme';
 import type { CommunityPost } from '@/store/community';
 
-import { DoubleTapLike } from './DoubleTapLike';
 import { LikeButton } from './LikeButton';
+import { MediaCarousel } from './MediaCarousel';
 import { PostAuthorHeader } from './PostAuthorHeader';
 
 function CommentBubbleIcon({ size = 13, color = Colors.ink3 }: { size?: number; color?: string }) {
@@ -35,8 +33,6 @@ type Props = {
 };
 
 function PostCardImpl({ post, onToggleLike, onRequestDelete }: Props) {
-  const firstMedia = post.media[0];
-
   return (
     <Pressable style={styles.card} onPress={() => router.push(`/social/post/${post.id}` as any)}>
       {onRequestDelete ? (
@@ -51,6 +47,14 @@ function PostCardImpl({ post, onToggleLike, onRequestDelete }: Props) {
 
       <PostAuthorHeader author={post.author} fo={post.fo} createdAt={post.createdAt} />
 
+      {!!post.activity && (
+        <Pressable onPress={() => router.push(`/social/post/${post.activity!.id}` as any)} hitSlop={4}>
+          <Text style={styles.activityChip} numberOfLines={1}>
+            ↳ {post.activity.title || post.activity.body || 'an activity'}
+          </Text>
+        </Pressable>
+      )}
+
       {!!post.title && <Text style={styles.title}>{post.title}</Text>}
       {!!post.body && (
         <Text style={styles.body} numberOfLines={6}>
@@ -59,54 +63,36 @@ function PostCardImpl({ post, onToggleLike, onRequestDelete }: Props) {
       )}
 
       {post.media.length > 0 && (
-        <DoubleTapLike
-          style={styles.mediaGrid}
+        <MediaCarousel
+          media={post.media}
+          variant="thumb"
+          likedByMe={post.likedByMe}
+          onDoubleTap={onToggleLike}
           onSingleTap={() => router.push(`/social/post/${post.id}` as any)}
-          // double-tap only ever likes, never unlikes — the burst always plays,
-          // but a second flourish tap on an already-liked post is a no-op
-          onDoubleTap={() => { if (!post.likedByMe) onToggleLike(); }}
-        >
-          {firstMedia.type === 'video' ? (
-            <View style={styles.videoThumb}>
-              <Image
-                source={{ uri: firstMedia.thumbnailUrl }}
-                style={StyleSheet.absoluteFill}
-                contentFit="cover"
-                recyclingKey={firstMedia.thumbnailUrl}
-                {...MEDIA_IMAGE}
-              />
-              <View style={styles.playBadge}>
-                <Svg width={14} height={14} viewBox="0 0 16 16">
-                  <Path d="M4 2.5 L13 8 L4 13.5 Z" fill="#fff" />
-                </Svg>
-              </View>
-            </View>
-          ) : (
-            post.media.map((m, i) =>
-              m.type === 'image' ? (
-                <Image
-                  key={i}
-                  // older posts have no thumbnail — fall back to the full photo
-                  source={{ uri: m.thumbnailUrl || m.url }}
-                  style={[styles.mediaImage, post.media.length === 1 && styles.mediaImageFull]}
-                  contentFit="cover"
-                  recyclingKey={m.thumbnailUrl || m.url}
-                  {...MEDIA_IMAGE}
-                />
-              ) : null,
-            )
-          )}
-        </DoubleTapLike>
+        />
       )}
 
       <View style={styles.divider} />
 
       <View style={styles.footer}>
-        <LikeButton liked={post.likedByMe} count={post.likeCount} onToggle={onToggleLike} />
-        <View style={styles.commentRow}>
-          <CommentBubbleIcon />
-          <Text style={styles.commentCount}>{post.commentCount}</Text>
-        </View>
+        {/* voting on an activity prompt is just liking it — same button, same
+            handler, only the label changes to say what the tap actually means */}
+        <LikeButton
+          liked={post.likedByMe}
+          count={post.likeCount}
+          onToggle={onToggleLike}
+          label={post.kind === 'activity' ? 'votes' : undefined}
+        />
+        {post.kind === 'activity' ? (
+          <View style={styles.commentRow}>
+            <Text style={styles.commentCount}>{post.responseCount} responses</Text>
+          </View>
+        ) : (
+          <View style={styles.commentRow}>
+            <CommentBubbleIcon />
+            <Text style={styles.commentCount}>{post.commentCount}</Text>
+          </View>
+        )}
       </View>
     </Pressable>
   );
@@ -130,19 +116,9 @@ const styles = StyleSheet.create({
     width: 26, height: 26, borderRadius: Radius.pill,
     backgroundColor: Colors.paperDeep, alignItems: 'center', justifyContent: 'center',
   },
+  activityChip: { fontFamily: FontFamily.uiMedium, fontSize: sf(11), color: Colors.sakuraDeep },
   title: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(16), color: Colors.ink, marginTop: 2 },
   body: { fontFamily: FontFamily.ui, fontSize: sf(13), color: Colors.ink2, lineHeight: sf(19) },
-  mediaGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 2 },
-  mediaImage: { width: '48%', aspectRatio: 1, borderRadius: Radius.r3, backgroundColor: Colors.paperDeep },
-  mediaImageFull: { width: '100%', aspectRatio: 4 / 3 },
-  videoThumb: {
-    width: '100%', aspectRatio: 4 / 3, borderRadius: Radius.r3, backgroundColor: Colors.paperDeep,
-    overflow: 'hidden', alignItems: 'center', justifyContent: 'center',
-  },
-  playBadge: {
-    width: 40, height: 40, borderRadius: Radius.pill, backgroundColor: 'rgba(31,18,25,0.45)',
-    alignItems: 'center', justifyContent: 'center',
-  },
   divider: { height: 1, backgroundColor: Colors.line, marginTop: 2 },
   footer: { flexDirection: 'row', alignItems: 'center', gap: 18 },
   commentRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },

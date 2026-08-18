@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
-import { router } from 'expo-router';
-import { useState } from 'react';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -15,19 +15,21 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { MediaComposer } from '@/components/community/MediaComposer';
-import { Chip } from '@/components/ui/Chip';
-import { Row } from '@/components/ui/Row';
 import { AVATAR_IMAGE } from '@/lib/imageProps';
 import { Colors, FontFamily, Radius, Spacing, sf } from '@/constants/theme';
-import { createPost, type LocalPickedMedia } from '@/store/community';
+import { createPost, fetchPost, type CommunityPost, type LocalPickedMedia } from '@/store/community';
 import { getGlobalSetting } from '@/store/onboarding';
-import { useFos } from '@/store/fo';
 
 const MAX_BODY = 4000;
 
 export default function NewPostScreen() {
   const insets = useSafeAreaInsets();
-  const fos = useFos().filter((f) => f.isPublic);
+  const { kind, activityId } = useLocalSearchParams<{ kind?: string; activityId?: string }>();
+  const isActivity = kind === 'activity';
+
+  // whichever F/O is paired in edit profile tags every post automatically —
+  // no separate per-post picker to choose from. Skipped for an activity
+  // submission itself: a prompt is for everyone to answer, not about one F/O.
   const identifyFoId = getGlobalSetting('user_identify_fo_id');
   const me = {
     name: getGlobalSetting('user_name'),
@@ -35,11 +37,14 @@ export default function NewPostScreen() {
     color: getGlobalSetting('user_color') || Colors.sakura,
   };
 
+  const [respondingTo, setRespondingTo] = useState<CommunityPost | null>(null);
+  useEffect(() => {
+    if (!activityId) return;
+    fetchPost(activityId).then(setRespondingTo);
+  }, [activityId]);
+
   const [body, setBody] = useState('');
   const [media, setMedia] = useState<LocalPickedMedia[]>([]);
-  const [foId, setFoId] = useState<string | undefined>(
-    () => fos.find((f) => f.id === identifyFoId)?.id,
-  );
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState('');
 
@@ -52,7 +57,13 @@ export default function NewPostScreen() {
     setPosting(true);
     setError('');
     try {
-      await createPost({ body, media, foProfileId: foId });
+      await createPost({
+        body,
+        media,
+        foProfileId: isActivity ? undefined : identifyFoId || undefined,
+        kind: isActivity ? 'activity' : undefined,
+        activityId: activityId || undefined,
+      });
       router.back();
     } catch (e: any) {
       setError(e?.message ?? 'something went wrong — try again');
@@ -82,7 +93,7 @@ export default function NewPostScreen() {
           {posting ? (
             <ActivityIndicator size="small" color="#fff" />
           ) : (
-            <Text style={styles.postBtnText}>post</Text>
+            <Text style={styles.postBtnText}>{isActivity ? 'submit' : 'post'}</Text>
           )}
         </Pressable>
       </View>
@@ -93,6 +104,13 @@ export default function NewPostScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
+        {isActivity && <Text style={styles.kindLabel}>submitting an activity — everyone can vote and answer it</Text>}
+        {!!respondingTo && (
+          <Text style={styles.kindLabel} numberOfLines={2}>
+            ↳ responding to "{respondingTo.title || respondingTo.body}"
+          </Text>
+        )}
+
         <View style={styles.composerRow}>
           <View style={[styles.avatar, { backgroundColor: me.color }]}>
             {me.avatar ? (
@@ -105,7 +123,7 @@ export default function NewPostScreen() {
           <TextInput
             value={body}
             onChangeText={setBody}
-            placeholder="what's on your mind?"
+            placeholder={isActivity ? 'what should everyone try? e.g. "show your F/O\'s comfort outfit"' : "what's on your mind?"}
             placeholderTextColor={Colors.ink3}
             multiline
             autoFocus
@@ -114,34 +132,9 @@ export default function NewPostScreen() {
           />
         </View>
 
-        <View style={styles.mediaWrap}>
-          <MediaComposer media={media} onChange={setMedia} />
-        </View>
-
-        {fos.length > 0 && (
-          <View style={styles.foSection}>
-            <Text style={styles.foLabel}>with</Text>
-            <Row gap={6} wrap>
-              <Chip
-                color={!foId ? Colors.sakuraDeep : Colors.ink2}
-                bg={!foId ? Colors.sakuraSoft : Colors.paperDeep}
-                active={!foId}
-                onPress={() => setFoId(undefined)}
-              >
-                just me
-              </Chip>
-              {fos.map((f) => (
-                <Chip
-                  key={f.id}
-                  color={foId === f.id ? Colors.sakuraDeep : Colors.ink2}
-                  bg={foId === f.id ? Colors.sakuraSoft : Colors.paperDeep}
-                  active={foId === f.id}
-                  onPress={() => setFoId(f.id)}
-                >
-                  {f.name}
-                </Chip>
-              ))}
-            </Row>
+        {!isActivity && (
+          <View style={styles.mediaWrap}>
+            <MediaComposer media={media} onChange={setMedia} />
           </View>
         )}
 
@@ -176,6 +169,11 @@ const styles = StyleSheet.create({
   scroll: { flex: 1 },
   content: { paddingHorizontal: Spacing.s5, paddingTop: Spacing.s4, paddingBottom: Spacing.s6 },
 
+  kindLabel: {
+    fontFamily: FontFamily.uiMedium, fontSize: sf(11.5), color: Colors.sakuraDeep,
+    marginBottom: Spacing.s3, lineHeight: sf(16),
+  },
+
   composerRow: { flexDirection: 'row', gap: 10 },
   avatar: {
     width: 38, height: 38, borderRadius: Radius.pill,
@@ -189,12 +187,6 @@ const styles = StyleSheet.create({
   },
 
   mediaWrap: { marginTop: Spacing.s3, paddingLeft: 48 },
-
-  foSection: { marginTop: Spacing.s5, paddingLeft: 48, gap: 8 },
-  foLabel: {
-    fontFamily: FontFamily.marker, fontSize: sf(9), color: Colors.ink3,
-    letterSpacing: 1.4, textTransform: 'uppercase',
-  },
 
   error: { fontFamily: FontFamily.ui, fontSize: sf(12), color: Colors.ember, marginTop: 16, textAlign: 'center' },
   counter: {

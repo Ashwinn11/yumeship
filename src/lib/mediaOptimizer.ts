@@ -1,5 +1,7 @@
 import { File } from 'expo-file-system';
-import { Image as ImageCompressor, Video as VideoCompressor, createVideoThumbnail } from 'react-native-compressor';
+import { Image as ImageCompressor } from 'react-native-compressor';
+
+import { isManagedMediaUrl } from './storage';
 
 // react-native-compressor's native (Nitro/Swift) implementation hard-crashes the
 // whole app (SIGTRAP, uncatchable by JS try/catch) when given a uri that no
@@ -26,18 +28,27 @@ function assertLocalFileExists(uri: string) {
 // this project), so there is no server-side resizing to fall back on: whatever we
 // upload is exactly what every screen downloads. Size each upload for its largest
 // real display instead of shipping one 1600px original to a 30px comment avatar.
+/**
+ * `compressionMethod: 'manual'` on every preset is load-bearing, not
+ * boilerplate. The library defaults to 'auto', where these bounds are only
+ * hints: it re-encodes, compares against the source, and if the result isn't
+ * smaller it discards it and hands back *the original file untouched*. That
+ * makes a 480px thumbnail silently come back as the full-size original, so
+ * "full" and "thumb" end up byte-identical. Manual mode always resizes to the
+ * bounds below, which is the whole point of having distinct presets.
+ */
 const PRESETS = {
   /** avatars — biggest on-screen use is ProfileCard's 96pt hero, so 512 covers 3x */
-  avatar: { maxWidth: 512, maxHeight: 512, quality: 0.8 },
+  avatar: { compressionMethod: 'manual', maxWidth: 512, maxHeight: 512, quality: 0.8 },
   /** post photos — full-bleed card media is ~400pt wide, so 1280 covers 3x */
-  post: { maxWidth: 1280, maxHeight: 1280, quality: 0.82 },
+  post: { compressionMethod: 'manual', maxWidth: 1280, maxHeight: 1280, quality: 0.82 },
   /**
    * Feed thumbnails. A 2x2 grid cell is ~180pt, so 480 covers it at ~3x for a
    * fraction of the bytes — the feed never has a reason to pull the full photo.
    */
-  thumb: { maxWidth: 480, maxHeight: 480, quality: 0.7 },
+  thumb: { compressionMethod: 'manual', maxWidth: 480, maxHeight: 480, quality: 0.7 },
   /** gallery polaroids render small but open larger, so keep some headroom */
-  gallery: { maxWidth: 1024, maxHeight: 1024, quality: 0.8 },
+  gallery: { compressionMethod: 'manual', maxWidth: 1024, maxHeight: 1024, quality: 0.8 },
 } as const;
 
 export type ImagePreset = keyof typeof PRESETS;
@@ -47,24 +58,13 @@ export async function compressImage(uri: string, preset: ImagePreset = 'post'): 
   return ImageCompressor.compress(uri, PRESETS[preset]);
 }
 
-export async function compressVideo(uri: string): Promise<{ uri: string; thumbnailUri: string }> {
-  assertLocalFileExists(uri);
-  // cap the long edge at 720p: these are short in-feed clips, and an uncapped
-  // 4K source uploads slowly and takes far longer to buffer on playback
-  const compressedUri = await VideoCompressor.compress(uri, {
-    compressionMethod: 'auto',
-    maxSize: 1280,
-  });
-  const thumb = await createVideoThumbnail(compressedUri, { quality: 0.8 });
-  return { uri: compressedUri, thumbnailUri: thumb.path };
-}
-
 /**
  * Given the account/F/O's current local gallery uris and the previously-synced
  * {localUri: remoteUrl} map, uploads only the uris not already in the map
  * (compressing first) and returns the fully up-to-date map. Local uris removed
  * from the gallery are dropped from the returned map — nothing else to do,
  * since orphaned Storage objects cost nothing to leave behind for now.
+ *
  */
 export async function syncMediaMap(
   currentLocalUris: string[],
@@ -78,10 +78,10 @@ export async function syncMediaMap(
       next[uri] = previousMap[uri];
       return false;
     }
-    // already a remote url — the startup repair pass substitutes one of these
-    // in place of a local path once the local copy is gone, so there is
-    // nothing to compress or upload, the url itself is the synced value
-    if (/^https?:\/\//.test(uri)) {
+    // already hosted where we serve from — the startup repair pass substitutes
+    // one of these in place of a local path once the local copy is gone, so
+    // there is nothing to compress or upload, the url itself is the synced value
+    if (isManagedMediaUrl(uri)) {
       next[uri] = uri;
       return false;
     }

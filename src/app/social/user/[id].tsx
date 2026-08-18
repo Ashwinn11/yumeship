@@ -7,6 +7,7 @@ import { FollowButton } from '@/components/community/FollowButton';
 import { PostCard } from '@/components/community/PostCard';
 import { FeedSkeleton } from '@/components/community/PostCardSkeleton';
 import { pairedProps } from '@/components/profile/cardProps';
+import { FoAvatarCard } from '@/components/profile/FoAvatarCard';
 import { InlineToast, useInlineToast } from '@/components/ui/InlineToast';
 import { PageBackground } from '@/components/profile/PageBackground';
 import { ProfileCard } from '@/components/profile/ProfileCard';
@@ -20,10 +21,12 @@ import {
   fetchFoProfile,
   fetchProfile,
   fetchRelationship,
+  fetchUserFoProfiles,
   subscribeProfile,
   unblockUser,
   useUserPosts,
   type CommunityFoProfile,
+  type CommunityFoSummary,
   type CommunityPost,
   type CommunityProfile,
 } from '@/store/community';
@@ -37,6 +40,7 @@ export default function PublicUserProfileScreen() {
   const me = useAuthUser();
   const [profile, setProfile] = useState<CommunityProfile | null>(null);
   const [pairedFo, setPairedFo] = useState<CommunityFoProfile | null>(null);
+  const [fos, setFos] = useState<CommunityFoSummary[]>([]);
   const [relationship, setRelationship] = useState({ following: false, blocked: false });
   const [loading, setLoading] = useState(true);
   const [confirmBlock, setConfirmBlock] = useState(false);
@@ -45,10 +49,11 @@ export default function PublicUserProfileScreen() {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    Promise.all([fetchProfile(id), fetchRelationship(id)]).then(async ([p, r]) => {
+    Promise.all([fetchProfile(id), fetchRelationship(id), fetchUserFoProfiles(id)]).then(async ([p, r, foList]) => {
       if (cancelled) return;
       setProfile(p);
       setRelationship(r);
+      setFos(foList);
       setLoading(false);
       // their paired F/O lives in its own row — fetch it after the card is up
       // rather than blocking the whole screen on a second round trip
@@ -196,6 +201,23 @@ export default function PublicUserProfileScreen() {
                 ) : undefined
               }
             />
+
+            {fos.length > 0 && (
+              <>
+                <Text style={styles.postsLabel}>f/os</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.foRow}>
+                  {fos.map((f) => (
+                    <FoAvatarCard
+                      key={f.id}
+                      name={f.name}
+                      avatarUri={f.avatarUrl}
+                      onPress={() => router.push(`/social/fo/${f.id}` as any)}
+                    />
+                  ))}
+                </ScrollView>
+              </>
+            )}
+
             <Text style={styles.postsLabel}>posts</Text>
           </>
         }
@@ -246,6 +268,7 @@ const styles = StyleSheet.create({
   scroll: { flex: 1 },
   content: { paddingHorizontal: Spacing.s6, paddingTop: Spacing.s6, paddingBottom: Spacing.s6 },
   postSeparator: { height: 12 },
+  foRow: { flexDirection: 'row', gap: 14, paddingBottom: 2 },
   postsLabel: {
     fontFamily: FontFamily.uiSemiBold, fontSize: sf(11), color: Colors.ink3,
     textTransform: 'uppercase', letterSpacing: 0.8, marginTop: Spacing.s6, marginBottom: Spacing.s3,

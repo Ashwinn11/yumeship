@@ -16,9 +16,12 @@ type Props = {
   count: number;
   onToggle: () => void;
   size?: number;
+  /** appended after the count, e.g. "votes" on an activity prompt — every
+   * other caller leaves this unset and keeps the plain heart + number look */
+  label?: string;
 };
 
-export function LikeButton({ liked, count, onToggle, size = 16 }: Props) {
+export function LikeButton({ liked, count, onToggle, size = 16, label }: Props) {
   const scale = useSharedValue(1);
   // first render shouldn't pop — only react to a change the user (or realtime) made
   const mounted = useSharedValue(false);
@@ -43,7 +46,7 @@ export function LikeButton({ liked, count, onToggle, size = 16 }: Props) {
       <Animated.View style={heartStyle}>
         <Heart size={size} color={liked ? Colors.sakuraDeep : Colors.ink3} outline={!liked} />
       </Animated.View>
-      <Text style={[styles.count, liked && styles.countActive]}>{count}</Text>
+      <Text style={[styles.count, liked && styles.countActive]}>{count}{label ? ` ${label}` : ''}</Text>
     </Pressable>
   );
 }

@@ -1,11 +1,9 @@
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
-import { useVideoPlayer, VideoView } from 'expo-video';
-import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Colors, FontFamily, Radius, Spacing, sf } from '@/constants/theme';
-import { MAX_IMAGES, MAX_VIDEO_DURATION_MS, type LocalPickedMedia } from '@/store/community';
+import { MAX_IMAGES, type LocalPickedMedia } from '@/store/community';
 
 type Props = {
   media: LocalPickedMedia[];
@@ -13,13 +11,9 @@ type Props = {
 };
 
 export function MediaComposer({ media, onChange }: Props) {
-  const [error, setError] = useState('');
   const images = media.filter((m): m is Extract<LocalPickedMedia, { type: 'image' }> => m.type === 'image');
-  const video = media.find((m): m is Extract<LocalPickedMedia, { type: 'video' }> => m.type === 'video');
-  const player = useVideoPlayer(video?.uri ?? null);
 
   async function pickImages() {
-    setError('');
     const res = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       allowsMultipleSelection: true,
@@ -34,25 +28,8 @@ export function MediaComposer({ media, onChange }: Props) {
     );
   }
 
-  async function pickVideo() {
-    setError('');
-    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['videos'], quality: 0.9 });
-    if (res.canceled || !res.assets[0]) return;
-    const asset = res.assets[0];
-    const durationMs = asset.duration ?? 0;
-    if (durationMs > MAX_VIDEO_DURATION_MS) {
-      setError(`keep it under ${MAX_VIDEO_DURATION_MS / 1000} seconds — pick a shorter clip`);
-      return;
-    }
-    onChange([{ type: 'video', uri: asset.uri, durationMs, width: asset.width ?? 0, height: asset.height ?? 0 }]);
-  }
-
   function removeImage(uri: string) {
     onChange(media.filter((m) => !(m.type === 'image' && m.uri === uri)));
-  }
-
-  function removeVideo() {
-    onChange([]);
   }
 
   return (
@@ -70,32 +47,14 @@ export function MediaComposer({ media, onChange }: Props) {
         </View>
       )}
 
-      {!!video && (
-        <View style={styles.videoPreviewWrap}>
-          <VideoView player={player} style={styles.videoPreview} contentFit="cover" nativeControls />
-          <Pressable style={styles.removeBadge} onPress={removeVideo} hitSlop={6}>
-            <Text style={styles.removeText}>✕</Text>
-          </Pressable>
-        </View>
-      )}
-
-      {media.length === 0 && (
-        <View style={styles.pickerRow}>
-          <Pressable style={styles.pickerTile} onPress={pickImages}>
-            <View style={styles.pickerIconWrap}>
-              <Text style={styles.pickerPlus}>+</Text>
-            </View>
-            <Text style={styles.pickerLabel}>photos</Text>
-            <Text style={styles.pickerSubLabel}>up to {MAX_IMAGES}</Text>
-          </Pressable>
-          <Pressable style={styles.pickerTile} onPress={pickVideo}>
-            <View style={styles.pickerIconWrap}>
-              <Text style={styles.pickerPlus}>+</Text>
-            </View>
-            <Text style={styles.pickerLabel}>video</Text>
-            <Text style={styles.pickerSubLabel}>up to {MAX_VIDEO_DURATION_MS / 1000}s</Text>
-          </Pressable>
-        </View>
+      {images.length === 0 && (
+        <Pressable style={styles.pickerTile} onPress={pickImages}>
+          <View style={styles.pickerIconWrap}>
+            <Text style={styles.pickerPlus}>+</Text>
+          </View>
+          <Text style={styles.pickerLabel}>photos</Text>
+          <Text style={styles.pickerSubLabel}>up to {MAX_IMAGES}</Text>
+        </Pressable>
       )}
 
       {images.length > 0 && images.length < MAX_IMAGES && (
@@ -106,8 +65,6 @@ export function MediaComposer({ media, onChange }: Props) {
           <Text style={styles.addMoreLabel}>add more photos</Text>
         </Pressable>
       )}
-
-      {!!error && <Text style={styles.error}>{error}</Text>}
     </View>
   );
 }
@@ -122,11 +79,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.paperDeep, alignItems: 'center', justifyContent: 'center',
   },
   removeText: { color: Colors.ink3, fontSize: sf(9), fontFamily: FontFamily.ui },
-  videoPreviewWrap: { position: 'relative', width: '100%', aspectRatio: 4 / 3 },
-  videoPreview: { width: '100%', height: '100%', borderRadius: Radius.r3, backgroundColor: Colors.paperDeep },
-  pickerRow: { flexDirection: 'row', gap: 10 },
   pickerTile: {
-    flex: 1, height: 92, borderRadius: Radius.r3,
+    height: 92, borderRadius: Radius.r3,
     borderWidth: 1.4, borderColor: Colors.line, borderStyle: 'dashed',
     alignItems: 'center', justifyContent: 'center', gap: 3,
     backgroundColor: Colors.paperDeep,
@@ -146,5 +100,4 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   addMoreLabel: { fontFamily: FontFamily.ui, fontSize: sf(12), color: Colors.ink3 },
-  error: { fontFamily: FontFamily.ui, fontSize: sf(11), color: Colors.ember, marginTop: 8 },
 });

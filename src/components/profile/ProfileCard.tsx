@@ -37,6 +37,10 @@ type Props = {
   sharing?: ProfileStatus;
   height?: string;
   weight?: string;
+  /** free text — F/O ages are as often "looks 20, actually 900" as a number */
+  age?: string;
+  /** free text — usually a day with no year, e.g. "March 3" */
+  birthday?: string;
   /** theme song shown in its own row */
   song?: string;
   /** optional Spotify/YouTube/etc link — makes the song row tappable */
@@ -183,6 +187,8 @@ export function ProfileCard({
   sharing,
   height,
   weight,
+  age,
+  birthday,
   song,
   songLink,
   gallery = [],
@@ -208,6 +214,8 @@ export function ProfileCard({
   const stats = [
     type ? { label: 'type', value: type.label, color: type.color } : null,
     sharing ? { label: 'sharing', value: sharing.label, color: sharing.color } : null,
+    age ? { label: 'age', value: age } : null,
+    birthday ? { label: 'birthday', value: birthday } : null,
     height ? { label: 'height', value: height } : null,
     weight ? { label: 'weight', value: weight } : null,
   ].filter(Boolean) as { label: string; value: string; color?: string }[];

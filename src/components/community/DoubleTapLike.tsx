@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { StyleSheet, View, type ViewStyle } from 'react-native';
+import { StyleSheet, View, type LayoutChangeEvent, type StyleProp, type ViewStyle } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   runOnJS,
@@ -23,7 +23,8 @@ type Props = {
    * action to preserve, so double-tap can be the only recognizer.
    */
   onSingleTap?: () => void;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
+  onLayout?: (e: LayoutChangeEvent) => void;
 };
 
 const MAX_TAP_DELAY = 250;
@@ -37,7 +38,7 @@ const MAX_TAP_DELAY = 250;
  * nothing competing with the double-tap there, so it skips the composition
  * entirely.
  */
-export function DoubleTapLike({ children, onDoubleTap, onSingleTap, style }: Props) {
+export function DoubleTapLike({ children, onDoubleTap, onSingleTap, style, onLayout }: Props) {
   const burstScale = useSharedValue(0);
   const burstOpacity = useSharedValue(0);
 
@@ -82,7 +83,7 @@ export function DoubleTapLike({ children, onDoubleTap, onSingleTap, style }: Pro
 
   return (
     <GestureDetector gesture={gesture}>
-      <View style={style}>
+      <View style={style} onLayout={onLayout}>
         {children}
         <Animated.View style={[styles.burstWrap, burstStyle]} pointerEvents="none">
           <View style={styles.burstShadow}>

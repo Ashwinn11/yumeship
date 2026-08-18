@@ -1,7 +1,4 @@
-import { useEvent } from 'expo';
-import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useVideoPlayer, VideoView } from 'expo-video';
 import { useEffect, useState } from 'react';
 import {
   Keyboard,
@@ -18,14 +15,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 
 import { CommentThread } from '@/components/community/CommentThread';
-import { DoubleTapLike } from '@/components/community/DoubleTapLike';
 import { LikeButton } from '@/components/community/LikeButton';
+import { MediaCarousel } from '@/components/community/MediaCarousel';
 import { PostAuthorHeader } from '@/components/community/PostAuthorHeader';
+import { PostCard } from '@/components/community/PostCard';
 import { PostDetailSkeleton } from '@/components/community/PostDetailSkeleton';
 import { Mark } from '@/components/ui/Mark';
-import { MEDIA_IMAGE } from '@/lib/imageProps';
 import { Colors, FontFamily, FontSize, Radius, Spacing, sf } from '@/constants/theme';
-import { addComment, deleteComment, deletePost, logSyncFailure, useCommunityPost } from '@/store/community';
+import { addComment, deleteComment, deletePost, logSyncFailure, useActivityResponses, useCommunityPost } from '@/store/community';
 import { InlineToast, useInlineToast } from '@/components/ui/InlineToast';
 import { useAuthUser } from '@/store/auth';
 import { CozyModal } from '@/components/ui/CozyModal';
@@ -34,6 +31,14 @@ export default function PostDetailScreen() {
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { post, comments, loading, toggleLikeOptimistic, insertComment } = useCommunityPost(id);
+  const isActivity = post?.kind === 'activity';
+  // called unconditionally (rules of hooks) — resolves to nothing until the
+  // post has loaded and turns out to be an activity, same pattern useFoPosts
+  // and useUserPosts already use for an id that starts out undefined
+  const {
+    posts: responses,
+    toggleLikeOptimistic: toggleResponseLikeOptimistic,
+  } = useActivityResponses(isActivity ? post.id : undefined);
   const [draft, setDraft] = useState('');
   const [replyTo, setReplyTo] = useState<{ id: string; name: string } | null>(null);
   const [sending, setSending] = useState(false);
@@ -65,15 +70,6 @@ export default function PostDetailScreen() {
     const hide = Keyboard.addListener(hideEvent, () => setKeyboardOpen(false));
     return () => { show.remove(); hide.remove(); };
   }, []);
-
-  const videoMedia =
-    post && post.media.length === 1 && post.media[0].type === 'video' ? post.media[0] : null;
-  const isVideo = !!videoMedia;
-  const player = useVideoPlayer(videoMedia?.url ?? null);
-  // the clip's thumbnail already loaded in the feed, so hold it over the player
-  // until there are real frames to show instead of flashing an empty black box
-  const { status } = useEvent(player, 'statusChange', { status: player.status });
-  const videoReady = status === 'readyToPlay';
 
   async function send() {
     if (!draft.trim() || !post) return;
@@ -156,46 +152,16 @@ export default function PostDetailScreen() {
           <Text style={[styles.body, !post.title && styles.bodyNoTitle]}>{post.body}</Text>
         )}
 
-        {isVideo ? (
-          <View style={styles.videoWrap}>
-            <VideoView player={player} style={styles.videoView} contentFit="contain" nativeControls />
-            {!videoReady && !!videoMedia?.thumbnailUrl && (
-              <Image
-                source={{ uri: videoMedia.thumbnailUrl }}
-                style={styles.videoPoster}
-                contentFit="contain"
-                pointerEvents="none"
-                {...MEDIA_IMAGE}
-              />
-            )}
+        {post.media.length > 0 && (
+          <View style={styles.mediaWrap}>
+            <MediaCarousel
+              media={post.media}
+              variant="full"
+              likedByMe={post.likedByMe}
+              onDoubleTap={() => toggleLikeOptimistic(() => showToast("couldn't update like — try again"))}
+            />
           </View>
-        ) : post.media.length > 0 ? (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.mediaScroll}>
-            {post.media.map((m, i) => (
-              // wrapped per-photo, not around the whole strip, so the burst lands
-              // on the photo actually double-tapped and scrolling stays untouched
-              <DoubleTapLike
-                key={i}
-                style={styles.mediaImage}
-                onDoubleTap={() => { if (!post.likedByMe) toggleLikeOptimistic(() => showToast("couldn't update like — try again")); }}
-              >
-                <Image
-                  source={{ uri: m.type === 'image' ? m.url : '' }}
-                  style={styles.mediaImageFill}
-                  contentFit="cover"
-                  {...MEDIA_IMAGE}
-                  // the feed already cached this thumb, so it paints immediately and
-                  // the full-size photo sharpens in over it instead of a blank frame
-                  placeholder={
-                    m.type === 'image' && m.thumbnailUrl
-                      ? { uri: m.thumbnailUrl }
-                      : MEDIA_IMAGE.placeholder
-                  }
-                />
-              </DoubleTapLike>
-            ))}
-          </ScrollView>
-        ) : null}
+        )}
 
         <View style={styles.likeRow}>
           <LikeButton
@@ -203,8 +169,37 @@ export default function PostDetailScreen() {
             count={post.likeCount}
             onToggle={() => toggleLikeOptimistic(() => showToast("couldn't update like — try again"))}
             size={19}
+            label={isActivity ? 'votes' : undefined}
           />
+          {isActivity && (
+            <Pressable
+              style={styles.respondBtn}
+              onPress={() => router.push(`/social/post/new?activityId=${post.id}` as any)}
+            >
+              <Text style={styles.respondBtnText}>respond</Text>
+            </Pressable>
+          )}
         </View>
+
+        {isActivity && (
+          <>
+            <View style={styles.divider} />
+            <Text style={styles.commentsLabel}>responses · {responses.length}</Text>
+            {responses.length === 0 ? (
+              <Text style={styles.noResponses}>no responses yet — be the first ♡</Text>
+            ) : (
+              <View style={styles.responseList}>
+                {responses.map((r) => (
+                  <PostCard
+                    key={r.id}
+                    post={r}
+                    onToggleLike={() => toggleResponseLikeOptimistic(r.id, () => showToast("couldn't update like — try again"))}
+                  />
+                ))}
+              </View>
+            )}
+          </>
+        )}
 
         <View style={styles.divider} />
 
@@ -299,20 +294,21 @@ const styles = StyleSheet.create({
   title: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(20), color: Colors.ink, marginTop: Spacing.s4 },
   body: { fontFamily: FontFamily.ui, fontSize: sf(14), color: Colors.ink2, lineHeight: sf(21), marginTop: 8 },
   bodyNoTitle: { marginTop: Spacing.s4, fontSize: sf(15), color: Colors.ink, lineHeight: sf(23) },
-  videoWrap: { marginTop: Spacing.s4, width: '100%', aspectRatio: 4 / 3 },
-  videoView: { width: '100%', height: '100%', borderRadius: Radius.r3, backgroundColor: Colors.paperDeep },
-  videoPoster: {
-    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-    borderRadius: Radius.r3,
+  mediaWrap: { marginTop: Spacing.s4 },
+  likeRow: { marginTop: Spacing.s4, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  respondBtn: {
+    paddingHorizontal: 16, height: 32, borderRadius: Radius.pill,
+    backgroundColor: Colors.sakuraDeep, alignItems: 'center', justifyContent: 'center',
   },
-  mediaScroll: { marginTop: Spacing.s4 },
-  mediaImage: { width: 240, height: 240, borderRadius: Radius.r3, marginRight: 8, backgroundColor: Colors.paperDeep, overflow: 'hidden' },
-  mediaImageFill: { width: '100%', height: '100%' },
-  likeRow: { marginTop: Spacing.s4 },
+  respondBtnText: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(12), color: '#fff' },
   divider: { height: 1, backgroundColor: Colors.line, marginTop: Spacing.s5, marginBottom: Spacing.s4 },
   commentsLabel: {
     fontFamily: FontFamily.marker, fontSize: sf(10), color: Colors.ink3,
     letterSpacing: 1.2, textTransform: 'uppercase', marginBottom: 12,
+  },
+  responseList: { gap: 12 },
+  noResponses: {
+    fontFamily: FontFamily.script, fontSize: sf(14), color: Colors.ink3, textAlign: 'center', paddingVertical: Spacing.s3,
   },
   toastWrap: { position: 'absolute', left: 0, right: 0, zIndex: 10, alignItems: 'center' },
   composerWrap: {

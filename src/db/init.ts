@@ -39,6 +39,10 @@ export function initDb() {
   // notification face, kept apart from the profile photo so a user can show a
   // different picture on the lock screen than on the F/O's card
   try { db.execSync(`ALTER TABLE fo ADD COLUMN notif_photo_uri TEXT NOT NULL DEFAULT ''`); } catch (_) {}
+  // free text like height/weight — a character's birthday is often a day with no
+  // year ("March 3"), and their age is as often "looks 20, canonically ancient"
+  try { db.execSync(`ALTER TABLE fo ADD COLUMN age TEXT NOT NULL DEFAULT ''`); } catch (_) {}
+  try { db.execSync(`ALTER TABLE fo ADD COLUMN birthday TEXT NOT NULL DEFAULT ''`); } catch (_) {}
   db.execSync(`
     CREATE TABLE IF NOT EXISTS ships (
       id TEXT PRIMARY KEY,
@@ -73,6 +77,8 @@ export function initDb() {
       bio TEXT NOT NULL DEFAULT '',
       height TEXT NOT NULL DEFAULT '',
       weight TEXT NOT NULL DEFAULT '',
+      age TEXT NOT NULL DEFAULT '',
+      birthday TEXT NOT NULL DEFAULT '',
       photo_uri TEXT NOT NULL DEFAULT '',
       notif_photo_uri TEXT NOT NULL DEFAULT '',
       page_bg_color TEXT NOT NULL DEFAULT '',

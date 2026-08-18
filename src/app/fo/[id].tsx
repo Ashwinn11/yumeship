@@ -1,8 +1,10 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useCallback, useState } from 'react';
+import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { PostCard } from '@/components/community/PostCard';
+import { FeedSkeleton } from '@/components/community/PostCardSkeleton';
 import { FoForm, FoFormValue } from '@/components/fo/FoForm';
 import { CardThemeSheet } from '@/components/profile/CardThemeSheet';
 import type { CardTheme } from '@/components/profile/cardTheme';
@@ -11,13 +13,24 @@ import { ProfileCard } from '@/components/profile/ProfileCard';
 import { ProfileScreenHeader } from '@/components/profile/ProfileScreenHeader';
 import { CozyModal } from '@/components/ui/CozyModal';
 import { IconEdit, IconPalette } from '@/components/ui/Icon';
-import { Colors, Radius, Spacing } from '@/constants/theme';
+import { InlineToast, useInlineToast } from '@/components/ui/InlineToast';
+import { Colors, FontFamily, Radius, Spacing, sf } from '@/constants/theme';
 import { relationshipStatus, sharingStatus } from '@/components/profile/cardProps';
 import { useIPad } from '@/hooks/use-ipad';
 import { deleteFo, updateFo, useFo } from '@/store/fo';
-import { logSyncFailure, pushFoProfile, unpublishFoProfile } from '@/store/community';
+import {
+  deletePost,
+  logSyncFailure,
+  pushFoProfile,
+  unpublishFoProfile,
+  useFoPosts,
+  type CommunityPost,
+} from '@/store/community';
 import { usePremium } from '@/store/premium';
 import { shipTitle, useShips } from '@/store/ships';
+
+const keyExtractor = (p: CommunityPost) => p.id;
+const PostSeparator = () => <View style={styles.postSeparator} />;
 
 export default function FoDetailScreen() {
   const insets = useSafeAreaInsets();
@@ -31,6 +44,46 @@ export default function FoDetailScreen() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [showCustomize, setShowCustomize] = useState(false);
   const [photoWarning, setPhotoWarning] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [deletingPost, setDeletingPost] = useState(false);
+  const { message: toastMsg, nonce: toastNonce, show: showToast } = useInlineToast();
+
+  // only a published F/O can be tagged in a post, so an unpublished one skips
+  // the fetch entirely and this screen stays the purely-local view it was
+  const {
+    posts,
+    loading: postsLoading,
+    refreshing,
+    refresh: refreshPosts,
+    loadMore,
+    toggleLikeOptimistic,
+    removePost,
+  } = useFoPosts(fo?.isPublic ? fo.id : undefined);
+
+  const renderPost = useCallback(
+    ({ item }: { item: CommunityPost }) => (
+      <PostCard
+        post={item}
+        onToggleLike={() => toggleLikeOptimistic(item.id, () => showToast("couldn't update like — try again"))}
+        onRequestDelete={() => setDeleteTarget(item.id)}
+      />
+    ),
+    [toggleLikeOptimistic, showToast],
+  );
+
+  async function confirmDeletePost() {
+    if (!deleteTarget) return;
+    setDeletingPost(true);
+    try {
+      await deletePost(deleteTarget);
+      removePost(deleteTarget);
+    } catch {
+      showToast("couldn't delete that post — try again");
+    } finally {
+      setDeletingPost(false);
+      setDeleteTarget(null);
+    }
+  }
 
   if (!fo) {
     return (
@@ -46,7 +99,8 @@ export default function FoDetailScreen() {
     setDraft({
       name: fo!.name, pronouns: fo!.pronouns, fandom: fo!.fandom,
       relStatus: fo!.relStatus, shareStatus: fo!.shareStatus,
-      bio: fo!.bio, height: fo!.height, weight: fo!.weight, photoUri: fo!.photoUri,
+      bio: fo!.bio, height: fo!.height, weight: fo!.weight,
+      age: fo!.age, birthday: fo!.birthday, photoUri: fo!.photoUri,
       song: fo!.song, songLink: fo!.songLink, gallery: fo!.gallery,
       statusLabel: fo!.statusLabel,
     });
@@ -99,6 +153,10 @@ export default function FoDetailScreen() {
 
   const body = (
     <View style={[styles.screen, !pageBg && { backgroundColor: Colors.paper }, { paddingBottom: Spacing.s1 }]}>
+      <View style={[styles.toastWrap, { top: insets.top + Spacing.s2 }]} pointerEvents="none">
+        <InlineToast message={toastMsg} nonce={toastNonce} />
+      </View>
+
       <ProfileScreenHeader
         insetsTop={insets.top}
         onBack={() => (editing ? setEditing(false) : router.back())}
@@ -127,31 +185,59 @@ export default function FoDetailScreen() {
           onDelete={() => setConfirmDelete(true)}
         />
       ) : (
-        <ScrollView style={styles.scroll} contentContainerStyle={[styles.content, column]} showsVerticalScrollIndicator={false}>
-          <ProfileCard
-            name={fo.name || 'untitled'}
-            pronouns={fo.pronouns}
-            subtitle={fo.fandom}
-            bio={fo.bio}
-            photoUri={fo.photoUri}
-            height={fo.height}
-            weight={fo.weight}
-            type={relationshipStatus(fo.relStatus)}
-            sharing={sharingStatus(fo.shareStatus)}
-            song={fo.song}
-            songLink={fo.songLink}
-            gallery={fo.gallery}
-            cardBgColor={fo.cardBgColor}
-            cardBgImage={fo.cardBgImage}
-            cardBgGradient={fo.cardBgGradient}
-            cardTransparent={fo.cardTransparent}
-            textColor={fo.textColor}
-            borderStyle={fo.borderStyle}
-            decoration={fo.decoration}
-            nameFont={fo.nameFont}
-            statusLabel={fo.statusLabel}
-          />
-        </ScrollView>
+        <FlatList
+          style={styles.scroll}
+          contentContainerStyle={[styles.content, column]}
+          showsVerticalScrollIndicator={false}
+          data={posts}
+          keyExtractor={keyExtractor}
+          renderItem={renderPost}
+          ItemSeparatorComponent={PostSeparator}
+          refreshControl={
+            fo.isPublic
+              ? <RefreshControl refreshing={refreshing} onRefresh={refreshPosts} tintColor={Colors.sakuraDeep} />
+              : undefined
+          }
+          onEndReached={loadMore}
+          onEndReachedThreshold={0.4}
+          ListHeaderComponent={
+            <>
+              <ProfileCard
+                name={fo.name || 'untitled'}
+                pronouns={fo.pronouns}
+                subtitle={fo.fandom}
+                bio={fo.bio}
+                photoUri={fo.photoUri}
+                height={fo.height}
+                weight={fo.weight}
+                age={fo.age}
+                birthday={fo.birthday}
+                type={relationshipStatus(fo.relStatus)}
+                sharing={sharingStatus(fo.shareStatus)}
+                song={fo.song}
+                songLink={fo.songLink}
+                gallery={fo.gallery}
+                cardBgColor={fo.cardBgColor}
+                cardBgImage={fo.cardBgImage}
+                cardBgGradient={fo.cardBgGradient}
+                cardTransparent={fo.cardTransparent}
+                textColor={fo.textColor}
+                borderStyle={fo.borderStyle}
+                decoration={fo.decoration}
+                nameFont={fo.nameFont}
+                statusLabel={fo.statusLabel}
+              />
+              {fo.isPublic && <Text style={styles.postsLabel}>posts about them</Text>}
+            </>
+          }
+          ListEmptyComponent={
+            !fo.isPublic ? null : postsLoading ? (
+              <FeedSkeleton />
+            ) : (
+              <Text style={styles.postsEmpty}>no posts about them yet</Text>
+            )
+          }
+        />
       )}
 
       <CozyModal
@@ -166,6 +252,19 @@ export default function FoDetailScreen() {
         cancelText="Keep them"
         onConfirm={handleDelete}
         onClose={() => setConfirmDelete(false)}
+        isDestructive
+      />
+
+      {/* one post, one row — deleting here removes it from your profile and the
+          feed too, not just from this F/O's page. Say so, or it reads as untag. */}
+      <CozyModal
+        visible={!!deleteTarget}
+        title="Delete this post?"
+        message="It'll be gone everywhere — your profile and the feed too, not just here. This can't be undone."
+        confirmText={deletingPost ? 'deleting…' : 'Delete'}
+        cancelText="Cancel"
+        onConfirm={confirmDeletePost}
+        onClose={() => setDeleteTarget(null)}
         isDestructive
       />
 
@@ -203,6 +302,16 @@ export default function FoDetailScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
+  toastWrap: { position: 'absolute', left: 0, right: 0, zIndex: 10, alignItems: 'center' },
+  postSeparator: { height: 12 },
+  postsLabel: {
+    fontFamily: FontFamily.uiSemiBold, fontSize: sf(11), color: Colors.ink3,
+    textTransform: 'uppercase', letterSpacing: 0.8, marginTop: Spacing.s6, marginBottom: Spacing.s3,
+  },
+  postsEmpty: {
+    fontFamily: FontFamily.script, fontSize: sf(14), color: Colors.ink3,
+    textAlign: 'center', marginTop: Spacing.s3,
+  },
   headerActions: { flexDirection: 'row', gap: 8 },
   headerBtn: {
     width: 32, height: 32, borderRadius: Radius.pill,

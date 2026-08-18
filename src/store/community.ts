@@ -1,8 +1,8 @@
 import { Image } from 'expo-image';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { compressImage, compressVideo, syncMediaMap } from '@/lib/mediaOptimizer';
-import { deleteFromBucketByUrl, uploadToBucket } from '@/lib/storage';
+import { compressImage, syncMediaMap } from '@/lib/mediaOptimizer';
+import { deleteFromBucketByUrl, isManagedMediaUrl, uploadToBucket } from '@/lib/storage';
 import { FunctionsHttpError } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 
@@ -10,7 +10,6 @@ import { getAllFos, getFo, parseGallery, updateFo, type Fo, type GalleryPhoto } 
 import { getGlobalSetting, saveGlobalSetting } from './onboarding';
 
 export const MAX_IMAGES = 4;
-export const MAX_VIDEO_DURATION_MS = 10_000;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -61,35 +60,23 @@ export type CommunityFoProfile = CommunityCardTheme & {
   fandom: string;
   relStatus: Fo['relStatus'];
   shareStatus: Fo['shareStatus'];
+  age: string;
+  birthday: string;
 };
 
-export type PostMedia =
-  | {
-      type: 'image';
-      url: string;
-      /** small variant for the feed grid — absent on posts made before thumbnails existed */
-      thumbnailUrl?: string;
-      width: number;
-      height: number;
-    }
-  | {
-      type: 'video';
-      url: string;
-      thumbnailUrl: string;
-      durationMs: number;
-      width: number;
-      height: number;
-    };
+export type PostMedia = {
+  type: 'image';
+  url: string;
+  /** small variant for the feed grid — absent on posts made before thumbnails existed */
+  thumbnailUrl?: string;
+  width: number;
+  height: number;
+};
 
-export type LocalPickedMedia =
-  | { type: 'image'; uri: string; width: number; height: number }
-  | {
-      type: 'video';
-      uri: string;
-      durationMs: number;
-      width: number;
-      height: number;
-    };
+export type LocalPickedMedia = { type: 'image'; uri: string; width: number; height: number };
+
+/** The activity prompt a response post answers — just enough to render its chip. */
+export type ActivityRef = { id: string; title: string; body: string };
 
 export type CommunityPost = {
   id: string;
@@ -102,6 +89,14 @@ export type CommunityPost = {
   commentCount: number;
   likedByMe: boolean;
   createdAt: string;
+  /** 'activity' = a prompt in the vote pool; 'post' = everything else, including responses */
+  kind: 'post' | 'activity';
+  /** set once this activity has been featured — the day it won */
+  featuredDate: string | null;
+  /** set on a response post, pointing back at the activity prompt it answers */
+  activity: ActivityRef | null;
+  /** activity prompts only — how many posts have answered it */
+  responseCount: number;
 };
 
 export type CommunityComment = {
@@ -175,6 +170,8 @@ function rowToFoProfile(row: Record<string, any>): CommunityFoProfile {
     fandom: row.fandom ?? '',
     relStatus: (row.rel_status as Fo['relStatus']) ?? 'romantic',
     shareStatus: (row.share_status as Fo['shareStatus']) ?? 'selective',
+    age: row.age ?? '',
+    birthday: row.birthday ?? '',
   };
 }
 
@@ -190,6 +187,10 @@ function rowToPost(row: Record<string, any>, likedPostIds: Set<string>): Communi
     commentCount: row.comment_count ?? 0,
     likedByMe: likedPostIds.has(row.id),
     createdAt: row.created_at,
+    kind: (row.kind as CommunityPost['kind']) ?? 'post',
+    featuredDate: row.featured_date ?? null,
+    activity: row.activity ? { id: row.activity.id, title: row.activity.title ?? '', body: row.activity.body ?? '' } : null,
+    responseCount: row.response_count ?? 0,
   };
 }
 
@@ -230,7 +231,7 @@ const PROFILE_FIELDS = cols(`
 `);
 const FO_PROFILE_FIELDS = cols(`
   id, name, pronouns, bio, avatar_url, status_label, song, song_link, gallery,
-  fandom, rel_status, share_status, ${CARD_THEME_FIELDS}
+  fandom, rel_status, share_status, age, birthday, ${CARD_THEME_FIELDS}
 `);
 
 // Feed rows only ever draw an avatar + name, so post embeds stay on this narrow
@@ -240,8 +241,10 @@ const PROFILE_SUMMARY_FIELDS = 'id, username, name, pronouns, avatar_url';
 const FO_SUMMARY_FIELDS = 'id, name, pronouns, avatar_url';
 const POST_SELECT = cols(`
   id, author_id, fo_profile_id, title, body, media, like_count, comment_count, created_at,
+  kind, featured_date, response_count,
   author:profiles!posts_author_id_fkey(${PROFILE_SUMMARY_FIELDS}),
-  fo:fo_profiles!posts_fo_profile_id_fkey(${FO_SUMMARY_FIELDS})
+  fo:fo_profiles!posts_fo_profile_id_fkey(${FO_SUMMARY_FIELDS}),
+  activity(id, title, body)
 `);
 const COMMENT_SELECT = cols(`
   id, post_id, parent_comment_id, body, created_at,
@@ -303,6 +306,8 @@ export async function claimUsername(username: string): Promise<{ ok: boolean; re
   const { error } = await supabase.from('profiles').upsert({ id: user.id, username: clean });
   if (error) return { ok: false, reason: error.message };
   saveGlobalSetting('user_username', clean);
+  // records *whose* username this is — see cachedUsernameFor in community.tsx
+  saveGlobalSetting('user_username_uid', user.id);
   return { ok: true };
 }
 
@@ -330,6 +335,11 @@ async function syncAvatarAndGallery(input: {
   uploadedAvatarFor: string;
   photoFailed: boolean;
   galleryMap: Record<string, string>;
+  /** urls nothing in the new state points at anymore — the caller should only
+   * actually delete these once its own upsert of that new state has landed.
+   * Deleting them here, before the save is confirmed, would turn a still-live
+   * reference into a broken one if that save then failed. */
+  orphanedUrls: string[];
 }> {
   const { table, entityId, avatarUri, avatarSyncedMarker, galleryUris, previousGalleryMap, avatarPath, galleryPathPrefix, logContext } = input;
 
@@ -342,22 +352,19 @@ async function syncAvatarAndGallery(input: {
   let uploadedAvatarFor = '';
   let photoFailed = false;
 
-  if (avatarUri && /^https?:\/\//.test(avatarUri)) {
-    // already a remote url — the local file was lost and the startup repair
-    // pass substituted the published copy already sitting on the server, so
-    // there is nothing to compress or upload, just keep it as the avatar
+  if (avatarUri && isManagedMediaUrl(avatarUri)) {
+    // already hosted where we serve from — the local file was lost and the
+    // startup repair pass substituted the published copy already sitting on
+    // the server, so there is nothing to compress or upload, just keep it
     avatarUrl = avatarUri;
   } else if (avatarUri && (avatarUri !== avatarSyncedMarker || !existingRow?.avatar_url)) {
     try {
       const compressed = await compressImage(avatarUri, 'avatar');
       avatarUrl = await uploadToBucket('avatars', avatarPath, compressed, 'image/jpeg');
       uploadedAvatarFor = avatarUri;
-      // the old copy is now unreferenced the moment the new one lands — clean
-      // it up instead of letting every avatar change leak a file forever;
-      // fire-and-forget so a slow delete never holds up the save
-      if (existingRow?.avatar_url && existingRow.avatar_url !== avatarUrl) {
-        deleteFromBucketByUrl('avatars', existingRow.avatar_url);
-      }
+      // the old copy's cleanup isn't handled here — see the orphan sweep below,
+      // which catches this the same way it catches a cleared avatar or a
+      // removed gallery photo, instead of a one-off case just for replacement
     } catch (e) {
       // the rest of the profile still saves, but the caller is told the photo did not
       photoFailed = true;
@@ -380,6 +387,13 @@ async function syncAvatarAndGallery(input: {
         'image/jpeg',
       ),
   );
+  // A uri missing from the returned map never made it up — syncMediaMap skips
+  // whatever it can't compress or upload so one bad photo doesn't sink the
+  // rest. That's the same thing photoFailed already means for the avatar, so
+  // report it the same way instead of letting a gallery photo quietly never
+  // appear on the public profile.
+  const galleryFailed = galleryUris.some((uri) => !galleryMap[uri]);
+
   // The avatar rides the same {localUri: remoteUrl} map as the gallery and
   // backgrounds, rather than a dedicated column — Part B of the media-durability
   // work: if this exact local file later goes missing (evicted cache, a wipe
@@ -389,7 +403,17 @@ async function syncAvatarAndGallery(input: {
   const avatarRemoteUrl = avatarUrl || existingRow?.avatar_url || '';
   if (avatarUri && avatarRemoteUrl) galleryMap[avatarUri] = avatarRemoteUrl;
 
-  return { avatarUrl, uploadedAvatarFor, photoFailed, galleryMap };
+  // Anything uploaded before that nothing points at anymore — a cleared
+  // avatar, a removed gallery photo, a swapped background, a replaced avatar
+  // — has no reason to keep costing storage. One check here covers every
+  // "this got removed" case instead of a separate cleanup call at each site
+  // that could remove something, which is exactly the kind of duplication
+  // that's easy to add once and then forget to repeat next time. Actually
+  // deleting is left to the caller — see the field's doc comment.
+  const stillReferenced = new Set(Object.values(galleryMap));
+  const orphanedUrls = Object.values(previousGalleryMap).filter((url) => url && !stillReferenced.has(url));
+
+  return { avatarUrl, uploadedAvatarFor, photoFailed: photoFailed || galleryFailed, galleryMap, orphanedUrls };
 }
 
 export async function pushOwnProfile(): Promise<PushResult> {
@@ -461,6 +485,9 @@ export async function pushOwnProfile(): Promise<PushResult> {
   if (error) throw error;
   // only remember the upload once the row that references it actually landed
   if (sync.uploadedAvatarFor) saveGlobalSetting('user_avatar_synced_uri', sync.uploadedAvatarFor);
+  // only now that the new state is durably saved — deleting any earlier would
+  // risk breaking a still-live reference had this upsert failed instead
+  for (const url of sync.orphanedUrls) deleteFromBucketByUrl('avatars', url);
   return { photoFailed: sync.photoFailed };
 }
 
@@ -493,6 +520,8 @@ export async function pushFoProfile(foId: string): Promise<PushResult> {
     status_label: fo.statusLabel,
     height: fo.height,
     weight: fo.weight,
+    age: fo.age,
+    birthday: fo.birthday,
     fandom: fo.fandom,
     rel_status: fo.relStatus,
     share_status: fo.shareStatus,
@@ -534,10 +563,20 @@ export async function pushFoProfile(foId: string): Promise<PushResult> {
     // committed only now that the row referencing the upload exists
     ...(sync.uploadedAvatarFor ? { avatarSyncedUri: sync.uploadedAvatarFor } : null),
   });
+  // only now that the new state is durably saved — deleting any earlier would
+  // risk breaking a still-live reference had this upsert failed instead
+  for (const url of sync.orphanedUrls) deleteFromBucketByUrl('avatars', url);
   return { photoFailed: sync.photoFailed };
 }
 
 export async function unpublishFoProfile(foId: string): Promise<void> {
+  // fetched before the row goes away — it's the only place these urls live
+  const { data: existing } = await supabase
+    .from('fo_profiles')
+    .select('avatar_url, gallery, card_bg_image, page_bg_image')
+    .eq('id', foId)
+    .maybeSingle();
+
   const { error } = await supabase.from('fo_profiles').delete().eq('id', foId);
   if (error) throw error;
   // only flip local state once the remote row is actually gone — otherwise a
@@ -545,12 +584,42 @@ export async function unpublishFoProfile(foId: string): Promise<void> {
   // the row is gone, so every uploaded-already marker is now a lie — clearing
   // them makes the next publish re-upload the avatar and gallery from scratch
   updateFo(foId, { isPublic: false, avatarSyncedUri: '', gallerySyncMap: {} });
+
+  // best-effort, after the delete the caller asked for has already landed —
+  // a missed cleanup here leaves orphaned files, not a broken unpublish
+  if (existing?.avatar_url) deleteFromBucketByUrl('avatars', existing.avatar_url);
+  if (existing?.card_bg_image) deleteFromBucketByUrl('avatars', existing.card_bg_image);
+  if (existing?.page_bg_image) deleteFromBucketByUrl('avatars', existing.page_bg_image);
+  for (const g of (existing?.gallery ?? []) as { url?: string }[]) {
+    if (g.url) deleteFromBucketByUrl('avatars', g.url);
+  }
 }
 
 export async function fetchFoProfile(id: string): Promise<CommunityFoProfile | null> {
   const { data, error } = await supabase.from('fo_profiles').select(FO_PROFILE_FIELDS).eq('id', id).maybeSingle();
   if (error || !data) return null;
   return rowToFoProfile(data);
+}
+
+export type CommunityFoSummary = { id: string; name: string; avatarUrl: string };
+
+function rowToFoSummary(row: Record<string, any>): CommunityFoSummary {
+  return { id: row.id, name: row.name ?? '', avatarUrl: row.avatar_url ?? '' };
+}
+
+/**
+ * A user's public F/Os, for the horizontal row on their profile. Unpublishing
+ * deletes the fo_profiles row outright, so "owned by this user" already means
+ * "public" — no is_public filter needed, row existence is the privacy model.
+ */
+export async function fetchUserFoProfiles(ownerId: string): Promise<CommunityFoSummary[]> {
+  const { data, error } = await supabase
+    .from('fo_profiles')
+    .select(FO_SUMMARY_FIELDS)
+    .eq('owner_id', ownerId)
+    .order('created_at', { ascending: true });
+  if (error || !data) return [];
+  return data.map(rowToFoSummary);
 }
 
 /**
@@ -610,6 +679,7 @@ export async function deleteCommunityAccount(): Promise<void> {
   }
 
   saveGlobalSetting('user_username', '');
+  saveGlobalSetting('user_username_uid', '');
   saveGlobalSetting('user_avatar_synced_uri', '');
   saveGlobalSetting('user_gallery_sync_map', '{}');
   saveGlobalSetting('user_identify_fo_id', '');
@@ -638,7 +708,9 @@ export async function fetchFeedPage(opts: {
   limit?: number;
 }): Promise<CommunityPost[]> {
   const limit = opts.limit ?? 20;
-  let query = supabase.from('posts').select(POST_SELECT).order('created_at', { ascending: false }).limit(limit);
+  // activity prompts live in their own pool (fetchActivityPool), not the feed —
+  // a response to one is still kind='post' and belongs here same as any other
+  let query = supabase.from('posts').select(POST_SELECT).eq('kind', 'post').order('created_at', { ascending: false }).limit(limit);
   if (opts.before) query = query.lt('created_at', opts.before);
 
   if (opts.mode === 'following') {
@@ -659,15 +731,19 @@ export async function fetchFeedPage(opts: {
   return data.map((r: any) => rowToPost(r, likedIds));
 }
 
-export async function fetchUserPosts(
-  authorId: string,
-  opts: { before?: string; limit?: number } = {},
+export type PostPageOpts = { before?: string; limit?: number };
+
+/** One owning column's posts — same page shape and cursor as the feed. */
+async function fetchPostsBy(
+  column: 'author_id' | 'fo_profile_id' | 'activity_id',
+  value: string,
+  opts: PostPageOpts,
 ): Promise<CommunityPost[]> {
   const limit = opts.limit ?? 20;
   let query = supabase
     .from('posts')
     .select(POST_SELECT)
-    .eq('author_id', authorId)
+    .eq(column, value)
     .order('created_at', { ascending: false })
     .limit(limit);
   if (opts.before) query = query.lt('created_at', opts.before);
@@ -676,6 +752,60 @@ export async function fetchUserPosts(
   if (error || !data) return [];
   const likedIds = await fetchLikedPostIds(data.map((r: any) => r.id));
   return data.map((r: any) => rowToPost(r, likedIds));
+}
+
+export function fetchUserPosts(authorId: string, opts: PostPageOpts = {}): Promise<CommunityPost[]> {
+  return fetchPostsBy('author_id', authorId, opts);
+}
+
+/**
+ * Every post tagged to one F/O. Always authored by that F/O's owner — the
+ * composer tags whichever F/O the poster paired in "profile identify", so
+ * there's no way to tag someone else's.
+ */
+export function fetchFoPosts(foProfileId: string, opts: PostPageOpts = {}): Promise<CommunityPost[]> {
+  return fetchPostsBy('fo_profile_id', foProfileId, opts);
+}
+
+/** Every response to one activity prompt, for that prompt's detail page. */
+export function fetchActivityResponses(activityId: string, opts: PostPageOpts = {}): Promise<CommunityPost[]> {
+  return fetchPostsBy('activity_id', activityId, opts);
+}
+
+/**
+ * The submission pool: activity prompts nobody has picked yet, highest-voted
+ * first. No cursor pagination — vote-count ordering doesn't map cleanly to a
+ * `before` cursor, and this app's realistic submission volume doesn't need it.
+ */
+export async function fetchActivityPool(limit = 50): Promise<CommunityPost[]> {
+  const { data, error } = await supabase
+    .from('posts')
+    .select(POST_SELECT)
+    .eq('kind', 'activity')
+    .is('featured_date', null)
+    .order('like_count', { ascending: false })
+    .order('created_at', { ascending: true })
+    .limit(limit);
+  if (error || !data) return [];
+  const likedIds = await fetchLikedPostIds(data.map((r: any) => r.id));
+  return data.map((r: any) => rowToPost(r, likedIds));
+}
+
+/**
+ * Today's featured activity — the single daily winner. `pick_todays_activity`
+ * is idempotent (picks once, then just returns the same row for the rest of
+ * the day), so every client can safely call this on launch with no cron: the
+ * first opener of the day does the pick, everyone after just reads it.
+ *
+ * The RPC returns bare `posts` columns with none of PostgREST's joined
+ * author/fo/activity embeds, so it only gives us the winning id — the actual
+ * render-ready post comes from the normal fully-joined fetch, same as how a
+ * realtime insert resolves its row in subscribeFeed below.
+ */
+export async function fetchTodaysActivity(): Promise<CommunityPost | null> {
+  const { data, error } = await supabase.rpc('pick_todays_activity');
+  if (error || !data || data.length === 0) return null;
+  return fetchPost(data[0].id);
 }
 
 export async function fetchPost(id: string): Promise<CommunityPost | null> {
@@ -691,6 +821,11 @@ export async function createPost(input: {
   body: string;
   media: LocalPickedMedia[];
   foProfileId?: string;
+  /** defaults to 'post' — pass 'activity' to submit a prompt to the vote pool */
+  kind?: 'post' | 'activity';
+  /** set to answer an existing activity prompt — this post shows in the normal
+   * feed, tagged back to the prompt, same as any other post */
+  activityId?: string;
 }): Promise<CommunityPost> {
   const {
     data: { session },
@@ -699,50 +834,29 @@ export async function createPost(input: {
   if (!user) throw new Error('not signed in');
 
   const batchId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-  const first = input.media[0];
 
-  // images (up to 4) upload concurrently; a video is always alone (schema-enforced),
-  // and its own two uploads (clip + thumbnail) also run concurrently once compressed
-  const media: PostMedia[] =
-    first?.type === 'video'
-      ? await (async () => {
-          const { uri: compressedUri, thumbnailUri } = await compressVideo(first.uri);
-          const [url, thumbnailUrl] = await Promise.all([
-            uploadToBucket('post-media', `${user.id}/${batchId}/video.mp4`, compressedUri, 'video/mp4'),
-            uploadToBucket('post-media', `${user.id}/${batchId}/thumb.jpg`, thumbnailUri, 'image/jpeg'),
-          ]);
-          return [
-            {
-              type: 'video' as const,
-              url,
-              thumbnailUrl,
-              durationMs: first.durationMs,
-              width: first.width,
-              height: first.height,
-            },
-          ];
-        })()
-      : await Promise.all(
-          input.media.map(async (item, i) => {
-            // full + thumb are compressed and uploaded side by side so the feed
-            // can stay on the small one and only the detail view pays for the full
-            const [full, thumb] = await Promise.all([
-              compressImage(item.uri, 'post'),
-              compressImage(item.uri, 'thumb'),
-            ]);
-            const [url, thumbnailUrl] = await Promise.all([
-              uploadToBucket('post-media', `${user.id}/${batchId}/${i}.jpg`, full, 'image/jpeg'),
-              uploadToBucket('post-media', `${user.id}/${batchId}/${i}-thumb.jpg`, thumb, 'image/jpeg'),
-            ]);
-            return {
-              type: 'image' as const,
-              url,
-              thumbnailUrl,
-              width: item.width,
-              height: item.height,
-            };
-          }),
-        );
+  // the images (up to 4) all upload concurrently
+  const media: PostMedia[] = await Promise.all(
+    input.media.map(async (item, i) => {
+      // full + thumb are compressed and uploaded side by side so the feed
+      // can stay on the small one and only the detail view pays for the full
+      const [full, thumb] = await Promise.all([
+        compressImage(item.uri, 'post'),
+        compressImage(item.uri, 'thumb'),
+      ]);
+      const [url, thumbnailUrl] = await Promise.all([
+        uploadToBucket('post-media', `${user.id}/${batchId}/${i}.jpg`, full, 'image/jpeg'),
+        uploadToBucket('post-media', `${user.id}/${batchId}/${i}-thumb.jpg`, thumb, 'image/jpeg'),
+      ]);
+      return {
+        type: 'image' as const,
+        url,
+        thumbnailUrl,
+        width: item.width,
+        height: item.height,
+      };
+    }),
+  );
 
   const { data, error } = await supabase
     .from('posts')
@@ -752,10 +866,20 @@ export async function createPost(input: {
       title: (input.title ?? '').trim(),
       body: input.body.trim(),
       media,
+      kind: input.kind ?? 'post',
+      activity_id: input.activityId ?? null,
     })
     .select(POST_SELECT)
     .single();
-  if (error) throw error;
+  if (error) {
+    // the images already landed in R2 with no row ever created to reference
+    // them — without this they'd sit there permanently, unused from the start
+    for (const m of media) {
+      deleteFromBucketByUrl('post-media', m.url);
+      if (m.thumbnailUrl) deleteFromBucketByUrl('post-media', m.thumbnailUrl);
+    }
+    throw error;
+  }
   return rowToPost(data, new Set());
 }
 
@@ -908,12 +1032,27 @@ export async function fetchBlockedUsers(): Promise<CommunityProfile[]> {
  * What this buys is consistency across the blocker's own devices, and an
  * immediate effect on the list already rendered.
  */
+let channelSeq = 0;
+/**
+ * `supabase.channel(topic)` returns the *same* object for a repeated topic
+ * string until the previous one's async unsubscribe finishes tearing down —
+ * and once `.subscribe()` has ever run on a channel, it refuses new `.on()`
+ * bindings forever, even mid-teardown. Reusing a topic keyed only on semantic
+ * identity (a post id, a mode) races that async unsubscribe: re-mounting the
+ * same screen before the previous subscription's teardown lands throws.
+ * A unique topic per subscription instance sidesteps the reuse lookup
+ * entirely, so this is never in play.
+ */
+function uniqueTopic(base: string): string {
+  return `${base}-${channelSeq++}`;
+}
+
 export function subscribeBlocks(
   userId: string,
   onBlocked: (blockedUserId: string) => void,
 ): () => void {
   const channel = supabase
-    .channel(`community-blocks-${userId}`)
+    .channel(uniqueTopic(`community-blocks-${userId}`))
     .on(
       'postgres_changes',
       { event: 'INSERT', schema: 'public', table: 'blocks', filter: `blocker_id=eq.${userId}` },
@@ -941,9 +1080,12 @@ export function subscribeFeed(
   },
 ): () => void {
   const channel = supabase
-    .channel(`community-feed-${mode}`)
+    .channel(uniqueTopic(`community-feed-${mode}`))
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'posts' }, async (payload) => {
-      const row = payload.new as { id: string; author_id: string };
+      const row = payload.new as { id: string; author_id: string; kind?: string };
+      // activity prompts live in their own pool, never the live feed — a
+      // response to one is kind='post' and belongs here same as any other
+      if (row.kind === 'activity') return;
       if (mode === 'following' && !followingIds.has(row.author_id)) return;
       const post = await fetchPost(row.id);
       if (post) handlers.onInsert(post);
@@ -975,7 +1117,7 @@ export function subscribeProfile(
   onUpdate: (patch: { followerCount: number; followingCount: number }) => void,
 ): () => void {
   const channel = supabase
-    .channel(`community-profile-${id}`)
+    .channel(uniqueTopic(`community-profile-${id}`))
     .on(
       'postgres_changes',
       {
@@ -1004,7 +1146,7 @@ export function subscribePost(
   },
 ): () => void {
   const channel = supabase
-    .channel(`community-post-${postId}`)
+    .channel(uniqueTopic(`community-post-${postId}`))
     .on(
       'postgres_changes',
       {
@@ -1070,9 +1212,7 @@ function prefetchFeedMedia(posts: CommunityPost[]) {
   for (const p of posts) {
     if (p.author.avatarUrl) urls.push(p.author.avatarUrl);
     if (p.fo?.avatarUrl) urls.push(p.fo.avatarUrl);
-    const first = p.media[0];
-    if (first?.type === 'video') urls.push(first.thumbnailUrl);
-    else for (const m of p.media) if (m.type === 'image') urls.push(m.thumbnailUrl || m.url);
+    for (const m of p.media) urls.push(m.thumbnailUrl || m.url);
   }
   if (urls.length) Image.prefetch(urls, 'memory-disk').catch(() => {});
 }
@@ -1251,31 +1391,34 @@ export function useCommunityFeed(mode: 'global' | 'following') {
 }
 
 /**
- * A single author's posts — the profile screens' "their posts" section, both
- * for the signed-in user's own profile and anyone else's public one.
+ * A paginated post list scoped to one owner — see useUserPosts (an author's
+ * posts) and useFoPosts (posts tagged to an F/O) for the entry points.
  *
  * Deliberately lighter than useCommunityFeed: no following-set or realtime
- * subscription, since a profile page is a secondary, already-scoped view —
+ * subscription, since these are secondary, already-scoped views —
  * posting/liking elsewhere is reflected next time this list loads, not live.
  */
-export function useUserPosts(userId: string | undefined) {
+function usePostList(
+  ownerId: string | undefined,
+  fetchPage: (id: string, opts: PostPageOpts) => Promise<CommunityPost[]>,
+) {
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const hasMore = useRef(true);
 
   const load = useCallback(async () => {
-    if (!userId) {
+    if (!ownerId) {
       setPosts([]);
       setLoading(false);
       return;
     }
-    const page = await fetchUserPosts(userId, { limit: 20 });
+    const page = await fetchPage(ownerId, { limit: 20 });
     hasMore.current = page.length >= 20;
     setPosts(page);
     setLoading(false);
     prefetchFeedMedia(page);
-  }, [userId]);
+  }, [ownerId, fetchPage]);
 
   useEffect(() => {
     setLoading(true);
@@ -1296,14 +1439,14 @@ export function useUserPosts(userId: string | undefined) {
   const loadingMore = useRef(false);
 
   const loadMore = useCallback(async () => {
-    if (!userId || loadingMore.current || !hasMore.current) return;
+    if (!ownerId || loadingMore.current || !hasMore.current) return;
     const current = postsRef.current;
     if (current.length === 0) return;
 
     loadingMore.current = true;
     try {
       const limit = 20;
-      const more = await fetchUserPosts(userId, { before: current[current.length - 1].createdAt, limit });
+      const more = await fetchPage(ownerId, { before: current[current.length - 1].createdAt, limit });
       if (more.length < limit) hasMore.current = false;
       setPosts((prev) => {
         const seen = new Set(prev.map((p) => p.id));
@@ -1313,7 +1456,7 @@ export function useUserPosts(userId: string | undefined) {
     } finally {
       loadingMore.current = false;
     }
-  }, [userId]);
+  }, [ownerId, fetchPage]);
 
   const inFlight = useRef<Set<string>>(new Set());
 
@@ -1355,6 +1498,24 @@ export function useUserPosts(userId: string | undefined) {
     toggleLikeOptimistic,
     removePost,
   };
+}
+
+/**
+ * A single author's posts — the profile screens' "their posts" section, both
+ * for the signed-in user's own profile and anyone else's public one.
+ */
+export function useUserPosts(userId: string | undefined) {
+  return usePostList(userId, fetchUserPosts);
+}
+
+/** Every post tagged to one F/O, for that F/O's profile page. */
+export function useFoPosts(foId: string | undefined) {
+  return usePostList(foId, fetchFoPosts);
+}
+
+/** Every response to one activity prompt, for that prompt's detail page. */
+export function useActivityResponses(activityId: string | undefined) {
+  return usePostList(activityId, fetchActivityResponses);
 }
 
 export function useCommunityPost(id: string) {

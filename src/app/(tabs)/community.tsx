@@ -31,7 +31,30 @@ import { AccountSheet } from '@/components/community/AccountSheet';
 import { AVATAR_IMAGE } from '@/lib/imageProps';
 import { PostCard } from '@/components/community/PostCard';
 import type { CommunityPost } from '@/store/community';
-import { checkUsernameAvailable, claimUsername, fetchProfile, logSyncFailure, pushOwnProfile, syncIdentifyFoPublish, useCommunityFeed } from '@/store/community';
+import {
+  checkUsernameAvailable,
+  claimUsername,
+  fetchActivityPool,
+  fetchProfile,
+  fetchTodaysActivity,
+  logSyncFailure,
+  pushOwnProfile,
+  syncIdentifyFoPublish,
+  toggleLike,
+  useCommunityFeed,
+} from '@/store/community';
+
+/**
+ * The locally cached username is only trustworthy for the account it was
+ * cached for. Without this check, deleting an account and signing into a new
+ * one (or switching accounts on a shared device) could resurrect a stale
+ * username — silently unlocking the feed and posting before the *current*
+ * account has actually claimed a handle server-side.
+ */
+function cachedUsernameFor(userId: string | undefined): string {
+  if (!userId) return '';
+  return getGlobalSetting('user_username_uid') === userId ? getGlobalSetting('user_username') : '';
+}
 import { InlineToast, useInlineToast } from '@/components/ui/InlineToast';
 import { FeedSkeleton } from '@/components/community/PostCardSkeleton';
 import { getGlobalSetting, saveGlobalSetting } from '@/store/onboarding';
@@ -143,9 +166,18 @@ const FeedSeparator = () => <View style={styles.feedSeparator} />;
 const keyExtractor = (p: CommunityPost) => p.id;
 
 function Feed({ insets }: { insets: { top: number } }) {
-  const [mode, setMode] = useState<'global' | 'following'>('global');
-  const { posts, loading, refreshing, refresh, loadMore, toggleLikeOptimistic } = useCommunityFeed(mode);
+  const [tab, setTab] = useState<'global' | 'following' | 'activities'>('global');
+  // the underlying feed hook only ever runs in global/following mode — picking
+  // the activities pill doesn't touch it, just swaps which data source the
+  // list below renders from, so switching back restores it with no re-fetch
+  const [feedMode, setFeedMode] = useState<'global' | 'following'>('global');
+  const { posts, loading, refreshing, refresh, loadMore, toggleLikeOptimistic } = useCommunityFeed(feedMode);
   const { message: toastMsg, nonce: toastNonce, show: showToast } = useInlineToast();
+
+  function selectTab(t: typeof tab) {
+    setTab(t);
+    if (t !== 'activities') setFeedMode(t);
+  }
 
   // follows aren't realtime, so the "following" list otherwise won't include
   // someone new until the tab is left and reopened — the moment a follow made
@@ -160,15 +192,92 @@ function Feed({ insets }: { insets: { top: number } }) {
     }, [refresh]),
   );
 
+  // the vote pool: activity prompts nobody has picked yet, highest-voted first.
+  // Deliberately no pagination or realtime here — vote-count ordering doesn't
+  // map to a `before` cursor, and this app's submission volume doesn't need it.
+  const [pool, setPool] = useState<CommunityPost[]>([]);
+  const [poolLoading, setPoolLoading] = useState(true);
+  const [poolRefreshing, setPoolRefreshing] = useState(false);
+  const loadPool = useCallback(async () => {
+    setPool(await fetchActivityPool());
+  }, []);
+  useEffect(() => {
+    if (tab !== 'activities') return;
+    setPoolLoading(true);
+    loadPool().finally(() => setPoolLoading(false));
+  }, [tab, loadPool]);
+
+  const inFlightPool = useRef<Set<string>>(new Set());
+  const togglePoolLikeOptimistic = useCallback(
+    async (postId: string) => {
+      if (inFlightPool.current.has(postId)) return;
+      const target = pool.find((p) => p.id === postId);
+      if (!target) return;
+      const wasLiked = target.likedByMe;
+      const apply = (liked: boolean, delta: number) =>
+        setPool((prev) => prev.map((p) => (p.id === postId ? { ...p, likedByMe: liked, likeCount: p.likeCount + delta } : p)));
+      inFlightPool.current.add(postId);
+      apply(!wasLiked, wasLiked ? -1 : 1);
+      try {
+        await toggleLike(postId, wasLiked);
+      } catch {
+        apply(wasLiked, wasLiked ? 1 : -1);
+        showToast("couldn't update vote — try again");
+      } finally {
+        inFlightPool.current.delete(postId);
+      }
+    },
+    [pool, showToast],
+  );
+
+  // today's featured activity — the single daily winner, pinned above the
+  // pills regardless of which one is selected, fetched once per app session
+  // (calling it is what picks the winner the first time anyone opens the feed
+  // that day; every client after just reads the same row back — see
+  // fetchTodaysActivity's doc comment)
+  const [featured, setFeatured] = useState<CommunityPost | null>(null);
+  useEffect(() => {
+    fetchTodaysActivity().then(setFeatured);
+  }, []);
+  const toggleFeaturedLikeOptimistic = useCallback(async () => {
+    if (!featured) return;
+    const wasLiked = featured.likedByMe;
+    setFeatured((f) => (f ? { ...f, likedByMe: !wasLiked, likeCount: f.likeCount + (wasLiked ? -1 : 1) } : f));
+    try {
+      await toggleLike(featured.id, wasLiked);
+    } catch {
+      setFeatured((f) => (f ? { ...f, likedByMe: wasLiked, likeCount: f.likeCount + (wasLiked ? 1 : -1) } : f));
+      showToast("couldn't update vote — try again");
+    }
+  }, [featured, showToast]);
+
   const renderPost = useCallback(
     ({ item }: { item: CommunityPost }) => (
       <PostCard
         post={item}
-        onToggleLike={() => toggleLikeOptimistic(item.id, () => showToast("couldn't update like — try again"))}
+        onToggleLike={() =>
+          tab === 'activities'
+            ? togglePoolLikeOptimistic(item.id)
+            : toggleLikeOptimistic(item.id, () => showToast("couldn't update like — try again"))
+        }
       />
     ),
-    [toggleLikeOptimistic, showToast],
+    [tab, togglePoolLikeOptimistic, toggleLikeOptimistic, showToast],
   );
+
+  const activityData = tab === 'activities';
+  const data = activityData ? pool : posts;
+  const isLoading = activityData ? poolLoading : loading;
+  const isRefreshing = activityData ? poolRefreshing : refreshing;
+  const handleRefresh = useCallback(async () => {
+    if (activityData) {
+      setPoolRefreshing(true);
+      await loadPool();
+      setPoolRefreshing(false);
+    } else {
+      await refresh();
+    }
+  }, [activityData, loadPool, refresh]);
 
   return (
     <View style={styles.feedWrap}>
@@ -176,22 +285,29 @@ function Feed({ insets }: { insets: { top: number } }) {
         <InlineToast message={toastMsg} nonce={toastNonce} />
       </View>
 
+      {!!featured && (
+        <View style={styles.featuredWrap}>
+          <Text style={styles.featuredLabel}>today's activity</Text>
+          <PostCard post={featured} onToggleLike={toggleFeaturedLikeOptimistic} />
+        </View>
+      )}
+
       <View style={styles.tabsRow}>
-        {(['global', 'following'] as const).map((m) => (
-          <Pressable key={m} onPress={() => setMode(m)} style={[styles.tab, mode === m && styles.tabActive]}>
-            <Text style={[styles.tabText, mode === m && styles.tabTextActive]}>{m}</Text>
+        {(['global', 'following', 'activities'] as const).map((m) => (
+          <Pressable key={m} onPress={() => selectTab(m)} style={[styles.tab, tab === m && styles.tabActive]}>
+            <Text style={[styles.tabText, tab === m && styles.tabTextActive]}>{m}</Text>
           </Pressable>
         ))}
       </View>
 
       <FlatList
-        data={posts}
+        data={data}
         keyExtractor={keyExtractor}
         renderItem={renderPost}
         contentContainerStyle={styles.feedContent}
         ItemSeparatorComponent={FeedSeparator}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={Colors.sakuraDeep} />}
-        onEndReached={loadMore}
+        refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={Colors.sakuraDeep} />}
+        onEndReached={activityData ? undefined : loadMore}
         onEndReachedThreshold={0.4}
         showsVerticalScrollIndicator={false}
         // posts carry photos, so keep the mounted window tight — offscreen cards
@@ -200,25 +316,42 @@ function Feed({ insets }: { insets: { top: number } }) {
         maxToRenderPerBatch={6}
         windowSize={7}
         removeClippedSubviews
+        ListHeaderComponent={
+          activityData ? (
+            <Pressable style={styles.poolSubmitRow} onPress={() => router.push('/social/post/new?kind=activity' as any)}>
+              <View style={styles.poolSubmitIcon}>
+                <Text style={styles.fabText}>+</Text>
+              </View>
+              <Text style={styles.poolSubmitText}>submit an activity</Text>
+            </Pressable>
+          ) : null
+        }
         ListEmptyComponent={
-          loading ? (
+          isLoading ? (
             <FeedSkeleton />
+          ) : activityData ? (
+            <View style={styles.feedEmpty}>
+              <Text style={styles.emptyTitle}>the pool's empty</Text>
+              <Text style={styles.claimSub}>submit a prompt and be the first to get voted up ♡</Text>
+            </View>
           ) : (
             <View style={styles.feedEmpty}>
               <Text style={styles.emptyTitle}>
-                {mode === 'following' ? 'quiet in here' : 'be the first to post'}
+                {tab === 'following' ? 'quiet in here' : 'be the first to post'}
               </Text>
               <Text style={styles.claimSub}>
-                {mode === 'following' ? 'follow people to see their posts here' : 'share something with the club ♡'}
+                {tab === 'following' ? 'follow people to see their posts here' : 'share something with the club ♡'}
               </Text>
             </View>
           )
         }
       />
 
-      <Pressable style={styles.fab} onPress={() => router.push('/social/post/new' as any)}>
-        <Text style={styles.fabText}>+</Text>
-      </Pressable>
+      {!activityData && (
+        <Pressable style={styles.fab} onPress={() => router.push('/social/post/new' as any)}>
+          <Text style={styles.fabText}>+</Text>
+        </Pressable>
+      )}
     </View>
   );
 }
@@ -232,8 +365,8 @@ export default function CommunityScreen() {
 
   const [loading, setLoading] = useState<'google' | 'apple' | null>(null);
   const [alertModal, setAlertModal] = useState<{ title: string; message: string } | null>(null);
-  const [username, setUsername] = useState(() => getGlobalSetting('user_username'));
-  const [checkingUsername, setCheckingUsername] = useState(!!user && !getGlobalSetting('user_username'));
+  const [username, setUsername] = useState(() => cachedUsernameFor(user?.id));
+  const [checkingUsername, setCheckingUsername] = useState(!!user && !cachedUsernameFor(user?.id));
   const [showAccount, setShowAccount] = useState(false);
   const [avatarUri, setAvatarUri] = useState(() => getGlobalSetting('user_avatar'));
   // measured rather than derived: header height shifts with safe-area insets
@@ -249,7 +382,7 @@ export default function CommunityScreen() {
       if (identifyFoId) await syncIdentifyFoPublish(identifyFoId).catch(logSyncFailure('publish paired F/O'));
       await pushOwnProfile().catch(logSyncFailure('push own profile'));
     })();
-    const local = getGlobalSetting('user_username');
+    const local = cachedUsernameFor(user.id);
     if (local) {
       setUsername(local);
       setCheckingUsername(false);
@@ -259,6 +392,7 @@ export default function CommunityScreen() {
     fetchProfile(user.id).then((profile) => {
       if (profile?.username) {
         saveGlobalSetting('user_username', profile.username);
+        saveGlobalSetting('user_username_uid', user.id);
         setUsername(profile.username);
       }
       setCheckingUsername(false);
@@ -568,6 +702,21 @@ const styles = StyleSheet.create({
   // feed
   feedWrap: { flex: 1 },
   feedToastWrap: { position: 'absolute', top: 4, left: 0, right: 0, zIndex: 10, alignItems: 'center' },
+  featuredWrap: { paddingHorizontal: Spacing.s5, paddingBottom: Spacing.s3 },
+  featuredLabel: {
+    fontFamily: FontFamily.uiSemiBold, fontSize: sf(11), color: Colors.sakuraDeep,
+    textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: Spacing.s2,
+  },
+  poolSubmitRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    borderWidth: 1.4, borderColor: Colors.line, borderStyle: 'dashed', borderRadius: Radius.r4,
+    backgroundColor: Colors.paperDeep, padding: Spacing.s4, marginBottom: 12,
+  },
+  poolSubmitIcon: {
+    width: 30, height: 30, borderRadius: Radius.pill, backgroundColor: Colors.sakuraDeep,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  poolSubmitText: { fontFamily: FontFamily.uiMedium, fontSize: sf(13), color: Colors.ink2 },
   tabsRow: {
     flexDirection: 'row',
     gap: 8,

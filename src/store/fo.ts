@@ -15,6 +15,10 @@ export type Fo = {
   bio: string;
   height: string;
   weight: string;
+  /** free text — canon ages are as often "looks 20, actually 900" as a number */
+  age: string;
+  /** free text — usually a day with no year, e.g. "March 3" */
+  birthday: string;
   photoUri: string;
   /** face used on notifications — falls back to photoUri when empty */
   notifPhotoUri: string;
@@ -78,6 +82,8 @@ function rowToFo(row: Record<string, unknown>): Fo {
     bio: (row.bio as string) ?? '',
     height: (row.height as string) ?? '',
     weight: (row.weight as string) ?? '',
+    age: (row.age as string) ?? '',
+    birthday: (row.birthday as string) ?? '',
     photoUri: (row.photo_uri as string) ?? '',
     notifPhotoUri: (row.notif_photo_uri as string) ?? '',
     pageBgColor: (row.page_bg_color as string) ?? '',
@@ -131,6 +137,8 @@ export function addFo(d: {
   bio?: string;
   height?: string;
   weight?: string;
+  age?: string;
+  birthday?: string;
   photoUri?: string;
   song?: string;
   songLink?: string;
@@ -138,8 +146,8 @@ export function addFo(d: {
 }): string {
   const id = newId();
   getDb().runSync(
-    `INSERT INTO fo (id, name, pronouns, fandom, rel_status, share_status, bio, height, weight, photo_uri, song, song_link, gallery, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO fo (id, name, pronouns, fandom, rel_status, share_status, bio, height, weight, age, birthday, photo_uri, song, song_link, gallery, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     id,
     d.name,
     d.pronouns ?? '',
@@ -149,6 +157,8 @@ export function addFo(d: {
     d.bio ?? '',
     d.height ?? '',
     d.weight ?? '',
+    d.age ?? '',
+    d.birthday ?? '',
     d.photoUri ?? '',
     d.song ?? '',
     d.songLink ?? '',
@@ -171,6 +181,8 @@ export function updateFo(id: string, d: Partial<Omit<Fo, 'id' | 'createdAt'>>) {
   if (d.bio !== undefined)         { fields.push('bio = ?');          values.push(d.bio); }
   if (d.height !== undefined)      { fields.push('height = ?');       values.push(d.height); }
   if (d.weight !== undefined)      { fields.push('weight = ?');       values.push(d.weight); }
+  if (d.age !== undefined)         { fields.push('age = ?');          values.push(d.age); }
+  if (d.birthday !== undefined)    { fields.push('birthday = ?');     values.push(d.birthday); }
   if (d.photoUri !== undefined)    { fields.push('photo_uri = ?');    values.push(d.photoUri); }
   if (d.notifPhotoUri !== undefined) { fields.push('notif_photo_uri = ?'); values.push(d.notifPhotoUri); }
   if (d.pageBgColor !== undefined) { fields.push('page_bg_color = ?'); values.push(d.pageBgColor); }
