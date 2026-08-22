@@ -373,7 +373,7 @@ const s = StyleSheet.create({
   removeXText: {
     color: '#fff',
     fontSize: sf(12),
-    lineHeight: 14,
+    lineHeight: sf(14),
     fontFamily: FontFamily.ui,
   },
 

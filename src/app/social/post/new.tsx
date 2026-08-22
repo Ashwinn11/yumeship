@@ -1,6 +1,7 @@
 import { Image } from 'expo-image';
+import * as ImagePicker from 'expo-image-picker';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -13,18 +14,62 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Svg, { Path, Rect, Text as SvgText } from 'react-native-svg';
 
-import { MediaComposer } from '@/components/community/MediaComposer';
+import { MediaComposer, mediaFromAssets } from '@/components/community/MediaComposer';
+import { MIN_POLL_OPTIONS, PollComposer } from '@/components/community/PollComposer';
+import { useIPad } from '@/hooks/use-ipad';
 import { AVATAR_IMAGE } from '@/lib/imageProps';
 import { Colors, FontFamily, Radius, Spacing, sf } from '@/constants/theme';
-import { createPost, fetchPost, type CommunityPost, type LocalPickedMedia } from '@/store/community';
+import { createPost, MAX_IMAGES, type LocalPickedMedia } from '@/store/community';
 import { getGlobalSetting } from '@/store/onboarding';
 
 const MAX_BODY = 4000;
 
+function ImageIcon({ size = 21, color = Colors.sakuraDeep }: { size?: number; color?: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 16 16" fill="none">
+      <Path d="M2 3.5C2 2.7 2.7 2 3.5 2h9c.8 0 1.5.7 1.5 1.5v9c0 .8-.7 1.5-1.5 1.5h-9C2.7 14 2 13.3 2 12.5v-9z" stroke={color} strokeWidth={1.2} />
+      <Path d="M2.5 11.5l3.3-3.3c.4-.4 1-.4 1.4 0L8 9l2.3-2.3c.4-.4 1-.4 1.4 0l2 2" stroke={color} strokeWidth={1.2} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
+
+function PollIcon({ size = 21, color = Colors.sakuraDeep }: { size?: number; color?: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 16 16" fill="none">
+      <Rect x="2" y="9" width="3" height="5" rx="0.8" stroke={color} strokeWidth={1.2} />
+      <Rect x="6.5" y="5.5" width="3" height="8.5" rx="0.8" stroke={color} strokeWidth={1.2} />
+      <Rect x="11" y="2" width="3" height="12" rx="0.8" stroke={color} strokeWidth={1.2} />
+    </Svg>
+  );
+}
+
+function GifIcon({ size = 21, color = Colors.sakuraDeep }: { size?: number; color?: string }) {
+  return (
+    // same 2–14 vertical span as ImageIcon/PollIcon above, so all three read
+    // as the same size in the toolbar row despite different shapes
+    <Svg width={size} height={size} viewBox="0 0 16 16" fill="none">
+      <Rect x="1" y="2" width="14" height="12" rx="2.5" stroke={color} strokeWidth={1.2} />
+      <SvgText
+        x="8"
+        y="10"
+        fontSize="6.4"
+        fontWeight="700"
+        fill={color}
+        textAnchor="middle"
+        fontFamily={FontFamily.uiSemiBold}
+      >
+        GIF
+      </SvgText>
+    </Svg>
+  );
+}
+
 export default function NewPostScreen() {
   const insets = useSafeAreaInsets();
-  const { kind, activityId } = useLocalSearchParams<{ kind?: string; activityId?: string }>();
+  const { column } = useIPad();
+  const { kind } = useLocalSearchParams<{ kind?: string }>();
   const isActivity = kind === 'activity';
 
   // whichever F/O is paired in edit profile tags every post automatically —
@@ -37,20 +82,46 @@ export default function NewPostScreen() {
     color: getGlobalSetting('user_color') || Colors.sakura,
   };
 
-  const [respondingTo, setRespondingTo] = useState<CommunityPost | null>(null);
-  useEffect(() => {
-    if (!activityId) return;
-    fetchPost(activityId).then(setRespondingTo);
-  }, [activityId]);
-
   const [body, setBody] = useState('');
   const [media, setMedia] = useState<LocalPickedMedia[]>([]);
+  // null = no poll attached; an array (starts at 2 blank options) = poll mode,
+  // mutually exclusive with media — same as Twitter/IG
+  const [poll, setPoll] = useState<string[] | null>(null);
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState('');
 
-  // a post just needs *something* in it — words or a photo, either is enough
-  const canPost = (body.trim().length > 0 || media.length > 0) && !posting;
+  const filledPollOptions = poll?.map((o) => o.trim()).filter(Boolean) ?? [];
+  const pollReady = poll ? filledPollOptions.length >= MIN_POLL_OPTIONS : true;
+  // a post just needs *something* in it — words, a photo, a gif, or a poll, any one is enough
+  const canPost = (body.trim().length > 0 || media.length > 0 || !!poll) && pollReady && !posting;
   const remaining = MAX_BODY - body.length;
+  // photos, gif, and poll are three mutually exclusive attachment modes —
+  // picking one clears the others, same as Twitter
+  const hasGif = media[0]?.type === 'gif';
+  const hasPhotos = media.length > 0 && !hasGif;
+
+  // photos and gifs share the same system picker (there's no OS-level "photos
+  // only" or "gifs only" filter) — mediaFromAssets reads each asset's real
+  // type and routes it correctly rather than rejecting a mismatched pick
+  async function pickImages() {
+    const res = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsMultipleSelection: true,
+      selectionLimit: Math.max(1, MAX_IMAGES - media.length),
+      quality: 0.9,
+    });
+    if (res.canceled) return;
+    setPoll(null);
+    setMedia((prev) => mediaFromAssets(res.assets, prev));
+  }
+
+  // one gif per post, same as Twitter — mutually exclusive with photos/poll
+  async function pickGif() {
+    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 1 });
+    if (res.canceled) return;
+    setPoll(null);
+    setMedia(mediaFromAssets(res.assets));
+  }
 
   async function submit() {
     if (!canPost) return;
@@ -59,12 +130,12 @@ export default function NewPostScreen() {
     try {
       await createPost({
         body,
-        media,
+        media: poll ? [] : media,
         foProfileId: isActivity ? undefined : identifyFoId || undefined,
         kind: isActivity ? 'activity' : undefined,
-        activityId: activityId || undefined,
+        poll: poll ? filledPollOptions : undefined,
       });
-      router.back();
+      router.canGoBack() ? router.back() : router.replace('/(tabs)/community' as any);
     } catch (e: any) {
       setError(e?.message ?? 'something went wrong — try again');
     } finally {
@@ -77,8 +148,8 @@ export default function NewPostScreen() {
       style={styles.screen}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <View style={[styles.header, { paddingTop: insets.top + Spacing.s1 }]}>
-        <Pressable onPress={() => router.back()} hitSlop={8}>
+      <View style={[styles.header, column, { paddingTop: insets.top + Spacing.s1 }]}>
+        <Pressable onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)/community' as any))} hitSlop={8}>
           <Text style={styles.cancel}>cancel</Text>
         </Pressable>
         <Pressable
@@ -100,16 +171,11 @@ export default function NewPostScreen() {
 
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, column]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        {isActivity && <Text style={styles.kindLabel}>submitting an activity — everyone can vote and answer it</Text>}
-        {!!respondingTo && (
-          <Text style={styles.kindLabel} numberOfLines={2}>
-            ↳ responding to "{respondingTo.title || respondingTo.body}"
-          </Text>
-        )}
+        {isActivity && <Text style={styles.kindLabel}>submitting an activity — everyone can vote on it</Text>}
 
         <View style={styles.composerRow}>
           <View style={[styles.avatar, { backgroundColor: me.color }]}>
@@ -132,7 +198,13 @@ export default function NewPostScreen() {
           />
         </View>
 
-        {!isActivity && (
+        {!isActivity && !!poll && (
+          <View style={styles.attachWrap}>
+            <PollComposer options={poll} onChange={setPoll} onRemove={() => setPoll(null)} />
+          </View>
+        )}
+
+        {!isActivity && media.length > 0 && !poll && (
           <View style={styles.mediaWrap}>
             <MediaComposer media={media} onChange={setMedia} />
           </View>
@@ -141,8 +213,30 @@ export default function NewPostScreen() {
         {!!error && <Text style={styles.error}>{error}</Text>}
       </ScrollView>
 
-      {remaining < 200 && (
-        <Text style={[styles.counter, remaining < 0 && styles.counterOver]}>{remaining}</Text>
+      {!isActivity ? (
+        <View style={[styles.toolbar, column]}>
+          <Pressable style={styles.toolbarBtn} disabled={!!poll || hasGif} onPress={pickImages}>
+            <ImageIcon color={poll || hasGif ? Colors.line : Colors.sakuraDeep} />
+          </Pressable>
+          <Pressable style={styles.toolbarBtn} disabled={!!poll || hasPhotos} onPress={pickGif}>
+            <GifIcon color={poll || hasPhotos ? Colors.line : hasGif ? Colors.sakuraInk : Colors.sakuraDeep} />
+          </Pressable>
+          <Pressable
+            style={styles.toolbarBtn}
+            disabled={media.length > 0}
+            onPress={() => setPoll(poll ? null : ['', ''])}
+          >
+            <PollIcon color={media.length > 0 ? Colors.line : poll ? Colors.sakuraInk : Colors.sakuraDeep} />
+          </Pressable>
+          <View style={styles.toolbarSpacer} />
+          {remaining < 200 && (
+            <Text style={[styles.counterInline, remaining < 0 && styles.counterOver]}>{remaining}</Text>
+          )}
+        </View>
+      ) : (
+        remaining < 200 && (
+          <Text style={[styles.counter, remaining < 0 && styles.counterOver]}>{remaining}</Text>
+        )
       )}
     </KeyboardAvoidingView>
   );
@@ -186,9 +280,20 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.ui, fontSize: sf(15), color: Colors.ink, lineHeight: sf(22),
   },
 
-  mediaWrap: { marginTop: Spacing.s3, paddingLeft: 48 },
+  attachWrap: { marginTop: Spacing.s3, paddingLeft: 48 },
+  mediaWrap: { marginTop: Spacing.s3 },
 
   error: { fontFamily: FontFamily.ui, fontSize: sf(12), color: Colors.ember, marginTop: 16, textAlign: 'center' },
+
+  toolbar: {
+    flexDirection: 'row', alignItems: 'center', gap: Spacing.s5,
+    paddingHorizontal: Spacing.s5, paddingVertical: Spacing.s3,
+    borderTopWidth: 1, borderTopColor: Colors.line,
+  },
+  toolbarBtn: { padding: 2 },
+  toolbarSpacer: { flex: 1 },
+  counterInline: { fontFamily: FontFamily.uiMedium, fontSize: sf(11), color: Colors.ink3 },
+
   counter: {
     position: 'absolute', right: Spacing.s5, bottom: Spacing.s4,
     fontFamily: FontFamily.uiMedium, fontSize: sf(11), color: Colors.ink3,

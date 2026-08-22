@@ -125,7 +125,7 @@ export default function OnbRules() {
   return (
     <View style={[styles.screen, { paddingTop: insets.top + Spacing.s1, paddingBottom: insets.bottom + Spacing.s1 }]}>
       {isNew ? (
-        <View style={styles.header}>
+        <View style={[styles.header, column]}>
           <Pressable onPress={() => router.back()} style={styles.backBtn}>
             <Text style={styles.backBtnText}>‹</Text>
           </Pressable>
@@ -217,7 +217,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1.6, textTransform: 'uppercase',
   },
   heading: {
-    fontFamily: FontFamily.displayItalic, fontSize: sf(26), lineHeight: 28,
+    fontFamily: FontFamily.displayItalic, fontSize: sf(26), lineHeight: sf(28),
     letterSpacing: -0.3, color: Colors.ink, marginTop: Spacing.s2,
   },
   headingNew: { marginTop: 0 },
@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
   },
   templateTape: { position: 'absolute', top: -3, left: 10 },
   templateLabel: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(13), marginTop: 4 },
-  templateDesc: { fontFamily: FontFamily.ui, fontSize: sf(10), color: Colors.ink3, marginTop: 2, lineHeight: 12 },
+  templateDesc: { fontFamily: FontFamily.ui, fontSize: sf(10), color: Colors.ink3, marginTop: 2, lineHeight: sf(12) },
   templateCheck: {
     position: 'absolute', bottom: 6, right: 6, width: 14, height: 14,
     borderRadius: Radius.pill, alignItems: 'center', justifyContent: 'center',
@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
   },
   privacyText: { flex: 1, gap: 2 },
   privacyTitle: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(13), color: Colors.ink },
-  privacyBody: { fontFamily: FontFamily.ui, fontSize: sf(11), color: Colors.ink3, lineHeight: 15 },
+  privacyBody: { fontFamily: FontFamily.ui, fontSize: sf(11), color: Colors.ink3, lineHeight: sf(15) },
   actions: { paddingHorizontal: Spacing.s6, paddingBottom: Spacing.s3 },
   decoTR: { position: 'absolute', top: 0, right: 0 },
   decoBL: { position: 'absolute', bottom: 120, right: 30 },

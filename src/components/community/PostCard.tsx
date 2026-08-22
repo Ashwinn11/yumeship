@@ -10,7 +10,9 @@ import type { CommunityPost } from '@/store/community';
 
 import { LikeButton } from './LikeButton';
 import { MediaCarousel } from './MediaCarousel';
+import { PollView } from './PollView';
 import { PostAuthorHeader } from './PostAuthorHeader';
+import { VoteButtons } from './VoteButtons';
 
 function CommentBubbleIcon({ size = 13, color = Colors.ink3 }: { size?: number; color?: string }) {
   return (
@@ -28,11 +30,15 @@ function CommentBubbleIcon({ size = 13, color = Colors.ink3 }: { size?: number; 
 type Props = {
   post: CommunityPost;
   onToggleLike: () => void;
+  /** activity prompts only — up/down vote, replaces onToggleLike for these cards */
+  onVote?: (direction: -1 | 1) => void;
+  /** posts with a poll only */
+  onPollVote?: (optionIndex: number) => void;
   /** own-profile posts only — public feed/profile cards never get this */
   onRequestDelete?: () => void;
 };
 
-function PostCardImpl({ post, onToggleLike, onRequestDelete }: Props) {
+function PostCardImpl({ post, onToggleLike, onVote, onPollVote, onRequestDelete }: Props) {
   return (
     <Pressable style={styles.card} onPress={() => router.push(`/social/post/${post.id}` as any)}>
       {onRequestDelete ? (
@@ -46,14 +52,6 @@ function PostCardImpl({ post, onToggleLike, onRequestDelete }: Props) {
       )}
 
       <PostAuthorHeader author={post.author} fo={post.fo} createdAt={post.createdAt} />
-
-      {!!post.activity && (
-        <Pressable onPress={() => router.push(`/social/post/${post.activity!.id}` as any)} hitSlop={4}>
-          <Text style={styles.activityChip} numberOfLines={1}>
-            ↳ {post.activity.title || post.activity.body || 'an activity'}
-          </Text>
-        </Pressable>
-      )}
 
       {!!post.title && <Text style={styles.title}>{post.title}</Text>}
       {!!post.body && (
@@ -72,26 +70,21 @@ function PostCardImpl({ post, onToggleLike, onRequestDelete }: Props) {
         />
       )}
 
+      {!!post.poll && <PollView poll={post.poll} onVote={(i) => onPollVote?.(i)} />}
+
       <View style={styles.divider} />
 
       <View style={styles.footer}>
-        {/* voting on an activity prompt is just liking it — same button, same
-            handler, only the label changes to say what the tap actually means */}
-        <LikeButton
-          liked={post.likedByMe}
-          count={post.likeCount}
-          onToggle={onToggleLike}
-          label={post.kind === 'activity' ? 'votes' : undefined}
-        />
         {post.kind === 'activity' ? (
-          <View style={styles.commentRow}>
-            <Text style={styles.commentCount}>{post.responseCount} responses</Text>
-          </View>
+          <VoteButtons score={post.voteScore} myVote={post.myVote} onVote={(d) => onVote?.(d)} />
         ) : (
-          <View style={styles.commentRow}>
-            <CommentBubbleIcon />
-            <Text style={styles.commentCount}>{post.commentCount}</Text>
-          </View>
+          <>
+            <LikeButton liked={post.likedByMe} count={post.likeCount} onToggle={onToggleLike} />
+            <View style={styles.commentRow}>
+              <CommentBubbleIcon />
+              <Text style={styles.commentCount}>{post.commentCount}</Text>
+            </View>
+          </>
         )}
       </View>
     </Pressable>
@@ -116,7 +109,6 @@ const styles = StyleSheet.create({
     width: 26, height: 26, borderRadius: Radius.pill,
     backgroundColor: Colors.paperDeep, alignItems: 'center', justifyContent: 'center',
   },
-  activityChip: { fontFamily: FontFamily.uiMedium, fontSize: sf(11), color: Colors.sakuraDeep },
   title: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(16), color: Colors.ink, marginTop: 2 },
   body: { fontFamily: FontFamily.ui, fontSize: sf(13), color: Colors.ink2, lineHeight: sf(19) },
   divider: { height: 1, backgroundColor: Colors.line, marginTop: 2 },

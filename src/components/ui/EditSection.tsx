@@ -37,5 +37,5 @@ export const styles = StyleSheet.create({
     ...Shadow.s1,
   },
   innerSpacer: { height: 14 },
-  sectionHint: { fontFamily: FontFamily.ui, fontSize: sf(11), color: Colors.ink3, lineHeight: 15 },
+  sectionHint: { fontFamily: FontFamily.ui, fontSize: sf(11), color: Colors.ink3, lineHeight: sf(15) },
 });

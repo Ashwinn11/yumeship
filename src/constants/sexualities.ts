@@ -12,9 +12,17 @@ export const SEXUALITY_OPTIONS: SexualityOption[] = [
   { key: 'aromantic', label: 'Aromantic', colors: ['#3DA542', '#A7D379', '#FFFFFF', '#A9A9A9', '#000000'] },
   { key: 'polysexual', label: 'Polysexual', colors: ['#F714BA', '#01D66A', '#1594F6'] },
   { key: 'omnisexual', label: 'Omnisexual', colors: ['#FE9ACE', '#FF53BF', '#200044', '#6760FE', '#8EA6FF'] },
-  { key: 'queer', label: 'Queer', colors: ['#E40303', '#FF8C00', '#FFED00', '#008026', '#004CFF', '#732982'] },
+  // distinct from the Pride rainbow — its own 8-stripe flag, not a rainbow reuse
+  { key: 'queer', label: 'Queer', colors: ['#000000', '#99D9EA', '#00A2E8', '#B5E61D', '#FFFFFF', '#FFC90E', '#FD6666', '#FFAEC9'] },
   { key: 'straight', label: 'Straight' },
   { key: 'questioning', label: 'Questioning' },
+  // real, actively-used self-descriptors (attraction to fictional characters) confirmed
+  // on r/yumeshipping and a 2K+-follower Tumblr tag — but unlike the flags above, no
+  // single design is catalogued on flagcolorcodes.com or the LGBTQIA+ wiki, so this
+  // stays text-only rather than guessing at a "recognizable" flag that isn't
+  { key: 'fictosexual', label: 'Fictosexual' },
+  { key: 'fictoromantic', label: 'Fictoromantic' },
+  { key: 'fictorose', label: 'Fictorose' },
 ];
 
 export function findSexualityOption(label: string): SexualityOption | undefined {

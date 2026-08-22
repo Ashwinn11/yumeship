@@ -13,6 +13,7 @@ import { IconTrashSolid } from '@/components/ui/Icon';
 import { Row } from '@/components/ui/Row';
 import { UnderInput } from '@/components/ui/UnderInput';
 import { Colors, FontFamily, RelationshipColors, SharingColors, Radius, Shadow, Spacing, sf } from '@/constants/theme';
+import { useIPad } from '@/hooks/use-ipad';
 import type { Fo, GalleryPhoto } from '@/store/fo';
 
 const PRONOUNS = ['she/her', 'he/him', 'they/them', '+'];
@@ -55,6 +56,8 @@ type Props = {
 };
 
 export function FoForm({ value, onChange, onSave, saveLabel = 'save them', onDelete }: Props) {
+  const { column } = useIPad();
+
   function set<K extends keyof FoFormValue>(key: K, v: FoFormValue[K]) {
     onChange({ ...value, [key]: v });
   }
@@ -75,7 +78,7 @@ export function FoForm({ value, onChange, onSave, saveLabel = 'save them', onDel
   return (
     <ScrollView
       style={styles.scroll}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[styles.content, column]}
       showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"
       keyboardDismissMode="on-drag"
@@ -275,7 +278,7 @@ const styles = StyleSheet.create({
   avatarBadgeText: { color: '#fff', fontSize: sf(13), fontFamily: FontFamily.ui, lineHeight: sf(15) },
   avatarHintCol: { flex: 1, gap: 2 },
   avatarHintTitle: { fontFamily: FontFamily.marker, fontSize: sf(9), color: Colors.ink3, letterSpacing: 1.4, textTransform: 'uppercase' },
-  avatarHint: { fontFamily: FontFamily.ui, fontSize: sf(11), color: Colors.ink3, lineHeight: 15 },
+  avatarHint: { fontFamily: FontFamily.ui, fontSize: sf(11), color: Colors.ink3, lineHeight: sf(15) },
   fieldSpacer: { height: 16 },
   fieldSpacer2: { height: 26 },
   bioInput: {

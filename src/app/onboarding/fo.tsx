@@ -113,7 +113,7 @@ export default function OnbFO() {
   return (
     <View style={[styles.screen, { paddingTop: insets.top + Spacing.s1, paddingBottom: insets.bottom + Spacing.s1 }]}>
       {(isNew || isEdit) ? (
-        <View style={styles.header}>
+        <View style={[styles.header, column]}>
           <Pressable onPress={() => { if (!isEdit) resetOnb(); router.back(); }} style={styles.closeBtn}>
             <Text style={styles.closeBtnText}>✕</Text>
           </Pressable>
@@ -431,7 +431,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1.6, textTransform: 'uppercase',
   },
   heading: {
-    fontFamily: FontFamily.displayItalic, fontSize: sf(26), lineHeight: 28,
+    fontFamily: FontFamily.displayItalic, fontSize: sf(26), lineHeight: sf(28),
     letterSpacing: -0.3, color: Colors.ink, marginTop: Spacing.s2,
   },
   headingNew: { marginTop: 0 },
@@ -458,7 +458,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   imageSwatchThumb: { width: 24, height: 24, borderRadius: Radius.pill },
-  imageSwatchPlus: { fontSize: sf(13), color: Colors.ink3, fontFamily: FontFamily.ui, lineHeight: 16 },
+  imageSwatchPlus: { fontSize: sf(13), color: Colors.ink3, fontFamily: FontFamily.ui, lineHeight: sf(16) },
   imageHint: { fontFamily: FontFamily.ui, fontSize: sf(9), color: Colors.ink3, marginTop: 6 },
   foLink: { marginTop: 14, paddingTop: 12, borderTopWidth: 1.2, borderTopColor: Colors.line },
   foLinkText: { fontFamily: FontFamily.ui, fontSize: sf(11), color: Colors.sakuraDeep, textDecorationLine: 'underline' },

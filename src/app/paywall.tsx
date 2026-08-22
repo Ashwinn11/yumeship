@@ -424,7 +424,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  closeTxt: { fontSize: sf(13), color: Colors.ink3, fontFamily: FontFamily.ui, lineHeight: 14 },
+  closeTxt: { fontSize: sf(13), color: Colors.ink3, fontFamily: FontFamily.ui, lineHeight: sf(14) },
 
   scroll: { flex: 1 },
   content: { paddingHorizontal: Spacing.s5, paddingBottom: Spacing.s9 + 20 },

@@ -39,8 +39,9 @@ import {
   fetchTodaysActivity,
   logSyncFailure,
   pushOwnProfile,
+  subscribeActivityPool,
   syncIdentifyFoPublish,
-  toggleLike,
+  voteOnActivity,
   useCommunityFeed,
 } from '@/store/community';
 
@@ -65,7 +66,9 @@ function GoogleIcon() {
   return (
     <Text style={{
       fontFamily: FontFamily.uiSemiBold,
-      fontSize: sf(15),
+      // matches appleBtnText/Button's size="lg" text so the "G" glyph reads
+      // the same weight as the Apple logo mark beside it
+      fontSize: FontSize.bodyLg,
       color: Colors.vellum,
     }}>G</Text>
   );
@@ -166,12 +169,13 @@ const FeedSeparator = () => <View style={styles.feedSeparator} />;
 const keyExtractor = (p: CommunityPost) => p.id;
 
 function Feed({ insets }: { insets: { top: number } }) {
+  const { column } = useIPad();
   const [tab, setTab] = useState<'global' | 'following' | 'activities'>('global');
   // the underlying feed hook only ever runs in global/following mode — picking
   // the activities pill doesn't touch it, just swaps which data source the
   // list below renders from, so switching back restores it with no re-fetch
   const [feedMode, setFeedMode] = useState<'global' | 'following'>('global');
-  const { posts, loading, refreshing, refresh, loadMore, toggleLikeOptimistic } = useCommunityFeed(feedMode);
+  const { posts, loading, refreshing, refresh, loadMore, toggleLikeOptimistic, pollVoteOptimistic } = useCommunityFeed(feedMode);
   const { message: toastMsg, nonce: toastNonce, show: showToast } = useInlineToast();
 
   function selectTab(t: typeof tab) {
@@ -193,8 +197,9 @@ function Feed({ insets }: { insets: { top: number } }) {
   );
 
   // the vote pool: activity prompts nobody has picked yet, highest-voted first.
-  // Deliberately no pagination or realtime here — vote-count ordering doesn't
-  // map to a `before` cursor, and this app's submission volume doesn't need it.
+  // No pagination (vote-score ordering doesn't map to a `before` cursor, and
+  // this app's submission volume doesn't need it) but it is realtime — new
+  // submissions and vote changes from other people show up live.
   const [pool, setPool] = useState<CommunityPost[]>([]);
   const [poolLoading, setPoolLoading] = useState(true);
   const [poolRefreshing, setPoolRefreshing] = useState(false);
@@ -207,21 +212,45 @@ function Feed({ insets }: { insets: { top: number } }) {
     loadPool().finally(() => setPoolLoading(false));
   }, [tab, loadPool]);
 
+  useEffect(() => {
+    if (tab !== 'activities') return;
+    return subscribeActivityPool({
+      onInsert: (p) => setPool((prev) => (prev.some((x) => x.id === p.id) ? prev : [p, ...prev])),
+      onVoteUpdate: ({ id, voteScore, featured: isFeatured }) => {
+        // the pinned card has its own state, not the pool array — keep it in
+        // sync too, so someone else's vote on today's winner shows up live
+        setFeatured((f) => (f && f.id === id ? { ...f, voteScore } : f));
+
+        // once someone's client features it, it belongs in the pinned slot,
+        // not the pool of unpicked prompts
+        if (isFeatured) {
+          setPool((prev) => prev.filter((p) => p.id !== id));
+          return;
+        }
+        setPool((prev) =>
+          prev.map((p) => (p.id === id ? { ...p, voteScore } : p)).sort((a, b) => b.voteScore - a.voteScore),
+        );
+      },
+      onDelete: (id) => setPool((prev) => prev.filter((p) => p.id !== id)),
+    });
+  }, [tab]);
+
   const inFlightPool = useRef<Set<string>>(new Set());
-  const togglePoolLikeOptimistic = useCallback(
-    async (postId: string) => {
+  const votePoolOptimistic = useCallback(
+    async (postId: string, direction: -1 | 1) => {
       if (inFlightPool.current.has(postId)) return;
       const target = pool.find((p) => p.id === postId);
       if (!target) return;
-      const wasLiked = target.likedByMe;
-      const apply = (liked: boolean, delta: number) =>
-        setPool((prev) => prev.map((p) => (p.id === postId ? { ...p, likedByMe: liked, likeCount: p.likeCount + delta } : p)));
+      const prevVote = target.myVote;
+      const nextVote: -1 | 0 | 1 = prevVote === direction ? 0 : direction;
+      const apply = (myVote: -1 | 0 | 1, voteScore: number) =>
+        setPool((prev) => prev.map((p) => (p.id === postId ? { ...p, myVote, voteScore } : p)));
       inFlightPool.current.add(postId);
-      apply(!wasLiked, wasLiked ? -1 : 1);
+      apply(nextVote, target.voteScore - prevVote + nextVote);
       try {
-        await toggleLike(postId, wasLiked);
+        await voteOnActivity(postId, direction, prevVote);
       } catch {
-        apply(wasLiked, wasLiked ? 1 : -1);
+        apply(prevVote, target.voteScore);
         showToast("couldn't update vote — try again");
       } finally {
         inFlightPool.current.delete(postId);
@@ -239,30 +268,32 @@ function Feed({ insets }: { insets: { top: number } }) {
   useEffect(() => {
     fetchTodaysActivity().then(setFeatured);
   }, []);
-  const toggleFeaturedLikeOptimistic = useCallback(async () => {
-    if (!featured) return;
-    const wasLiked = featured.likedByMe;
-    setFeatured((f) => (f ? { ...f, likedByMe: !wasLiked, likeCount: f.likeCount + (wasLiked ? -1 : 1) } : f));
-    try {
-      await toggleLike(featured.id, wasLiked);
-    } catch {
-      setFeatured((f) => (f ? { ...f, likedByMe: wasLiked, likeCount: f.likeCount + (wasLiked ? 1 : -1) } : f));
-      showToast("couldn't update vote — try again");
-    }
-  }, [featured, showToast]);
+  const voteFeaturedOptimistic = useCallback(
+    async (direction: -1 | 1) => {
+      if (!featured) return;
+      const prevVote = featured.myVote;
+      const nextVote: -1 | 0 | 1 = prevVote === direction ? 0 : direction;
+      setFeatured((f) => (f ? { ...f, myVote: nextVote, voteScore: f.voteScore - prevVote + nextVote } : f));
+      try {
+        await voteOnActivity(featured.id, direction, prevVote);
+      } catch {
+        setFeatured((f) => (f ? { ...f, myVote: prevVote, voteScore: f.voteScore - nextVote + prevVote } : f));
+        showToast("couldn't update vote — try again");
+      }
+    },
+    [featured, showToast],
+  );
 
   const renderPost = useCallback(
     ({ item }: { item: CommunityPost }) => (
       <PostCard
         post={item}
-        onToggleLike={() =>
-          tab === 'activities'
-            ? togglePoolLikeOptimistic(item.id)
-            : toggleLikeOptimistic(item.id, () => showToast("couldn't update like — try again"))
-        }
+        onToggleLike={() => toggleLikeOptimistic(item.id, () => showToast("couldn't update like — try again"))}
+        onVote={tab === 'activities' ? (d) => votePoolOptimistic(item.id, d) : undefined}
+        onPollVote={(i) => pollVoteOptimistic(item.id, i, () => showToast("couldn't update vote — try again"))}
       />
     ),
-    [tab, togglePoolLikeOptimistic, toggleLikeOptimistic, showToast],
+    [tab, votePoolOptimistic, toggleLikeOptimistic, pollVoteOptimistic, showToast],
   );
 
   const activityData = tab === 'activities';
@@ -285,14 +316,7 @@ function Feed({ insets }: { insets: { top: number } }) {
         <InlineToast message={toastMsg} nonce={toastNonce} />
       </View>
 
-      {!!featured && (
-        <View style={styles.featuredWrap}>
-          <Text style={styles.featuredLabel}>today's activity</Text>
-          <PostCard post={featured} onToggleLike={toggleFeaturedLikeOptimistic} />
-        </View>
-      )}
-
-      <View style={styles.tabsRow}>
+      <View style={[styles.tabsRow, column]}>
         {(['global', 'following', 'activities'] as const).map((m) => (
           <Pressable key={m} onPress={() => selectTab(m)} style={[styles.tab, tab === m && styles.tabActive]}>
             <Text style={[styles.tabText, tab === m && styles.tabTextActive]}>{m}</Text>
@@ -304,7 +328,7 @@ function Feed({ insets }: { insets: { top: number } }) {
         data={data}
         keyExtractor={keyExtractor}
         renderItem={renderPost}
-        contentContainerStyle={styles.feedContent}
+        contentContainerStyle={[styles.feedContent, column]}
         ItemSeparatorComponent={FeedSeparator}
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={Colors.sakuraDeep} />}
         onEndReached={activityData ? undefined : loadMore}
@@ -317,13 +341,11 @@ function Feed({ insets }: { insets: { top: number } }) {
         windowSize={7}
         removeClippedSubviews
         ListHeaderComponent={
-          activityData ? (
-            <Pressable style={styles.poolSubmitRow} onPress={() => router.push('/social/post/new?kind=activity' as any)}>
-              <View style={styles.poolSubmitIcon}>
-                <Text style={styles.fabText}>+</Text>
-              </View>
-              <Text style={styles.poolSubmitText}>submit an activity</Text>
-            </Pressable>
+          activityData && featured ? (
+            <View style={styles.featuredWrap}>
+              <Text style={styles.featuredLabel}>today's activity</Text>
+              <PostCard post={featured} onToggleLike={() => {}} onVote={voteFeaturedOptimistic} />
+            </View>
           ) : null
         }
         ListEmptyComponent={
@@ -347,11 +369,12 @@ function Feed({ insets }: { insets: { top: number } }) {
         }
       />
 
-      {!activityData && (
-        <Pressable style={styles.fab} onPress={() => router.push('/social/post/new' as any)}>
-          <Text style={styles.fabText}>+</Text>
-        </Pressable>
-      )}
+      <Pressable
+        style={styles.fab}
+        onPress={() => router.push((activityData ? '/social/post/new?kind=activity' : '/social/post/new') as any)}
+      >
+        <Text style={styles.fabText}>+</Text>
+      </Pressable>
     </View>
   );
 }
@@ -361,7 +384,7 @@ function Feed({ insets }: { insets: { top: number } }) {
 export default function CommunityScreen() {
   const user = useAuthUser();
   const insets = useSafeAreaInsets();
-  const { column } = useIPad();
+  const { column, isIPad } = useIPad();
 
   const [loading, setLoading] = useState<'google' | 'apple' | null>(null);
   const [alertModal, setAlertModal] = useState<{ title: string; message: string } | null>(null);
@@ -493,7 +516,7 @@ export default function CommunityScreen() {
 
               <Text style={styles.emptyTitle}>join the club</Text>
 
-              <View style={styles.buttons}>
+              <View style={[styles.buttons, isIPad && styles.buttonsIPad]}>
                 {/* Apple Button (iOS Only) — rendered first */}
                 {Platform.OS === 'ios' && (
                   <Pressable
@@ -584,7 +607,7 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: FontFamily.displayItalic,
     fontSize: sf(34),
-    lineHeight: 34,
+    lineHeight: sf(34),
     letterSpacing: -0.4,
     color: Colors.ink,
   },
@@ -629,6 +652,12 @@ const styles = StyleSheet.create({
     marginTop: Spacing.s4,
     paddingHorizontal: Spacing.s4,
   },
+  // a sign-in CTA reads as oversized stretched across the same 760pt reading
+  // column everything else uses — cap it to a normal button width instead
+  buttonsIPad: {
+    maxWidth: 420,
+    alignSelf: 'center',
+  },
 
   appleBtnCustom: {
     flexDirection: 'row',
@@ -643,7 +672,10 @@ const styles = StyleSheet.create({
   },
   appleBtnText: {
     fontFamily: FontFamily.uiMedium,
-    fontSize: sf(15),
+    // matches Button's size="lg" text (FontSize.bodyLg) — this is a bespoke
+    // Pressable, not the shared Button component, so nothing keeps its text
+    // in sync automatically; it drifted to a smaller sf(15) before
+    fontSize: FontSize.bodyLg,
     color: '#ffffff',
   },
 
@@ -683,7 +715,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 8,
     paddingHorizontal: Spacing.s4,
-    lineHeight: 17,
+    lineHeight: sf(17),
   },
   claimInputRow: {
     flexDirection: 'row',
@@ -702,21 +734,11 @@ const styles = StyleSheet.create({
   // feed
   feedWrap: { flex: 1 },
   feedToastWrap: { position: 'absolute', top: 4, left: 0, right: 0, zIndex: 10, alignItems: 'center' },
-  featuredWrap: { paddingHorizontal: Spacing.s5, paddingBottom: Spacing.s3 },
+  featuredWrap: { paddingBottom: Spacing.s3 },
   featuredLabel: {
     fontFamily: FontFamily.uiSemiBold, fontSize: sf(11), color: Colors.sakuraDeep,
     textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: Spacing.s2,
   },
-  poolSubmitRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-    borderWidth: 1.4, borderColor: Colors.line, borderStyle: 'dashed', borderRadius: Radius.r4,
-    backgroundColor: Colors.paperDeep, padding: Spacing.s4, marginBottom: 12,
-  },
-  poolSubmitIcon: {
-    width: 30, height: 30, borderRadius: Radius.pill, backgroundColor: Colors.sakuraDeep,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  poolSubmitText: { fontFamily: FontFamily.uiMedium, fontSize: sf(13), color: Colors.ink2 },
   tabsRow: {
     flexDirection: 'row',
     gap: 8,

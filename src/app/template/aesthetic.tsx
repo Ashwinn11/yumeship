@@ -447,7 +447,7 @@ const s = StyleSheet.create({
   tropesText: {
     fontFamily: FontFamily.ja,
     fontSize: sf(12),
-    lineHeight: 17,
+    lineHeight: sf(17),
     minHeight: 50,
     textAlignVertical: 'top',
   },

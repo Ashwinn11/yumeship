@@ -183,9 +183,9 @@ const s = StyleSheet.create({
 
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, justifyContent: 'flex-start' },
   cell: { borderRadius: 8, borderWidth: 1.5, borderColor: INK, alignItems: 'center', justifyContent: 'center', padding: 3, overflow: 'hidden' },
-  cellText: { fontFamily: FontFamily.uiMedium, fontSize: sf(9), lineHeight: 11, color: INK, textAlign: 'center' },
-  cellFreeText: { fontFamily: FontFamily.script, fontSize: sf(15), lineHeight: 17, color: '#7a5e15' },
-  cellInput: { width: '100%', height: '100%', fontFamily: FontFamily.uiMedium, fontSize: sf(9), lineHeight: 11, color: INK, textAlign: 'center', padding: 0 },
+  cellText: { fontFamily: FontFamily.uiMedium, fontSize: sf(9), lineHeight: sf(11), color: INK, textAlign: 'center' },
+  cellFreeText: { fontFamily: FontFamily.script, fontSize: sf(15), lineHeight: sf(17), color: '#7a5e15' },
+  cellInput: { width: '100%', height: '100%', fontFamily: FontFamily.uiMedium, fontSize: sf(9), lineHeight: sf(11), color: INK, textAlign: 'center', padding: 0 },
   heartOverlay: { position: 'absolute', fontSize: sf(28), color: 'rgba(215,122,141,0.4)' },
 
   controls: { flexDirection: 'row', gap: 8, justifyContent: 'center', flexWrap: 'wrap', marginTop: 16 },

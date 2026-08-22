@@ -867,9 +867,9 @@ const fo = StyleSheet.create({
   },
   msgCardOff: { opacity: 0.5 },
   msgCardTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 },
-  msgSender: { fontFamily: FontFamily.displayItalic, fontSize: sf(16), color: Colors.ink, lineHeight: 18 },
+  msgSender: { fontFamily: FontFamily.displayItalic, fontSize: sf(16), color: Colors.ink, lineHeight: sf(18) },
   msgTime: { fontFamily: FontFamily.marker, fontSize: sf(9), color: Colors.ink3, letterSpacing: 1.2, textTransform: 'uppercase' },
-  msgBody: { fontFamily: FontFamily.script, fontSize: sf(16), color: Colors.ink, lineHeight: 22 },
+  msgBody: { fontFamily: FontFamily.script, fontSize: sf(16), color: Colors.ink, lineHeight: sf(22) },
   msgBodyOff: { color: Colors.ink3 },
   msgVariation: { fontFamily: FontFamily.uiMedium, fontSize: sf(11), color: Colors.sakuraDeep },
 
@@ -944,7 +944,7 @@ const fo = StyleSheet.create({
   },
   msgInput: {
     fontFamily: FontFamily.script, fontSize: sf(16), color: Colors.ink,
-    minHeight: 72, textAlignVertical: 'top', lineHeight: 24,
+    minHeight: 72, textAlignVertical: 'top', lineHeight: sf(24),
   },
   addMsgBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
@@ -1015,7 +1015,7 @@ const fo = StyleSheet.create({
     fontFamily: FontFamily.ui,
     fontSize: sf(10),
     color: 'rgba(255, 255, 255, 0.80)',
-    lineHeight: 13,
+    lineHeight: sf(13),
   },
 
   lockscreenBg: {

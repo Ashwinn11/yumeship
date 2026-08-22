@@ -17,28 +17,24 @@ import Svg, { Path } from 'react-native-svg';
 import { CommentThread } from '@/components/community/CommentThread';
 import { LikeButton } from '@/components/community/LikeButton';
 import { MediaCarousel } from '@/components/community/MediaCarousel';
+import { PollView } from '@/components/community/PollView';
 import { PostAuthorHeader } from '@/components/community/PostAuthorHeader';
-import { PostCard } from '@/components/community/PostCard';
 import { PostDetailSkeleton } from '@/components/community/PostDetailSkeleton';
+import { VoteButtons } from '@/components/community/VoteButtons';
+import { useIPad } from '@/hooks/use-ipad';
 import { Mark } from '@/components/ui/Mark';
 import { Colors, FontFamily, FontSize, Radius, Spacing, sf } from '@/constants/theme';
-import { addComment, deleteComment, deletePost, logSyncFailure, useActivityResponses, useCommunityPost } from '@/store/community';
+import { addComment, deleteComment, deletePost, logSyncFailure, useCommunityPost } from '@/store/community';
 import { InlineToast, useInlineToast } from '@/components/ui/InlineToast';
 import { useAuthUser } from '@/store/auth';
 import { CozyModal } from '@/components/ui/CozyModal';
 
 export default function PostDetailScreen() {
   const insets = useSafeAreaInsets();
+  const { column } = useIPad();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { post, comments, loading, toggleLikeOptimistic, insertComment } = useCommunityPost(id);
+  const { post, comments, loading, toggleLikeOptimistic, voteOptimistic, pollVoteOptimistic, insertComment } = useCommunityPost(id);
   const isActivity = post?.kind === 'activity';
-  // called unconditionally (rules of hooks) — resolves to nothing until the
-  // post has loaded and turns out to be an activity, same pattern useFoPosts
-  // and useUserPosts already use for an id that starts out undefined
-  const {
-    posts: responses,
-    toggleLikeOptimistic: toggleResponseLikeOptimistic,
-  } = useActivityResponses(isActivity ? post.id : undefined);
   const [draft, setDraft] = useState('');
   const [replyTo, setReplyTo] = useState<{ id: string; name: string } | null>(null);
   const [sending, setSending] = useState(false);
@@ -97,12 +93,12 @@ export default function PostDetailScreen() {
   if (loading || !post) {
     return (
       <View style={[styles.screen, { paddingTop: insets.top }]}>
-        <View style={styles.header}>
+        <View style={[styles.header, column]}>
           <Pressable onPress={() => router.back()} style={styles.headerBtn}>
             <Text style={styles.headerBtnText}>‹</Text>
           </Pressable>
         </View>
-        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={[styles.content, column]} showsVerticalScrollIndicator={false}>
           <PostDetailSkeleton />
         </ScrollView>
       </View>
@@ -121,7 +117,7 @@ export default function PostDetailScreen() {
         <InlineToast message={toastMsg} nonce={toastNonce} />
       </View>
 
-      <View style={[styles.header, { paddingTop: insets.top + Spacing.s1 }]}>
+      <View style={[styles.header, column, { paddingTop: insets.top + Spacing.s1 }]}>
         <Pressable onPress={() => router.back()} style={styles.headerBtn}>
           <Text style={styles.headerBtnText}>‹</Text>
         </Pressable>
@@ -141,7 +137,7 @@ export default function PostDetailScreen() {
 
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, column]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
@@ -163,43 +159,30 @@ export default function PostDetailScreen() {
           </View>
         )}
 
-        <View style={styles.likeRow}>
-          <LikeButton
-            liked={post.likedByMe}
-            count={post.likeCount}
-            onToggle={() => toggleLikeOptimistic(() => showToast("couldn't update like — try again"))}
-            size={19}
-            label={isActivity ? 'votes' : undefined}
+        {!!post.poll && (
+          <PollView
+            poll={post.poll}
+            onVote={(i) => pollVoteOptimistic(i, () => showToast("couldn't update vote — try again"))}
           />
-          {isActivity && (
-            <Pressable
-              style={styles.respondBtn}
-              onPress={() => router.push(`/social/post/new?activityId=${post.id}` as any)}
-            >
-              <Text style={styles.respondBtnText}>respond</Text>
-            </Pressable>
+        )}
+
+        <View style={styles.likeRow}>
+          {isActivity ? (
+            <VoteButtons
+              score={post.voteScore}
+              myVote={post.myVote}
+              onVote={(d) => voteOptimistic(d, () => showToast("couldn't update vote — try again"))}
+              size={19}
+            />
+          ) : (
+            <LikeButton
+              liked={post.likedByMe}
+              count={post.likeCount}
+              onToggle={() => toggleLikeOptimistic(() => showToast("couldn't update like — try again"))}
+              size={19}
+            />
           )}
         </View>
-
-        {isActivity && (
-          <>
-            <View style={styles.divider} />
-            <Text style={styles.commentsLabel}>responses · {responses.length}</Text>
-            {responses.length === 0 ? (
-              <Text style={styles.noResponses}>no responses yet — be the first ♡</Text>
-            ) : (
-              <View style={styles.responseList}>
-                {responses.map((r) => (
-                  <PostCard
-                    key={r.id}
-                    post={r}
-                    onToggleLike={() => toggleResponseLikeOptimistic(r.id, () => showToast("couldn't update like — try again"))}
-                  />
-                ))}
-              </View>
-            )}
-          </>
-        )}
 
         <View style={styles.divider} />
 
@@ -228,6 +211,7 @@ export default function PostDetailScreen() {
       <View
         style={[
           styles.composerWrap,
+          column,
           { paddingBottom: (keyboardOpen ? 0 : insets.bottom) + Spacing.s2 },
         ]}
       >
@@ -296,19 +280,10 @@ const styles = StyleSheet.create({
   bodyNoTitle: { marginTop: Spacing.s4, fontSize: sf(15), color: Colors.ink, lineHeight: sf(23) },
   mediaWrap: { marginTop: Spacing.s4 },
   likeRow: { marginTop: Spacing.s4, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  respondBtn: {
-    paddingHorizontal: 16, height: 32, borderRadius: Radius.pill,
-    backgroundColor: Colors.sakuraDeep, alignItems: 'center', justifyContent: 'center',
-  },
-  respondBtnText: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(12), color: '#fff' },
   divider: { height: 1, backgroundColor: Colors.line, marginTop: Spacing.s5, marginBottom: Spacing.s4 },
   commentsLabel: {
     fontFamily: FontFamily.marker, fontSize: sf(10), color: Colors.ink3,
     letterSpacing: 1.2, textTransform: 'uppercase', marginBottom: 12,
-  },
-  responseList: { gap: 12 },
-  noResponses: {
-    fontFamily: FontFamily.script, fontSize: sf(14), color: Colors.ink3, textAlign: 'center', paddingVertical: Spacing.s3,
   },
   toastWrap: { position: 'absolute', left: 0, right: 0, zIndex: 10, alignItems: 'center' },
   composerWrap: {

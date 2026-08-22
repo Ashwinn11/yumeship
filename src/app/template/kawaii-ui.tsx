@@ -406,7 +406,7 @@ export function KawaiiUIContent({ editing = false }: { editing?: boolean }) {
               if (e) {
                 return (
                   <View style={{ marginTop: 6 }}>
-                    <Text style={{ fontFamily: FontFamily.markerBold, fontSize: sf(26), color: ink, lineHeight: 28 }}>
+                    <Text style={{ fontFamily: FontFamily.markerBold, fontSize: sf(26), color: ink, lineHeight: sf(28) }}>
                       {el ? el.label : '——'}
                     </Text>
                     <DateField
@@ -431,7 +431,7 @@ export function KawaiiUIContent({ editing = false }: { editing?: boolean }) {
               } else {
                 return el ? (
                   <View style={{ marginTop: 6 }}>
-                    <Text style={{ fontFamily: FontFamily.markerBold, fontSize: sf(26), color: ink, lineHeight: 28 }}>
+                    <Text style={{ fontFamily: FontFamily.markerBold, fontSize: sf(26), color: ink, lineHeight: sf(28) }}>
                       {el.label}
                     </Text>
                     <Text style={{ fontFamily: FontFamily.marker, fontSize: sf(10), color: ink, opacity: 0.7, marginTop: 2 }}>
@@ -554,7 +554,7 @@ const s = StyleSheet.create({
   firstPillText: { fontFamily: FontFamily.marker, fontSize: sf(8) },
   storyBlock: { marginTop: 6 },
   storyInput: { fontFamily: FontFamily.ja, fontSize: sf(11), minHeight: 40, borderWidth: 1, borderRadius: 6, padding: 8, marginTop: 4, textAlignVertical: 'top' },
-  storyText: { fontFamily: FontFamily.ja, fontSize: sf(11), marginTop: 4, lineHeight: 15 },
+  storyText: { fontFamily: FontFamily.ja, fontSize: sf(11), marginTop: 4, lineHeight: sf(15) },
 });
 
 const pk = StyleSheet.create({

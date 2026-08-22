@@ -171,7 +171,7 @@ function ThreadView({
         {/* Back chevron */}
         {onBack && (
           <Pressable onPress={onBack} hitSlop={8} style={{ marginRight: 2 }}>
-            <Text style={{ fontSize: sf(28), color: Colors.ink2, fontFamily: FontFamily.ui, lineHeight: 28 }}>‹</Text>
+            <Text style={{ fontSize: sf(28), color: Colors.ink2, fontFamily: FontFamily.ui, lineHeight: sf(28) }}>‹</Text>
           </Pressable>
         )}
 
@@ -226,7 +226,7 @@ function ThreadView({
 
         {/* Name + subtitle */}
         <View style={{ flex: 1 }}>
-          <Text style={{ fontFamily: FontFamily.uiMedium, fontSize: sf(19), color: Colors.ink, lineHeight: 21 }}>
+          <Text style={{ fontFamily: FontFamily.uiMedium, fontSize: sf(19), color: Colors.ink, lineHeight: sf(21) }}>
             {headerName}
           </Text>
           {poly && (
@@ -519,7 +519,7 @@ const s = StyleSheet.create({
     borderColor: Colors.line,
     borderBottomLeftRadius: 4,
   },
-  bubbleText: { fontFamily: FontFamily.ui, fontSize: sf(13), lineHeight: 18 },
+  bubbleText: { fontFamily: FontFamily.ui, fontSize: sf(13), lineHeight: sf(18) },
   bubbleTextMe: { color: Colors.vellum },
   bubbleTextThem: { color: Colors.ink },
   senderLabel: { fontFamily: FontFamily.uiMedium, fontSize: sf(10), color: Colors.ink3, marginBottom: 2, marginLeft: 4 },
@@ -541,7 +541,7 @@ const s = StyleSheet.create({
     flex: 1, minHeight: 40, maxHeight: 120, paddingVertical: 10, paddingHorizontal: 14,
     backgroundColor: Colors.vellum, borderWidth: 1, borderColor: Colors.line,
     borderRadius: 20, fontFamily: FontFamily.ui, fontSize: sf(14), color: Colors.ink,
-    lineHeight: 20,
+    lineHeight: sf(20),
   },
   sendBtn: {
     width: 38, height: 38, borderRadius: Radius.pill,

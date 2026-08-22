@@ -57,6 +57,7 @@ export default function FoDetailScreen() {
     refresh: refreshPosts,
     loadMore,
     toggleLikeOptimistic,
+    pollVoteOptimistic,
     removePost,
   } = useFoPosts(fo?.isPublic ? fo.id : undefined);
 
@@ -65,10 +66,11 @@ export default function FoDetailScreen() {
       <PostCard
         post={item}
         onToggleLike={() => toggleLikeOptimistic(item.id, () => showToast("couldn't update like — try again"))}
+        onPollVote={(i) => pollVoteOptimistic(item.id, i, () => showToast("couldn't update vote — try again"))}
         onRequestDelete={() => setDeleteTarget(item.id)}
       />
     ),
-    [toggleLikeOptimistic, showToast],
+    [toggleLikeOptimistic, pollVoteOptimistic, showToast],
   );
 
   async function confirmDeletePost() {

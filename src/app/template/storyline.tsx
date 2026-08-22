@@ -175,7 +175,7 @@ const s = StyleSheet.create({
   eventBody: {
     fontFamily: FontFamily.ja,
     fontSize: sf(12),
-    lineHeight: 18,
+    lineHeight: sf(18),
     minHeight: 18,
     textAlignVertical: 'top',
   },

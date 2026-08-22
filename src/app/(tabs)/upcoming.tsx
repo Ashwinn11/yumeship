@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: FontFamily.displayItalic,
     fontSize: sf(34),
-    lineHeight: 34,
+    lineHeight: sf(34),
     letterSpacing: -0.4,
     color: Colors.ink,
   },
@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
   emptySub: {
     fontFamily: FontFamily.script,
     fontSize: sf(18),
-    lineHeight: 22,
+    lineHeight: sf(22),
     color: Colors.ink2,
     textAlign: 'center',
     paddingHorizontal: Spacing.s8,

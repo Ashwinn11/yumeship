@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: FontFamily.displayItalic,
     fontSize: sf(34),
-    lineHeight: 34,
+    lineHeight: sf(34),
     letterSpacing: -0.4,
     color: Colors.ink,
   },
@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontFamily: FontFamily.markerBold,
     fontSize: sf(13),
-    lineHeight: 17,
+    lineHeight: sf(17),
     textTransform: 'uppercase',
     letterSpacing: 0.3,
   },

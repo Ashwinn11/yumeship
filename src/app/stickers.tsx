@@ -32,7 +32,7 @@ export default function StickersScreen() {
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top + Spacing.s1 }]}>
-      <View style={styles.header}>
+      <View style={[styles.header, column]}>
         <Pressable onPress={() => router.back()} style={styles.headerBtn}>
           <Text style={styles.headerBtnText}>‹</Text>
         </Pressable>

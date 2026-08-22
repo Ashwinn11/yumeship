@@ -171,7 +171,7 @@ export function DatesTab({ shipId, shipName }: { shipId: string; shipName?: stri
                   <Text style={{ fontFamily: FontFamily.marker, fontSize: sf(9), color: tint, letterSpacing: 1.4, textAlign: 'center' }}>
                     {monthStr}
                   </Text>
-                  <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: sf(28), lineHeight: 28, color: tint, marginTop: -1, textAlign: 'center' }}>
+                  <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: sf(28), lineHeight: sf(28), color: tint, marginTop: -1, textAlign: 'center' }}>
                     {dayStr}
                   </Text>
                 </View>
@@ -179,7 +179,7 @@ export function DatesTab({ shipId, shipName }: { shipId: string; shipName?: stri
                 {/* center text */}
                 <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                    <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: sf(16), color: Colors.ink, lineHeight: 18 }} numberOfLines={1}>
+                    <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: sf(16), color: Colors.ink, lineHeight: sf(18) }} numberOfLines={1}>
                       {d.title}
                     </Text>
                     {isAnn && <Bullets.Heart size={10} color={tint} />}
@@ -191,7 +191,7 @@ export function DatesTab({ shipId, shipName }: { shipId: string; shipName?: stri
 
                 {/* countdown right */}
                 <View style={{ alignItems: 'flex-end', justifyContent: 'center' }}>
-                  <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: sf(22), color: tint, lineHeight: 22 }}>
+                  <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: sf(22), color: tint, lineHeight: sf(22) }}>
                     {numDisplay}
                   </Text>
                   <Text style={{ fontFamily: FontFamily.marker, fontSize: sf(8), color: Colors.ink3, letterSpacing: 1.4 }}>
@@ -323,10 +323,10 @@ const s = StyleSheet.create({
   },
   annHeart: { position: 'absolute', top: 10, left: 12 },
   cardLeft: { width: 52, alignItems: 'flex-start', justifyContent: 'center' },
-  cardNum: { fontFamily: FontFamily.displayItalic, fontSize: sf(36), lineHeight: 38, letterSpacing: -1 },
+  cardNum: { fontFamily: FontFamily.displayItalic, fontSize: sf(36), lineHeight: sf(38), letterSpacing: -1 },
   cardUnit: { fontFamily: FontFamily.marker, fontSize: sf(9), letterSpacing: 1.4, textTransform: 'uppercase', marginTop: -4 },
   cardInfo: { flex: 1, gap: 2 },
-  cardTitle: { fontFamily: FontFamily.displayItalic, fontSize: sf(17), color: Colors.ink, lineHeight: 20 },
+  cardTitle: { fontFamily: FontFamily.displayItalic, fontSize: sf(17), color: Colors.ink, lineHeight: sf(20) },
   cardSub: { fontFamily: FontFamily.ui, fontSize: sf(11), color: Colors.ink3 },
 
   // Sheet

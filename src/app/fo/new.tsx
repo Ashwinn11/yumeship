@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FoForm, FoFormValue } from '@/components/fo/FoForm';
 import { Mark } from '@/components/ui/Mark';
 import { Colors, FontFamily, FontSize, Radius, Spacing, sf } from '@/constants/theme';
+import { useIPad } from '@/hooks/use-ipad';
 import { addFo } from '@/store/fo';
 
 const EMPTY: FoFormValue = {
@@ -15,6 +16,7 @@ const EMPTY: FoFormValue = {
 
 export default function NewFoScreen() {
   const insets = useSafeAreaInsets();
+  const { column } = useIPad();
   const [value, setValue] = useState<FoFormValue>(EMPTY);
 
   function handleSave() {
@@ -25,7 +27,7 @@ export default function NewFoScreen() {
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top + Spacing.s1, paddingBottom: insets.bottom + Spacing.s1 }]}>
-      <View style={styles.header}>
+      <View style={[styles.header, column]}>
         <Pressable onPress={() => router.back()} style={styles.headerBtn}>
           <Text style={styles.headerBtnText}>✕</Text>
         </Pressable>

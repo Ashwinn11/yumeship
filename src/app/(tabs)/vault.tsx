@@ -332,7 +332,7 @@ const styles = StyleSheet.create({
   featureCardLocked: { opacity: 0.55 },
   featureJa: { fontFamily: FontFamily.ja, fontSize: sf(22), marginBottom: 2 },
   featureLabel: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(13), marginBottom: 2 },
-  featureDesc: { fontFamily: FontFamily.ui, fontSize: sf(10), color: Colors.ink3, lineHeight: 14 },
+  featureDesc: { fontFamily: FontFamily.ui, fontSize: sf(10), color: Colors.ink3, lineHeight: sf(14) },
   featureTextLocked: { opacity: 0.7 },
   lockBadge: {
     position: 'absolute', top: 8, right: 8,

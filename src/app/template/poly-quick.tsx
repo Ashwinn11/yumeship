@@ -309,7 +309,7 @@ const qs = StyleSheet.create({
 
   // story
   storyBox: { backgroundColor: '#fffdfb', borderWidth: 1.5, borderColor: '#e3cdbe', borderRadius: 10, padding: 12, marginTop: 8 },
-  storyInput: { minHeight: 48, fontFamily: FontFamily.ja, fontSize: sf(12), lineHeight: 19, color: INK, padding: 0, textAlignVertical: 'top' },
+  storyInput: { minHeight: 48, fontFamily: FontFamily.ja, fontSize: sf(12), lineHeight: sf(19), color: INK, padding: 0, textAlignVertical: 'top' },
 
   // tropes
   tropesWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 },

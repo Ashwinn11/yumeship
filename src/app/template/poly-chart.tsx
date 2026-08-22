@@ -632,7 +632,7 @@ const ps = StyleSheet.create({
   cardPhoto: { borderWidth: 1.5, borderColor: INK, borderRadius: 6, backgroundColor: '#e9d8cb' },
   colorDot: { position: 'absolute', top: 5, left: 5, width: 18, height: 18, borderRadius: 999, borderWidth: 1.5, borderColor: INK },
   removeDot: { position: 'absolute', top: 5, right: 5, width: 22, height: 22, borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.95)', borderWidth: 1.5, borderColor: INK, alignItems: 'center', justifyContent: 'center' },
-  removeX: { fontSize: sf(11), color: '#b04a4a', fontFamily: FontFamily.ui, lineHeight: 14 },
+  removeX: { fontSize: sf(11), color: '#b04a4a', fontFamily: FontFamily.ui, lineHeight: sf(14) },
   addCard: { width: 34, minHeight: 120, borderWidth: 1.5, borderColor: '#c9a9c0', borderStyle: 'dashed', borderRadius: 6, alignItems: 'center', justifyContent: 'center' },
   addPlus: { fontSize: sf(18), color: '#8b6fc4', fontFamily: FontFamily.ui },
 

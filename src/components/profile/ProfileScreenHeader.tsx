@@ -2,6 +2,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Mark } from '@/components/ui/Mark';
 import { Colors, FontFamily, FontSize, Radius, Spacing, sf } from '@/constants/theme';
+import { useIPad } from '@/hooks/use-ipad';
 
 type Props = {
   /** top safe-area inset — owned here so every profile-like screen agrees on
@@ -19,8 +20,9 @@ type Props = {
 const SPACER = <View style={{ width: 32 }} />;
 
 export function ProfileScreenHeader({ insetsTop, onBack, backLabel = '‹', title, right }: Props) {
+  const { column } = useIPad();
   return (
-    <View style={[styles.header, { paddingTop: insetsTop + Spacing.s1 }]}>
+    <View style={[styles.header, column, { paddingTop: insetsTop + Spacing.s1 }]}>
       <Pressable onPress={onBack} style={styles.headerBtn}>
         <Text style={styles.headerBtnText}>{backLabel}</Text>
       </Pressable>

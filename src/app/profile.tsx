@@ -113,6 +113,7 @@ export default function MyProfileScreen() {
     refresh: refreshPosts,
     loadMore,
     toggleLikeOptimistic,
+    pollVoteOptimistic,
     removePost,
   } = useUserPosts(user?.id);
   const { message: toastMsg, nonce: toastNonce, show: showToast } = useInlineToast();
@@ -162,10 +163,11 @@ export default function MyProfileScreen() {
       <PostCard
         post={item}
         onToggleLike={() => toggleLikeOptimistic(item.id, () => showToast("couldn't update like — try again"))}
+        onPollVote={(i) => pollVoteOptimistic(item.id, i, () => showToast("couldn't update vote — try again"))}
         onRequestDelete={() => setDeleteTarget(item.id)}
       />
     ),
-    [toggleLikeOptimistic, showToast],
+    [toggleLikeOptimistic, pollVoteOptimistic, showToast],
   );
 
   function handleThemeChange(patch: Partial<CardTheme>) {

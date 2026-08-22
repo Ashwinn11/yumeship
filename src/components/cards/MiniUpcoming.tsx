@@ -81,7 +81,7 @@ export function MiniUpcoming({ days, title, fo, tint, featured, muted, dateStr, 
         <Text style={{ fontFamily: FontFamily.marker, fontSize: sf(9), color: tint, letterSpacing: 1.4, textAlign: 'center' }}>
           {monthStr}
         </Text>
-        <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: sf(28), lineHeight: 28, color: tint, marginTop: -1, textAlign: 'center' }}>
+        <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: sf(28), lineHeight: sf(28), color: tint, marginTop: -1, textAlign: 'center' }}>
           {dayStr}
         </Text>
       </View>
@@ -89,7 +89,7 @@ export function MiniUpcoming({ days, title, fo, tint, featured, muted, dateStr, 
       {/* center text */}
       <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-          <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: sf(16), color: Colors.ink, lineHeight: 18 }} numberOfLines={1}>
+          <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: sf(16), color: Colors.ink, lineHeight: sf(18) }} numberOfLines={1}>
             {title}
           </Text>
           {isAnn && <Bullets.Heart size={10} color={tint} />}
@@ -101,7 +101,7 @@ export function MiniUpcoming({ days, title, fo, tint, featured, muted, dateStr, 
 
       {/* countdown right */}
       <View style={{ alignItems: 'flex-end', justifyContent: 'center' }}>
-        <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: sf(22), color: tint, lineHeight: 22 }}>
+        <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: sf(22), color: tint, lineHeight: sf(22) }}>
           {numDisplay}
         </Text>
         <Text style={{ fontFamily: FontFamily.marker, fontSize: sf(8), color: Colors.ink3, letterSpacing: 1.4 }}>

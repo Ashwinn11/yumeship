@@ -518,7 +518,7 @@ const s = StyleSheet.create({
     width: 32, height: 32, alignItems: 'center', justifyContent: 'center',
     backgroundColor: Colors.vellum, borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.pill,
   },
-  backText: { fontSize: sf(20), lineHeight: 20, color: Colors.ink2, fontFamily: FontFamily.ui, includeFontPadding: false },
+  backText: { fontSize: sf(20), lineHeight: sf(20), color: Colors.ink2, fontFamily: FontFamily.ui, includeFontPadding: false },
   nameArea: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 },
   styleChip: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
@@ -553,7 +553,7 @@ const s = StyleSheet.create({
   },
   tplTape: { position: 'absolute', top: -2, left: 6 },
   tplLabel: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(12), marginBottom: 2 },
-  tplDesc: { fontFamily: FontFamily.ui, fontSize: sf(10), color: Colors.ink3, lineHeight: 14 },
+  tplDesc: { fontFamily: FontFamily.ui, fontSize: sf(10), color: Colors.ink3, lineHeight: sf(14) },
   tplCheck: { position: 'absolute', top: 8, right: 8, width: 18, height: 18, borderRadius: Radius.pill, alignItems: 'center', justifyContent: 'center' },
   tplCheckText: { fontSize: sf(10), color: Colors.vellum, fontFamily: FontFamily.uiSemiBold },
   sheetActions: { paddingHorizontal: Spacing.s5, paddingTop: Spacing.s2 },

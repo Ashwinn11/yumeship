@@ -457,7 +457,7 @@ const styles = StyleSheet.create({
     marginHorizontal: Spacing.s4, height: 180,
     borderRadius: Radius.r4, alignItems: 'center', justifyContent: 'center',
   },
-  heroInitial: { fontFamily: FontFamily.displayItalic, fontSize: sf(100), color: 'rgba(255,255,255,0.95)', lineHeight: 100 },
+  heroInitial: { fontFamily: FontFamily.displayItalic, fontSize: sf(100), color: 'rgba(255,255,255,0.95)', lineHeight: sf(100) },
   heroTape: { position: 'absolute', top: -2, left: 14 },
   heroPin: {
     position: 'absolute', top: 12, right: 12,
@@ -469,7 +469,7 @@ const styles = StyleSheet.create({
   heroChips: { position: 'absolute', bottom: 10, left: 12, flexDirection: 'row', gap: 6 },
   nameBlock: { paddingHorizontal: Spacing.s5, paddingTop: 12, paddingBottom: Spacing.s1 },
   nameRow: { flexDirection: 'row', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' },
-  name: { fontFamily: FontFamily.displayItalic, fontSize: sf(32), lineHeight: 33, color: Colors.ink },
+  name: { fontFamily: FontFamily.displayItalic, fontSize: sf(32), lineHeight: sf(33), color: Colors.ink },
   polyMembers: { fontFamily: FontFamily.uiMedium, fontSize: sf(13), color: Colors.plum, marginTop: 2 },
   // Profile tab
   profileContent: { paddingHorizontal: Spacing.s5, paddingTop: Spacing.s1, paddingBottom: Spacing.s6, gap: 14 },
@@ -492,14 +492,14 @@ const styles = StyleSheet.create({
   },
   aboutInput: {
     fontFamily: FontFamily.ui, fontSize: sf(14),
-    color: Colors.ink, lineHeight: 21, minHeight: 80, textAlignVertical: 'top',
+    color: Colors.ink, lineHeight: sf(21), minHeight: 80, textAlignVertical: 'top',
   },
   aboutEditActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 10, marginTop: 8 },
   aboutCancelBtn: { padding: 4 },
   aboutCancelText: { fontFamily: FontFamily.ui, fontSize: sf(13), color: Colors.ink3 },
   aboutSaveBtn: { paddingVertical: 4, paddingHorizontal: 12, backgroundColor: Colors.sakuraDeep, borderRadius: Radius.pill },
   aboutSaveText: { fontFamily: FontFamily.uiMedium, fontSize: sf(13), color: Colors.vellum },
-  aboutText: { fontFamily: FontFamily.displayItalic, fontSize: sf(14), color: Colors.ink2, lineHeight: 21 },
+  aboutText: { fontFamily: FontFamily.displayItalic, fontSize: sf(14), color: Colors.ink2, lineHeight: sf(21) },
   hcSection: { gap: 2 },
   hcRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
 
@@ -524,11 +524,11 @@ const styles = StyleSheet.create({
     paddingVertical: 10, paddingHorizontal: 4,
     borderBottomWidth: 1, borderBottomColor: Colors.paperDeep,
   },
-  hcBody: { fontFamily: FontFamily.displayItalic, fontSize: sf(14), color: Colors.ink, lineHeight: 20 },
+  hcBody: { fontFamily: FontFamily.displayItalic, fontSize: sf(14), color: Colors.ink, lineHeight: sf(20) },
   hcEditRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   hcBodyWrap: { flex: 1 },
   hcEditInput: {
-    fontFamily: FontFamily.displayItalic, fontSize: sf(14), color: Colors.ink, lineHeight: 20,
+    fontFamily: FontFamily.displayItalic, fontSize: sf(14), color: Colors.ink, lineHeight: sf(20),
     borderBottomWidth: 1, borderBottomColor: Colors.sakura, paddingVertical: 2,
   },
   hcDeleteBtn: { padding: 4 },
@@ -579,6 +579,6 @@ const styles = StyleSheet.create({
   templateCardInner: { flex: 1, padding: Spacing.s4, justifyContent: 'flex-end' },
   templateCardTitle: {
     fontFamily: FontFamily.markerBold, fontSize: sf(13),
-    lineHeight: 17, textTransform: 'uppercase', letterSpacing: 0.3,
+    lineHeight: sf(17), textTransform: 'uppercase', letterSpacing: 0.3,
   },
 });

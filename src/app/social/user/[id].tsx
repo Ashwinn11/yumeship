@@ -15,6 +15,7 @@ import { ProfileCardSkeleton } from '@/components/profile/ProfileCardSkeleton';
 import { ProfileScreenHeader } from '@/components/profile/ProfileScreenHeader';
 import { CozyModal } from '@/components/ui/CozyModal';
 import { Colors, FontFamily, Radius, sf, Spacing } from '@/constants/theme';
+import { useIPad } from '@/hooks/use-ipad';
 import { useAuthUser } from '@/store/auth';
 import {
   blockUser,
@@ -36,6 +37,7 @@ const PostSeparator = () => <View style={styles.postSeparator} />;
 
 export default function PublicUserProfileScreen() {
   const insets = useSafeAreaInsets();
+  const { column } = useIPad();
   const { id } = useLocalSearchParams<{ id: string }>();
   const me = useAuthUser();
   const [profile, setProfile] = useState<CommunityProfile | null>(null);
@@ -77,16 +79,17 @@ export default function PublicUserProfileScreen() {
 
   const isMe = me?.id === id;
 
-  const { posts, loading: postsLoading, refreshing, refresh: refreshPosts, loadMore, toggleLikeOptimistic } = useUserPosts(id);
+  const { posts, loading: postsLoading, refreshing, refresh: refreshPosts, loadMore, toggleLikeOptimistic, pollVoteOptimistic } = useUserPosts(id);
 
   const renderPost = useCallback(
     ({ item }: { item: CommunityPost }) => (
       <PostCard
         post={item}
         onToggleLike={() => toggleLikeOptimistic(item.id, () => showToast("couldn't update like — try again"))}
+        onPollVote={(i) => pollVoteOptimistic(item.id, i, () => showToast("couldn't update vote — try again"))}
       />
     ),
-    [toggleLikeOptimistic, showToast],
+    [toggleLikeOptimistic, pollVoteOptimistic, showToast],
   );
 
   async function handleBlock() {
@@ -112,7 +115,7 @@ export default function PublicUserProfileScreen() {
     return (
       <View style={styles.screen}>
         <ProfileScreenHeader insetsTop={insets.top} onBack={() => router.back()} title="" />
-        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={[styles.content, column]} showsVerticalScrollIndicator={false}>
           <ProfileCardSkeleton />
         </ScrollView>
       </View>
@@ -156,7 +159,7 @@ export default function PublicUserProfileScreen() {
 
       <FlatList
         style={styles.scroll}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, column]}
         showsVerticalScrollIndicator={false}
         data={posts}
         keyExtractor={keyExtractor}

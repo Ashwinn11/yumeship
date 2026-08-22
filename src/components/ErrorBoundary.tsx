@@ -51,7 +51,7 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: FontFamily.script,
     fontSize: sf(34),
-    lineHeight: 36,
+    lineHeight: sf(36),
     color: Colors.ink,
     textAlign: 'center',
   },

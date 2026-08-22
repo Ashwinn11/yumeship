@@ -241,7 +241,7 @@ const s = StyleSheet.create({
   lineRow: { flexDirection: 'row', gap: 8, alignItems: 'flex-start' },
   speakerPill: { borderRadius: 999, borderWidth: 1.5, borderColor: INK, paddingVertical: 2, paddingHorizontal: 11, alignSelf: 'flex-start' },
   speakerPillText: { fontFamily: FontFamily.uiMedium, fontSize: sf(11), color: '#fff' },
-  lineText: { flex: 1, fontFamily: FontFamily.ja, fontSize: sf(13), lineHeight: 19, color: INK },
+  lineText: { flex: 1, fontFamily: FontFamily.ja, fontSize: sf(13), lineHeight: sf(19), color: INK },
   lineRemove: { color: '#c9a9b7', fontSize: sf(11) },
 
   controls: { flexDirection: 'row', gap: 8, justifyContent: 'center', flexWrap: 'wrap', marginTop: 12 },
@@ -264,5 +264,5 @@ const s = StyleSheet.create({
   savedRemoveText: { color: '#c9a9b7', fontSize: sf(12) },
   savedLine: { flexDirection: 'row', gap: 6, alignItems: 'flex-start', paddingRight: 16 },
   savedName: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(10.5) },
-  savedText: { flex: 1, fontFamily: FontFamily.ja, fontSize: sf(11.5), lineHeight: 16, color: INK },
+  savedText: { flex: 1, fontFamily: FontFamily.ja, fontSize: sf(11.5), lineHeight: sf(16), color: INK },
 });

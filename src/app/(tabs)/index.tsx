@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.sakuraSoft,
   },
   titleRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 10, marginTop: Spacing.s4 },
-  title: { fontFamily: FontFamily.displayItalic, fontSize: sf(38), lineHeight: 38, letterSpacing: -0.4, color: Colors.ink },
+  title: { fontFamily: FontFamily.displayItalic, fontSize: sf(38), lineHeight: sf(38), letterSpacing: -0.4, color: Colors.ink },
   meta: { fontFamily: FontFamily.marker, fontSize: sf(10), color: Colors.ink3, letterSpacing: 1.2, marginTop: Spacing.s2 },
   searchContainer: {
     flexDirection: 'row',
@@ -298,7 +298,7 @@ const styles = StyleSheet.create({
   },
   addText: {
     fontFamily: FontFamily.displayItalic, fontSize: sf(14),
-    color: Colors.ink2, textAlign: 'center', paddingHorizontal: 8, lineHeight: 18,
+    color: Colors.ink2, textAlign: 'center', paddingHorizontal: 8, lineHeight: sf(18),
   },
   emptyState: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: Spacing.s3, paddingBottom: Spacing.s9 },
   emptyDeco: { flexDirection: 'row', alignItems: 'center', gap: Spacing.s3, marginBottom: Spacing.s2 },

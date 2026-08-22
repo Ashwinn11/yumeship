@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.ui,
     fontSize: sf(13),
     color: Colors.ink2,
-    lineHeight: 18,
+    lineHeight: sf(18),
     textAlign: 'center',
   },
   buttonRow: {

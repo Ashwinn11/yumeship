@@ -57,7 +57,7 @@ export function CalloutBubble({ children, tone = 'pink', notch = true, raw = fal
             style={{
               fontFamily: FontFamily.script,
               fontSize: sf(17),
-              lineHeight: 24,
+              lineHeight: sf(24),
               color: t.color,
               textAlign: 'center',
             }}
@@ -168,7 +168,7 @@ export function ThoughtCloud({ children, tone = 'lavender', flower = true, style
           style={{
             fontFamily: FontFamily.script,
             fontSize: sf(16),
-            lineHeight: 18,
+            lineHeight: sf(18),
             color: t.color,
             textAlign: 'center',
           }}

@@ -1435,7 +1435,7 @@ const s = StyleSheet.create({
     fontSize: sf(11),
     color: INK,
     flex: 1,
-    lineHeight: 16,
+    lineHeight: sf(16),
   },
   profileGoodInput: {
     fontFamily: FontFamily.ja,

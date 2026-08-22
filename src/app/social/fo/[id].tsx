@@ -11,6 +11,7 @@ import { ProfileCardSkeleton } from '@/components/profile/ProfileCardSkeleton';
 import { ProfileScreenHeader } from '@/components/profile/ProfileScreenHeader';
 import { InlineToast, useInlineToast } from '@/components/ui/InlineToast';
 import { Colors, FontFamily, Spacing, sf } from '@/constants/theme';
+import { useIPad } from '@/hooks/use-ipad';
 import { relationshipStatus, sharingStatus } from '@/components/profile/cardProps';
 import { fetchFoProfile, useFoPosts, type CommunityFoProfile, type CommunityPost } from '@/store/community';
 
@@ -19,6 +20,7 @@ const PostSeparator = () => <View style={styles.postSeparator} />;
 
 export default function PublicFoProfileScreen() {
   const insets = useSafeAreaInsets();
+  const { column } = useIPad();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [profile, setProfile] = useState<CommunityFoProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -38,16 +40,17 @@ export default function PublicFoProfileScreen() {
     };
   }, [id]);
 
-  const { posts, loading: postsLoading, refreshing, refresh: refreshPosts, loadMore, toggleLikeOptimistic } = useFoPosts(id);
+  const { posts, loading: postsLoading, refreshing, refresh: refreshPosts, loadMore, toggleLikeOptimistic, pollVoteOptimistic } = useFoPosts(id);
 
   const renderPost = useCallback(
     ({ item }: { item: CommunityPost }) => (
       <PostCard
         post={item}
         onToggleLike={() => toggleLikeOptimistic(item.id, () => showToast("couldn't update like — try again"))}
+        onPollVote={(i) => pollVoteOptimistic(item.id, i, () => showToast("couldn't update vote — try again"))}
       />
     ),
-    [toggleLikeOptimistic, showToast],
+    [toggleLikeOptimistic, pollVoteOptimistic, showToast],
   );
 
   const pageBg = profile?.pageBgImage || profile?.pageBgColor;
@@ -65,7 +68,7 @@ export default function PublicFoProfileScreen() {
       />
 
       {loading ? (
-        <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <ScrollView style={styles.scroll} contentContainerStyle={[styles.content, column]} showsVerticalScrollIndicator={false}>
           <ProfileCardSkeleton />
         </ScrollView>
       ) : !profile ? (
@@ -73,7 +76,7 @@ export default function PublicFoProfileScreen() {
       ) : (
         <FlatList
           style={styles.scroll}
-          contentContainerStyle={styles.content}
+          contentContainerStyle={[styles.content, column]}
           showsVerticalScrollIndicator={false}
           data={posts}
           keyExtractor={keyExtractor}

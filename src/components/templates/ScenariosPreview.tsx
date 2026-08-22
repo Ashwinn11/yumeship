@@ -75,7 +75,7 @@ export function ScenariosPreview() {
             <Text style={{ fontFamily: FontFamily.uiSemiBold, fontSize: sf(16), color: Colors.ink }} numberOfLines={2}>
               {c.title}
             </Text>
-            <Text style={{ fontFamily: FontFamily.ui, fontSize: sf(13), lineHeight: 19, color: Colors.ink2, marginTop: 4 }} numberOfLines={3}>
+            <Text style={{ fontFamily: FontFamily.ui, fontSize: sf(13), lineHeight: sf(19), color: Colors.ink2, marginTop: 4 }} numberOfLines={3}>
               {c.body}
             </Text>
             <Text style={{ fontFamily: FontFamily.marker, fontSize: sf(9), color: Colors.sakuraDeep, letterSpacing: 1, textAlign: 'right', marginTop: 10 }}>

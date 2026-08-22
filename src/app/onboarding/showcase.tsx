@@ -222,14 +222,14 @@ const styles = StyleSheet.create({
   heading: {
     fontFamily: FontFamily.displayItalic,
     fontSize: sf(31),
-    lineHeight: 33,
+    lineHeight: sf(33),
     color: Colors.ink,
     marginTop: Spacing.s2,
   },
   subcopy: {
     fontFamily: FontFamily.script,
     fontSize: sf(18),
-    lineHeight: 22,
+    lineHeight: sf(22),
     color: Colors.ink2,
     marginTop: Spacing.s3,
   },

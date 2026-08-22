@@ -257,7 +257,7 @@ const s = StyleSheet.create({
     fontFamily: FontFamily.ja,
     fontSize: sf(12),
     color: INK,
-    lineHeight: 20,
+    lineHeight: sf(20),
     marginTop: 4,
     minHeight: 120,
     textAlignVertical: 'top',

@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
   name: { fontFamily: FontFamily.uiMedium, fontSize: sf(13), color: Colors.ink, textAlign: 'center' },
   pronounsRow: { height: 16, alignItems: 'center', justifyContent: 'center' },
   pronouns: { fontFamily: FontFamily.ui, fontSize: sf(11), color: Colors.ink3 },
-  flagRow: { height: 16, alignItems: 'center', justifyContent: 'center' },
+  flagRow: { height: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
   bio: {
     fontFamily: FontFamily.ui, fontSize: sf(12), color: Colors.ink2, lineHeight: sf(16),
     textAlign: 'center', minHeight: sf(16) * 2,

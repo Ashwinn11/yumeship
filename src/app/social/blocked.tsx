@@ -7,10 +7,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { InlineToast, useInlineToast } from '@/components/ui/InlineToast';
 import { Mark } from '@/components/ui/Mark';
 import { Colors, FontFamily, FontSize, Radius, Spacing, sf } from '@/constants/theme';
+import { useIPad } from '@/hooks/use-ipad';
 import { fetchBlockedUsers, unblockUser, type CommunityProfile } from '@/store/community';
 
 export default function BlockedUsersScreen() {
   const insets = useSafeAreaInsets();
+  const { column } = useIPad();
   const [users, setUsers] = useState<CommunityProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const { message: toastMsg, nonce: toastNonce, show: showToast } = useInlineToast();
@@ -42,8 +44,8 @@ export default function BlockedUsersScreen() {
         <InlineToast message={toastMsg} nonce={toastNonce} />
       </View>
 
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.headerBtn}>
+      <View style={[styles.header, column]}>
+        <Pressable onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)/community' as any))} style={styles.headerBtn}>
           <Text style={styles.headerBtnText}>‹</Text>
         </Pressable>
         <View style={styles.headerCenter}>
@@ -58,7 +60,7 @@ export default function BlockedUsersScreen() {
       ) : users.length === 0 ? (
         <Text style={styles.empty}>no one's blocked ♡</Text>
       ) : (
-        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={[styles.content, column]} showsVerticalScrollIndicator={false}>
           {users.map((u) => (
             <View key={u.id} style={styles.row}>
               <View style={[styles.avatar, { backgroundColor: Colors.sakura }]}>

@@ -152,7 +152,7 @@ export function ScenariosFeature({ shipId, shipName, setCustomBack }: { shipId: 
                 onPress={() => handleNewScenario(p.text)}
               >
                 <Text style={{ fontSize: sf(13), color: accent }}>♡</Text>
-                <Text style={{ flex: 1, fontFamily: FontFamily.ui, fontSize: sf(13), lineHeight: 19, color: Colors.ink2 }}>{p.text}</Text>
+                <Text style={{ flex: 1, fontFamily: FontFamily.ui, fontSize: sf(13), lineHeight: sf(19), color: Colors.ink2 }}>{p.text}</Text>
               </Pressable>
             ))}
           </View>
@@ -238,7 +238,7 @@ export function ScenariosFeature({ shipId, shipName, setCustomBack }: { shipId: 
 
                   {/* body preview — Fredoka, matches the editor */}
                   {s.body ? (
-                    <Text style={[sc.cardPreview, { fontFamily: FontFamily.ui, fontSize: sf(13), lineHeight: 19, color: Colors.ink2, marginTop: 4 }]} numberOfLines={3}>
+                    <Text style={[sc.cardPreview, { fontFamily: FontFamily.ui, fontSize: sf(13), lineHeight: sf(19), color: Colors.ink2, marginTop: 4 }]} numberOfLines={3}>
                       {s.body}
                     </Text>
                   ) : (
@@ -313,7 +313,7 @@ export function ScenariosFeature({ shipId, shipName, setCustomBack }: { shipId: 
                     style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 }}
                   >
                     <Text style={{ fontSize: sf(13), color: isCustom ? Colors.lavenderDeep : accent }}>{isCustom ? '✎' : '♡'}</Text>
-                    <Text style={{ flex: 1, fontFamily: FontFamily.ui, fontSize: sf(13), lineHeight: 19, color: Colors.ink }}>{p.text}</Text>
+                    <Text style={{ flex: 1, fontFamily: FontFamily.ui, fontSize: sf(13), lineHeight: sf(19), color: Colors.ink }}>{p.text}</Text>
                   </Pressable>
                   {isCustom && (
                     <Pressable hitSlop={8} onPress={() => deleteCustomPrompt((p as CustomPrompt).id)}>
@@ -457,7 +457,7 @@ function ScenarioEditor({ initial, shipName, accent, accentLight, onSave, onDele
             fontFamily: FontFamily.ui,
             fontSize: sf(15),
             color: Colors.ink2,
-            lineHeight: 24,
+            lineHeight: sf(24),
             flex: 1,
             textAlignVertical: 'top',
           }}
@@ -506,7 +506,7 @@ const sc = StyleSheet.create({
   cardBody: { flex: 1, padding: Spacing.s4, gap: 3 },
   cardTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 6 },
   cardTitle: { fontFamily: FontFamily.displayItalic, fontSize: sf(16), color: Colors.ink, flex: 1 },
-  cardPreview: { fontFamily: FontFamily.script, fontSize: sf(14), color: Colors.ink2, lineHeight: 20 },
+  cardPreview: { fontFamily: FontFamily.script, fontSize: sf(14), color: Colors.ink2, lineHeight: sf(20) },
   cardEmpty: { fontFamily: FontFamily.displayItalic, fontSize: sf(13), color: Colors.ink3 },
   cardDate: { fontFamily: FontFamily.marker, fontSize: sf(9), color: Colors.ink3, letterSpacing: 0.5, marginTop: 4 },
 
@@ -546,7 +546,7 @@ const sc = StyleSheet.create({
   },
   bodyInput: {
     flex: 1, padding: Spacing.s4,
-    fontFamily: FontFamily.script, fontSize: sf(15), color: Colors.ink, lineHeight: 26,
+    fontFamily: FontFamily.script, fontSize: sf(15), color: Colors.ink, lineHeight: sf(26),
     minHeight: 260,
   },
 });

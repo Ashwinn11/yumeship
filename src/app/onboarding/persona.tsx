@@ -129,7 +129,7 @@ export default function OnbPersona() {
   return (
     <View style={[styles.screen, { paddingTop: insets.top + Spacing.s1, paddingBottom: Spacing.s1 }]}>
       {isEdit ? (
-        <View style={styles.header}>
+        <View style={[styles.header, column]}>
           <Pressable onPress={() => router.back()} style={styles.closeBtn}>
             <Text style={styles.closeBtnText}>✕</Text>
           </Pressable>
@@ -409,7 +409,7 @@ const styles = StyleSheet.create({
   heading: {
     fontFamily: FontFamily.displayItalic,
     fontSize: sf(30),
-    lineHeight: 33,
+    lineHeight: sf(33),
     letterSpacing: -0.3,
     color: Colors.ink,
     marginTop: Spacing.s2,
@@ -437,7 +437,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   avatarBadgeText: { color: '#fff', fontSize: sf(11), fontFamily: FontFamily.ui, lineHeight: sf(13) },
-  avatarHint: { flex: 1, fontFamily: FontFamily.ui, fontSize: sf(11), color: Colors.ink3, lineHeight: 15 },
+  avatarHint: { flex: 1, fontFamily: FontFamily.ui, fontSize: sf(11), color: Colors.ink3, lineHeight: sf(15) },
   fieldSpacer: {
     height: 14,
   },
@@ -461,7 +461,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   imageSwatchThumb: { width: 26, height: 26, borderRadius: Radius.pill },
-  imageSwatchPlus: { fontSize: sf(15), color: Colors.ink3, fontFamily: FontFamily.ui, lineHeight: 18 },
+  imageSwatchPlus: { fontSize: sf(15), color: Colors.ink3, fontFamily: FontFamily.ui, lineHeight: sf(18) },
   imageHint: { fontFamily: FontFamily.ui, fontSize: sf(9), color: Colors.ink3, marginTop: 8 },
   bioInput: {
     borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.r3,

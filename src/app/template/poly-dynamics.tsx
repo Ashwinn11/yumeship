@@ -270,7 +270,7 @@ const ds = StyleSheet.create({
   castPhoto: { borderWidth: 1.5, borderColor: INK, borderRadius: 8, backgroundColor: '#e9d8cb' },
   colorDot: { position: 'absolute', top: 4, left: 4, width: 18, height: 18, borderRadius: 999, borderWidth: 1.5, borderColor: INK },
   removeDot: { position: 'absolute', top: 4, right: 4, width: 20, height: 20, borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.95)', borderWidth: 1.5, borderColor: INK, alignItems: 'center', justifyContent: 'center' },
-  removeX: { fontSize: sf(11), color: '#b04a4a', fontFamily: FontFamily.ui, lineHeight: 14 },
+  removeX: { fontSize: sf(11), color: '#b04a4a', fontFamily: FontFamily.ui, lineHeight: sf(14) },
   castName: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(13), color: INK, borderBottomWidth: 1.4, borderColor: INK, paddingBottom: 2, padding: 0 },
   quoteBubble: { backgroundColor: '#fff', borderWidth: 1.5, borderColor: INK, borderRadius: 12, borderBottomLeftRadius: 3, paddingVertical: 4, paddingHorizontal: 8 },
   quoteText: { fontFamily: FontFamily.script, fontSize: sf(13), color: INK, padding: 0 },

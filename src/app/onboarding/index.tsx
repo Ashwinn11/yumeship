@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: FontFamily.displayItalic,
     fontSize: sf(56),
-    lineHeight: 54,
+    lineHeight: sf(54),
     letterSpacing: -1,
     color: Colors.ink,
     textAlign: 'center',

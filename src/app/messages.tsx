@@ -7,9 +7,11 @@ import { Heart } from '@/components/deco/Heart';
 import { Sparkle } from '@/components/deco/Sparkle';
 import { IconLock, IconSend } from '@/components/ui/Icon';
 import { Colors, FontFamily, FontSize, Radius, Spacing ,sf } from '@/constants/theme';
+import { useIPad } from '@/hooks/use-ipad';
 
 export default function MessagesScreen() {
   const insets = useSafeAreaInsets();
+  const { column } = useIPad();
   const [side, setSide] = useState<'me' | 'them'>('them');
 
   return (
@@ -23,7 +25,7 @@ export default function MessagesScreen() {
       </View>
 
       {/* App bar */}
-      <View style={styles.appBar}>
+      <View style={[styles.appBar, column]}>
         <Pressable onPress={() => router.back()}>
           <Text style={styles.back}>‹</Text>
         </Pressable>
@@ -43,7 +45,7 @@ export default function MessagesScreen() {
       {/* Empty thread state */}
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={styles.emptyContainer}
+        contentContainerStyle={[styles.emptyContainer, column]}
         showsVerticalScrollIndicator={false}
       >
         <Text style={styles.emptyText}>no messages yet</Text>
@@ -51,7 +53,7 @@ export default function MessagesScreen() {
       </ScrollView>
 
       {/* Composer */}
-      <View style={styles.composer}>
+      <View style={[styles.composer, column]}>
         <View style={styles.sideToggle}>
           <Pressable
             onPress={() => setSide('me')}

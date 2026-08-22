@@ -282,7 +282,7 @@ const hc = StyleSheet.create({
     borderRadius: Radius.pill, borderWidth: 1, borderColor: Colors.line, backgroundColor: Colors.vellum,
   },
   editBtnText: { fontFamily: FontFamily.uiMedium, fontSize: sf(12), color: Colors.ink2 },
-  itemBody: { fontFamily: FontFamily.ui, fontSize: sf(13), color: INK, lineHeight: 18 },
+  itemBody: { fontFamily: FontFamily.ui, fontSize: sf(13), color: INK, lineHeight: sf(18) },
 
   editorHeader: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
@@ -300,7 +300,7 @@ const hc = StyleSheet.create({
     paddingVertical: 6,
   },
   editorRowNum: { fontFamily: FontFamily.marker, fontSize: sf(9), color: Colors.ink3, width: 18 },
-  editorInput: { flex: 1, fontFamily: FontFamily.ui, fontSize: sf(13), color: Colors.ink, lineHeight: 18 },
+  editorInput: { flex: 1, fontFamily: FontFamily.ui, fontSize: sf(13), color: Colors.ink, lineHeight: sf(18) },
   editorAddRow: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 6 },
   editorAddText: { fontFamily: FontFamily.uiMedium, fontSize: sf(13) },
   addCatRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 14, marginTop: 4 },

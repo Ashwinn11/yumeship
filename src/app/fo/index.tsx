@@ -29,7 +29,7 @@ export default function FoListScreen() {
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top + Spacing.s1, paddingBottom: insets.bottom + Spacing.s1 }]}>
-      <View style={styles.header}>
+      <View style={[styles.header, column]}>
         <Pressable onPress={() => router.back()} style={styles.headerBtn}>
           <Text style={styles.headerBtnText}>‹</Text>
         </Pressable>
@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.s7, paddingHorizontal: Spacing.s5,
   },
   emptyTitle: { fontFamily: FontFamily.displayItalic, fontSize: sf(20), color: Colors.ink, marginTop: 4 },
-  emptyBody: { fontFamily: FontFamily.ui, fontSize: sf(12), color: Colors.ink3, textAlign: 'center', lineHeight: 17 },
+  emptyBody: { fontFamily: FontFamily.ui, fontSize: sf(12), color: Colors.ink3, textAlign: 'center', lineHeight: sf(17) },
   emptyBtn: {
     marginTop: 10, paddingVertical: 10, paddingHorizontal: 18,
     backgroundColor: Colors.sakuraDeep, borderRadius: Radius.pill,

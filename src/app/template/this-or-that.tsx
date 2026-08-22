@@ -144,7 +144,7 @@ const s = StyleSheet.create({
   noteText: {
     fontFamily: FontFamily.script,
     fontSize: sf(16),
-    lineHeight: 18,
+    lineHeight: sf(18),
     textAlign: 'center',
     minWidth: 180,
   },
