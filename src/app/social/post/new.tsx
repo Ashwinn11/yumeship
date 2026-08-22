@@ -281,7 +281,7 @@ const styles = StyleSheet.create({
   },
 
   attachWrap: { marginTop: Spacing.s3, paddingLeft: 48 },
-  mediaWrap: { marginTop: Spacing.s3 },
+  mediaWrap: { marginTop: Spacing.s3, paddingLeft: 48 },
 
   error: { fontFamily: FontFamily.ui, fontSize: sf(12), color: Colors.ember, marginTop: 16, textAlign: 'center' },
 

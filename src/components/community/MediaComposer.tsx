@@ -1,7 +1,7 @@
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
-import { FlatList, Pressable, StyleSheet, Text, View, type ListRenderItemInfo } from 'react-native';
+import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
 
 import { Colors, FontFamily, Radius, sf } from '@/constants/theme';
@@ -54,32 +54,48 @@ type Props = {
   onChange: (media: LocalPickedMedia[]) => void;
 };
 
-const keyExtractor = (m: LocalPickedMedia, i: number) => m.uri || String(i);
-const ASPECT = 4 / 3;
-// with more than one photo, the current one takes 84% of the width so the
-// next one visibly peeks in at the edge — signals "there's more, swipe" the
-// way a single edge-to-edge page never can. A lone photo just gets the full
-// width, since there's nothing to peek at.
-const PEEK_RATIO = 0.84;
-const GAP = 10;
+const SINGLE_ASPECT = 4 / 3;
+// 2/3/4-photo grids read shorter and wider than a single full photo, same as
+// Twitter/Instagram's compose grid — this is the ratio of that shorter box.
+const GRID_HEIGHT_RATIO = 0.62;
+
+function Tile({
+  uri,
+  isGif,
+  style,
+  onRemove,
+}: {
+  uri: string;
+  isGif: boolean;
+  style: StyleProp<ViewStyle>;
+  onRemove: () => void;
+}) {
+  return (
+    <View style={[styles.tile, style]}>
+      <Image source={{ uri }} style={StyleSheet.absoluteFill} contentFit="cover" />
+      {isGif && (
+        <View style={styles.gifBadge}>
+          <Text style={styles.gifBadgeText}>GIF</Text>
+        </View>
+      )}
+      <Pressable style={styles.removeBadge} onPress={onRemove} hitSlop={8}>
+        <Text style={styles.removeText}>✕</Text>
+      </Pressable>
+    </View>
+  );
+}
 
 /**
- * Preview mirrors the real post's `MediaCarousel` sizing — big enough to
- * actually see, not a grid of small tiles — but peeks the next photo's edge
- * rather than going full-bleed one-per-page, so multiple attachments read as
- * swipeable instead of looking like a single flat photo. Each page carries
- * its own remove button; "add more" is a separate control below the
- * carousel rather than a tile inside it, since a picker affordance stretched
- * to post-preview size would look nothing like the button it's supposed to be.
+ * Mirrors Twitter/Instagram's compose grid: every attached photo is visible
+ * at once, sized by count (1 full-width, 2 side by side, 3 one-large-two-
+ * stacked, 4 in a 2x2), each large enough to actually see and each with its
+ * own remove button — rather than a swipeable pager, which would hide
+ * photos behind a swipe while still deciding what to post. Swiping is for
+ * viewing a published post (`MediaCarousel`), not composing one.
  */
 export function MediaComposer({ media, onChange }: Props) {
   const [width, setWidth] = useState(0);
-  const [page, setPage] = useState(0);
   const hasGif = media.some((m) => m.type === 'gif');
-  const multi = media.length > 1;
-  const itemWidth = multi ? width * PEEK_RATIO : width;
-  const height = itemWidth / ASPECT;
-  const stride = itemWidth + GAP;
 
   async function pickImages() {
     const res = await ImagePicker.launchImageLibraryAsync({
@@ -94,55 +110,55 @@ export function MediaComposer({ media, onChange }: Props) {
 
   function removeItem(uri: string) {
     onChange(media.filter((m) => m.uri !== uri));
-    setPage(0);
   }
-
-  const renderItem = useCallback(
-    ({ item }: ListRenderItemInfo<LocalPickedMedia>) => (
-      <View style={[styles.page, { width: itemWidth, height, marginRight: multi ? GAP : 0 }]}>
-        <Image source={{ uri: item.uri }} style={StyleSheet.absoluteFill} contentFit="cover" />
-        {item.type === 'gif' && (
-          <View style={styles.gifBadge}>
-            <Text style={styles.gifBadgeText}>GIF</Text>
-          </View>
-        )}
-        <Pressable style={styles.removeBadge} onPress={() => removeItem(item.uri)} hitSlop={8}>
-          <Text style={styles.removeText}>✕</Text>
-        </Pressable>
-      </View>
-    ),
-    [itemWidth, height, multi],
-  );
 
   if (media.length === 0) return null;
 
+  const singleHeight = width / SINGLE_ASPECT;
+  const gridHeight = width * GRID_HEIGHT_RATIO;
+
   return (
     <View>
-      <View onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
-        {width > 0 &&
-          (media.length === 1 ? (
-            renderItem({ item: media[0], index: 0 } as ListRenderItemInfo<LocalPickedMedia>)
-          ) : (
-            <>
-              <FlatList
-                data={media}
-                keyExtractor={keyExtractor}
-                renderItem={renderItem}
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                snapToInterval={stride}
-                decelerationRate="fast"
-                initialNumToRender={2}
-                windowSize={3}
-                maxToRenderPerBatch={2}
-                getItemLayout={(_, i) => ({ length: stride, offset: stride * i, index: i })}
-                onMomentumScrollEnd={(e) => setPage(Math.round(e.nativeEvent.contentOffset.x / stride))}
-              />
-              <View style={styles.countBadge} pointerEvents="none">
-                <Text style={styles.countText}>{page + 1}/{media.length}</Text>
-              </View>
-            </>
-          ))}
+      <View style={styles.wrap} onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
+        {width > 0 && media.length === 1 && (
+          <Tile
+            uri={media[0].uri}
+            isGif={media[0].type === 'gif'}
+            style={{ width, height: singleHeight }}
+            onRemove={() => removeItem(media[0].uri)}
+          />
+        )}
+
+        {width > 0 && media.length === 2 && (
+          <View style={[styles.row, { width, height: gridHeight }]}>
+            {media.map((m) => (
+              <Tile key={m.uri} uri={m.uri} isGif={false} style={styles.flexTile} onRemove={() => removeItem(m.uri)} />
+            ))}
+          </View>
+        )}
+
+        {width > 0 && media.length === 3 && (
+          <View style={[styles.row, { width, height: gridHeight }]}>
+            <Tile uri={media[0].uri} isGif={false} style={styles.flexTile} onRemove={() => removeItem(media[0].uri)} />
+            <View style={[styles.col, styles.flexTile]}>
+              <Tile uri={media[1].uri} isGif={false} style={styles.flexTile} onRemove={() => removeItem(media[1].uri)} />
+              <Tile uri={media[2].uri} isGif={false} style={styles.flexTile} onRemove={() => removeItem(media[2].uri)} />
+            </View>
+          </View>
+        )}
+
+        {width > 0 && media.length >= 4 && (
+          <View style={[styles.col, { width, height: gridHeight }]}>
+            <View style={[styles.row, styles.flexTile]}>
+              <Tile uri={media[0].uri} isGif={false} style={styles.flexTile} onRemove={() => removeItem(media[0].uri)} />
+              <Tile uri={media[1].uri} isGif={false} style={styles.flexTile} onRemove={() => removeItem(media[1].uri)} />
+            </View>
+            <View style={[styles.row, styles.flexTile]}>
+              <Tile uri={media[2].uri} isGif={false} style={styles.flexTile} onRemove={() => removeItem(media[2].uri)} />
+              <Tile uri={media[3].uri} isGif={false} style={styles.flexTile} onRemove={() => removeItem(media[3].uri)} />
+            </View>
+          </View>
+        )}
       </View>
 
       {/* a gif is a single, exclusive attachment — no "add more" once one is set */}
@@ -157,7 +173,11 @@ export function MediaComposer({ media, onChange }: Props) {
 }
 
 const styles = StyleSheet.create({
-  page: { borderRadius: Radius.r3, backgroundColor: Colors.paperDeep, overflow: 'hidden' },
+  wrap: { borderRadius: Radius.r3, overflow: 'hidden', backgroundColor: Colors.paperDeep },
+  row: { flexDirection: 'row', gap: 2 },
+  col: { flexDirection: 'column', gap: 2 },
+  flexTile: { flex: 1 },
+  tile: { position: 'relative', backgroundColor: Colors.paperDeep },
   gifBadge: {
     position: 'absolute', left: 8, bottom: 8,
     paddingHorizontal: 6, paddingVertical: 2, borderRadius: Radius.r1,
@@ -165,17 +185,11 @@ const styles = StyleSheet.create({
   },
   gifBadgeText: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(9), color: '#fff', letterSpacing: 0.4 },
   removeBadge: {
-    position: 'absolute', top: 8, right: 8,
-    width: 28, height: 28, borderRadius: Radius.pill,
+    position: 'absolute', top: 6, right: 6,
+    width: 24, height: 24, borderRadius: Radius.pill,
     backgroundColor: 'rgba(0,0,0,0.55)', alignItems: 'center', justifyContent: 'center',
   },
-  removeText: { color: '#fff', fontSize: sf(13), fontFamily: FontFamily.ui },
-  countBadge: {
-    position: 'absolute', top: 8, left: 8,
-    paddingHorizontal: 8, paddingVertical: 3, borderRadius: Radius.pill,
-    backgroundColor: 'rgba(0,0,0,0.55)',
-  },
-  countText: { fontFamily: FontFamily.uiMedium, fontSize: sf(11), color: '#fff' },
+  removeText: { color: '#fff', fontSize: sf(12), fontFamily: FontFamily.ui },
   addMoreBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start',
     marginTop: 8, paddingHorizontal: 12, paddingVertical: 7,
