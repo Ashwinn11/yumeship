@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { router, useFocusEffect } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 
 import { useAuthUser, signInWithApple, signInWithGoogle } from '@/store/auth';
 import { Colors, FontFamily, FontSize, Radius, Spacing, sf, Shadow } from '@/constants/theme';
@@ -41,7 +41,7 @@ import {
   pushOwnProfile,
   subscribeActivityPool,
   syncIdentifyFoPublish,
-  voteOnActivity,
+  toggleLike,
   useCommunityFeed,
 } from '@/store/community';
 
@@ -170,7 +170,10 @@ const keyExtractor = (p: CommunityPost) => p.id;
 
 function Feed({ insets }: { insets: { top: number } }) {
   const { column } = useIPad();
-  const [tab, setTab] = useState<'global' | 'following' | 'activities'>('global');
+  const { tab: initialTab } = useLocalSearchParams<{ tab?: string }>();
+  const [tab, setTab] = useState<'global' | 'following' | 'activities'>(
+    initialTab === 'activities' ? 'activities' : 'global',
+  );
   // the underlying feed hook only ever runs in global/following mode — picking
   // the activities pill doesn't touch it, just swaps which data source the
   // list below renders from, so switching back restores it with no re-fetch
@@ -196,10 +199,10 @@ function Feed({ insets }: { insets: { top: number } }) {
     }, [refresh]),
   );
 
-  // the vote pool: activity prompts nobody has picked yet, highest-voted first.
-  // No pagination (vote-score ordering doesn't map to a `before` cursor, and
+  // the like pool: activity prompts nobody has picked yet, most-liked first.
+  // No pagination (like-count ordering doesn't map to a `before` cursor, and
   // this app's submission volume doesn't need it) but it is realtime — new
-  // submissions and vote changes from other people show up live.
+  // submissions and like changes from other people show up live.
   const [pool, setPool] = useState<CommunityPost[]>([]);
   const [poolLoading, setPoolLoading] = useState(true);
   const [poolRefreshing, setPoolRefreshing] = useState(false);
@@ -216,10 +219,10 @@ function Feed({ insets }: { insets: { top: number } }) {
     if (tab !== 'activities') return;
     return subscribeActivityPool({
       onInsert: (p) => setPool((prev) => (prev.some((x) => x.id === p.id) ? prev : [p, ...prev])),
-      onVoteUpdate: ({ id, voteScore, featured: isFeatured }) => {
+      onLikeUpdate: ({ id, likeCount, featured: isFeatured }) => {
         // the pinned card has its own state, not the pool array — keep it in
-        // sync too, so someone else's vote on today's winner shows up live
-        setFeatured((f) => (f && f.id === id ? { ...f, voteScore } : f));
+        // sync too, so someone else's like on today's winner shows up live
+        setFeatured((f) => (f && f.id === id ? { ...f, likeCount } : f));
 
         // once someone's client features it, it belongs in the pinned slot,
         // not the pool of unpicked prompts
@@ -228,7 +231,7 @@ function Feed({ insets }: { insets: { top: number } }) {
           return;
         }
         setPool((prev) =>
-          prev.map((p) => (p.id === id ? { ...p, voteScore } : p)).sort((a, b) => b.voteScore - a.voteScore),
+          prev.map((p) => (p.id === id ? { ...p, likeCount } : p)).sort((a, b) => b.likeCount - a.likeCount),
         );
       },
       onDelete: (id) => setPool((prev) => prev.filter((p) => p.id !== id)),
@@ -236,22 +239,21 @@ function Feed({ insets }: { insets: { top: number } }) {
   }, [tab]);
 
   const inFlightPool = useRef<Set<string>>(new Set());
-  const votePoolOptimistic = useCallback(
-    async (postId: string, direction: -1 | 1) => {
+  const likePoolOptimistic = useCallback(
+    async (postId: string) => {
       if (inFlightPool.current.has(postId)) return;
       const target = pool.find((p) => p.id === postId);
       if (!target) return;
-      const prevVote = target.myVote;
-      const nextVote: -1 | 0 | 1 = prevVote === direction ? 0 : direction;
-      const apply = (myVote: -1 | 0 | 1, voteScore: number) =>
-        setPool((prev) => prev.map((p) => (p.id === postId ? { ...p, myVote, voteScore } : p)));
+      const wasLiked = target.likedByMe;
+      const apply = (liked: boolean, delta: number) =>
+        setPool((prev) => prev.map((p) => (p.id === postId ? { ...p, likedByMe: liked, likeCount: p.likeCount + delta } : p)));
       inFlightPool.current.add(postId);
-      apply(nextVote, target.voteScore - prevVote + nextVote);
+      apply(!wasLiked, wasLiked ? -1 : 1);
       try {
-        await voteOnActivity(postId, direction, prevVote);
+        await toggleLike(postId, wasLiked);
       } catch {
-        apply(prevVote, target.voteScore);
-        showToast("couldn't update vote — try again");
+        apply(wasLiked, wasLiked ? 1 : -1);
+        showToast("couldn't update like — try again");
       } finally {
         inFlightPool.current.delete(postId);
       }
@@ -268,32 +270,31 @@ function Feed({ insets }: { insets: { top: number } }) {
   useEffect(() => {
     fetchTodaysActivity().then(setFeatured);
   }, []);
-  const voteFeaturedOptimistic = useCallback(
-    async (direction: -1 | 1) => {
-      if (!featured) return;
-      const prevVote = featured.myVote;
-      const nextVote: -1 | 0 | 1 = prevVote === direction ? 0 : direction;
-      setFeatured((f) => (f ? { ...f, myVote: nextVote, voteScore: f.voteScore - prevVote + nextVote } : f));
-      try {
-        await voteOnActivity(featured.id, direction, prevVote);
-      } catch {
-        setFeatured((f) => (f ? { ...f, myVote: prevVote, voteScore: f.voteScore - nextVote + prevVote } : f));
-        showToast("couldn't update vote — try again");
-      }
-    },
-    [featured, showToast],
-  );
+  const likeFeaturedOptimistic = useCallback(async () => {
+    if (!featured) return;
+    const wasLiked = featured.likedByMe;
+    setFeatured((f) => (f ? { ...f, likedByMe: !wasLiked, likeCount: f.likeCount + (wasLiked ? -1 : 1) } : f));
+    try {
+      await toggleLike(featured.id, wasLiked);
+    } catch {
+      setFeatured((f) => (f ? { ...f, likedByMe: wasLiked, likeCount: f.likeCount + (wasLiked ? 1 : -1) } : f));
+      showToast("couldn't update like — try again");
+    }
+  }, [featured, showToast]);
 
   const renderPost = useCallback(
     ({ item }: { item: CommunityPost }) => (
       <PostCard
         post={item}
-        onToggleLike={() => toggleLikeOptimistic(item.id, () => showToast("couldn't update like — try again"))}
-        onVote={tab === 'activities' ? (d) => votePoolOptimistic(item.id, d) : undefined}
+        onToggleLike={() =>
+          tab === 'activities'
+            ? likePoolOptimistic(item.id)
+            : toggleLikeOptimistic(item.id, () => showToast("couldn't update like — try again"))
+        }
         onPollVote={(i) => pollVoteOptimistic(item.id, i, () => showToast("couldn't update vote — try again"))}
       />
     ),
-    [tab, votePoolOptimistic, toggleLikeOptimistic, pollVoteOptimistic, showToast],
+    [tab, likePoolOptimistic, toggleLikeOptimistic, pollVoteOptimistic, showToast],
   );
 
   const activityData = tab === 'activities';
@@ -341,11 +342,23 @@ function Feed({ insets }: { insets: { top: number } }) {
         windowSize={7}
         removeClippedSubviews
         ListHeaderComponent={
-          activityData && featured ? (
-            <View style={styles.featuredWrap}>
-              <Text style={styles.featuredLabel}>today's activity</Text>
-              <PostCard post={featured} onToggleLike={() => {}} onVote={voteFeaturedOptimistic} />
-            </View>
+          featured || activityData ? (
+            <>
+              {featured && (
+                <View style={styles.featuredWrap}>
+                  <Text style={styles.featuredLabel}>today's activity</Text>
+                  <PostCard post={featured} onToggleLike={likeFeaturedOptimistic} />
+                </View>
+              )}
+              {activityData && (
+                <Pressable
+                  style={styles.submitPromptRow}
+                  onPress={() => router.push('/social/post/new?kind=activity' as any)}
+                >
+                  <Text style={styles.submitPromptText}>+ submit a prompt</Text>
+                </Pressable>
+              )}
+            </>
           ) : null
         }
         ListEmptyComponent={
@@ -369,10 +382,7 @@ function Feed({ insets }: { insets: { top: number } }) {
         }
       />
 
-      <Pressable
-        style={styles.fab}
-        onPress={() => router.push((activityData ? '/social/post/new?kind=activity' : '/social/post/new') as any)}
-      >
+      <Pressable style={styles.fab} onPress={() => router.push('/social/post/new' as any)}>
         <Text style={styles.fabText}>+</Text>
       </Pressable>
     </View>
@@ -739,6 +749,13 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.uiSemiBold, fontSize: sf(11), color: Colors.sakuraDeep,
     textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: Spacing.s2,
   },
+  submitPromptRow: {
+    alignItems: 'center', justifyContent: 'center',
+    paddingVertical: 12, borderRadius: Radius.r4,
+    borderWidth: 1, borderColor: Colors.line, borderStyle: 'dashed',
+    backgroundColor: Colors.paperDeep, marginBottom: Spacing.s3,
+  },
+  submitPromptText: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(13), color: Colors.sakuraDeep },
   tabsRow: {
     flexDirection: 'row',
     gap: 8,

@@ -10,8 +10,8 @@ import { supabase } from './supabase';
 const CACHE_CONTROL = 'public, max-age=31536000, immutable';
 
 const PUBLIC_BASE: Record<string, string> = {
-  avatars: 'https://avatars.mascotmaker.io',
-  'post-media': 'https://media.mascotmaker.io',
+  avatars: 'https://avatars.asograde.com',
+  'post-media': 'https://media.asograde.com',
 };
 
 /**

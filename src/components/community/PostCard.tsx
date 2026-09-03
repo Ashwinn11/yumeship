@@ -12,7 +12,6 @@ import { LikeButton } from './LikeButton';
 import { MediaCarousel } from './MediaCarousel';
 import { PollView } from './PollView';
 import { PostAuthorHeader } from './PostAuthorHeader';
-import { VoteButtons } from './VoteButtons';
 
 function CommentBubbleIcon({ size = 13, color = Colors.ink3 }: { size?: number; color?: string }) {
   return (
@@ -30,17 +29,22 @@ function CommentBubbleIcon({ size = 13, color = Colors.ink3 }: { size?: number; 
 type Props = {
   post: CommunityPost;
   onToggleLike: () => void;
-  /** activity prompts only — up/down vote, replaces onToggleLike for these cards */
-  onVote?: (direction: -1 | 1) => void;
   /** posts with a poll only */
   onPollVote?: (optionIndex: number) => void;
   /** own-profile posts only — public feed/profile cards never get this */
   onRequestDelete?: () => void;
 };
 
-function PostCardImpl({ post, onToggleLike, onVote, onPollVote, onRequestDelete }: Props) {
+function PostCardImpl({ post, onToggleLike, onPollVote, onRequestDelete }: Props) {
+  // a featured activity opens its own responses page; a regular post opens
+  // its comments. An unfeatured pool prompt has neither — nothing to see
+  // beyond the card itself, so it isn't navigable at all.
+  const isFeaturedActivity = post.kind === 'activity' && !!post.featuredDate;
+  const destination = post.kind === 'activity' ? (isFeaturedActivity ? `/social/activity/${post.id}` : null) : `/social/post/${post.id}`;
+  const onOpen = destination ? () => router.push(destination as any) : undefined;
+
   return (
-    <Pressable style={styles.card} onPress={() => router.push(`/social/post/${post.id}` as any)}>
+    <Pressable style={styles.card} onPress={onOpen}>
       {onRequestDelete ? (
         <Pressable style={styles.deleteBtn} onPress={onRequestDelete} hitSlop={8}>
           <IconTrashSolid size={13} color={Colors.ink3} />
@@ -66,27 +70,26 @@ function PostCardImpl({ post, onToggleLike, onVote, onPollVote, onRequestDelete 
           variant="thumb"
           likedByMe={post.likedByMe}
           onDoubleTap={onToggleLike}
-          onSingleTap={() => router.push(`/social/post/${post.id}` as any)}
+          onSingleTap={onOpen}
         />
       )}
 
       {!!post.poll && <PollView poll={post.poll} onVote={(i) => onPollVote?.(i)} />}
 
-      <View style={styles.divider} />
-
-      <View style={styles.footer}>
-        {post.kind === 'activity' ? (
-          <VoteButtons score={post.voteScore} myVote={post.myVote} onVote={(d) => onVote?.(d)} />
-        ) : (
-          <>
+      {!isFeaturedActivity && (
+        <>
+          <View style={styles.divider} />
+          <View style={styles.footer}>
             <LikeButton liked={post.likedByMe} count={post.likeCount} onToggle={onToggleLike} />
-            <View style={styles.commentRow}>
-              <CommentBubbleIcon />
-              <Text style={styles.commentCount}>{post.commentCount}</Text>
-            </View>
-          </>
-        )}
-      </View>
+            {post.kind !== 'activity' && (
+              <View style={styles.commentRow}>
+                <CommentBubbleIcon />
+                <Text style={styles.commentCount}>{post.commentCount}</Text>
+              </View>
+            )}
+          </View>
+        </>
+      )}
     </Pressable>
   );
 }

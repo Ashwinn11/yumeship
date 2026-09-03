@@ -20,7 +20,6 @@ import { MediaCarousel } from '@/components/community/MediaCarousel';
 import { PollView } from '@/components/community/PollView';
 import { PostAuthorHeader } from '@/components/community/PostAuthorHeader';
 import { PostDetailSkeleton } from '@/components/community/PostDetailSkeleton';
-import { VoteButtons } from '@/components/community/VoteButtons';
 import { useIPad } from '@/hooks/use-ipad';
 import { Mark } from '@/components/ui/Mark';
 import { Colors, FontFamily, FontSize, Radius, Spacing, sf } from '@/constants/theme';
@@ -33,8 +32,7 @@ export default function PostDetailScreen() {
   const insets = useSafeAreaInsets();
   const { column } = useIPad();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { post, comments, loading, toggleLikeOptimistic, voteOptimistic, pollVoteOptimistic, insertComment } = useCommunityPost(id);
-  const isActivity = post?.kind === 'activity';
+  const { post, comments, loading, toggleLikeOptimistic, pollVoteOptimistic, insertComment } = useCommunityPost(id);
   const [draft, setDraft] = useState('');
   const [replyTo, setReplyTo] = useState<{ id: string; name: string } | null>(null);
   const [sending, setSending] = useState(false);
@@ -167,21 +165,12 @@ export default function PostDetailScreen() {
         )}
 
         <View style={styles.likeRow}>
-          {isActivity ? (
-            <VoteButtons
-              score={post.voteScore}
-              myVote={post.myVote}
-              onVote={(d) => voteOptimistic(d, () => showToast("couldn't update vote — try again"))}
-              size={19}
-            />
-          ) : (
-            <LikeButton
-              liked={post.likedByMe}
-              count={post.likeCount}
-              onToggle={() => toggleLikeOptimistic(() => showToast("couldn't update like — try again"))}
-              size={19}
-            />
-          )}
+          <LikeButton
+            liked={post.likedByMe}
+            count={post.likeCount}
+            onToggle={() => toggleLikeOptimistic(() => showToast("couldn't update like — try again"))}
+            size={19}
+          />
         </View>
 
         <View style={styles.divider} />

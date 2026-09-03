@@ -99,12 +99,10 @@ export type CommunityPost = {
   kind: 'post' | 'activity';
   /** set once this activity has been featured — the day it won */
   featuredDate: string | null;
-  /** activity prompts only — net of all up/down votes */
-  voteScore: number;
-  /** activity prompts only — the signed-in user's own vote, 0 if none */
-  myVote: -1 | 0 | 1;
   /** null when this post has no poll attached */
   poll: Poll | null;
+  /** set when this post is a response to a featured activity — null otherwise */
+  activityId: string | null;
 };
 
 export type CommunityComment = {
@@ -208,7 +206,6 @@ function rowToPoll(row: Record<string, any>, myPollVote: number | undefined): Po
 function rowToPost(
   row: Record<string, any>,
   likedPostIds: Set<string>,
-  myVotes: Map<string, -1 | 1>,
   myPollVotes: Map<string, number>,
 ): CommunityPost {
   return {
@@ -224,9 +221,8 @@ function rowToPost(
     createdAt: row.created_at,
     kind: (row.kind as CommunityPost['kind']) ?? 'post',
     featuredDate: row.featured_date ?? null,
-    voteScore: row.vote_score ?? 0,
     poll: rowToPoll(row, myPollVotes.get(row.id)),
-    myVote: myVotes.get(row.id) ?? 0,
+    activityId: row.activity_id ?? null,
   };
 }
 
@@ -281,7 +277,7 @@ const FO_SUMMARY_FIELDS = 'id, name, pronouns, avatar_url';
 const FO_ROW_FIELDS = 'id, name, pronouns, avatar_url, bio, status_label';
 const POST_SELECT = cols(`
   id, author_id, fo_profile_id, title, body, media, like_count, comment_count, created_at,
-  kind, featured_date, vote_score, poll_options, poll_counts,
+  kind, featured_date, poll_options, poll_counts, activity_id,
   author:profiles!posts_author_id_fkey(${PROFILE_SUMMARY_FIELDS}),
   fo:fo_profiles!posts_fo_profile_id_fkey(${FO_SUMMARY_FIELDS})
 `);
@@ -755,21 +751,6 @@ async function fetchLikedPostIds(postIds: string[]): Promise<Set<string>> {
   return new Set((data ?? []).map((r: any) => r.post_id));
 }
 
-async function fetchMyVotes(postIds: string[]): Promise<Map<string, -1 | 1>> {
-  if (postIds.length === 0) return new Map();
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const user = session?.user;
-  if (!user) return new Map();
-  const { data } = await supabase
-    .from('activity_votes')
-    .select('post_id, value')
-    .eq('user_id', user.id)
-    .in('post_id', postIds);
-  return new Map((data ?? []).map((r: any) => [r.post_id, r.value as -1 | 1]));
-}
-
 async function fetchMyPollVotes(postIds: string[]): Promise<Map<string, number>> {
   if (postIds.length === 0) return new Map();
   const {
@@ -791,8 +772,16 @@ export async function fetchFeedPage(opts: {
   limit?: number;
 }): Promise<CommunityPost[]> {
   const limit = opts.limit ?? 20;
-  // activity prompts live in their own pool (fetchActivityPool), not the feed
-  let query = supabase.from('posts').select(POST_SELECT).eq('kind', 'post').order('created_at', { ascending: false }).limit(limit);
+  // activity prompts live in their own pool (fetchActivityPool), and responses
+  // to a featured activity live only on that activity's own page — neither
+  // belongs in the feed
+  let query = supabase
+    .from('posts')
+    .select(POST_SELECT)
+    .eq('kind', 'post')
+    .is('activity_id', null)
+    .order('created_at', { ascending: false })
+    .limit(limit);
   if (opts.before) query = query.lt('created_at', opts.before);
 
   if (opts.mode === 'following') {
@@ -810,12 +799,11 @@ export async function fetchFeedPage(opts: {
   const { data, error } = await query;
   if (error || !data) return [];
   const ids = data.map((r: any) => r.id);
-  const [likedIds, myVotes, myPollVotes] = await Promise.all([
+  const [likedIds, myPollVotes] = await Promise.all([
     fetchLikedPostIds(ids),
-    fetchMyVotes(ids),
     fetchMyPollVotes(ids),
   ]);
-  return data.map((r: any) => rowToPost(r, likedIds, myVotes, myPollVotes));
+  return data.map((r: any) => rowToPost(r, likedIds, myPollVotes));
 }
 
 export type PostPageOpts = { before?: string; limit?: number };
@@ -838,12 +826,11 @@ async function fetchPostsBy(
   const { data, error } = await query;
   if (error || !data) return [];
   const ids = data.map((r: any) => r.id);
-  const [likedIds, myVotes, myPollVotes] = await Promise.all([
+  const [likedIds, myPollVotes] = await Promise.all([
     fetchLikedPostIds(ids),
-    fetchMyVotes(ids),
     fetchMyPollVotes(ids),
   ]);
-  return data.map((r: any) => rowToPost(r, likedIds, myVotes, myPollVotes));
+  return data.map((r: any) => rowToPost(r, likedIds, myPollVotes));
 }
 
 export function fetchUserPosts(authorId: string, opts: PostPageOpts = {}): Promise<CommunityPost[]> {
@@ -860,28 +847,49 @@ export function fetchFoPosts(foProfileId: string, opts: PostPageOpts = {}): Prom
 }
 
 /**
- * The submission pool: every activity prompt nobody has picked yet, highest
- * net vote score first. No cursor pagination — vote-score ordering doesn't
- * map cleanly to a `before` cursor, and this app's realistic submission
- * volume doesn't need it.
+ * The submission pool: the top 30 unfeatured activity prompts, most liked
+ * first — a submission stays eligible indefinitely, however long ago it was
+ * posted, until it either wins or someone bumps it off the top 30. No cursor
+ * pagination — like-count ordering doesn't map cleanly to a `before` cursor,
+ * and only the top slice is ever shown anyway.
  */
-export async function fetchActivityPool(limit = 50): Promise<CommunityPost[]> {
+export async function fetchActivityPool(limit = 30): Promise<CommunityPost[]> {
   const { data, error } = await supabase
     .from('posts')
     .select(POST_SELECT)
     .eq('kind', 'activity')
     .is('featured_date', null)
-    .order('vote_score', { ascending: false })
+    .order('like_count', { ascending: false })
     .order('created_at', { ascending: true })
     .limit(limit);
   if (error || !data) return [];
   const ids = data.map((r: any) => r.id);
-  const [likedIds, myVotes, myPollVotes] = await Promise.all([
+  const [likedIds, myPollVotes] = await Promise.all([
     fetchLikedPostIds(ids),
-    fetchMyVotes(ids),
     fetchMyPollVotes(ids),
   ]);
-  return data.map((r: any) => rowToPost(r, likedIds, myVotes, myPollVotes));
+  return data.map((r: any) => rowToPost(r, likedIds, myPollVotes));
+}
+
+/**
+ * Full posts made in response to one activity, newest first. No cursor
+ * pagination — bounded to a single activity's single day, same reasoning as
+ * fetchActivityPool.
+ */
+export async function fetchActivityResponses(activityId: string, limit = 150): Promise<CommunityPost[]> {
+  const { data, error } = await supabase
+    .from('posts')
+    .select(POST_SELECT)
+    .eq('activity_id', activityId)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (error || !data) return [];
+  const ids = data.map((r: any) => r.id);
+  const [likedIds, myPollVotes] = await Promise.all([
+    fetchLikedPostIds(ids),
+    fetchMyPollVotes(ids),
+  ]);
+  return data.map((r: any) => rowToPost(r, likedIds, myPollVotes));
 }
 
 /**
@@ -904,40 +912,11 @@ export async function fetchTodaysActivity(): Promise<CommunityPost | null> {
 export async function fetchPost(id: string): Promise<CommunityPost | null> {
   const { data, error } = await supabase.from('posts').select(POST_SELECT).eq('id', id).maybeSingle();
   if (error || !data) return null;
-  const [likedIds, myVotes, myPollVotes] = await Promise.all([
+  const [likedIds, myPollVotes] = await Promise.all([
     fetchLikedPostIds([id]),
-    fetchMyVotes([id]),
     fetchMyPollVotes([id]),
   ]);
-  return rowToPost(data, likedIds, myVotes, myPollVotes);
-}
-
-/**
- * Vote on an activity prompt — clicking the same direction again clears the
- * vote (toggle off), same feel as liking. `apply_activity_vote_score` (a DB
- * trigger, not called directly) keeps `posts.vote_score` in sync.
- */
-export async function voteOnActivity(postId: string, direction: -1 | 1, currentVote: -1 | 0 | 1): Promise<void> {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const user = session?.user;
-  if (!user) throw new Error('not signed in');
-
-  if (currentVote === direction) {
-    const { error } = await supabase
-      .from('activity_votes')
-      .delete()
-      .eq('post_id', postId)
-      .eq('user_id', user.id);
-    if (error) throw error;
-    return;
-  }
-
-  const { error } = await supabase
-    .from('activity_votes')
-    .upsert({ post_id: postId, user_id: user.id, value: direction }, { onConflict: 'post_id,user_id' });
-  if (error) throw error;
+  return rowToPost(data, likedIds, myPollVotes);
 }
 
 /** Vote (or switch your vote) on a poll — no un-voting once cast, same as Twitter/IG. */
@@ -964,6 +943,8 @@ export async function createPost(input: {
   kind?: 'post' | 'activity';
   /** 2-4 option labels — mutually exclusive with media, same as Twitter/IG */
   poll?: string[];
+  /** set to post as a response to a featured activity, kept off the main feed */
+  activityId?: string;
 }): Promise<CommunityPost> {
   const {
     data: { session },
@@ -1013,6 +994,7 @@ export async function createPost(input: {
       kind: input.kind ?? 'post',
       poll_options: input.poll ?? null,
       poll_counts: input.poll ? input.poll.map(() => 0) : null,
+      activity_id: input.activityId ?? null,
     })
     .select(POST_SELECT)
     .single();
@@ -1025,7 +1007,7 @@ export async function createPost(input: {
     }
     throw error;
   }
-  return rowToPost(data, new Set(), new Map(), new Map());
+  return rowToPost(data, new Set(), new Map());
 }
 
 export async function deletePost(id: string): Promise<void> {
@@ -1227,10 +1209,11 @@ export function subscribeFeed(
   const channel = supabase
     .channel(uniqueTopic(`community-feed-${mode}`))
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'posts' }, async (payload) => {
-      const row = payload.new as { id: string; author_id: string; kind?: string };
-      // activity prompts live in their own pool (subscribeActivityPool below),
-      // never the live feed
-      if (row.kind === 'activity') return;
+      const row = payload.new as { id: string; author_id: string; kind?: string; activity_id?: string | null };
+      // activity prompts live in their own pool (subscribeActivityPool below)
+      // and responses to one live only on that activity's own page — neither
+      // belongs in the live feed
+      if (row.kind === 'activity' || row.activity_id) return;
       if (mode === 'following' && !followingIds.has(row.author_id)) return;
       const post = await fetchPost(row.id);
       if (post) handlers.onInsert(post);
@@ -1262,13 +1245,13 @@ export function subscribeFeed(
 /**
  * Counts only, no insert/delete — for a scoped, already-loaded list (a
  * profile's or F/O's posts) where a new post showing up live isn't needed,
- * but someone else's like/vote/poll tap on a post already on screen should
+ * but someone else's like/poll tap on a post already on screen should
  * still move without a manual refresh. Broadcasts every posts UPDATE
  * unfiltered; the caller's reducer only applies patches whose id it already
  * has, so this is cheap to leave running per screen.
  */
 export function subscribePostCounts(
-  onCountsUpdate: (patch: { id: string; likeCount: number; commentCount: number; voteScore: number; pollCounts: number[] | null }) => void,
+  onCountsUpdate: (patch: { id: string; likeCount: number; commentCount: number; pollCounts: number[] | null }) => void,
 ): () => void {
   const channel = supabase
     .channel(uniqueTopic('community-post-counts'))
@@ -1277,14 +1260,12 @@ export function subscribePostCounts(
         id: string;
         like_count: number;
         comment_count: number;
-        vote_score: number;
         poll_counts: number[] | null;
       };
       onCountsUpdate({
         id: row.id,
         likeCount: row.like_count,
         commentCount: row.comment_count,
-        voteScore: row.vote_score,
         pollCounts: row.poll_counts,
       });
     })
@@ -1296,14 +1277,14 @@ export function subscribePostCounts(
 
 /**
  * The activity submission pool, live — a newly submitted prompt appears for
- * everyone watching, and vote counts move in real time as people vote. A
- * vote itself only ever touches `posts.vote_score` (via the DB trigger), so
- * watching `posts` UPDATE is enough — no separate subscription on
- * `activity_votes` is needed.
+ * everyone watching, and like counts move in real time as people like one.
+ * Liking an activity only ever touches `posts.like_count` (via the same
+ * trigger every other post's likes use), so watching `posts` UPDATE is
+ * enough.
  */
 export function subscribeActivityPool(handlers: {
   onInsert: (p: CommunityPost) => void;
-  onVoteUpdate: (patch: { id: string; voteScore: number; featured: boolean }) => void;
+  onLikeUpdate: (patch: { id: string; likeCount: number; featured: boolean }) => void;
   onDelete: (id: string) => void;
 }): () => void {
   const channel = supabase
@@ -1315,13 +1296,44 @@ export function subscribeActivityPool(handlers: {
       if (post) handlers.onInsert(post);
     })
     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'posts' }, (payload) => {
-      const row = payload.new as { id: string; kind?: string; vote_score: number; featured_date: string | null };
+      const row = payload.new as { id: string; kind?: string; like_count: number; featured_date: string | null };
       if (row.kind !== 'activity') return;
-      handlers.onVoteUpdate({ id: row.id, voteScore: row.vote_score, featured: !!row.featured_date });
+      handlers.onLikeUpdate({ id: row.id, likeCount: row.like_count, featured: !!row.featured_date });
     })
     .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'posts' }, (payload) => {
       const row = payload.old as { id: string };
       handlers.onDelete(row.id);
+    })
+    .subscribe();
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}
+
+export function subscribeActivityDetail(
+  activityId: string,
+  handlers: {
+    onResponseInsert: (p: CommunityPost) => void;
+    onResponseDelete: (id: string) => void;
+  },
+): () => void {
+  const channel = supabase
+    .channel(uniqueTopic(`community-activity-detail-${activityId}`))
+    .on(
+      'postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'posts', filter: `activity_id=eq.${activityId}` },
+      async (payload) => {
+        const row = payload.new as { id: string };
+        const post = await fetchPost(row.id);
+        if (post) handlers.onResponseInsert(post);
+      },
+    )
+    // unfiltered: posts has default replica identity, so a DELETE's old-row
+    // payload only carries the primary key — a filter on activity_id would
+    // never match. The caller's reducer discards ids it doesn't have.
+    .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'posts' }, (payload) => {
+      const row = payload.old as { id: string };
+      handlers.onResponseDelete(row.id);
     })
     .subscribe();
   return () => {
@@ -1357,7 +1369,7 @@ export function subscribeProfile(
 export function subscribePost(
   postId: string,
   handlers: {
-    onCountsUpdate: (patch: { likeCount: number; commentCount: number; voteScore: number; pollCounts: number[] | null }) => void;
+    onCountsUpdate: (patch: { likeCount: number; commentCount: number; pollCounts: number[] | null }) => void;
     onCommentInsert: (c: CommunityComment) => void;
     onCommentDelete: (id: string) => void;
   },
@@ -1376,13 +1388,11 @@ export function subscribePost(
         const row = payload.new as {
           like_count: number;
           comment_count: number;
-          vote_score: number;
           poll_counts: number[] | null;
         };
         handlers.onCountsUpdate({
           likeCount: row.like_count,
           commentCount: row.comment_count,
-          voteScore: row.vote_score,
           pollCounts: row.poll_counts,
         });
       },
@@ -1677,7 +1687,6 @@ function usePostList(
                 ...p,
                 likeCount: patch.likeCount,
                 commentCount: patch.commentCount,
-                voteScore: patch.voteScore,
                 poll: withPollCounts(p.poll, patch.pollCounts),
               }
             : p,
@@ -1823,7 +1832,6 @@ export function useCommunityPost(id: string) {
                 ...prev,
                 likeCount: patch.likeCount,
                 commentCount: patch.commentCount,
-                voteScore: patch.voteScore,
                 poll: withPollCounts(prev.poll, patch.pollCounts),
               }
             : prev,
@@ -1862,20 +1870,6 @@ export function useCommunityPost(id: string) {
     }
   }, [post]);
 
-  const voteOptimistic = useCallback(async (direction: -1 | 1, onFailure?: () => void) => {
-    if (!post) return;
-    const prevVote = post.myVote;
-    const targetId = post.id;
-    const nextVote: -1 | 0 | 1 = prevVote === direction ? 0 : direction;
-    setPost((p) => (p ? { ...p, myVote: nextVote, voteScore: p.voteScore - prevVote + nextVote } : p));
-    try {
-      await voteOnActivity(targetId, direction, prevVote);
-    } catch {
-      setPost((p) => (p ? { ...p, myVote: prevVote, voteScore: p.voteScore - nextVote + prevVote } : p));
-      onFailure?.();
-    }
-  }, [post]);
-
   const pollVoteOptimistic = useCallback(async (optionIndex: number, onFailure?: () => void) => {
     if (!post?.poll) return;
     const targetId = post.id;
@@ -1896,5 +1890,86 @@ export function useCommunityPost(id: string) {
     setComments((prev) => (prev.some((x) => x.id === c.id) ? prev : [...prev, c]));
   }, []);
 
-  return { post, comments, loading, toggleLikeOptimistic, voteOptimistic, pollVoteOptimistic, insertComment };
+  return { post, comments, loading, toggleLikeOptimistic, pollVoteOptimistic, insertComment };
+}
+
+/**
+ * A featured activity's own page: the prompt itself (votable) plus every
+ * full post made in response to it, live.
+ */
+export function useActivityDetail(activityId: string) {
+  const [activity, setActivity] = useState<CommunityPost | null>(null);
+  const [responses, setResponses] = useState<CommunityPost[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    (async () => {
+      const [a, r] = await Promise.all([fetchPost(activityId), fetchActivityResponses(activityId)]);
+      if (!cancelled) {
+        setActivity(a);
+        setResponses(r);
+        setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [activityId]);
+
+  useEffect(() => {
+    return subscribeActivityDetail(activityId, {
+      onResponseInsert: (p) => setResponses((prev) => (prev.some((x) => x.id === p.id) ? prev : [p, ...prev])),
+      onResponseDelete: (id) => setResponses((prev) => prev.filter((p) => p.id !== id)),
+    });
+  }, [activityId]);
+
+  const responsesRef = useRef(responses);
+  responsesRef.current = responses;
+
+  const inFlightLike = useRef<Set<string>>(new Set());
+  const toggleResponseLikeOptimistic = useCallback(async (postId: string, onFailure?: () => void) => {
+    if (inFlightLike.current.has(postId)) return;
+    const target = responsesRef.current.find((p) => p.id === postId);
+    if (!target) return;
+
+    const wasLiked = target.likedByMe;
+    const apply = (liked: boolean, delta: number) =>
+      setResponses((prev) =>
+        prev.map((p) => (p.id === postId ? { ...p, likedByMe: liked, likeCount: p.likeCount + delta } : p)),
+      );
+
+    inFlightLike.current.add(postId);
+    apply(!wasLiked, wasLiked ? -1 : 1);
+    try {
+      await toggleLike(postId, wasLiked);
+    } catch {
+      apply(wasLiked, wasLiked ? 1 : -1);
+      onFailure?.();
+    } finally {
+      inFlightLike.current.delete(postId);
+    }
+  }, []);
+
+  const inFlightPoll = useRef<Set<string>>(new Set());
+  const pollVoteOptimistic = useCallback(async (postId: string, optionIndex: number, onFailure?: () => void) => {
+    if (inFlightPoll.current.has(postId)) return;
+    const target = responsesRef.current.find((p) => p.id === postId);
+    if (!target?.poll) return;
+
+    const prevPoll = target.poll;
+    setResponses((prev) => prev.map((p) => (p.id === postId ? { ...p, poll: pollAfterVote(prevPoll, optionIndex) } : p)));
+    inFlightPoll.current.add(postId);
+    try {
+      await votePoll(postId, optionIndex);
+    } catch {
+      setResponses((prev) => prev.map((p) => (p.id === postId ? { ...p, poll: prevPoll } : p)));
+      onFailure?.();
+    } finally {
+      inFlightPoll.current.delete(postId);
+    }
+  }, []);
+
+  return { activity, responses, loading, toggleResponseLikeOptimistic, pollVoteOptimistic };
 }

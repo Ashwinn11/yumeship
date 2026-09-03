@@ -69,7 +69,7 @@ function GifIcon({ size = 21, color = Colors.sakuraDeep }: { size?: number; colo
 export default function NewPostScreen() {
   const insets = useSafeAreaInsets();
   const { column } = useIPad();
-  const { kind } = useLocalSearchParams<{ kind?: string }>();
+  const { kind, activityId } = useLocalSearchParams<{ kind?: string; activityId?: string }>();
   const isActivity = kind === 'activity';
 
   // whichever F/O is paired in edit profile tags every post automatically —
@@ -134,6 +134,7 @@ export default function NewPostScreen() {
         foProfileId: isActivity ? undefined : identifyFoId || undefined,
         kind: isActivity ? 'activity' : undefined,
         poll: poll ? filledPollOptions : undefined,
+        activityId,
       });
       router.canGoBack() ? router.back() : router.replace('/(tabs)/community' as any);
     } catch (e: any) {
@@ -176,6 +177,7 @@ export default function NewPostScreen() {
         keyboardShouldPersistTaps="handled"
       >
         {isActivity && <Text style={styles.kindLabel}>submitting an activity — everyone can vote on it</Text>}
+        {!isActivity && !!activityId && <Text style={styles.kindLabel}>posting a response to this activity</Text>}
 
         <View style={styles.composerRow}>
           <View style={[styles.avatar, { backgroundColor: me.color }]}>
