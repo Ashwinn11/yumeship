@@ -83,20 +83,20 @@ export function FoMessagesFeature({ shipId, shipName, setCustomBack }: { shipId:
         shipName={shipName}
         ship={composeShip}
         initialMessage={composingMsg === 'new' ? undefined : composingMsg}
-        onQueue={async (queueData, sender) => {
+        onQueue={async (queueData, sender, senderId) => {
           if (composingMsg === 'new') {
             for (const item of queueData) {
-              await addFoMessage(shipId, item.body, item.hour, sender, item.minute, item.arrivalDay);
+              await addFoMessage(shipId, item.body, item.hour, sender, item.minute, item.arrivalDay, 1, senderId);
             }
           } else {
             const first = queueData[0];
             if (first) {
-              await updateFoMessage(composingMsg.id, first.body, first.hour, sender, shipName, first.minute, first.arrivalDay);
+              await updateFoMessage(composingMsg.id, first.body, first.hour, sender, shipName, first.minute, first.arrivalDay, senderId);
             }
             if (queueData.length > 1) {
               for (let i = 1; i < queueData.length; i++) {
                 const item = queueData[i];
-                await addFoMessage(shipId, item.body, item.hour, sender, item.minute, item.arrivalDay);
+                await addFoMessage(shipId, item.body, item.hour, sender, item.minute, item.arrivalDay, 1, senderId);
               }
             }
           }
@@ -326,7 +326,7 @@ function FoCompose({ shipName, ship, initialMessage, onQueue }: {
   shipName: string;
   ship?: Ship;
   initialMessage?: FoMessage;
-  onQueue: (options: { body: string; hour: number; minute: number; arrivalDay: 'now' | 'today' | 'tomorrow' | 'everyday' | 'random' }[], senderName: string) => void;
+  onQueue: (options: { body: string; hour: number; minute: number; arrivalDay: 'now' | 'today' | 'tomorrow' | 'everyday' | 'random' }[], senderName: string, senderId: string) => void;
 }) {
   const isPremium = usePremium();
   const [notifDenied, setNotifDenied] = useState(false);
@@ -366,12 +366,16 @@ function FoCompose({ shipName, ship, initialMessage, onQueue }: {
     () => senderOptions(ship?.id ?? '', shipName),
     [ship?.id, ship?.members, shipName, allFos],
   );
+  const initialSender = fromOptions.find((o) => o.id === initialMessage?.senderId && o.isFo)
+    ?? fromOptions.find((o) => o.isFo)
+    ?? fromOptions[0];
+  const [senderId, setSenderId] = useState(initialMessage?.senderId || initialSender?.id || '');
   const [senderName, setSenderName] = useState(
     // an edited message keeps its sender even if that member was since renamed
-    initialMessage?.senderName || fromOptions[0]?.name || shipName,
+    initialMessage?.senderName || initialSender?.name || shipName,
   );
 
-  const selectedSender = fromOptions.find((o) => o.name === senderName);
+  const selectedSender = fromOptions.find((o) => o.id === senderId);
   const notifFace = senderFace(selectedSender);
 
   async function pickNotifPhoto() {
@@ -449,7 +453,7 @@ function FoCompose({ shipName, ship, initialMessage, onQueue }: {
       };
     });
 
-    onQueue(queueData, senderName.trim() || shipName);
+    onQueue(queueData, senderName.trim() || shipName, senderId);
   }
 
   const firstOpt = options[0];

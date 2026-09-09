@@ -85,8 +85,9 @@ export function senderOptions(shipId: string, shipName = ''): SenderOption[] {
  * not arrive wearing another's photo. No match means no avatar, and the
  * scheduler quietly falls back to a plain notification.
  */
-function foIdentity(shipId: string, senderName: string): { avatarUri: string; conversationId: string } {
-  const match = senderOptions(shipId).find(
+function foIdentity(shipId: string, senderName: string, senderId = ''): { avatarUri: string; conversationId: string } {
+  const options = senderOptions(shipId);
+  const match = options.find((o) => o.id === senderId) ?? options.find(
     (o) => o.name.trim().toLowerCase() === senderName.trim().toLowerCase(),
   );
   const face = senderFace(match);
@@ -99,6 +100,7 @@ export type FoMessage = {
   shipId: string;
   body: string;
   senderName: string;
+  senderId: string;
   scheduledHour: number;
   scheduledMinute: number;
   arrivalDay: 'now' | 'today' | 'tomorrow' | 'everyday' | 'random';
@@ -117,6 +119,7 @@ function rowToMsg(r: Record<string, unknown>): FoMessage {
     shipId: r.ship_id as string,
     body: r.body as string,
     senderName: (r.sender_name as string) ?? '',
+    senderId: (r.sender_id as string) ?? '',
     scheduledHour: r.scheduled_hour as number,
     scheduledMinute: (r.scheduled_minute as number) ?? 0,
     arrivalDay: (r.arrival_day as FoMessage['arrivalDay']) ?? 'everyday',
@@ -241,11 +244,12 @@ export async function addFoMessage(
   scheduledMinute = 0,
   arrivalDay: FoMessage['arrivalDay'] = 'everyday',
   active = 1,
+  senderId = '',
 ): Promise<string> {
   const id = newId();
   getDb().runSync(
-    'INSERT INTO fo_messages (id, ship_id, body, sender_name, scheduled_hour, scheduled_minute, arrival_day, active, notif_id, current_index, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)',
-    id, shipId, body, senderName, scheduledHour, scheduledMinute, arrivalDay, active, '', Date.now(),
+    'INSERT INTO fo_messages (id, ship_id, body, sender_name, sender_id, scheduled_hour, scheduled_minute, arrival_day, active, notif_id, current_index, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)',
+    id, shipId, body, senderName, senderId, scheduledHour, scheduledMinute, arrivalDay, active, '', Date.now(),
   );
 
   let triggerBody = body;
@@ -279,7 +283,7 @@ export async function addFoMessage(
       const targetHour = scheduledHour === -2 ? 0 : scheduledHour;
       const targetMinute = scheduledHour === -2 ? 0 : scheduledMinute;
 
-      const { avatarUri, conversationId } = foIdentity(shipId, senderName);
+      const { avatarUri, conversationId } = foIdentity(shipId, senderName, senderId);
       const nid = await scheduleFoNotification(triggerBody, senderName, arrivalDay, targetHour, targetMinute, staggerIndex, avatarUri, conversationId);
       if (nid) notifId = nid;
     }
@@ -333,7 +337,7 @@ export async function toggleFoMessage(id: string, active: boolean, foName = ''):
       const targetHour = msg.scheduledHour === -2 ? 0 : msg.scheduledHour;
       const targetMinute = msg.scheduledHour === -2 ? 0 : msg.scheduledMinute;
 
-      const { avatarUri, conversationId } = foIdentity(msg.shipId, msg.senderName || foName);
+      const { avatarUri, conversationId } = foIdentity(msg.shipId, msg.senderName || foName, msg.senderId);
       const nid = await scheduleFoNotification(triggerBody, msg.senderName || foName, msg.arrivalDay, targetHour, targetMinute, staggerIndex, avatarUri, conversationId);
       if (nid) newNotifId = nid;
     }
@@ -356,6 +360,7 @@ export async function updateFoMessage(
   foName = '',
   scheduledMinute = 0,
   arrivalDay: FoMessage['arrivalDay'] = 'everyday',
+  senderId = '',
 ): Promise<void> {
   const row = getDb().getFirstSync('SELECT * FROM fo_messages WHERE id = ?', id) as Record<string, unknown> | null;
   if (!row) return;
@@ -396,7 +401,7 @@ export async function updateFoMessage(
       const targetHour = scheduledHour === -2 ? 0 : scheduledHour;
       const targetMinute = scheduledHour === -2 ? 0 : scheduledMinute;
 
-      const { avatarUri, conversationId } = foIdentity(msg.shipId, senderName);
+      const { avatarUri, conversationId } = foIdentity(msg.shipId, senderName, senderId || msg.senderId);
       notifId = await scheduleFoNotification(triggerBody, senderName, arrivalDay, targetHour, targetMinute, staggerIndex, avatarUri, conversationId) ?? '';
     }
 
@@ -404,8 +409,8 @@ export async function updateFoMessage(
   }
 
   getDb().runSync(
-    'UPDATE fo_messages SET body = ?, sender_name = ?, scheduled_hour = ?, scheduled_minute = ?, arrival_day = ?, notif_id = ?, current_index = ? WHERE id = ?',
-    body, senderName, scheduledHour, scheduledMinute, arrivalDay, notifId, newIndex, id,
+    'UPDATE fo_messages SET body = ?, sender_name = ?, sender_id = ?, scheduled_hour = ?, scheduled_minute = ?, arrival_day = ?, notif_id = ?, current_index = ? WHERE id = ?',
+    body, senderName, senderId || msg.senderId, scheduledHour, scheduledMinute, arrivalDay, notifId, newIndex, id,
   );
 
   notify();
