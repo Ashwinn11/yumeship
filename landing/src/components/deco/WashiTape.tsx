@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useId } from 'react';
 
 export type TapePattern =
   | 'stripe'
@@ -31,7 +31,7 @@ export function WashiTape({
   className,
   style = {},
 }: Props) {
-  const id = useMemo(() => 'wt-' + Math.random().toString(36).slice(2, 7), []);
+  const id = 'wt-' + useId();
 
   const renderPattern = () => {
     switch (pattern) {

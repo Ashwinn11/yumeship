@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useId } from 'react';
 
 type Props = {
   width: number;
@@ -7,7 +7,7 @@ type Props = {
 };
 
 export function PatternBackdrop({ width, height, color = '#d77a8d' }: Props) {
-  const id = useMemo(() => 'patternbg-' + Math.random().toString(36).slice(2, 7), []);
+  const id = 'patternbg-' + useId();
   if (width <= 0 || height <= 0) return null;
 
   return (

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import {
   fetchProfileByUsername,
   fetchUserFoProfiles,
@@ -38,8 +38,14 @@ function NotFound({ username }: { username: string }) {
 
 export function ProfilePage() {
   const { handle = '' } = useParams<{ handle: string }>();
+  const navigate = useNavigate();
   // Support both /@username and /username — strip the leading @
   const username = handle.replace(/^@/, '');
+
+  function handleBack() {
+    if (window.history.length > 1) navigate(-1);
+    else navigate('/');
+  }
   const [profile, setProfile] = useState<WebProfile | null | undefined>(undefined); // undefined = loading
   const [fos, setFos] = useState<WebFoProfile[]>([]);
   const [pairedFo, setPairedFo] = useState<WebFoProfile | null>(null);
@@ -48,6 +54,9 @@ export function ProfilePage() {
     if (!username) return;
     let cancelled = false;
 
+    // reset to "loading" before the async fetch below settles, so a changed
+    // username doesn't briefly show the previous user's stale profile
+    // oxlint-disable-next-line react/set-state-in-effect
     setProfile(undefined);
     setFos([]);
     setPairedFo(null);
@@ -106,20 +115,7 @@ export function ProfilePage() {
       </div>
 
       <div className="profile-container">
-        <ProfileScreenHeader
-          title={profile?.name || 'their profile'}
-          right={
-            profile ? (
-              <a
-                href={`yumeship://user/${profile.id}`}
-                className="header-round-btn"
-                title="Open in app"
-              >
-                <span className="header-btn-dots">⋯</span>
-              </a>
-            ) : undefined
-          }
-        />
+        <ProfileScreenHeader onBack={handleBack} title={profile?.name || 'their profile'} />
 
         <div className="profile-body-content">
           {isLoading && <ProfileSkeleton />}

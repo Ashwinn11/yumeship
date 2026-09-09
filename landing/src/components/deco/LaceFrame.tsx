@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useId } from 'react';
 
 type Props = {
   width: number;
@@ -46,7 +46,7 @@ function scallopedRectPath(x: number, y: number, w: number, h: number, scallop: 
 }
 
 export function LaceFrame({ width, height, radius = 18, bandWidth = 13, scallopSize = 9, color = '#d77a8d' }: Props) {
-  const id = useMemo(() => 'lace-' + Math.random().toString(36).slice(2, 7), []);
+  const id = 'lace-' + useId();
   if (width < bandWidth * 3 || height < bandWidth * 3) return null;
 
   const outer = roundedRectPath(0, 0, width, height, radius);

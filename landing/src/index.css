@@ -596,12 +596,6 @@ a:hover {
   font-family: var(--font-ui);
   color: var(--ink2);
 }
-.header-btn-dots {
-  font-size: 18px;
-  line-height: 20px;
-  font-family: var(--font-ui);
-  color: var(--ink2);
-}
 .header-center {
   display: flex;
   align-items: center;

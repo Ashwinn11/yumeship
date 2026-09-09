@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import type { ProfileFlag } from '../../lib/profile';
-import { FlagIcon, SEXUALITY_OPTIONS } from './ProfileFlags';
+import { SEXUALITY_OPTIONS } from '../../constants/sexualities';
+import { FlagIcon } from './ProfileFlags';
 
 const BY_KEY = new Map(SEXUALITY_OPTIONS.map((o) => [o.key, o]));
 

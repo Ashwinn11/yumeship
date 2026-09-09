@@ -38,6 +38,9 @@ export function FoProfilePage() {
   useEffect(() => {
     if (!id) return;
     let cancelled = false;
+    // reset to "loading" before the async fetch below settles, so a changed
+    // id doesn't briefly show the previous F/O's stale profile
+    // oxlint-disable-next-line react/set-state-in-effect
     setProfile(undefined);
 
     fetchFoProfile(id).then((p) => {
@@ -90,21 +93,7 @@ export function FoProfilePage() {
       </div>
 
       <div className="profile-container">
-        <ProfileScreenHeader
-          onBack={handleBack}
-          title={profile?.name || 'their profile'}
-          right={
-            profile ? (
-              <a
-                href={`yumeship://fo/${profile.id}`}
-                className="header-round-btn"
-                title="Open in app"
-              >
-                <span className="header-btn-dots">⋯</span>
-              </a>
-            ) : undefined
-          }
-        />
+        <ProfileScreenHeader onBack={handleBack} title={profile?.name || 'their profile'} />
 
         <div className="profile-body-content">
           {isLoading && <FoSkeleton />}
