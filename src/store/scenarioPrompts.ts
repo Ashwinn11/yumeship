@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { relationshipTypeOr, type RelationshipType } from '@/constants/theme';
 import { getDb, newId } from '@/db/client';
 
 // ─── Prompt = an evocative scenario seed you write *from* ────────────────────
@@ -8,11 +9,12 @@ import { getDb, newId } from '@/db/client';
 export type Prompt = { text: string };
 export type CustomPrompt = Prompt & { id: string; createdAt: number };
 
-type RelType = 'romantic' | 'platonic' | 'familial';
-
 // Built-in decks. `any` shows for every ship; the rest are merged by the ship's
 // relationship type so a familial F/O never gets a romantic prompt, etc.
-const BUILTIN: { any: Prompt[] } & Record<RelType, Prompt[]> = {
+// Keyed by RelationshipType, so adding a sixth status is a type error here
+// until it has a deck — comfort and queerplatonic silently fell back to the
+// romantic deck for exactly as long as this list was written out by hand.
+const BUILTIN: { any: Prompt[] } & Record<RelationshipType, Prompt[]> = {
   any: [
     { text: 'Destined to find each other in every universe. What does it look like in this one?' },
     { text: 'You show them your favorite movie, mostly to watch their face during the good parts.' },
@@ -51,12 +53,27 @@ const BUILTIN: { any: Prompt[] } & Record<RelType, Prompt[]> = {
     { text: 'They patiently teach you something they’re really good at.' },
     { text: 'A quiet evening where they remind you, without making it a big deal, that you’re safe.' },
   ],
+  queerplatonic: [
+    { text: 'You make it official in your own way — no existing word fits, so the two of you pick one.' },
+    { text: 'They’re your emergency contact, and neither of you can remember deciding that.' },
+    { text: 'Someone assumes you’re dating. The look you exchange says everything.' },
+    { text: 'The spare key, the lease, the pet — a life built together on terms only the two of you set.' },
+    { text: 'They fall asleep against your shoulder, and it means exactly what you’ve both agreed it means.' },
+    { text: 'The night you both admit this is the most important relationship either of you has.' },
+  ],
+  comfort: [
+    { text: 'Something you can’t explain has you shaking, and they simply sit with you until it passes.' },
+    { text: 'You don’t have the words today. They don’t ask you to find any.' },
+    { text: 'Theirs is the voice your head reaches for when everything gets too loud.' },
+    { text: 'They notice you’ve gone quiet, and just move a little closer.' },
+    { text: 'The safest room you can picture — and they’re already in it, waiting.' },
+    { text: 'You start to apologize for needing them. They won’t hear it.' },
+  ],
 };
 
 /** Built-in deck for a relationship type (any + that type). */
 export function getBuiltinDeck(relType: string | undefined): Prompt[] {
-  const key = (relType === 'platonic' || relType === 'familial' ? relType : 'romantic') as RelType;
-  return [...BUILTIN.any, ...BUILTIN[key]];
+  return [...BUILTIN.any, ...BUILTIN[relationshipTypeOr(relType)]];
 }
 
 const listeners = new Set<() => void>();

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { type RelationshipType } from '@/constants/theme';
 import { getDb, newId } from '@/db/client';
 import { parseProfileFlags, type ProfileFlag } from '@/components/profile/cardTheme';
 import { notifyShips } from './ships';
@@ -11,7 +12,7 @@ export type Fo = {
   name: string;
   pronouns: string;
   fandom: string;
-  relStatus: 'romantic' | 'platonic' | 'familial' | 'queerplatonic' | 'comfort';
+  relStatus: RelationshipType;
   shareStatus: 'yes' | 'no' | 'selective' | 'mirror';
   bio: string;
   /** short bio shown on the card itself; `bio` keeps its own about section */

@@ -1,7 +1,9 @@
 import { Ribbon } from '@/components/deco/Ribbon';
 import { WashiTape } from '@/components/deco/WashiTape';
 import { GradientCover } from '@/components/ui/GradientCover';
-import { Colors, FontFamily, FontSize, Radius, Shadow ,sf } from '@/constants/theme';
+import {
+  Colors, FontFamily, FontSize, Radius, RelationshipColors, type RelationshipType, Shadow, sf,
+} from '@/constants/theme';
 import { Image } from 'expo-image';
 import { Pressable, StyleSheet, Text, View, ViewStyle } from 'react-native';
 
@@ -20,7 +22,7 @@ type Props = {
   gradEnd: string;
   /** Optional photo cover; replaces the gradient + initial when set */
   coverUri?: string;
-  type: 'romantic' | 'platonic' | 'familial';
+  type: RelationshipType;
   pinned?: boolean;
   polycule?: boolean;
   days: string;
@@ -29,12 +31,6 @@ type Props = {
   onPress?: () => void;
   onLongPress?: () => void;
   style?: ViewStyle;
-};
-
-const TYPE_COLORS: Record<string, string> = {
-  romantic: Colors.sakuraDeep,
-  platonic: Colors.sageDeep,
-  familial: Colors.peachDeep,
 };
 
 export function ShipCard({
@@ -57,7 +53,7 @@ export function ShipCard({
   style,
 }: Props) {
   const displayTitle = shipName || name;
-  const typeColor = TYPE_COLORS[type];
+  const typeColor = RelationshipColors[type];
 
   return (
     <Pressable onPress={onPress} onLongPress={onLongPress} style={[styles.card, style]}>

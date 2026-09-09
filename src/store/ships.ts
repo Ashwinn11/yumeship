@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { relationshipTypeOr, type RelationshipType } from '@/constants/theme';
 import { getDb, newId } from '@/db/client';
 import { notifyDates } from './dates';
 
@@ -19,7 +20,7 @@ export type Ship = {
   shipName: string;
   myName: string;
   fandom: string;
-  relType: 'romantic' | 'platonic' | 'familial';
+  relType: RelationshipType;
   shareType: string;
   aboutText: string;
   gradStart: string;
@@ -87,7 +88,7 @@ function rowToShip(row: Record<string, unknown>): Ship {
     shipName: (row.ship_name as string) ?? '',
     myName: (row.my_name as string) ?? '',
     fandom: row.fandom as string,
-    relType: (row.rel_type as Ship['relType']) ?? 'romantic',
+    relType: relationshipTypeOr(row.rel_type as string | undefined),
     shareType: row.share_type as string,
     aboutText: row.about_text as string,
     gradStart: row.grad_start as string,

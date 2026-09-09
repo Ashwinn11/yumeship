@@ -9,7 +9,10 @@ import { StickerSakuraBranch, WashiTape } from '@/components/deco';
 
 import { CozyModal } from '@/components/ui/CozyModal';
 import { IconPlus, IconTrashSolid } from '@/components/ui/Icon';
-import { Colors, FontFamily, FontSize, Radius, Shadow, SheetColumn, Spacing, sf } from '@/constants/theme';
+import {
+  Colors, FontFamily, FontSize, Radius, RelationshipBase, RelationshipColors, RelationshipSoft,
+  relationshipTypeOr, Shadow, SheetColumn, Spacing, sf,
+} from '@/constants/theme';
 import { newId } from '@/db/client';
 import { useIPad } from '@/hooks/use-ipad';
 import { usePremium } from '@/store/premium';
@@ -37,10 +40,10 @@ export function ScenariosFeature({ shipId, shipName, setCustomBack }: { shipId: 
 
   // Relationship type drives the whole screen's accent — keeps the design tied
   // to the ship and consistent with the relationship-aware prompts.
-  const relType = ship?.relType;
-  const accent = relType === 'platonic' ? Colors.sageDeep : relType === 'familial' ? Colors.peachDeep : Colors.sakuraDeep;
-  const accentSoft = relType === 'platonic' ? Colors.sageSoft : relType === 'familial' ? Colors.peachSoft : Colors.sakuraSoft;
-  const accentLight = relType === 'platonic' ? Colors.sage : relType === 'familial' ? Colors.peach : Colors.sakura;
+  const relType = relationshipTypeOr(ship?.relType);
+  const accent = RelationshipColors[relType];
+  const accentSoft = RelationshipSoft[relType];
+  const accentLight = RelationshipBase[relType];
 
   const builtinDeck = getBuiltinDeck(ship?.relType);
   // Built-in (relationship-aware) + the user's own prompts, shuffled for serendipity.

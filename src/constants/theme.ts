@@ -89,6 +89,14 @@ export const RelationshipSoft: Record<RelationshipType, string> = {
   comfort: Butter.butterSoft,
 };
 
+export const RelationshipBase: Record<RelationshipType, string> = {
+  romantic: Sakura.sakura,
+  platonic: Sage.sage,
+  familial: Peach.peach,
+  queerplatonic: Lavender.lavender,
+  comfort: Butter.butter,
+};
+
 export const RelationshipLabels: Record<RelationshipType, string> = {
   romantic: 'romantic',
   platonic: 'platonic',
@@ -98,6 +106,19 @@ export const RelationshipLabels: Record<RelationshipType, string> = {
 };
 
 export const REL_ORDER: RelationshipType[] = ['romantic', 'queerplatonic', 'platonic', 'comfort', 'familial'];
+
+/**
+ * Narrows a stored relationship string to a known type. Every consumer goes
+ * through this rather than testing the values itself — the reason a comfort
+ * F/O used to be served romantic scenario prompts was three files each
+ * re-listing the types they knew about, and only ever listing three.
+ */
+export function relationshipTypeOr(
+  value: string | undefined,
+  fallback: RelationshipType = 'romantic',
+): RelationshipType {
+  return value && value in RelationshipColors ? (value as RelationshipType) : fallback;
+}
 
 // Single shared vocabulary for "sharing status" everywhere it appears —
 // F/O profile, ship badge, and every template's own sharing field.
