@@ -25,8 +25,8 @@ export function initDb() {
   try { db.execSync(`ALTER TABLE fo ADD COLUMN card_bg_gradient TEXT NOT NULL DEFAULT ''`); } catch (_) {}
   try { db.execSync(`ALTER TABLE fo ADD COLUMN card_transparent INTEGER NOT NULL DEFAULT 0`); } catch (_) {}
   try { db.execSync(`ALTER TABLE fo ADD COLUMN border_style TEXT NOT NULL DEFAULT ''`); } catch (_) {}
-  try { db.execSync(`ALTER TABLE fo ADD COLUMN decoration TEXT NOT NULL DEFAULT ''`); } catch (_) {}
   try { db.execSync(`ALTER TABLE fo ADD COLUMN name_font TEXT NOT NULL DEFAULT ''`); } catch (_) {}
+  try { db.execSync(`ALTER TABLE fo ADD COLUMN name_ornament TEXT NOT NULL DEFAULT ''`); } catch (_) {}
   try { db.execSync(`ALTER TABLE fo ADD COLUMN status_label TEXT NOT NULL DEFAULT ''`); } catch (_) {}
   try { db.execSync(`ALTER TABLE fo_messages ADD COLUMN notif_id TEXT NOT NULL DEFAULT ''`); } catch (_) {}
   try { db.execSync(`ALTER TABLE fo_messages ADD COLUMN sender_name TEXT NOT NULL DEFAULT ''`); } catch (_) {}
@@ -43,6 +43,14 @@ export function initDb() {
   // year ("March 3"), and their age is as often "looks 20, canonically ancient"
   try { db.execSync(`ALTER TABLE fo ADD COLUMN age TEXT NOT NULL DEFAULT ''`); } catch (_) {}
   try { db.execSync(`ALTER TABLE fo ADD COLUMN birthday TEXT NOT NULL DEFAULT ''`); } catch (_) {}
+  try { db.execSync(`ALTER TABLE fo ADD COLUMN labels TEXT NOT NULL DEFAULT '[]'`); } catch (_) {}
+  // flags absorbed the old `labels` list and the single `status_label`; tagline is
+  // the short bio that sits on the card itself — see migrateFlags below
+  try { db.execSync(`ALTER TABLE fo ADD COLUMN flags TEXT NOT NULL DEFAULT '[]'`); } catch (_) {}
+  try { db.execSync(`ALTER TABLE fo ADD COLUMN tagline TEXT NOT NULL DEFAULT ''`); } catch (_) {}
+  try { db.execSync(`ALTER TABLE fo ADD COLUMN avatar_frame TEXT NOT NULL DEFAULT ''`); } catch (_) {}
+  try { db.execSync(`ALTER TABLE fo ADD COLUMN avatar_animation_url TEXT NOT NULL DEFAULT ''`); } catch (_) {}
+  try { db.execSync(`ALTER TABLE fo ADD COLUMN avatar_animation_synced_uri TEXT NOT NULL DEFAULT ''`); } catch (_) {}
   db.execSync(`
     CREATE TABLE IF NOT EXISTS ships (
       id TEXT PRIMARY KEY,
@@ -75,6 +83,7 @@ export function initDb() {
       rel_status TEXT NOT NULL DEFAULT 'romantic',
       share_status TEXT NOT NULL DEFAULT 'selective',
       bio TEXT NOT NULL DEFAULT '',
+      tagline TEXT NOT NULL DEFAULT '',
       height TEXT NOT NULL DEFAULT '',
       weight TEXT NOT NULL DEFAULT '',
       age TEXT NOT NULL DEFAULT '',
@@ -95,9 +104,13 @@ export function initDb() {
       card_bg_gradient TEXT NOT NULL DEFAULT '',
       card_transparent INTEGER NOT NULL DEFAULT 0,
       border_style TEXT NOT NULL DEFAULT '',
-      decoration TEXT NOT NULL DEFAULT '',
       name_font TEXT NOT NULL DEFAULT '',
+      name_ornament TEXT NOT NULL DEFAULT '',
       status_label TEXT NOT NULL DEFAULT '',
+      flags TEXT NOT NULL DEFAULT '[]',
+      avatar_frame TEXT NOT NULL DEFAULT '',
+      avatar_animation_url TEXT NOT NULL DEFAULT '',
+      avatar_animation_synced_uri TEXT NOT NULL DEFAULT '',
       created_at INTEGER NOT NULL
     );
     CREATE TABLE IF NOT EXISTS headcanons (
@@ -197,6 +210,7 @@ export function initDb() {
     );
   `);
   migrateShareVocabulary();
+  migrateFlags();
   backfillFos();
   repairMediaPaths();
   applyRemoteFallbacks();
@@ -206,6 +220,51 @@ export function initDb() {
 // (matching the old kanji badge). Every surface now shares one vocabulary —
 // yes/no/selective — so old rows get renamed in place. Idempotent: once
 // renamed, these WHERE clauses match nothing on future runs.
+// Flags and sexuality were two fields for one idea. Fold the old `labels` list
+// and the single `status_label` into `flags`, keeping both. Idempotent — only
+// touches rows whose flags are still empty.
+function migrateFlags() {
+  const db = getDb();
+  type Legacy = { id?: string; icon?: string; flag?: string; imageUrl?: string; text?: string };
+  const toFlags = (rawLabels: string, statusLabel: string) => {
+    let parsed: unknown = [];
+    try { parsed = JSON.parse(rawLabels || '[]'); } catch { parsed = []; }
+    const list = (Array.isArray(parsed) ? parsed : []).map((e: Legacy) => ({
+      id: e?.id ?? newId(),
+      flag: e?.flag ?? e?.icon ?? '',
+      imageUrl: e?.imageUrl ?? '',
+      text: e?.text ?? '',
+    }));
+    // the old text doubles as the flag key when it names one we can draw
+    if (statusLabel) list.push({ id: 'legacy-sexuality', flag: statusLabel.toLowerCase(), imageUrl: '', text: statusLabel });
+    return list;
+  };
+
+  try {
+    const rows = db.getAllSync(`SELECT id, labels, status_label FROM fo WHERE flags = '[]'`) as
+      { id: string; labels: string | null; status_label: string | null }[];
+    for (const r of rows) {
+      const flags = toFlags(r.labels ?? '', r.status_label ?? '');
+      if (flags.length) db.runSync(`UPDATE fo SET flags = ? WHERE id = ?`, JSON.stringify(flags), r.id);
+    }
+  } catch (_) {}
+
+  try {
+    const read = (k: string) =>
+      (db.getFirstSync(`SELECT value FROM settings WHERE key = ?`, k) as { value?: string } | null)?.value ?? '';
+    if (!read('user_flags')) {
+      const flags = toFlags(read('user_labels'), read('user_status_label'));
+      if (flags.length) {
+        db.runSync(
+          `INSERT INTO settings (key, value) VALUES ('user_flags', ?)
+           ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+          JSON.stringify(flags),
+        );
+      }
+    }
+  } catch (_) {}
+}
+
 function migrateShareVocabulary() {
   const db = getDb();
   const rename: [string, string][] = [['ng', 'no'], ['welcome', 'yes'], ['mirror', 'selective']];
@@ -269,8 +328,8 @@ function repairMediaPaths() {
     // avatar_synced_uri and gallery_sync_map are keyed *by local path*, so they
     // have to move in lockstep — otherwise a rescued photo no longer matches its
     // own bookkeeping and the next publish re-uploads everything
-    ['fo', ['id'], ['photo_uri', 'notif_photo_uri', 'page_bg_image', 'card_bg_image', 'gallery',
-                    'avatar_synced_uri', 'gallery_sync_map']],
+    ['fo', ['id'], ['photo_uri', 'notif_photo_uri', 'page_bg_image', 'card_bg_image', 'gallery', 'labels',
+                    'avatar_animation_url', 'avatar_synced_uri', 'gallery_sync_map']],
     ['messages', ['id'], ['image_uri']],
     ['album_photos', ['id'], ['uri']],
     ['outfits', ['id'], ['uri']],
@@ -342,11 +401,33 @@ function applyRemoteFallbacks() {
     return changed ? JSON.stringify(next) : raw;
   }
 
+  // Labels store their custom image under `imageUrl` rather than `uri` — same
+  // shape/logic as fallbackGallery otherwise, since a label's image rides the
+  // exact same {localUri: remoteUrl} map (see labelImageUris in community.ts).
+  function fallbackLabels(raw: string, syncMap: Record<string, string>): string {
+    let labels: { imageUrl?: string }[];
+    try {
+      const parsed = JSON.parse(raw || '[]');
+      if (!Array.isArray(parsed)) return raw;
+      labels = parsed;
+    } catch {
+      return raw;
+    }
+    let changed = false;
+    const next = labels.map((l) => {
+      if (typeof l?.imageUrl !== 'string' || !l.imageUrl) return l;
+      const swapped = fallback(l.imageUrl, syncMap);
+      if (swapped !== l.imageUrl) changed = true;
+      return changed ? { ...l, imageUrl: swapped } : l;
+    });
+    return changed ? JSON.stringify(next) : raw;
+  }
+
   // F/O profiles: one sync map per row
   let foRows: Record<string, string>[];
   try {
     foRows = db.getAllSync(
-      'SELECT id, photo_uri, page_bg_image, card_bg_image, gallery, gallery_sync_map FROM fo',
+      'SELECT id, photo_uri, page_bg_image, card_bg_image, gallery, labels, gallery_sync_map FROM fo',
     ) as Record<string, string>[];
   } catch (e) {
     console.warn('[applyRemoteFallbacks] skipped fo:', e);
@@ -365,26 +446,28 @@ function applyRemoteFallbacks() {
     const pageBgImage = fallback(row.page_bg_image, syncMap);
     const cardBgImage = fallback(row.card_bg_image, syncMap);
     const gallery = fallbackGallery(row.gallery, syncMap);
+    const labels = fallbackLabels(row.labels, syncMap);
 
     if (
       photoUri !== row.photo_uri ||
       pageBgImage !== row.page_bg_image ||
       cardBgImage !== row.card_bg_image ||
-      gallery !== row.gallery
+      gallery !== row.gallery ||
+      labels !== row.labels
     ) {
       db.runSync(
-        'UPDATE fo SET photo_uri = ?, page_bg_image = ?, card_bg_image = ?, gallery = ? WHERE id = ?',
-        photoUri, pageBgImage, cardBgImage, gallery, row.id,
+        'UPDATE fo SET photo_uri = ?, page_bg_image = ?, card_bg_image = ?, gallery = ?, labels = ? WHERE id = ?',
+        photoUri, pageBgImage, cardBgImage, gallery, labels, row.id,
       );
     }
   }
 
   // The user's own profile: settings is a flat key/value table, not one row —
   // read the handful of keys involved directly rather than looping generically.
-  let settingsRow: { user_avatar: string; user_card_bg_image: string; user_page_bg_image: string; user_gallery: string; user_gallery_sync_map: string } | null = null;
+  let settingsRow: { user_avatar: string; user_card_bg_image: string; user_page_bg_image: string; user_gallery: string; user_labels: string; user_gallery_sync_map: string } | null = null;
   try {
     const rows = db.getAllSync(
-      `SELECT key, value FROM settings WHERE key IN ('user_avatar','user_card_bg_image','user_page_bg_image','user_gallery','user_gallery_sync_map')`,
+      `SELECT key, value FROM settings WHERE key IN ('user_avatar','user_card_bg_image','user_page_bg_image','user_gallery','user_labels','user_gallery_sync_map')`,
     ) as { key: string; value: string }[];
     const byKey = Object.fromEntries(rows.map((r) => [r.key, r.value]));
     settingsRow = {
@@ -392,6 +475,7 @@ function applyRemoteFallbacks() {
       user_card_bg_image: byKey.user_card_bg_image ?? '',
       user_page_bg_image: byKey.user_page_bg_image ?? '',
       user_gallery: byKey.user_gallery ?? '',
+      user_labels: byKey.user_labels ?? '',
       user_gallery_sync_map: byKey.user_gallery_sync_map ?? '',
     };
   } catch (e) {
@@ -419,6 +503,9 @@ function applyRemoteFallbacks() {
 
       const gallery = fallbackGallery(settingsRow.user_gallery, syncMap);
       if (gallery !== settingsRow.user_gallery) updates.push(['user_gallery', gallery]);
+
+      const labels = fallbackLabels(settingsRow.user_labels, syncMap);
+      if (labels !== settingsRow.user_labels) updates.push(['user_labels', labels]);
 
       for (const [key, value] of updates) {
         db.runSync('UPDATE settings SET value = ? WHERE key = ?', value, key);

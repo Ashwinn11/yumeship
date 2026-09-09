@@ -6,6 +6,7 @@ import { deleteFromBucketByUrl, isManagedMediaUrl, uploadToBucket } from '@/lib/
 import { FunctionsHttpError } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 
+import { parseProfileFlags, type ProfileFlag } from '@/components/profile/cardTheme';
 import { getAllFos, getFo, parseGallery, updateFo, type Fo, type GalleryPhoto } from './fo';
 import { getGlobalSetting, saveGlobalSetting } from './onboarding';
 
@@ -26,8 +27,10 @@ export type CommunityCardTheme = {
   cardTransparent: boolean;
   textColor: string;
   borderStyle: string;
-  decoration: string;
   nameFont: string;
+  nameOrnament: string;
+  avatarFrame: string;
+  avatarFrameUrl: string;
 };
 
 export type CommunityProfile = CommunityCardTheme & {
@@ -36,11 +39,13 @@ export type CommunityProfile = CommunityCardTheme & {
   name: string;
   pronouns: string;
   bio: string;
+  /** short bio shown on the card itself, under the name */
+  tagline: string;
   avatarUrl: string;
-  statusLabel: string;
   song: string;
   songLink: string;
   gallery: GalleryPhoto[];
+  flags: ProfileFlag[];
   /** published F/O shown paired on this card, when "profile identify" is on */
   identifyFoId: string | null;
   followerCount: number;
@@ -52,11 +57,13 @@ export type CommunityFoProfile = CommunityCardTheme & {
   name: string;
   pronouns: string;
   bio: string;
+  /** short bio shown on the card itself, under the name */
+  tagline: string;
   avatarUrl: string;
-  statusLabel: string;
   song: string;
   songLink: string;
   gallery: GalleryPhoto[];
+  flags: ProfileFlag[];
   fandom: string;
   relStatus: Fo['relStatus'];
   shareStatus: Fo['shareStatus'];
@@ -129,9 +136,25 @@ function rowToCardTheme(row: Record<string, any>): CommunityCardTheme {
     cardTransparent: !!row.card_transparent,
     textColor: row.text_color ?? '',
     borderStyle: row.border_style ?? '',
-    decoration: row.decoration ?? '',
     nameFont: row.name_font ?? '',
+    nameOrnament: row.name_ornament ?? '',
+    avatarFrame: row.avatar_frame ?? '',
+    avatarFrameUrl: row.avatar_animation_url ?? '',
   };
+}
+
+/** Tolerates a missing/malformed column the same way the rest of this file treats gaps. */
+function rowToFlags(raw: unknown): ProfileFlag[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((l) => l && typeof l.text === 'string')
+    .map((f) => ({
+      id: (f.id as string) ?? '',
+      // rows written before flags and sexuality merged still carry `icon`
+      flag: ((f.flag ?? f.icon) as string) ?? '',
+      imageUrl: (f.imageUrl as string) ?? '',
+      text: f.text as string,
+    }));
 }
 
 /** Remote gallery rows are already {url, caption} — reshape to the local {uri, caption}. */
@@ -150,11 +173,12 @@ function rowToProfile(row: Record<string, any>): CommunityProfile {
     name: row.name ?? '',
     pronouns: row.pronouns ?? '',
     bio: row.bio ?? '',
+    tagline: row.tagline ?? '',
     avatarUrl: row.avatar_url ?? '',
-    statusLabel: row.status_label ?? '',
     song: row.song ?? '',
     songLink: row.song_link ?? '',
     gallery: rowToGallery(row.gallery),
+    flags: rowToFlags(row.flags),
     identifyFoId: row.identify_fo_id ?? null,
     followerCount: row.follower_count ?? 0,
     followingCount: row.following_count ?? 0,
@@ -168,11 +192,12 @@ function rowToFoProfile(row: Record<string, any>): CommunityFoProfile {
     name: row.name ?? '',
     pronouns: row.pronouns ?? '',
     bio: row.bio ?? '',
+    tagline: row.tagline ?? '',
     avatarUrl: row.avatar_url ?? '',
-    statusLabel: row.status_label ?? '',
     song: row.song ?? '',
     songLink: row.song_link ?? '',
     gallery: rowToGallery(row.gallery),
+    flags: rowToFlags(row.flags),
     fandom: row.fandom ?? '',
     relStatus: (row.rel_status as Fo['relStatus']) ?? 'romantic',
     shareStatus: (row.share_status as Fo['shareStatus']) ?? 'selective',
@@ -249,7 +274,8 @@ function parseSyncMap(raw: string): Record<string, string> {
 /** Everything a full profile card needs to render as its owner styled it. */
 const CARD_THEME_FIELDS =
   'height, weight, page_bg_color, page_bg_image, card_bg_color, card_bg_image, ' +
-  'card_bg_gradient, card_transparent, text_color, border_style, decoration, name_font';
+  'card_bg_gradient, card_transparent, text_color, border_style, name_font, name_ornament, ' +
+  'avatar_frame, avatar_animation_url';
 /**
  * PostgREST silently ignores a `select` that starts with whitespace and returns
  * *every* column instead — so a readable multi-line list quietly turns into
@@ -258,11 +284,11 @@ const CARD_THEME_FIELDS =
 const cols = (s: string) => s.replace(/\s+/g, ' ').trim();
 
 const PROFILE_FIELDS = cols(`
-  id, username, name, pronouns, bio, avatar_url, status_label, song, song_link, gallery,
+  id, username, name, pronouns, bio, tagline, avatar_url, song, song_link, gallery, flags,
   color, identify_fo_id, follower_count, following_count, ${CARD_THEME_FIELDS}
 `);
 const FO_PROFILE_FIELDS = cols(`
-  id, name, pronouns, bio, avatar_url, status_label, song, song_link, gallery,
+  id, name, pronouns, bio, tagline, avatar_url, song, song_link, gallery, flags,
   fandom, rel_status, share_status, age, birthday, ${CARD_THEME_FIELDS}
 `);
 
@@ -274,7 +300,7 @@ const FO_SUMMARY_FIELDS = 'id, name, pronouns, avatar_url';
 // The F/O preview row on a profile shows a real card (bio, pronouns, flag), not
 // just an avatar+name chip — a richer, standalone select so post embeds above
 // stay on the narrow field set.
-const FO_ROW_FIELDS = 'id, name, pronouns, avatar_url, bio, status_label';
+const FO_ROW_FIELDS = 'id, name, pronouns, avatar_url, bio, flags';
 const POST_SELECT = cols(`
   id, author_id, fo_profile_id, title, body, media, like_count, comment_count, created_at,
   kind, featured_date, poll_options, poll_counts, activity_id,
@@ -451,6 +477,51 @@ async function syncAvatarAndGallery(input: {
   return { avatarUrl, uploadedAvatarFor, photoFailed: photoFailed || galleryFailed, galleryMap, orphanedUrls };
 }
 
+/**
+ * Uploads a newly-picked custom avatar-animation gif. Mirrors createPost's gif
+ * branch — uploaded as-is, no compression pass, since react-native-compressor
+ * would flatten it to a single static frame and defeat the whole point.
+ *
+ * Doesn't fit syncAvatarAndGallery's batch (different content-type, no
+ * compression), so it gets its own small "already uploaded this local file"
+ * check, same idea as avatarSyncedUri for the avatar photo.
+ */
+async function syncAvatarFrame(input: {
+  table: 'profiles' | 'fo_profiles';
+  entityId: string;
+  kind: string;
+  localUrl: string;
+  syncedMarker: string;
+  uploadPath: string;
+}): Promise<{ url: string; uploadedFor: string; failed: boolean }> {
+  const { table, entityId, kind, localUrl, syncedMarker, uploadPath } = input;
+  if (kind !== 'custom' || !localUrl) return { url: '', uploadedFor: '', failed: false };
+  if (isManagedMediaUrl(localUrl)) return { url: localUrl, uploadedFor: '', failed: false };
+
+  if (localUrl === syncedMarker) {
+    const { data: existingRow } = await supabase.from(table).select('avatar_animation_url').eq('id', entityId).maybeSingle();
+    if (existingRow?.avatar_animation_url) return { url: existingRow.avatar_animation_url, uploadedFor: '', failed: false };
+  }
+
+  try {
+    const url = await uploadToBucket('avatars', uploadPath, localUrl, 'image/gif');
+    return { url, uploadedFor: localUrl, failed: false };
+  } catch (e) {
+    logSyncFailure('avatar frame upload')(e);
+    return { url: '', uploadedFor: '', failed: true };
+  }
+}
+
+/** Folds any custom label images into the same {localUri: remoteUrl} batch the
+ *  gallery/avatar/backgrounds already use, then remaps each label's imageUrl
+ *  through the result — same pattern as card_bg_image/page_bg_image below. */
+function flagImageUris(flags: ProfileFlag[]): string[] {
+  return flags.map((f) => f.imageUrl).filter(Boolean);
+}
+function remapFlags(flags: ProfileFlag[], galleryMap: Record<string, string>): ProfileFlag[] {
+  return flags.map((f) => (f.imageUrl ? { ...f, imageUrl: galleryMap[f.imageUrl] || '' } : f));
+}
+
 export async function pushOwnProfile(): Promise<PushResult> {
   const {
     data: { session },
@@ -463,9 +534,9 @@ export async function pushOwnProfile(): Promise<PushResult> {
     name: getGlobalSetting('user_name'),
     pronouns: getGlobalSetting('user_pronouns', 'she/her'),
     bio: getGlobalSetting('user_bio'),
+    tagline: getGlobalSetting('user_tagline'),
     song: getGlobalSetting('user_song'),
     song_link: getGlobalSetting('user_song_link'),
-    status_label: getGlobalSetting('user_status_label'),
     height: getGlobalSetting('user_height'),
     weight: getGlobalSetting('user_weight'),
     color: getGlobalSetting('user_color'),
@@ -475,8 +546,9 @@ export async function pushOwnProfile(): Promise<PushResult> {
     card_transparent: getGlobalSetting('user_card_transparent') === '1',
     text_color: getGlobalSetting('user_text_color'),
     border_style: getGlobalSetting('user_border_style'),
-    decoration: getGlobalSetting('user_decoration'),
     name_font: getGlobalSetting('user_name_font'),
+    name_ornament: getGlobalSetting('user_name_ornament'),
+    avatar_frame: getGlobalSetting('user_avatar_frame'),
   };
 
   // identify_fo_id is a real FK, so confirm the row is actually there rather than
@@ -497,13 +569,14 @@ export async function pushOwnProfile(): Promise<PushResult> {
   const localGallery = parseGallery(getGlobalSetting('user_gallery'));
   const cardBgImage = getGlobalSetting('user_card_bg_image');
   const pageBgImage = getGlobalSetting('user_page_bg_image');
+  const localFlags = parseProfileFlags(getGlobalSetting('user_flags'));
 
   const sync = await syncAvatarAndGallery({
     table: 'profiles',
     entityId: user.id,
     avatarUri: getGlobalSetting('user_avatar'),
     avatarSyncedMarker: getGlobalSetting('user_avatar_synced_uri'),
-    galleryUris: [...localGallery.map((p) => p.uri), cardBgImage, pageBgImage].filter(Boolean),
+    galleryUris: [...localGallery.map((p) => p.uri), cardBgImage, pageBgImage, ...flagImageUris(localFlags)].filter(Boolean),
     previousGalleryMap: parseSyncMap(getGlobalSetting('user_gallery_sync_map')),
     avatarPath: `${user.id}/${Date.now()}.jpg`,
     galleryPathPrefix: `${user.id}/gallery`,
@@ -515,15 +588,31 @@ export async function pushOwnProfile(): Promise<PushResult> {
   patch.gallery = localGallery.map((p) => ({ url: sync.galleryMap[p.uri], caption: p.caption })).filter((g) => g.url);
   patch.card_bg_image = (cardBgImage && sync.galleryMap[cardBgImage]) || '';
   patch.page_bg_image = (pageBgImage && sync.galleryMap[pageBgImage]) || '';
+  patch.flags = remapFlags(localFlags, sync.galleryMap).filter((f) => f.text || f.flag || f.imageUrl);
+
+  const { data: existingFrame } = await supabase.from('profiles').select('avatar_animation_url').eq('id', user.id).maybeSingle();
+  const frame = await syncAvatarFrame({
+    table: 'profiles',
+    entityId: user.id,
+    kind: patch.avatar_frame as string,
+    localUrl: getGlobalSetting('user_avatar_frame_url'),
+    syncedMarker: getGlobalSetting('user_avatar_frame_synced_uri'),
+    uploadPath: `${user.id}/frame-${Date.now()}.gif`,
+  });
+  patch.avatar_animation_url = frame.url;
 
   const { error } = await supabase.from('profiles').upsert(patch);
   if (error) throw error;
   // only remember the upload once the row that references it actually landed
   if (sync.uploadedAvatarFor) saveGlobalSetting('user_avatar_synced_uri', sync.uploadedAvatarFor);
+  if (frame.uploadedFor) saveGlobalSetting('user_avatar_frame_synced_uri', frame.uploadedFor);
   // only now that the new state is durably saved — deleting any earlier would
   // risk breaking a still-live reference had this upsert failed instead
   for (const url of sync.orphanedUrls) deleteFromBucketByUrl('avatars', url);
-  return { photoFailed: sync.photoFailed };
+  if (existingFrame?.avatar_animation_url && existingFrame.avatar_animation_url !== patch.avatar_animation_url) {
+    deleteFromBucketByUrl('avatars', existingFrame.avatar_animation_url);
+  }
+  return { photoFailed: sync.photoFailed || frame.failed };
 }
 
 export async function fetchProfile(id: string): Promise<CommunityProfile | null> {
@@ -550,9 +639,9 @@ export async function pushFoProfile(foId: string): Promise<PushResult> {
     name: fo.name,
     pronouns: fo.pronouns,
     bio: fo.bio,
+    tagline: fo.tagline,
     song: fo.song,
     song_link: fo.songLink,
-    status_label: fo.statusLabel,
     height: fo.height,
     weight: fo.weight,
     age: fo.age,
@@ -566,8 +655,9 @@ export async function pushFoProfile(foId: string): Promise<PushResult> {
     card_transparent: fo.cardTransparent,
     text_color: fo.textColor,
     border_style: fo.borderStyle,
-    decoration: fo.decoration,
     name_font: fo.nameFont,
+    name_ornament: fo.nameOrnament,
+    avatar_frame: fo.avatarFrame,
   };
 
   // See pushOwnProfile: unpublishing deletes the row outright, so a re-publish
@@ -577,7 +667,7 @@ export async function pushFoProfile(foId: string): Promise<PushResult> {
     entityId: fo.id,
     avatarUri: fo.photoUri,
     avatarSyncedMarker: fo.avatarSyncedUri,
-    galleryUris: [...fo.gallery.map((p) => p.uri), fo.cardBgImage, fo.pageBgImage].filter(Boolean),
+    galleryUris: [...fo.gallery.map((p) => p.uri), fo.cardBgImage, fo.pageBgImage, ...flagImageUris(fo.flags)].filter(Boolean),
     previousGalleryMap: fo.gallerySyncMap,
     avatarPath: `${user.id}/fo/${fo.id}/${Date.now()}.jpg`,
     galleryPathPrefix: `${user.id}/fo/${fo.id}/gallery`,
@@ -588,6 +678,18 @@ export async function pushFoProfile(foId: string): Promise<PushResult> {
   patch.gallery = fo.gallery.map((p) => ({ url: sync.galleryMap[p.uri], caption: p.caption })).filter((g) => g.url);
   patch.card_bg_image = (fo.cardBgImage && sync.galleryMap[fo.cardBgImage]) || '';
   patch.page_bg_image = (fo.pageBgImage && sync.galleryMap[fo.pageBgImage]) || '';
+  patch.flags = remapFlags(fo.flags, sync.galleryMap).filter((f) => f.text || f.flag || f.imageUrl);
+
+  const { data: existingFrame } = await supabase.from('fo_profiles').select('avatar_animation_url').eq('id', fo.id).maybeSingle();
+  const frame = await syncAvatarFrame({
+    table: 'fo_profiles',
+    entityId: fo.id,
+    kind: fo.avatarFrame,
+    localUrl: fo.avatarFrameUrl,
+    syncedMarker: fo.avatarFrameSyncedUri,
+    uploadPath: `${user.id}/fo/${fo.id}/frame-${Date.now()}.gif`,
+  });
+  patch.avatar_animation_url = frame.url;
 
   const { error } = await supabase.from('fo_profiles').upsert(patch);
   if (error) throw error;
@@ -597,18 +699,22 @@ export async function pushFoProfile(foId: string): Promise<PushResult> {
     isPublic: true,
     // committed only now that the row referencing the upload exists
     ...(sync.uploadedAvatarFor ? { avatarSyncedUri: sync.uploadedAvatarFor } : null),
+    ...(frame.uploadedFor ? { avatarFrameSyncedUri: frame.uploadedFor } : null),
   });
   // only now that the new state is durably saved — deleting any earlier would
   // risk breaking a still-live reference had this upsert failed instead
   for (const url of sync.orphanedUrls) deleteFromBucketByUrl('avatars', url);
-  return { photoFailed: sync.photoFailed };
+  if (existingFrame?.avatar_animation_url && existingFrame.avatar_animation_url !== patch.avatar_animation_url) {
+    deleteFromBucketByUrl('avatars', existingFrame.avatar_animation_url);
+  }
+  return { photoFailed: sync.photoFailed || frame.failed };
 }
 
 export async function unpublishFoProfile(foId: string): Promise<void> {
   // fetched before the row goes away — it's the only place these urls live
   const { data: existing } = await supabase
     .from('fo_profiles')
-    .select('avatar_url, gallery, card_bg_image, page_bg_image')
+    .select('avatar_url, gallery, card_bg_image, page_bg_image, avatar_animation_url, flags')
     .eq('id', foId)
     .maybeSingle();
 
@@ -618,15 +724,19 @@ export async function unpublishFoProfile(foId: string): Promise<void> {
   // failed delete leaves the app believing a still-public profile is private
   // the row is gone, so every uploaded-already marker is now a lie — clearing
   // them makes the next publish re-upload the avatar and gallery from scratch
-  updateFo(foId, { isPublic: false, avatarSyncedUri: '', gallerySyncMap: {} });
+  updateFo(foId, { isPublic: false, avatarSyncedUri: '', gallerySyncMap: {}, avatarFrameSyncedUri: '' });
 
   // best-effort, after the delete the caller asked for has already landed —
   // a missed cleanup here leaves orphaned files, not a broken unpublish
   if (existing?.avatar_url) deleteFromBucketByUrl('avatars', existing.avatar_url);
   if (existing?.card_bg_image) deleteFromBucketByUrl('avatars', existing.card_bg_image);
   if (existing?.page_bg_image) deleteFromBucketByUrl('avatars', existing.page_bg_image);
+  if (existing?.avatar_animation_url) deleteFromBucketByUrl('avatars', existing.avatar_animation_url);
   for (const g of (existing?.gallery ?? []) as { url?: string }[]) {
     if (g.url) deleteFromBucketByUrl('avatars', g.url);
+  }
+  for (const l of (existing?.flags ?? []) as { imageUrl?: string }[]) {
+    if (l.imageUrl) deleteFromBucketByUrl('avatars', l.imageUrl);
   }
 }
 
@@ -642,7 +752,8 @@ export type CommunityFoSummary = {
   avatarUrl: string;
   pronouns: string;
   bio: string;
-  statusLabel: string;
+  /** short bio shown on the card itself, under the name */
+  tagline: string;
 };
 
 function rowToFoSummary(row: Record<string, any>): CommunityFoSummary {
@@ -652,7 +763,7 @@ function rowToFoSummary(row: Record<string, any>): CommunityFoSummary {
     avatarUrl: row.avatar_url ?? '',
     pronouns: row.pronouns ?? '',
     bio: row.bio ?? '',
-    statusLabel: row.status_label ?? '',
+    tagline: row.tagline ?? '',
   };
 }
 
@@ -688,6 +799,23 @@ export async function syncIdentifyFoPublish(foId: string): Promise<PushResult> {
   if (!fo) return nothingToDo;
   if (fo.isPublic) return nothingToDo;
   return pushFoProfile(foId);
+}
+
+/**
+ * Clears local cache that's tied to whichever community account was last
+ * signed in: the claimed username and its ownership marker (see
+ * cachedUsernameFor in community.tsx), and the sync markers that let avatar/
+ * gallery syncing skip re-uploading. Without this, signing out and back in
+ * with a different account carries the previous account's identity into the
+ * new one — e.g. the account menu shows the old username — until each piece
+ * happens to get overwritten by the new account's own data.
+ */
+export function clearCommunityAccountCache() {
+  saveGlobalSetting('user_username', '');
+  saveGlobalSetting('user_username_uid', '');
+  saveGlobalSetting('user_avatar_synced_uri', '');
+  saveGlobalSetting('user_gallery_sync_map', '{}');
+  saveGlobalSetting('user_identify_fo_id', '');
 }
 
 /**
@@ -727,11 +855,7 @@ export async function deleteCommunityAccount(): Promise<void> {
     throw new Error((data as { error: string }).error);
   }
 
-  saveGlobalSetting('user_username', '');
-  saveGlobalSetting('user_username_uid', '');
-  saveGlobalSetting('user_avatar_synced_uri', '');
-  saveGlobalSetting('user_gallery_sync_map', '{}');
-  saveGlobalSetting('user_identify_fo_id', '');
+  clearCommunityAccountCache();
   // the cascade already unpublished every F/O; the local flags must agree
   for (const fo of getAllFos()) {
     if (fo.isPublic) updateFo(fo.id, { isPublic: false, avatarSyncedUri: '', gallerySyncMap: {} });

@@ -1,0 +1,8 @@
+node_modules
+.expo
+ios
+android
+.git
+*.log
+landing/node_modules
+landing/dist

@@ -8,7 +8,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Sparkle } from '@/components/deco/Sparkle';
 import { StickerSakuraBranch } from '@/components/deco';
 import { GalleryPicker } from '@/components/profile/GalleryPicker';
-import { SexualityPicker } from '@/components/profile/SexualityPicker';
+import { ProfileFlagsEditor } from '@/components/profile/ProfileFlagsEditor';
+import { parseProfileFlags, type ProfileFlag } from '@/components/profile/cardTheme';
 import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
 import { EditSection, styles as editSection } from '@/components/ui/EditSection';
@@ -55,7 +56,7 @@ export default function OnbPersona() {
   const [song, setSong] = useState(() => getGlobalSetting('user_song'));
   const [songLink, setSongLink] = useState(() => getGlobalSetting('user_song_link'));
   const [gallery, setGallery] = useState<GalleryPhoto[]>(() => parseGallery(getGlobalSetting('user_gallery')));
-  const [sexuality, setSexuality] = useState(() => getGlobalSetting('user_status_label'));
+  const [flags, setFlags] = useState<ProfileFlag[]>(() => parseProfileFlags(getGlobalSetting('user_flags')));
   const [identifyFoId, setIdentifyFoId] = useState(() => getGlobalSetting('user_identify_fo_id'));
   const [showFoPicker, setShowFoPicker] = useState(false);
   const fos = useFos();
@@ -67,7 +68,7 @@ export default function OnbPersona() {
   const handleSongChange = (v: string) => { setSong(v); saveGlobalSetting('user_song', v); };
   const handleSongLinkChange = (v: string) => { setSongLink(v); saveGlobalSetting('user_song_link', v); };
   const handleGalleryChange = (g: GalleryPhoto[]) => { setGallery(g); saveGlobalSetting('user_gallery', JSON.stringify(g)); };
-  const handleSexualityChange = (v: string) => { setSexuality(v); saveGlobalSetting('user_status_label', v); };
+  const handleFlagsChange = (f: ProfileFlag[]) => { setFlags(f); saveGlobalSetting('user_flags', JSON.stringify(f)); };
   const handlePronounChange = (p: string) => {
     setPronoun(p);
     setOnbField('pronouns', p);
@@ -294,8 +295,10 @@ export default function OnbPersona() {
               </Field>
             </EditSection>
 
-            <EditSection label="sexuality">
-              <SexualityPicker value={sexuality} onChange={handleSexualityChange} />
+            <EditSection label="flags">
+              <Text style={editSection.sectionHint}>identity flags, your own symbols, your own words</Text>
+              <View style={editSection.innerSpacer} />
+              <ProfileFlagsEditor flags={flags} onChange={handleFlagsChange} />
             </EditSection>
 
             <EditSection label="gallery">

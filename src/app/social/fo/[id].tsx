@@ -92,9 +92,9 @@ export default function PublicFoProfileScreen() {
                 pronouns={profile.pronouns}
                 subtitle={profile.fandom}
                 bio={profile.bio}
+                tagline={profile.tagline}
                 photoUri={profile.avatarUrl}
                 fallbackColor={Colors.lavender}
-                statusLabel={profile.statusLabel}
                 type={relationshipStatus(profile.relStatus)}
                 sharing={sharingStatus(profile.shareStatus)}
                 height={profile.height}
@@ -110,8 +110,11 @@ export default function PublicFoProfileScreen() {
                 cardTransparent={profile.cardTransparent}
                 textColor={profile.textColor}
                 borderStyle={profile.borderStyle}
-                decoration={profile.decoration}
                 nameFont={profile.nameFont}
+                nameOrnament={profile.nameOrnament}
+                flags={profile.flags}
+                avatarFrame={profile.avatarFrame}
+                avatarFrameUrl={profile.avatarFrameUrl}
               />
               <Text style={styles.postsLabel}>posts about them</Text>
             </>

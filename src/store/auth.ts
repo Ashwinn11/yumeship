@@ -6,6 +6,7 @@ import * as WebBrowser from 'expo-web-browser';
 import type { Session, User } from '@supabase/supabase-js';
 
 import { supabase, supabaseRedirectUrl } from '@/lib/supabase';
+import { clearCommunityAccountCache } from './community';
 
 // Required for expo-auth-session to close the browser after OAuth on Android
 WebBrowser.maybeCompleteAuthSession();
@@ -57,7 +58,11 @@ export function bootstrapAuth() {
   });
 
   // Keep state in sync with future auth events
-  supabase.auth.onAuthStateChange((_event, session) => {
+  supabase.auth.onAuthStateChange((event, session) => {
+    // Covers every path to a signed-out state, not just the sign-out button —
+    // an expired/revoked session lands here too, and it must not leave the
+    // previous account's username/sync markers for the next sign-in to inherit.
+    if (event === 'SIGNED_OUT') clearCommunityAccountCache();
     _user = userFromSession(session);
     notify();
   });

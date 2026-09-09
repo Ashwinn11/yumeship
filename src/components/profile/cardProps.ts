@@ -33,11 +33,10 @@ export type PairedSource = {
   name: string;
   pronouns: string;
   avatarUri: string;
-  statusLabel: string;
 } | null | undefined;
 
 /**
- * Spreads a paired F/O (or lack of one) into ProfileCard's five separate
+ * Spreads a paired F/O (or lack of one) into ProfileCard's separate
  * `paired*` props. A missing field here is exactly what silently drops
  * "profile identify" pairing on one screen while another still shows it.
  */
@@ -47,6 +46,5 @@ export function pairedProps(paired: PairedSource) {
     pairedName: paired?.name,
     pairedPronouns: paired?.pronouns,
     pairedAvatarUri: paired?.avatarUri,
-    pairedStatusLabel: paired?.statusLabel,
   };
 }

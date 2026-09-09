@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Sakura } from '@/components/deco/Sakura';
 import { Sparkle } from '@/components/deco/Sparkle';
 import { CardThemeSheet } from '@/components/profile/CardThemeSheet';
-import type { CardTheme } from '@/components/profile/cardTheme';
+import { type CardTheme } from '@/components/profile/cardTheme';
 import { pairedProps } from '@/components/profile/cardProps';
 import { FoAvatarCard } from '@/components/profile/FoAvatarCard';
 import { PageBackground } from '@/components/profile/PageBackground';
@@ -31,51 +31,12 @@ import { ProfileCard } from '@/components/profile/ProfileCard';
 import { IconEdit, IconPalette } from '@/components/ui/Icon';
 import { Colors, FontFamily, Radius, sf, Spacing } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
-import { getGlobalSettings, saveGlobalSetting } from '@/store/onboarding';
 import { usePremium } from '@/store/premium';
-import { parseGallery, useFos } from '@/store/fo';
+import { useFos } from '@/store/fo';
+import { meCardTheme, readMe, saveMe, type Me } from '@/store/me';
 
 const keyExtractor = (p: CommunityPost) => p.id;
 const PostSeparator = () => <View style={styles.postSeparator} />;
-
-const ME_KEYS = [
-  'user_name', 'user_pronouns', 'user_username', 'user_color', 'user_avatar', 'user_bio',
-  'user_height', 'user_weight', 'user_song', 'user_song_link', 'user_gallery',
-  'user_page_bg_color', 'user_page_bg_image', 'user_card_bg_color', 'user_card_bg_image',
-  'user_card_bg_gradient', 'user_card_transparent', 'user_text_color', 'user_border_style',
-  'user_decoration', 'user_name_font', 'user_status_label', 'user_identify_fo_id',
-] as const;
-
-// One query rather than one per field: this runs on every focus, and 23
-// synchronous SELECTs is a visible stall before the card paints.
-function readMe() {
-  const g = getGlobalSettings(ME_KEYS);
-  return {
-    name: g.user_name,
-    pronouns: g.user_pronouns || 'she/her',
-    username: g.user_username,
-    color: g.user_color || Colors.sakura,
-    avatar: g.user_avatar,
-    bio: g.user_bio,
-    height: g.user_height,
-    weight: g.user_weight,
-    song: g.user_song,
-    songLink: g.user_song_link,
-    gallery: parseGallery(g.user_gallery),
-    pageBgColor: g.user_page_bg_color,
-    pageBgImage: g.user_page_bg_image,
-    cardBgColor: g.user_card_bg_color,
-    cardBgImage: g.user_card_bg_image,
-    cardBgGradient: g.user_card_bg_gradient,
-    cardTransparent: g.user_card_transparent === '1',
-    textColor: g.user_text_color,
-    borderStyle: g.user_border_style,
-    decoration: g.user_decoration,
-    nameFont: g.user_name_font,
-    statusLabel: g.user_status_label,
-    identifyFoId: g.user_identify_fo_id,
-  };
-}
 
 export default function MyProfileScreen() {
   const insets = useSafeAreaInsets();
@@ -171,24 +132,7 @@ export default function MyProfileScreen() {
   );
 
   function handleThemeChange(patch: Partial<CardTheme>) {
-    const keyMap = {
-      pageBgColor: 'user_page_bg_color', pageBgImage: 'user_page_bg_image',
-      cardBgColor: 'user_card_bg_color', cardBgImage: 'user_card_bg_image',
-      cardBgGradient: 'user_card_bg_gradient',
-      textColor: 'user_text_color',
-      borderStyle: 'user_border_style',
-      decoration: 'user_decoration',
-      nameFont: 'user_name_font',
-      statusLabel: 'user_status_label',
-    } as const;
-    for (const [k, v] of Object.entries(patch)) {
-      if (k === 'cardTransparent') {
-        saveGlobalSetting('user_card_transparent', v ? '1' : '');
-        continue;
-      }
-      const mappedKey = keyMap[k as keyof typeof keyMap];
-      if (mappedKey) saveGlobalSetting(mappedKey, (v as string) ?? '');
-    }
+    saveMe(patch as Partial<Me>);
     setMe((p) => ({ ...p, ...patch }));
   }
 
@@ -219,7 +163,7 @@ export default function MyProfileScreen() {
             <Pressable onPress={() => setShowCustomize(true)} style={styles.headerBtn}>
               <IconPalette size={13} color={Colors.ink2} />
             </Pressable>
-            <Pressable onPress={() => router.push('/onboarding/persona?mode=edit' as any)} style={styles.headerBtn}>
+            <Pressable onPress={() => router.push('/profile/edit' as any)} style={styles.headerBtn}>
               <IconEdit size={13} color={Colors.ink2} />
             </Pressable>
           </View>
@@ -248,6 +192,7 @@ export default function MyProfileScreen() {
               pronouns={me.pronouns}
               username={me.username}
               bio={me.bio}
+              tagline={me.tagline}
               photoUri={me.avatar}
               fallbackColor={me.color}
               height={me.height}
@@ -261,10 +206,12 @@ export default function MyProfileScreen() {
               cardTransparent={me.cardTransparent}
               textColor={me.textColor}
               borderStyle={me.borderStyle}
-              decoration={me.decoration}
               nameFont={me.nameFont}
-              statusLabel={me.statusLabel}
-              {...pairedProps(pairedFo && { name: pairedFo.name, pronouns: pairedFo.pronouns, avatarUri: pairedFo.photoUri, statusLabel: pairedFo.statusLabel })}
+              nameOrnament={me.nameOrnament}
+              flags={me.flags}
+              avatarFrame={me.avatarFrame}
+              avatarFrameUrl={me.avatarFrameUrl}
+              {...pairedProps(pairedFo && { name: pairedFo.name, pronouns: pairedFo.pronouns, avatarUri: pairedFo.photoUri })}
               followerCount={counts.followerCount}
               followingCount={counts.followingCount}
             />
@@ -300,7 +247,6 @@ export default function MyProfileScreen() {
                       avatarUri={f.photoUri}
                       pronouns={f.pronouns}
                       bio={f.bio}
-                      statusLabel={f.statusLabel}
                       onPress={() => router.push(`/fo/${f.id}` as any)}
                     />
                   ))}
@@ -323,14 +269,7 @@ export default function MyProfileScreen() {
       <CardThemeSheet
         visible={showCustomize}
         onClose={handleThemeSheetClose}
-        theme={{
-          pageBgColor: me.pageBgColor, pageBgImage: me.pageBgImage,
-          cardBgColor: me.cardBgColor, cardBgImage: me.cardBgImage,
-          cardBgGradient: me.cardBgGradient, cardTransparent: me.cardTransparent,
-          textColor: me.textColor,
-          borderStyle: me.borderStyle, decoration: me.decoration,
-          nameFont: me.nameFont, statusLabel: me.statusLabel,
-        }}
+        theme={meCardTheme(me)}
         onChange={handleThemeChange}
         premium={premium}
       />

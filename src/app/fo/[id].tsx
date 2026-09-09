@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { PostCard } from '@/components/community/PostCard';
 import { FeedSkeleton } from '@/components/community/PostCardSkeleton';
-import { FoForm, FoFormValue } from '@/components/fo/FoForm';
+import { FoEditor, type FoDraft } from '@/components/fo/FoEditor';
 import { CardThemeSheet } from '@/components/profile/CardThemeSheet';
 import type { CardTheme } from '@/components/profile/cardTheme';
 import { PageBackground } from '@/components/profile/PageBackground';
@@ -40,7 +40,7 @@ export default function FoDetailScreen() {
   const ships = useShips();
   const premium = usePremium();
   const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState<FoFormValue | null>(null);
+  const [draft, setDraft] = useState<FoDraft | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [showCustomize, setShowCustomize] = useState(false);
   const [photoWarning, setPhotoWarning] = useState(false);
@@ -101,10 +101,9 @@ export default function FoDetailScreen() {
     setDraft({
       name: fo!.name, pronouns: fo!.pronouns, fandom: fo!.fandom,
       relStatus: fo!.relStatus, shareStatus: fo!.shareStatus,
-      bio: fo!.bio, height: fo!.height, weight: fo!.weight,
+      bio: fo!.bio, tagline: fo!.tagline, height: fo!.height, weight: fo!.weight,
       age: fo!.age, birthday: fo!.birthday, photoUri: fo!.photoUri,
-      song: fo!.song, songLink: fo!.songLink, gallery: fo!.gallery,
-      statusLabel: fo!.statusLabel,
+      song: fo!.song, songLink: fo!.songLink, gallery: fo!.gallery, flags: fo!.flags,
     });
     setEditing(true);
   }
@@ -159,13 +158,15 @@ export default function FoDetailScreen() {
         <InlineToast message={toastMsg} nonce={toastNonce} />
       </View>
 
-      <ProfileScreenHeader
-        insetsTop={insets.top}
-        onBack={() => (editing ? setEditing(false) : router.back())}
-        backLabel={editing ? '✕' : '‹'}
-        title={editing ? 'edit F/O' : fo.name || 'their profile'}
-        right={
-          editing ? undefined : (
+      {/* the editor brings its own header (✕ / title / done) — a second one
+          from the screen would stack two headers on top of each other */}
+      {!editing && (
+        <ProfileScreenHeader
+          insetsTop={insets.top}
+          onBack={() => router.back()}
+          backLabel="‹"
+          title={fo.name || 'their profile'}
+          right={
             <View style={styles.headerActions}>
               <Pressable onPress={() => setShowCustomize(true)} style={styles.headerBtn}>
                 <IconPalette size={13} color={Colors.ink2} />
@@ -174,16 +175,15 @@ export default function FoDetailScreen() {
                 <IconEdit size={13} color={Colors.ink2} />
               </Pressable>
             </View>
-          )
-        }
-      />
+          }
+        />
+      )}
 
       {editing && draft ? (
-        <FoForm
+        <FoEditor
           value={draft}
-          onChange={setDraft}
-          onSave={saveEdit}
-          saveLabel="save changes"
+          onChange={(p) => setDraft((d) => (d ? { ...d, ...p } : d))}
+          onClose={saveEdit}
           onDelete={() => setConfirmDelete(true)}
         />
       ) : (
@@ -209,6 +209,7 @@ export default function FoDetailScreen() {
                 pronouns={fo.pronouns}
                 subtitle={fo.fandom}
                 bio={fo.bio}
+                tagline={fo.tagline}
                 photoUri={fo.photoUri}
                 height={fo.height}
                 weight={fo.weight}
@@ -225,9 +226,11 @@ export default function FoDetailScreen() {
                 cardTransparent={fo.cardTransparent}
                 textColor={fo.textColor}
                 borderStyle={fo.borderStyle}
-                decoration={fo.decoration}
                 nameFont={fo.nameFont}
-                statusLabel={fo.statusLabel}
+                nameOrnament={fo.nameOrnament}
+                flags={fo.flags}
+                avatarFrame={fo.avatarFrame}
+                avatarFrameUrl={fo.avatarFrameUrl}
               />
               {fo.isPublic && <Text style={styles.postsLabel}>posts about them</Text>}
             </>
@@ -286,8 +289,9 @@ export default function FoDetailScreen() {
           cardBgColor: fo.cardBgColor, cardBgImage: fo.cardBgImage,
           cardBgGradient: fo.cardBgGradient, cardTransparent: fo.cardTransparent,
           textColor: fo.textColor,
-          borderStyle: fo.borderStyle, decoration: fo.decoration,
-          nameFont: fo.nameFont, statusLabel: fo.statusLabel,
+          borderStyle: fo.borderStyle,
+          nameFont: fo.nameFont, nameOrnament: fo.nameOrnament,
+          avatarFrame: fo.avatarFrame, avatarFrameUrl: fo.avatarFrameUrl,
         }}
         onChange={handleThemeChange}
         premium={premium}

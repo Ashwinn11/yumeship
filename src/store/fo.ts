@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { getDb, newId } from '@/db/client';
+import { parseProfileFlags, type ProfileFlag } from '@/components/profile/cardTheme';
 import { notifyShips } from './ships';
 import { getGlobalSetting, saveGlobalSetting } from './onboarding';
 
@@ -13,6 +14,8 @@ export type Fo = {
   relStatus: 'romantic' | 'platonic' | 'familial';
   shareStatus: 'yes' | 'no' | 'selective';
   bio: string;
+  /** short bio shown on the card itself; `bio` keeps its own about section */
+  tagline: string;
   height: string;
   weight: string;
   /** free text — canon ages are as often "looks 20, actually 900" as a number */
@@ -32,19 +35,25 @@ export type Fo = {
   /** hero card has no fill at all, letting the page background show through */
   cardTransparent: boolean;
   textColor: string;
-  /** '' (default) | 'dashed' | 'double' | 'torn' | 'polaroid' */
+  /** comma-joined edge + decorations — see cardTheme.ts parseBorderStyle/buildBorderStyle */
   borderStyle: string;
-  /** '' (classic washi+sparkle) | 'sparkles' | 'hearts' | 'stars' | 'floral' | 'washi' | 'none' */
-  decoration: string;
   /** '' (default display font) | 'script' | 'marker' */
   nameFont: string;
-  /** short free-text flair badge shown near the name, e.g. "comfort character" */
-  statusLabel: string;
+  nameOrnament: string;
+  /** theme song shown in its own row */
   song: string;
   /** optional Spotify/YouTube/etc link for the theme song */
   songLink: string;
   /** extra photos shown in a strip on the profile card, beyond the main portrait */
   gallery: GalleryPhoto[];
+  /** everything they fly under the name — identity flags, symbols, their words */
+  flags: ProfileFlag[];
+  /** '' (none) | 'custom' — frames just the avatar photo; more presets coming */
+  avatarFrame: string;
+  /** local uri (pre-sync) or remote url of the uploaded custom frame image/gif */
+  avatarFrameUrl: string;
+  /** local avatar-frame uri last uploaded — skip re-upload when unchanged */
+  avatarFrameSyncedUri: string;
   /** whether this F/O has an opt-in public profile in community (gated by shareStatus !== 'no') */
   isPublic: boolean;
   /** local avatar uri last uploaded to the public fo_profiles row — skip re-upload when unchanged */
@@ -80,6 +89,7 @@ function rowToFo(row: Record<string, unknown>): Fo {
     relStatus: (row.rel_status as Fo['relStatus']) ?? 'romantic',
     shareStatus: (row.share_status as Fo['shareStatus']) ?? 'selective',
     bio: (row.bio as string) ?? '',
+    tagline: (row.tagline as string) ?? '',
     height: (row.height as string) ?? '',
     weight: (row.weight as string) ?? '',
     age: (row.age as string) ?? '',
@@ -94,12 +104,15 @@ function rowToFo(row: Record<string, unknown>): Fo {
     cardTransparent: !!(row.card_transparent as number),
     textColor: (row.text_color as string) ?? '',
     borderStyle: (row.border_style as string) ?? '',
-    decoration: (row.decoration as string) ?? '',
     nameFont: (row.name_font as string) ?? '',
-    statusLabel: (row.status_label as string) ?? '',
+    nameOrnament: (row.name_ornament as string) ?? '',
     song: (row.song as string) ?? '',
     songLink: (row.song_link as string) ?? '',
     gallery: parseGallery(row.gallery),
+    flags: parseProfileFlags((row.flags as string) ?? ''),
+    avatarFrame: (row.avatar_frame as string) ?? '',
+    avatarFrameUrl: (row.avatar_animation_url as string) ?? '',
+    avatarFrameSyncedUri: (row.avatar_animation_synced_uri as string) ?? '',
     isPublic: !!(row.is_public as number),
     avatarSyncedUri: (row.avatar_synced_uri as string) ?? '',
     gallerySyncMap: parseSyncMap(row.gallery_sync_map),
@@ -135,6 +148,7 @@ export function addFo(d: {
   relStatus?: string;
   shareStatus?: string;
   bio?: string;
+  tagline?: string;
   height?: string;
   weight?: string;
   age?: string;
@@ -146,8 +160,8 @@ export function addFo(d: {
 }): string {
   const id = newId();
   getDb().runSync(
-    `INSERT INTO fo (id, name, pronouns, fandom, rel_status, share_status, bio, height, weight, age, birthday, photo_uri, song, song_link, gallery, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO fo (id, name, pronouns, fandom, rel_status, share_status, bio, tagline, height, weight, age, birthday, photo_uri, song, song_link, gallery, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     id,
     d.name,
     d.pronouns ?? '',
@@ -155,6 +169,7 @@ export function addFo(d: {
     d.relStatus ?? 'romantic',
     d.shareStatus ?? 'selective',
     d.bio ?? '',
+    d.tagline ?? '',
     d.height ?? '',
     d.weight ?? '',
     d.age ?? '',
@@ -179,6 +194,7 @@ export function updateFo(id: string, d: Partial<Omit<Fo, 'id' | 'createdAt'>>) {
   if (d.relStatus !== undefined)   { fields.push('rel_status = ?');   values.push(d.relStatus); }
   if (d.shareStatus !== undefined) { fields.push('share_status = ?'); values.push(d.shareStatus); }
   if (d.bio !== undefined)         { fields.push('bio = ?');          values.push(d.bio); }
+  if (d.tagline !== undefined)     { fields.push('tagline = ?');      values.push(d.tagline); }
   if (d.height !== undefined)      { fields.push('height = ?');       values.push(d.height); }
   if (d.weight !== undefined)      { fields.push('weight = ?');       values.push(d.weight); }
   if (d.age !== undefined)         { fields.push('age = ?');          values.push(d.age); }
@@ -193,12 +209,15 @@ export function updateFo(id: string, d: Partial<Omit<Fo, 'id' | 'createdAt'>>) {
   if (d.cardTransparent !== undefined) { fields.push('card_transparent = ?'); values.push(d.cardTransparent ? 1 : 0); }
   if (d.textColor !== undefined)   { fields.push('text_color = ?');   values.push(d.textColor); }
   if (d.borderStyle !== undefined) { fields.push('border_style = ?'); values.push(d.borderStyle); }
-  if (d.decoration !== undefined)  { fields.push('decoration = ?');   values.push(d.decoration); }
   if (d.nameFont !== undefined)    { fields.push('name_font = ?');    values.push(d.nameFont); }
-  if (d.statusLabel !== undefined) { fields.push('status_label = ?'); values.push(d.statusLabel); }
+  if (d.nameOrnament !== undefined) { fields.push('name_ornament = ?'); values.push(d.nameOrnament); }
   if (d.song !== undefined)        { fields.push('song = ?');         values.push(d.song); }
   if (d.songLink !== undefined)    { fields.push('song_link = ?');    values.push(d.songLink); }
   if (d.gallery !== undefined)     { fields.push('gallery = ?');      values.push(JSON.stringify(d.gallery)); }
+  if (d.flags !== undefined)       { fields.push('flags = ?');        values.push(JSON.stringify(d.flags)); }
+  if (d.avatarFrame !== undefined) { fields.push('avatar_frame = ?'); values.push(d.avatarFrame); }
+  if (d.avatarFrameUrl !== undefined) { fields.push('avatar_animation_url = ?'); values.push(d.avatarFrameUrl); }
+  if (d.avatarFrameSyncedUri !== undefined) { fields.push('avatar_animation_synced_uri = ?'); values.push(d.avatarFrameSyncedUri); }
   if (d.isPublic !== undefined)       { fields.push('is_public = ?');         values.push(d.isPublic ? 1 : 0); }
   if (d.avatarSyncedUri !== undefined) { fields.push('avatar_synced_uri = ?'); values.push(d.avatarSyncedUri); }
   if (d.gallerySyncMap !== undefined)  { fields.push('gallery_sync_map = ?');  values.push(JSON.stringify(d.gallerySyncMap)); }

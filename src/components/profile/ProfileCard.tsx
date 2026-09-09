@@ -1,20 +1,23 @@
 import { Image } from 'expo-image';
 import { MEDIA_IMAGE } from '@/lib/imageProps';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Linking, LayoutChangeEvent, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { FlagIcon } from '@/components/deco/FlagIcon';
 import { Heart } from '@/components/deco/Heart';
-import { Sakura } from '@/components/deco/Sakura';
-import { Sparkle } from '@/components/deco/Sparkle';
-import { Star } from '@/components/deco/Star';
+import { LaceFrame } from '@/components/deco/LaceFrame';
+import { NameOrnament } from '@/components/deco/NameOrnament';
+import { PatternBackdrop } from '@/components/deco/PatternBackdrop';
 import { StickerCassette } from '@/components/deco/Stickers';
+import { StickerCorners } from '@/components/deco/StickerCorners';
 import { TornEdge } from '@/components/deco/TornEdge';
 import { WashiTape } from '@/components/deco/WashiTape';
 import { Polaroid } from '@/components/templates/primitives';
 import { Colors, FontFamily, Radius, Shadow, Spacing, sf } from '@/constants/theme';
-import { findSexualityOption } from '@/constants/sexualities';
 import type { GalleryPhoto } from '@/store/fo';
+import { AvatarFrame } from './AvatarFrame';
+import { ProfileFlags } from './ProfileFlags';
+import { parseBorderStyle, type ProfileFlag } from './cardTheme';
 
 const POLAROID_TAPES = [Colors.sakura, Colors.lavender, Colors.butter, Colors.sage, Colors.peach];
 
@@ -28,6 +31,8 @@ type Props = {
   /** small line under the name, e.g. the F/O's source/fandom */
   subtitle?: string;
   bio?: string;
+  /** short bio shown on the card itself, under the name/handle */
+  tagline?: string;
   photoUri?: string;
   /** avatar backdrop when there's no photo */
   fallbackColor?: string;
@@ -55,14 +60,18 @@ type Props = {
   /** no hero fill at all — the page background shows through */
   cardTransparent?: boolean;
   textColor?: string;
-  /** '' default dashed-avatar look | 'dashed' | 'double' | 'torn' | 'polaroid' */
+  /** '' (default) | 'torn' | 'polaroid' | 'lace' | 'stickers' | 'pattern' */
   borderStyle?: string;
-  /** '' classic washi+sparkles | 'sparkles' | 'hearts' | 'stars' | 'floral' | 'washi' | 'none' */
-  decoration?: string;
-  /** '' default display font | 'script' | 'marker' */
+  /** '' default display font | 'script' | 'marker' | 'klee' */
   nameFont?: string;
-  /** sexuality badge under the name, e.g. "bisexual" — free text, this person's own words */
-  statusLabel?: string;
+  /** '' (none) | a NAME_ORNAMENTS key — line art flanking the display name */
+  nameOrnament?: string;
+  /** everything they fly under the name */
+  flags?: ProfileFlag[];
+  /** '' (none) | 'custom' — frames just the avatar photo; more presets coming */
+  avatarFrame?: string;
+  /** uploaded custom frame image/gif — only meaningful when avatarFrame is 'custom' */
+  avatarFrameUrl?: string;
   /** community follower/following counts, rendered under pronouns */
   followerCount?: number;
   followingCount?: number;
@@ -74,97 +83,13 @@ type Props = {
   pairedPronouns?: string;
   pairedAvatarUri?: string;
   pairedFallbackColor?: string;
-  pairedStatusLabel?: string;
 };
 
 const NAME_FONT_MAP: Record<string, string> = {
   script: FontFamily.script,
   marker: FontFamily.uiSemiBold,
+  klee: FontFamily.ja,
 };
-
-// Each preset is a set of absolutely-positioned corner/edge ornaments layered
-// over the hero. '' keeps the original hardcoded washi-tape + two sparkles.
-function HeroDecoration({ decoration }: { decoration: string }) {
-  if (decoration === 'none') return null;
-  if (decoration === 'sparkles') {
-    return (
-      <>
-        <View style={[styles.decoPos, { top: 12, right: 14 }]} pointerEvents="none"><Sparkle size={16} color={Colors.lavenderDeep} /></View>
-        <View style={[styles.decoPos, { top: 30, right: 34 }]} pointerEvents="none"><Sparkle size={9} color={Colors.butterDeep} /></View>
-        <View style={[styles.decoPos, { bottom: 14, left: 14 }]} pointerEvents="none"><Sparkle size={13} color={Colors.sakuraDeep} /></View>
-        <View style={[styles.decoPos, { bottom: 32, left: 32 }]} pointerEvents="none"><Sparkle size={8} color={Colors.lavenderDeep} /></View>
-      </>
-    );
-  }
-  if (decoration === 'hearts') {
-    return (
-      <>
-        <View style={[styles.decoPos, { top: 12, left: 14, transform: [{ rotate: '-14deg' }] }]} pointerEvents="none"><Heart size={14} color={Colors.sakuraDeep} /></View>
-        <View style={[styles.decoPos, { top: 26, right: 16, transform: [{ rotate: '10deg' }] }]} pointerEvents="none"><Heart size={11} color={Colors.sakura} /></View>
-        <View style={[styles.decoPos, { bottom: 14, right: 30, transform: [{ rotate: '-8deg' }] }]} pointerEvents="none"><Heart size={9} color={Colors.sakuraDeep} outline /></View>
-        <View style={[styles.decoPos, { bottom: 24, left: 20, transform: [{ rotate: '12deg' }] }]} pointerEvents="none"><Heart size={12} color={Colors.sakura} /></View>
-      </>
-    );
-  }
-  if (decoration === 'stars') {
-    return (
-      <>
-        <View style={[styles.decoPos, { top: 12, right: 14, transform: [{ rotate: '12deg' }] }]} pointerEvents="none"><Star size={14} color={Colors.butterDeep} /></View>
-        <View style={[styles.decoPos, { top: 34, left: 18, transform: [{ rotate: '-10deg' }] }]} pointerEvents="none"><Star size={10} color={Colors.butter} /></View>
-        <View style={[styles.decoPos, { bottom: 16, left: 32 }]} pointerEvents="none"><Sparkle size={9} color={Colors.butterDeep} /></View>
-        <View style={[styles.decoPos, { bottom: 12, right: 24, transform: [{ rotate: '8deg' }] }]} pointerEvents="none"><Star size={12} color={Colors.butterDeep} /></View>
-      </>
-    );
-  }
-  if (decoration === 'floral') {
-    return (
-      <>
-        <View style={[styles.decoPos, { top: 10, left: 12 }]} pointerEvents="none"><Sakura size={18} /></View>
-        <View style={[styles.decoPos, { top: 26, left: 30 }]} pointerEvents="none"><Sakura size={11} color={Colors.lavender} /></View>
-        <View style={[styles.decoPos, { bottom: 12, right: 14 }]} pointerEvents="none"><Sakura size={16} /></View>
-        <View style={[styles.decoPos, { bottom: 30, right: 32 }]} pointerEvents="none"><Sakura size={10} color={Colors.lavender} /></View>
-      </>
-    );
-  }
-  if (decoration === 'washi') {
-    return (
-      <>
-        <View style={[styles.decoPos, { top: -8, left: 18 }]} pointerEvents="none">
-          <WashiTape width={64} height={14} pattern="stripe" color={Colors.lavender} rotate={-6} />
-        </View>
-        <View style={[styles.decoPos, { top: -8, right: 18 }]} pointerEvents="none">
-          <WashiTape width={64} height={14} pattern="dot" color={Colors.sakura} rotate={5} />
-        </View>
-      </>
-    );
-  }
-  // classic default
-  return (
-    <>
-      <View style={styles.tape} pointerEvents="none">
-        <WashiTape width={72} height={14} pattern="floral" color={Colors.sakura} rotate={-4} />
-      </View>
-      <View style={styles.sparkleTR} pointerEvents="none">
-        <Sparkle size={14} color={Colors.lavenderDeep} />
-      </View>
-      <View style={styles.sparkleBL} pointerEvents="none">
-        <Sparkle size={10} color={Colors.butterDeep} />
-      </View>
-    </>
-  );
-}
-
-function StatusPill({ label, style }: { label: string; style?: object }) {
-  const matched = findSexualityOption(label);
-  return (
-    <View style={[styles.statusPill, style]}>
-      {matched?.colors && (
-        <View style={styles.statusPillFlag}><FlagIcon colors={matched.colors} width={16} height={11} /></View>
-      )}
-      <Text style={styles.statusPillText}>{label}</Text>
-    </View>
-  );
-}
 
 function SectionLabel({ children }: { children: string }) {
   return (
@@ -181,6 +106,7 @@ export function ProfileCard({
   username,
   subtitle,
   bio,
+  tagline,
   photoUri,
   fallbackColor = Colors.sakura,
   type,
@@ -198,9 +124,11 @@ export function ProfileCard({
   cardTransparent,
   textColor,
   borderStyle = '',
-  decoration = '',
   nameFont = '',
-  statusLabel,
+  nameOrnament = '',
+  flags = [],
+  avatarFrame = '',
+  avatarFrameUrl = '',
   followerCount,
   followingCount,
   followAction,
@@ -209,7 +137,6 @@ export function ProfileCard({
   pairedPronouns,
   pairedAvatarUri,
   pairedFallbackColor = Colors.lavender,
-  pairedStatusLabel,
 }: Props) {
   const stats = [
     type ? { label: 'type', value: type.label, color: type.color } : null,
@@ -222,52 +149,70 @@ export function ProfileCard({
 
   const textStyle = textColor ? { color: textColor } : null;
   const nameFontStyle = nameFont && NAME_FONT_MAP[nameFont] ? { fontFamily: NAME_FONT_MAP[nameFont] } : null;
+  const ornamentColor = textColor || Colors.ink;
 
   const gradientColors = cardBgGradient ? (cardBgGradient.split(',').filter(Boolean) as string[]) : null;
   // best-effort match so the torn strip reads as this card's own paper, not a random overlay
   const tornColor = cardTransparent ? Colors.paper
     : cardBgColor || (gradientColors && gradientColors[gradientColors.length - 1]) || Colors.vellum;
 
+  // hero card's rendered size — needed to size the lace/pattern SVG overlays to match
+  const [heroSize, setHeroSize] = useState({ width: 0, height: 0 });
+  const onHeroLayout = (e: LayoutChangeEvent) => {
+    const { width, height } = e.nativeEvent.layout;
+    setHeroSize((prev) => (prev.width === width && prev.height === height ? prev : { width, height }));
+  };
+
+  // edge treatment and decorations are independent axes packed into one string — see cardTheme.ts
+  const { edge: borderEdge, stickers: hasStickers, pattern: hasPattern } = parseBorderStyle(borderStyle);
+
   // border frame treatment for the hero card
   const heroBorderStyle =
-    borderStyle === 'dashed' ? { borderWidth: 1.5, borderStyle: 'dashed' as const, borderColor: Colors.lineStrong } :
-    borderStyle === 'polaroid' ? { borderWidth: 10, borderColor: '#ffffff' } :
-    borderStyle === 'torn' ? { borderBottomWidth: 0 } :
-    null; // 'double' and '' keep the default 1px solid border
+    borderEdge === 'polaroid' ? { borderWidth: 10, borderColor: '#ffffff' } :
+    borderEdge === 'torn' ? { borderBottomWidth: 0 } :
+    borderEdge === 'lace' ? { borderWidth: 0 } :
+    null; // '' keeps the default 1px solid border
 
   // ── Hero: identity only — everything else lives in its own section below ──
   const heroContent = (
     <>
-      <HeroDecoration decoration={decoration} />
-
       {showPairedIdentity ? (
         <View style={styles.pairedWrap}>
-          <View style={[styles.pairedAvatar, { backgroundColor: fallbackColor }]}>
-            {photoUri ? (
-              <Image source={{ uri: photoUri }} style={styles.pairedAvatarImg} contentFit="cover" />
-            ) : (
-              <Text style={styles.pairedAvatarInitial}>{name.trim().charAt(0).toUpperCase() || '♡'}</Text>
-            )}
+          <View style={styles.pairedAvatarOuter}>
+            <AvatarFrame kind={avatarFrame} url={avatarFrameUrl} size={74} />
+            <View style={[styles.pairedAvatar, { backgroundColor: fallbackColor }]}>
+              {photoUri ? (
+                <Image source={{ uri: photoUri }} style={styles.pairedAvatarImg} contentFit="cover" />
+              ) : (
+                <Text style={styles.pairedAvatarInitial}>{name.trim().charAt(0).toUpperCase() || '♡'}</Text>
+              )}
+            </View>
           </View>
           <View style={styles.pairedHeartBadge}>
             <Heart size={13} color={Colors.sakuraDeep} />
           </View>
-          <View style={[styles.pairedAvatar, { backgroundColor: pairedFallbackColor }]}>
-            {pairedAvatarUri ? (
-              <Image source={{ uri: pairedAvatarUri }} style={styles.pairedAvatarImg} contentFit="cover" />
-            ) : (
-              <Text style={styles.pairedAvatarInitial}>{(pairedName ?? '').trim().charAt(0).toUpperCase() || '♡'}</Text>
-            )}
+          <View style={styles.pairedAvatarOuter}>
+            <AvatarFrame kind={avatarFrame} url={avatarFrameUrl} size={74} />
+            <View style={[styles.pairedAvatar, { backgroundColor: pairedFallbackColor }]}>
+              {pairedAvatarUri ? (
+                <Image source={{ uri: pairedAvatarUri }} style={styles.pairedAvatarImg} contentFit="cover" />
+              ) : (
+                <Text style={styles.pairedAvatarInitial}>{(pairedName ?? '').trim().charAt(0).toUpperCase() || '♡'}</Text>
+              )}
+            </View>
           </View>
         </View>
       ) : (
-        <View style={styles.avatarWrap}>
-          <View style={[styles.avatar, { backgroundColor: fallbackColor }]}>
-            {photoUri ? (
-              <Image source={{ uri: photoUri }} style={styles.avatarImg} contentFit="cover" />
-            ) : (
-              <Text style={styles.avatarInitial}>{name.trim().charAt(0).toUpperCase() || '♡'}</Text>
-            )}
+        <View style={styles.avatarOuter}>
+          <AvatarFrame kind={avatarFrame} url={avatarFrameUrl} size={96} />
+          <View style={styles.avatarWrap}>
+            <View style={[styles.avatar, { backgroundColor: fallbackColor }]}>
+              {photoUri ? (
+                <Image source={{ uri: photoUri }} style={styles.avatarImg} contentFit="cover" />
+              ) : (
+                <Text style={styles.avatarInitial}>{name.trim().charAt(0).toUpperCase() || '♡'}</Text>
+              )}
+            </View>
           </View>
         </View>
       )}
@@ -277,22 +222,27 @@ export function ProfileCard({
           <View style={styles.pairedNameCol}>
             <Text style={[styles.pairedNameText, nameFontStyle, textStyle]} numberOfLines={1}>{name || '—'}</Text>
             {!!pronouns && <Text style={[styles.pairedPronounsText, textStyle]}>{pronouns}</Text>}
-            {!!statusLabel && <StatusPill label={statusLabel} style={styles.pairedStatusPill} />}
           </View>
           <Heart size={10} color={Colors.sakuraDeep} />
           <View style={styles.pairedNameCol}>
             <Text style={[styles.pairedNameText, nameFontStyle, textStyle]} numberOfLines={1}>{pairedName || '—'}</Text>
             {!!pairedPronouns && <Text style={[styles.pairedPronounsText, textStyle]}>{pairedPronouns}</Text>}
-            {!!pairedStatusLabel && <StatusPill label={pairedStatusLabel} style={styles.pairedStatusPill} />}
           </View>
         </View>
       ) : (
         <>
           <View style={styles.nameRow}>
-            <Text style={[styles.name, nameFontStyle, textStyle]} numberOfLines={1}>{name || '—'}</Text>
+            <View style={styles.nameGroup}>
+              {!!nameOrnament && <NameOrnament kind={nameOrnament} size={16} color={ornamentColor} />}
+              <Text style={[styles.name, nameFontStyle, textStyle]} numberOfLines={1}>{name || '—'}</Text>
+              {!!nameOrnament && <NameOrnament kind={nameOrnament} size={16} color={ornamentColor} flip />}
+            </View>
             {!!username && <Text style={[styles.username, textStyle]}>@{username}</Text>}
+            {!!subtitle && <Text style={[styles.subtitle, textStyle]}>{subtitle}</Text>}
           </View>
           {!!pronouns && <Text style={[styles.pronouns, textStyle]}>{pronouns}</Text>}
+          <ProfileFlags flags={flags} textColor={textColor} />
+          {!!tagline && <Text style={[styles.tagline, textStyle]} numberOfLines={3}>{tagline}</Text>}
           {(followerCount !== undefined || followingCount !== undefined) && (
             <View style={styles.socialStatsRow}>
               <View style={styles.socialStat}>
@@ -306,15 +256,13 @@ export function ProfileCard({
             </View>
           )}
           {!!followAction && <View style={styles.followActionRow}>{followAction}</View>}
-          {!!subtitle && <Text style={[styles.subtitle, textStyle]}>{subtitle}</Text>}
-          {!!statusLabel && <StatusPill label={statusLabel} />}
         </>
       )}
 
-      {borderStyle === 'double' && (
-        <View style={styles.doubleBorderOverlay} pointerEvents="none" />
+      {borderEdge === 'lace' && heroSize.width > 0 && (
+        <LaceFrame width={heroSize.width} height={heroSize.height} />
       )}
-      {borderStyle === 'torn' && (
+      {borderEdge === 'torn' && (
         <View style={styles.tornOverlay} pointerEvents="none">
           <TornEdge width={340} height={12} color={tornColor} />
         </View>
@@ -322,40 +270,52 @@ export function ProfileCard({
     </>
   );
 
+  const patternOverlay = hasPattern && heroSize.width > 0 && (
+    <PatternBackdrop width={heroSize.width} height={heroSize.height} />
+  );
+
   return (
     <View style={styles.page}>
-      {cardBgImage ? (
-        <View style={[styles.hero, heroBorderStyle]}>
-          <Image
-            source={{ uri: cardBgImage }}
-            style={[StyleSheet.absoluteFill, styles.heroBgImage]}
-            contentFit="cover"
-            {...MEDIA_IMAGE}
-          />
-          <View style={styles.heroImageOverlay} />
-          {heroContent}
-        </View>
-      ) : gradientColors && gradientColors.length >= 2 ? (
-        <LinearGradient
-          colors={gradientColors as [string, string, ...string[]]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={[styles.hero, heroBorderStyle]}
-        >
-          {heroContent}
-        </LinearGradient>
-      ) : (
-        <View
-          style={[
-            styles.hero,
-            cardTransparent ? styles.heroTransparent : null,
-            cardBgColor ? { backgroundColor: cardBgColor } : null,
-            heroBorderStyle,
-          ]}
-        >
-          {heroContent}
-        </View>
-      )}
+      <View style={styles.heroWrap}>
+        {cardBgImage ? (
+          <View style={[styles.hero, heroBorderStyle]} onLayout={onHeroLayout}>
+            <Image
+              source={{ uri: cardBgImage }}
+              style={[StyleSheet.absoluteFill, styles.heroBgImage]}
+              contentFit="cover"
+              {...MEDIA_IMAGE}
+            />
+            <View style={styles.heroImageOverlay} />
+            {patternOverlay}
+            {heroContent}
+          </View>
+        ) : gradientColors && gradientColors.length >= 2 ? (
+          <LinearGradient
+            colors={gradientColors as [string, string, ...string[]]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={[styles.hero, heroBorderStyle]}
+            onLayout={onHeroLayout}
+          >
+            {patternOverlay}
+            {heroContent}
+          </LinearGradient>
+        ) : (
+          <View
+            style={[
+              styles.hero,
+              cardTransparent ? styles.heroTransparent : null,
+              cardBgColor ? { backgroundColor: cardBgColor } : null,
+              heroBorderStyle,
+            ]}
+            onLayout={onHeroLayout}
+          >
+            {patternOverlay}
+            {heroContent}
+          </View>
+        )}
+        {hasStickers && <StickerCorners />}
+      </View>
 
       {/* about */}
       <View style={styles.section}>
@@ -432,6 +392,7 @@ export function ProfileCard({
 const styles = StyleSheet.create({
   page: { gap: Spacing.s5 },
 
+  heroWrap: { position: 'relative' },
   hero: {
     backgroundColor: Colors.vellum,
     borderWidth: 1,
@@ -450,34 +411,15 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.55)',
   },
   heroTransparent: { backgroundColor: 'transparent', ...Platform.select({ ios: { shadowOpacity: 0 }, default: {} }), elevation: 0 },
-  tape: { position: 'absolute', top: -8, alignSelf: 'center' },
-  sparkleTR: { position: 'absolute', top: 14, right: 16 },
-  sparkleBL: { position: 'absolute', bottom: 14, left: 16 },
-  decoPos: { position: 'absolute' },
-  doubleBorderOverlay: {
-    position: 'absolute', top: 5, left: 5, right: 5, bottom: 5,
-    borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.r4 - 5,
-  },
   tornOverlay: { position: 'absolute', left: 0, right: 0, bottom: -1 },
-  statusPill: {
-    flexDirection: 'row', alignItems: 'center', gap: 5,
-    marginTop: Spacing.s2,
-    paddingHorizontal: Spacing.s3, paddingVertical: 4,
-    borderRadius: Radius.pill,
-    backgroundColor: 'rgba(255,255,255,0.55)',
-    borderWidth: 1, borderColor: Colors.line,
-  },
-  statusPillFlag: { borderRadius: 2, overflow: 'hidden' },
-  statusPillText: {
-    fontFamily: FontFamily.uiMedium, fontSize: sf(10), color: Colors.ink2,
-    letterSpacing: 0.4,
-  },
+  avatarOuter: { position: 'relative', alignItems: 'center', justifyContent: 'center' },
   avatarWrap: {
     padding: 3,
     borderRadius: Radius.pill,
     borderWidth: 1.4,
     borderColor: Colors.line,
     borderStyle: 'dashed',
+    position: 'relative',
   },
   avatar: {
     width: 96, height: 96, borderRadius: Radius.pill,
@@ -488,6 +430,7 @@ const styles = StyleSheet.create({
   pairedWrap: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 2,
   },
+  pairedAvatarOuter: { position: 'relative', alignItems: 'center', justifyContent: 'center' },
   pairedAvatar: {
     width: 74, height: 74, borderRadius: Radius.pill,
     alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
@@ -511,7 +454,7 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.displayItalic, fontSize: sf(19), lineHeight: sf(23), color: Colors.ink,
   },
   pairedPronounsText: { fontFamily: FontFamily.ui, fontSize: sf(11), color: Colors.ink2 },
-  pairedStatusPill: { marginTop: 4, paddingHorizontal: Spacing.s2, maxWidth: 108 },
+  nameGroup: { flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 1 },
   nameRow: {
     flexDirection: 'row',
     alignItems: 'baseline',
@@ -529,7 +472,12 @@ const styles = StyleSheet.create({
   },
   username: { fontFamily: FontFamily.uiMedium, fontSize: sf(13), color: Colors.sakuraDeep, flexShrink: 0 },
   pronouns: { fontFamily: FontFamily.ui, fontSize: sf(12), color: Colors.ink2, marginTop: 2 },
-  subtitle: { fontFamily: FontFamily.marker, fontSize: sf(10), color: Colors.ink3, letterSpacing: 1.2, marginTop: 5, textTransform: 'uppercase' },
+  tagline: {
+    fontFamily: FontFamily.ui, fontSize: sf(13), lineHeight: sf(19),
+    color: Colors.ink2, textAlign: 'center',
+    marginTop: Spacing.s2, paddingHorizontal: Spacing.s2,
+  },
+  subtitle: { fontFamily: FontFamily.marker, fontSize: sf(10), color: Colors.ink3, letterSpacing: 1.2, textTransform: 'uppercase', flexShrink: 0 },
   socialStatsRow: { flexDirection: 'row', justifyContent: 'center', gap: 28, marginTop: Spacing.s3 },
   socialStat: { alignItems: 'center' },
   socialStatValue: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(15), color: Colors.ink },

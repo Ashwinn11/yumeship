@@ -14,6 +14,14 @@ export const SEXUALITY_OPTIONS: SexualityOption[] = [
   { key: 'omnisexual', label: 'Omnisexual', colors: ['#FE9ACE', '#FF53BF', '#200044', '#6760FE', '#8EA6FF'] },
   // distinct from the Pride rainbow — its own 8-stripe flag, not a rainbow reuse
   { key: 'queer', label: 'Queer', colors: ['#000000', '#99D9EA', '#00A2E8', '#B5E61D', '#FFFFFF', '#FFC90E', '#FD6666', '#FFAEC9'] },
+  { key: 'transgender', label: 'Transgender', colors: ['#5BCEFA', '#F5A9B8', '#FFFFFF', '#F5A9B8', '#5BCEFA'] },
+  { key: 'nonbinary', label: 'Non-binary', colors: ['#FCF434', '#FFFFFF', '#9C59D1', '#2C2C2C'] },
+  { key: 'genderfluid', label: 'Genderfluid', colors: ['#FF76A4', '#FFFFFF', '#C011D7', '#000000', '#2F3CBE'] },
+  { key: 'genderqueer', label: 'Genderqueer', colors: ['#B57EDC', '#FFFFFF', '#4A8123'] },
+  { key: 'agender', label: 'Agender', colors: ['#000000', '#BCC4C7', '#FFFFFF', '#B7F684', '#FFFFFF', '#BCC4C7', '#000000'] },
+  { key: 'bigender', label: 'Bigender', colors: ['#C479A2', '#EDA5CD', '#D6C7E8', '#FFFFFF', '#D6C7E8', '#9AC7E8', '#6D82D1'] },
+  { key: 'demigirl', label: 'Demigirl', colors: ['#7F7F7F', '#C4C4C4', '#FDADC8', '#FFFFFF', '#FDADC8', '#C4C4C4', '#7F7F7F'] },
+  { key: 'demiboy', label: 'Demiboy', colors: ['#7F7F7F', '#C4C4C4', '#9DD7EA', '#FFFFFF', '#9DD7EA', '#C4C4C4', '#7F7F7F'] },
   { key: 'straight', label: 'Straight' },
   { key: 'questioning', label: 'Questioning' },
   // real, actively-used self-descriptors (attraction to fictional characters) confirmed

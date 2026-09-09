@@ -10,8 +10,8 @@ import { supabase } from './supabase';
 const CACHE_CONTROL = 'public, max-age=31536000, immutable';
 
 const PUBLIC_BASE: Record<string, string> = {
-  avatars: 'https://avatars.asograde.com',
-  'post-media': 'https://media.asograde.com',
+  avatars: 'https://avatars.myyume.app',
+  'post-media': 'https://media.myyume.app',
 };
 
 /**
@@ -49,7 +49,7 @@ export async function uploadToBucket(
     body: bytes,
   });
   if (!res.ok) throw new Error(`upload failed: ${res.status}`);
-  return data.publicUrl;
+  return PUBLIC_BASE[bucket] ? `${PUBLIC_BASE[bucket]}/${path}` : data.publicUrl;
 }
 
 /**

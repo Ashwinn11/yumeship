@@ -175,9 +175,9 @@ export default function PublicUserProfileScreen() {
               pronouns={profile.pronouns}
               username={profile.username}
               bio={profile.bio}
+                tagline={profile.tagline}
               photoUri={profile.avatarUrl}
               fallbackColor={profile.color || Colors.sakura}
-              statusLabel={profile.statusLabel}
               height={profile.height}
               weight={profile.weight}
               song={profile.song}
@@ -189,9 +189,12 @@ export default function PublicUserProfileScreen() {
               cardTransparent={profile.cardTransparent}
               textColor={profile.textColor}
               borderStyle={profile.borderStyle}
-              decoration={profile.decoration}
               nameFont={profile.nameFont}
-              {...pairedProps(pairedFo && { name: pairedFo.name, pronouns: pairedFo.pronouns, avatarUri: pairedFo.avatarUrl, statusLabel: pairedFo.statusLabel })}
+              nameOrnament={profile.nameOrnament}
+              flags={profile.flags}
+              avatarFrame={profile.avatarFrame}
+              avatarFrameUrl={profile.avatarFrameUrl}
+              {...pairedProps(pairedFo && { name: pairedFo.name, pronouns: pairedFo.pronouns, avatarUri: pairedFo.avatarUrl })}
               followerCount={profile.followerCount}
               followingCount={profile.followingCount}
               followAction={
@@ -216,7 +219,6 @@ export default function PublicUserProfileScreen() {
                       avatarUri={f.avatarUrl}
                       pronouns={f.pronouns}
                       bio={f.bio}
-                      statusLabel={f.statusLabel}
                       onPress={() => router.push(`/social/fo/${f.id}` as any)}
                     />
                   ))}

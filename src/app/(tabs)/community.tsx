@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/Button';
 import { Mark } from '@/components/ui/Mark';
 import { Star } from '@/components/deco/Star';
 import { Cloud } from '@/components/deco/Cloud';
+import { Heart } from '@/components/deco/Heart';
 import { Sparkle } from '@/components/deco/Sparkle';
 import { StickerEnvelope, StickerPolaroid } from '@/components/deco/Stickers';
 import { useIPad } from '@/hooks/use-ipad';
@@ -29,7 +30,9 @@ import { CozyModal } from '@/components/ui/CozyModal';
 import { Image } from 'expo-image';
 import { AccountSheet } from '@/components/community/AccountSheet';
 import { AVATAR_IMAGE } from '@/lib/imageProps';
+import { ActivityPromptRow } from '@/components/community/ActivityPromptRow';
 import { PostCard } from '@/components/community/PostCard';
+import { TodaysActivityCard } from '@/components/community/TodaysActivityCard';
 import type { CommunityPost } from '@/store/community';
 import {
   checkUsernameAvailable,
@@ -270,31 +273,22 @@ function Feed({ insets }: { insets: { top: number } }) {
   useEffect(() => {
     fetchTodaysActivity().then(setFeatured);
   }, []);
-  const likeFeaturedOptimistic = useCallback(async () => {
-    if (!featured) return;
-    const wasLiked = featured.likedByMe;
-    setFeatured((f) => (f ? { ...f, likedByMe: !wasLiked, likeCount: f.likeCount + (wasLiked ? -1 : 1) } : f));
-    try {
-      await toggleLike(featured.id, wasLiked);
-    } catch {
-      setFeatured((f) => (f ? { ...f, likedByMe: wasLiked, likeCount: f.likeCount + (wasLiked ? 1 : -1) } : f));
-      showToast("couldn't update like — try again");
-    }
-  }, [featured, showToast]);
-
   const renderPost = useCallback(
-    ({ item }: { item: CommunityPost }) => (
-      <PostCard
-        post={item}
-        onToggleLike={() =>
-          tab === 'activities'
-            ? likePoolOptimistic(item.id)
-            : toggleLikeOptimistic(item.id, () => showToast("couldn't update like — try again"))
-        }
-        onPollVote={(i) => pollVoteOptimistic(item.id, i, () => showToast("couldn't update vote — try again"))}
-      />
-    ),
-    [tab, likePoolOptimistic, toggleLikeOptimistic, pollVoteOptimistic, showToast],
+    ({ item, index }: { item: CommunityPost; index: number }) =>
+      tab === 'activities' ? (
+        <ActivityPromptRow
+          post={item}
+          onToggleLike={() => likePoolOptimistic(item.id)}
+          isLast={index === pool.length - 1}
+        />
+      ) : (
+        <PostCard
+          post={item}
+          onToggleLike={() => toggleLikeOptimistic(item.id, () => showToast("couldn't update like — try again"))}
+          onPollVote={(i) => pollVoteOptimistic(item.id, i, () => showToast("couldn't update vote — try again"))}
+        />
+      ),
+    [tab, pool.length, likePoolOptimistic, toggleLikeOptimistic, pollVoteOptimistic, showToast],
   );
 
   const activityData = tab === 'activities';
@@ -330,7 +324,7 @@ function Feed({ insets }: { insets: { top: number } }) {
         keyExtractor={keyExtractor}
         renderItem={renderPost}
         contentContainerStyle={[styles.feedContent, column]}
-        ItemSeparatorComponent={FeedSeparator}
+        ItemSeparatorComponent={activityData ? undefined : FeedSeparator}
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={Colors.sakuraDeep} />}
         onEndReached={activityData ? undefined : loadMore}
         onEndReachedThreshold={0.4}
@@ -346,17 +340,22 @@ function Feed({ insets }: { insets: { top: number } }) {
             <>
               {featured && (
                 <View style={styles.featuredWrap}>
-                  <Text style={styles.featuredLabel}>today's activity</Text>
-                  <PostCard post={featured} onToggleLike={likeFeaturedOptimistic} />
+                  <TodaysActivityCard activity={featured} />
                 </View>
               )}
               {activityData && (
-                <Pressable
-                  style={styles.submitPromptRow}
-                  onPress={() => router.push('/social/post/new?kind=activity' as any)}
-                >
-                  <Text style={styles.submitPromptText}>+ submit a prompt</Text>
-                </Pressable>
+                <View style={styles.submittedHeaderCard}>
+                  <View style={styles.submittedHeaderLeft}>
+                    <Heart size={16} color={Colors.sakuraDeep} />
+                    <View>
+                      <Text style={styles.submittedTitle}>Submitted Activities</Text>
+                      <Text style={styles.submittedSub}>Help pick tomorrow's</Text>
+                    </View>
+                  </View>
+                  <Pressable onPress={() => router.push('/social/post/new?kind=activity' as any)} hitSlop={8}>
+                    <Text style={styles.submittedSubmitLink}>Submit</Text>
+                  </Pressable>
+                </View>
               )}
             </>
           ) : null
@@ -365,9 +364,9 @@ function Feed({ insets }: { insets: { top: number } }) {
           isLoading ? (
             <FeedSkeleton />
           ) : activityData ? (
-            <View style={styles.feedEmpty}>
+            <View style={[styles.feedEmpty, styles.submittedEmptyClose]}>
               <Text style={styles.emptyTitle}>the pool's empty</Text>
-              <Text style={styles.claimSub}>submit a prompt and be the first to get voted up ♡</Text>
+              <Text style={styles.claimSub}>submit a prompt and be the first to get liked up ♡</Text>
             </View>
           ) : (
             <View style={styles.feedEmpty}>
@@ -745,17 +744,23 @@ const styles = StyleSheet.create({
   feedWrap: { flex: 1 },
   feedToastWrap: { position: 'absolute', top: 4, left: 0, right: 0, zIndex: 10, alignItems: 'center' },
   featuredWrap: { paddingBottom: Spacing.s3 },
-  featuredLabel: {
-    fontFamily: FontFamily.uiSemiBold, fontSize: sf(11), color: Colors.sakuraDeep,
-    textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: Spacing.s2,
+  submittedHeaderCard: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    backgroundColor: Colors.vellum,
+    borderTopWidth: 1, borderLeftWidth: 1, borderRightWidth: 1, borderColor: Colors.line,
+    borderTopLeftRadius: Radius.r4, borderTopRightRadius: Radius.r4,
+    padding: Spacing.s4,
   },
-  submitPromptRow: {
-    alignItems: 'center', justifyContent: 'center',
-    paddingVertical: 12, borderRadius: Radius.r4,
-    borderWidth: 1, borderColor: Colors.line, borderStyle: 'dashed',
-    backgroundColor: Colors.paperDeep, marginBottom: Spacing.s3,
+  submittedHeaderLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  submittedTitle: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(14), color: Colors.ink },
+  submittedSub: { fontFamily: FontFamily.ui, fontSize: sf(11.5), color: Colors.ink3, marginTop: 1 },
+  submittedSubmitLink: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(13), color: Colors.sakuraDeep },
+  submittedEmptyClose: {
+    backgroundColor: Colors.vellum,
+    borderLeftWidth: 1, borderRightWidth: 1, borderBottomWidth: 1, borderColor: Colors.line,
+    borderBottomLeftRadius: Radius.r4, borderBottomRightRadius: Radius.r4,
+    paddingVertical: Spacing.s6,
   },
-  submitPromptText: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(13), color: Colors.sakuraDeep },
   tabsRow: {
     flexDirection: 'row',
     gap: 8,
