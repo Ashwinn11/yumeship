@@ -8,7 +8,7 @@ import { KawaiiPanel, BlankPill, PhotoBox, DualSlider, INK, getContrastColor } f
 import { Heart } from '@/components/deco/Heart';
 import { DateField, calcElapsed } from '@/components/ui/DateField';
 import { useTemplateCtx } from '@/store/templateData';
-import { FontFamily, Radius, Spacing, SheetColumn, sf } from '@/constants/theme';
+import { FontFamily, Radius, Spacing, SheetColumn, sf, SHARING_TEMPLATE_OPTS } from '@/constants/theme';
 
 const PINK_INK = '#9c2d5a';
 const PINK_BG = '#fbe7ee';
@@ -27,7 +27,7 @@ const INFO_FIELDS = [
   { field: 'loveLanguage', label: 'love language' },
   { field: 'mbti', label: 'mbti' },
 ] as const;
-const SHARING_OPTS = ['Yes', 'No', 'Selective'] as const;
+const SHARING_OPTS = SHARING_TEMPLATE_OPTS;
 const ORIENTATION_OPTS = ['Gay', 'Straight', 'Bi', 'Pan', 'Ace', 'Other'] as const;
 const PALETTE_SWATCHES = [
   '#9c2d5a', '#d77a8d', '#f3a8c4', '#fbe7ee',

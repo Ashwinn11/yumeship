@@ -12,7 +12,7 @@ import { ThoughtCloud } from '@/components/ui';
 import { Button } from '@/components/ui/Button';
 import { Mark } from '@/components/ui/Mark';
 import { StepDots } from '@/components/ui/StepDots';
-import { Colors, FontFamily, FontSize, Radius, Spacing ,sf } from '@/constants/theme';
+import { Colors, FontFamily, FontSize, REL_ORDER, Radius, RelationshipColors, RelationshipSoft, Spacing, type RelationshipType ,sf } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
 import { resetOnb, setOnbField } from '@/store/onboarding';
 import { usePremium } from '@/store/premium';
@@ -46,7 +46,7 @@ export default function OnbFO() {
     return m ? m.id : 'sakura';
   });
   const [coverUri, setCoverUri] = useState(editingShip?.coverUri ?? '');
-  const [relType, setRelType] = useState<'romantic' | 'platonic' | 'familial'>(editingShip?.relType ?? 'romantic');
+  const [relType, setRelType] = useState<RelationshipType>((editingShip?.relType as RelationshipType) ?? 'romantic');
 
   const [kind, setKind] = useState<'single' | 'poly'>(editingShip?.kind ?? 'single');
 
@@ -286,13 +286,11 @@ export default function OnbFO() {
           {/* RELATIONSHIP field */}
           <View>
             <Text style={styles.fieldLabel}>RELATIONSHIP</Text>
-            <View style={{ flexDirection: 'row', gap: 6, marginTop: 6 }}>
-              {(['romantic', 'platonic', 'familial'] as const).map((r) => {
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
+              {REL_ORDER.map((r) => {
                 const isActive = relType === r;
-                let activeColor: string = Colors.sakuraDeep;
-                let activeBg: string = Colors.sakuraSoft;
-                if (r === 'platonic') { activeColor = Colors.sageDeep; activeBg = Colors.sageSoft; }
-                if (r === 'familial') { activeColor = Colors.peachDeep; activeBg = Colors.peachSoft; }
+                const activeColor: string = RelationshipColors[r];
+                const activeBg: string = RelationshipSoft[r];
 
                 return (
                   <Pressable

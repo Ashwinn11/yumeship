@@ -24,9 +24,9 @@ export function initDb() {
   try { db.execSync(`ALTER TABLE fo ADD COLUMN gallery_sync_map TEXT NOT NULL DEFAULT '{}'`); } catch (_) {}
   try { db.execSync(`ALTER TABLE fo ADD COLUMN card_bg_gradient TEXT NOT NULL DEFAULT ''`); } catch (_) {}
   try { db.execSync(`ALTER TABLE fo ADD COLUMN card_transparent INTEGER NOT NULL DEFAULT 0`); } catch (_) {}
+  try { db.execSync(`ALTER TABLE fo ADD COLUMN color TEXT NOT NULL DEFAULT ''`); } catch (_) {}
   try { db.execSync(`ALTER TABLE fo ADD COLUMN border_style TEXT NOT NULL DEFAULT ''`); } catch (_) {}
   try { db.execSync(`ALTER TABLE fo ADD COLUMN name_font TEXT NOT NULL DEFAULT ''`); } catch (_) {}
-  try { db.execSync(`ALTER TABLE fo ADD COLUMN name_ornament TEXT NOT NULL DEFAULT ''`); } catch (_) {}
   try { db.execSync(`ALTER TABLE fo ADD COLUMN status_label TEXT NOT NULL DEFAULT ''`); } catch (_) {}
   try { db.execSync(`ALTER TABLE fo_messages ADD COLUMN notif_id TEXT NOT NULL DEFAULT ''`); } catch (_) {}
   try { db.execSync(`ALTER TABLE fo_messages ADD COLUMN sender_name TEXT NOT NULL DEFAULT ''`); } catch (_) {}
@@ -48,9 +48,6 @@ export function initDb() {
   // the short bio that sits on the card itself — see migrateFlags below
   try { db.execSync(`ALTER TABLE fo ADD COLUMN flags TEXT NOT NULL DEFAULT '[]'`); } catch (_) {}
   try { db.execSync(`ALTER TABLE fo ADD COLUMN tagline TEXT NOT NULL DEFAULT ''`); } catch (_) {}
-  try { db.execSync(`ALTER TABLE fo ADD COLUMN avatar_frame TEXT NOT NULL DEFAULT ''`); } catch (_) {}
-  try { db.execSync(`ALTER TABLE fo ADD COLUMN avatar_animation_url TEXT NOT NULL DEFAULT ''`); } catch (_) {}
-  try { db.execSync(`ALTER TABLE fo ADD COLUMN avatar_animation_synced_uri TEXT NOT NULL DEFAULT ''`); } catch (_) {}
   db.execSync(`
     CREATE TABLE IF NOT EXISTS ships (
       id TEXT PRIMARY KEY,
@@ -105,12 +102,9 @@ export function initDb() {
       card_transparent INTEGER NOT NULL DEFAULT 0,
       border_style TEXT NOT NULL DEFAULT '',
       name_font TEXT NOT NULL DEFAULT '',
-      name_ornament TEXT NOT NULL DEFAULT '',
+      color TEXT NOT NULL DEFAULT '',
       status_label TEXT NOT NULL DEFAULT '',
       flags TEXT NOT NULL DEFAULT '[]',
-      avatar_frame TEXT NOT NULL DEFAULT '',
-      avatar_animation_url TEXT NOT NULL DEFAULT '',
-      avatar_animation_synced_uri TEXT NOT NULL DEFAULT '',
       created_at INTEGER NOT NULL
     );
     CREATE TABLE IF NOT EXISTS headcanons (
@@ -265,9 +259,12 @@ function migrateFlags() {
   } catch (_) {}
 }
 
+// Runs on every launch, so it must only ever rename vocabulary that is no longer
+// valid. 'mirror' was once folded into 'selective' here; it is a real stance
+// again (mirror-sharing), so renaming it now would wipe the value on restart.
 function migrateShareVocabulary() {
   const db = getDb();
-  const rename: [string, string][] = [['ng', 'no'], ['welcome', 'yes'], ['mirror', 'selective']];
+  const rename: [string, string][] = [['ng', 'no'], ['welcome', 'yes']];
   for (const [from, to] of rename) {
     db.runSync(`UPDATE ships SET share_type = ? WHERE share_type = ?`, to, from);
     db.runSync(`UPDATE fo SET share_status = ? WHERE share_status = ?`, to, from);
@@ -329,7 +326,7 @@ function repairMediaPaths() {
     // have to move in lockstep — otherwise a rescued photo no longer matches its
     // own bookkeeping and the next publish re-uploads everything
     ['fo', ['id'], ['photo_uri', 'notif_photo_uri', 'page_bg_image', 'card_bg_image', 'gallery', 'labels',
-                    'avatar_animation_url', 'avatar_synced_uri', 'gallery_sync_map']],
+                    'avatar_synced_uri', 'gallery_sync_map']],
     ['messages', ['id'], ['image_uri']],
     ['album_photos', ['id'], ['uri']],
     ['outfits', ['id'], ['uri']],

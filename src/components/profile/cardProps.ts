@@ -1,4 +1,4 @@
-import { RelationshipColors, SharingColors } from '@/constants/theme';
+import { RelationshipColors, RelationshipLabels, SharingColors, SharingLabels } from '@/constants/theme';
 import type { ProfileStatus } from './ProfileCard';
 
 /**
@@ -10,13 +10,11 @@ import type { ProfileStatus } from './ProfileCard';
  * only the values that involve a lookup or a shape transform go through here.
  */
 
-const REL_LABEL: Record<string, string> = { romantic: 'romantic', platonic: 'platonic', familial: 'familial' };
-const SHARE_LABEL: Record<string, string> = { yes: 'Yes', no: 'No', selective: 'Selective' };
 
 /** The F/O "type" badge — same derivation whether the F/O is local or public. */
 export function relationshipStatus(relStatus: string): ProfileStatus {
   return {
-    label: REL_LABEL[relStatus] ?? relStatus,
+    label: RelationshipLabels[relStatus as keyof typeof RelationshipLabels] ?? relStatus,
     color: RelationshipColors[relStatus as keyof typeof RelationshipColors] ?? RelationshipColors.romantic,
   };
 }
@@ -24,7 +22,7 @@ export function relationshipStatus(relStatus: string): ProfileStatus {
 /** The F/O "sharing" badge — same derivation whether the F/O is local or public. */
 export function sharingStatus(shareStatus: string): ProfileStatus {
   return {
-    label: SHARE_LABEL[shareStatus] ?? shareStatus,
+    label: SharingLabels[shareStatus as keyof typeof SharingLabels] ?? shareStatus,
     color: SharingColors[shareStatus as keyof typeof SharingColors] ?? SharingColors.selective,
   };
 }

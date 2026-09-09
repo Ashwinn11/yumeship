@@ -7,43 +7,77 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
 
-const STATES = [
+type BState = {
+  title: string; ja: string; tint: string; stroke: string; desc: string;
+  /** which shareStatus this card represents, so the one you actually hold can be marked */
+  stance: string;
+  checks: { label: string; on: boolean }[];
+};
+
+const STATES: BState[] = [
   {
-    title: 'NO SHARING', ja: '夢', tint: '#ffd6e2', stroke: '#c44e75',
+    title: 'NO SHARING', ja: '夢', tint: '#ffd6e2', stroke: '#c44e75', stance: 'no',
     desc: "they're mine. doubles dni.",
-    checks: ['doubles interact', 'fan art with double f/o', 'double tags / hashtags', 'RP with double'] as string[],
-    defaults: [false, false, false, false],
+    checks: ['doubles interact', 'fan art with double f/o', 'double tags / hashtags', 'RP with double']
+      .map((label) => ({ label, on: false })),
   },
   {
-    title: 'SELECTIVE', ja: '限', tint: '#fde9c6', stroke: '#b58732',
+    title: 'SELECTIVE', ja: '限', tint: '#fde9c6', stroke: '#b58732', stance: 'selective',
     desc: 'case by case. ask me first.',
-    checks: ['mutuals only', 'platonic doubles ok', 'fan art if tagged', 'non-shipping discussions'] as string[],
-    defaults: [true, true, true, true],
+    checks: ['mutuals only', 'platonic doubles ok', 'fan art if tagged', 'non-shipping discussions']
+      .map((label) => ({ label, on: true })),
   },
   {
-    title: 'OK SHARING', ja: '可', tint: '#d6ecda', stroke: '#3f8157',
+    title: 'OK SHARING', ja: '可', tint: '#d6ecda', stroke: '#3f8157', stance: 'yes',
     desc: 'the more the merrier.',
-    checks: ['all doubles welcome', 'co-headcanons', 'polyship intros', 'scenario swaps'] as string[],
-    defaults: [true, true, true, true],
+    checks: ['all doubles welcome', 'co-headcanons', 'polyship intros', 'scenario swaps']
+      .map((label) => ({ label, on: true })),
+  },
+  {
+    title: 'MIRROR', ja: '鏡', tint: '#fbecc4', stroke: '#b8902a', stance: 'mirror',
+    desc: "whatever you're comfy with. tell me yours.",
+    checks: ['i follow your lead', 'ask before tagging', 'quiet if you prefer', 'close if you are']
+      .map((label) => ({ label, on: true })),
   },
 ];
 
-const DEFAULT_CHECK_STATES = STATES.map((st) => [...st.defaults]);
 
 export function BoundariesContent({ editing = false }: { editing?: boolean }) {
   const ctx = useTemplateCtx();
   const customBg = ctx.bgColor || ctx.bgImage;
   const ink = useThemedInk();
 
-  const [checkStates, setCheckStates] = useState<boolean[][]>(() =>
-    JSON.parse(ctx.get('checkStates', 'null')) ?? DEFAULT_CHECK_STATES
-  );
+  // Reads the same `states` the vault's Boundaries feature writes, so editing your
+  // boundaries in one place is reflected in the other — this screen used to keep a
+  // private `checkStates` array positionally bound to its own hardcoded copy, and
+  // the two views of "my boundaries" could never agree.
+  const [states, setStates] = useState<BState[]>(() => {
+    try {
+      const saved = JSON.parse(ctx.get('states', 'null'));
+      if (Array.isArray(saved) && saved.length) return saved;
+    } catch {}
+    try {
+      // carry over ticks saved under the old private schema
+      const legacy = JSON.parse(ctx.get('checkStates', 'null'));
+      if (Array.isArray(legacy)) {
+        return STATES.map((st, i) => ({
+          ...st,
+          checks: st.checks.map((c, j) => ({ ...c, on: legacy[i]?.[j] ?? c.on })),
+        }));
+      }
+    } catch {}
+    return STATES;
+  });
+
+  const mine = ctx.get('sharing', '');
 
   const toggle = (si: number, ci: number) => {
     if (!editing) return;
-    setCheckStates((p) => {
-      const next = p.map((cs, i) => (i === si ? cs.map((c, j) => (j === ci ? !c : c)) : cs));
-      ctx.set('checkStates', JSON.stringify(next));
+    setStates((p) => {
+      const next = p.map((st, i) =>
+        i !== si ? st : { ...st, checks: st.checks.map((c, j) => (j === ci ? { ...c, on: !c.on } : c)) },
+      );
+      ctx.set('states', JSON.stringify(next));
       return next;
     });
   };
@@ -59,25 +93,34 @@ export function BoundariesContent({ editing = false }: { editing?: boolean }) {
       </View>
 
       <View style={s.states}>
-        {STATES.map((st, si) => (
-          <View key={si} style={[s.stateCard, { backgroundColor: st.tint, borderColor: st.stroke }]}>
+        {states.map((st, si) => (
+          <View
+            key={si}
+            style={[
+              s.stateCard,
+              { backgroundColor: st.tint, borderColor: st.stroke },
+              mine && st.stance === mine && { borderWidth: 3 },
+            ]}
+          >
             <View style={[s.seal, { borderColor: st.stroke }]}>
               <Text style={[s.sealJa, { color: st.stroke }]}>{st.ja}</Text>
             </View>
             <View style={s.stateContent}>
-              <Text style={[s.stateTitle, { color: st.stroke }]}>{st.title}</Text>
+              <Text style={[s.stateTitle, { color: st.stroke }]}>
+                {st.title}{mine && st.stance === mine ? '  ♡ mine' : ''}
+              </Text>
               <Text style={[s.stateDesc, { color: ink }]}>{st.desc}</Text>
               <View style={s.checkGrid}>
-                {st.checks.map((label, ci) => (
+                {st.checks.map((c, ci) => (
                   <Pressable
                     key={ci}
                     style={s.checkRow}
                     onPress={() => toggle(si, ci)}
                     disabled={!editing}
                   >
-                    <SquareCheck on={checkStates[si][ci]} size={11} stroke={st.stroke} />
-                    <Text style={[s.checkText, { color: ink, opacity: checkStates[si][ci] ? 1 : 0.8 }]}>
-                      {label}
+                    <SquareCheck on={c.on} size={11} stroke={st.stroke} />
+                    <Text style={[s.checkText, { color: ink, opacity: c.on ? 1 : 0.8 }]}>
+                      {c.label}
                     </Text>
                   </Pressable>
                 ))}

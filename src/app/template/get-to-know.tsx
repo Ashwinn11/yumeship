@@ -10,7 +10,7 @@ import { Heart } from '@/components/deco/Heart';
 import { Sparkle } from '@/components/deco';
 import { StickerCassette } from '@/components/deco/Stickers';
 import { useTemplateCtx } from '@/store/templateData';
-import { FontFamily, Spacing } from '@/constants/theme';
+import { FontFamily, Spacing, type SharingTemplateLabel } from '@/constants/theme';
 
 const STICKER_ROTATE = [-6, 4, -3];
 const STICKER_BADGE = ['★', '♡', '✧'];
@@ -52,7 +52,7 @@ export function GetToKnowContent({ editing = false }: { editing?: boolean }) {
   };
 
   const e = editing;
-  const sharing = (vals.sharing || undefined) as 'Yes' | 'No' | 'Selective' | undefined;
+  const sharing = (vals.sharing || undefined) as SharingTemplateLabel | undefined;
   const meFilled: FilledState  = JSON.parse(vals.meFilled  || '{}');
   const meDicho:  DichoState   = JSON.parse(vals.meDicho   || '{}');
   const themFilled: FilledState = JSON.parse(vals.themFilled || '{}');

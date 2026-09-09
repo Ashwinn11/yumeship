@@ -94,7 +94,7 @@ export default function PublicFoProfileScreen() {
                 bio={profile.bio}
                 tagline={profile.tagline}
                 photoUri={profile.avatarUrl}
-                fallbackColor={Colors.lavender}
+                fallbackColor={profile.color || Colors.sakura}
                 type={relationshipStatus(profile.relStatus)}
                 sharing={sharingStatus(profile.shareStatus)}
                 height={profile.height}
@@ -111,10 +111,7 @@ export default function PublicFoProfileScreen() {
                 textColor={profile.textColor}
                 borderStyle={profile.borderStyle}
                 nameFont={profile.nameFont}
-                nameOrnament={profile.nameOrnament}
                 flags={profile.flags}
-                avatarFrame={profile.avatarFrame}
-                avatarFrameUrl={profile.avatarFrameUrl}
               />
               <Text style={styles.postsLabel}>posts about them</Text>
             </>

@@ -6,20 +6,30 @@ import { Linking, LayoutChangeEvent, Platform, Pressable, ScrollView, StyleSheet
 
 import { Heart } from '@/components/deco/Heart';
 import { LaceFrame } from '@/components/deco/LaceFrame';
-import { NameOrnament } from '@/components/deco/NameOrnament';
 import { PatternBackdrop } from '@/components/deco/PatternBackdrop';
 import { StickerCassette } from '@/components/deco/Stickers';
-import { StickerCorners } from '@/components/deco/StickerCorners';
-import { TornEdge } from '@/components/deco/TornEdge';
 import { WashiTape } from '@/components/deco/WashiTape';
 import { Polaroid } from '@/components/templates/primitives';
 import { Colors, FontFamily, Radius, Shadow, Spacing, sf } from '@/constants/theme';
 import type { GalleryPhoto } from '@/store/fo';
-import { AvatarFrame } from './AvatarFrame';
 import { ProfileFlags } from './ProfileFlags';
-import { parseBorderStyle, type ProfileFlag } from './cardTheme';
+import { parseBorderFrame, type ProfileFlag } from './cardTheme';
 
 const POLAROID_TAPES = [Colors.sakura, Colors.lavender, Colors.butter, Colors.sage, Colors.peach];
+
+// type/sharing are the only two fields here that are actually a *status*
+// (they share RelationshipColors/SharingColors with badges everywhere else in
+// the app) — so they're the only two that get a colored pill. Age/birthday/
+// height/weight are plain facts; coloring them would be decoration standing
+// in for meaning they don't have, so they stay plain text.
+const PILL_SOFT_BY_DEEP: Record<string, string> = {
+  [Colors.sakuraDeep]: Colors.sakuraSoft,
+  [Colors.sageDeep]: Colors.sageSoft,
+  [Colors.peachDeep]: Colors.peachSoft,
+  [Colors.lavenderDeep]: Colors.lavenderSoft,
+  [Colors.butterDeep]: Colors.butterSoft,
+  [Colors.ember]: Colors.paperDeep,
+};
 
 export type ProfileStatus = { label: string; color: string };
 
@@ -60,18 +70,12 @@ type Props = {
   /** no hero fill at all — the page background shows through */
   cardTransparent?: boolean;
   textColor?: string;
-  /** '' (default) | 'torn' | 'polaroid' | 'lace' | 'stickers' | 'pattern' */
+  /** comma-joined border-frame accents: '' (none) | 'lace' | 'pattern' | 'lace,pattern' */
   borderStyle?: string;
   /** '' default display font | 'script' | 'marker' | 'klee' */
   nameFont?: string;
-  /** '' (none) | a NAME_ORNAMENTS key — line art flanking the display name */
-  nameOrnament?: string;
   /** everything they fly under the name */
   flags?: ProfileFlag[];
-  /** '' (none) | 'custom' — frames just the avatar photo; more presets coming */
-  avatarFrame?: string;
-  /** uploaded custom frame image/gif — only meaningful when avatarFrame is 'custom' */
-  avatarFrameUrl?: string;
   /** community follower/following counts, rendered under pronouns */
   followerCount?: number;
   followingCount?: number;
@@ -125,10 +129,7 @@ export function ProfileCard({
   textColor,
   borderStyle = '',
   nameFont = '',
-  nameOrnament = '',
   flags = [],
-  avatarFrame = '',
-  avatarFrameUrl = '',
   followerCount,
   followingCount,
   followAction,
@@ -139,22 +140,18 @@ export function ProfileCard({
   pairedFallbackColor = Colors.lavender,
 }: Props) {
   const stats = [
-    type ? { label: 'type', value: type.label, color: type.color } : null,
-    sharing ? { label: 'sharing', value: sharing.label, color: sharing.color } : null,
+    type ? { label: 'type', value: type.label, color: type.color, pill: true } : null,
+    sharing ? { label: 'sharing', value: sharing.label, color: sharing.color, pill: true } : null,
     age ? { label: 'age', value: age } : null,
     birthday ? { label: 'birthday', value: birthday } : null,
     height ? { label: 'height', value: height } : null,
     weight ? { label: 'weight', value: weight } : null,
-  ].filter(Boolean) as { label: string; value: string; color?: string }[];
+  ].filter(Boolean) as { label: string; value: string; color?: string; pill?: boolean }[];
 
   const textStyle = textColor ? { color: textColor } : null;
   const nameFontStyle = nameFont && NAME_FONT_MAP[nameFont] ? { fontFamily: NAME_FONT_MAP[nameFont] } : null;
-  const ornamentColor = textColor || Colors.ink;
 
   const gradientColors = cardBgGradient ? (cardBgGradient.split(',').filter(Boolean) as string[]) : null;
-  // best-effort match so the torn strip reads as this card's own paper, not a random overlay
-  const tornColor = cardTransparent ? Colors.paper
-    : cardBgColor || (gradientColors && gradientColors[gradientColors.length - 1]) || Colors.vellum;
 
   // hero card's rendered size — needed to size the lace/pattern SVG overlays to match
   const [heroSize, setHeroSize] = useState({ width: 0, height: 0 });
@@ -163,15 +160,11 @@ export function ProfileCard({
     setHeroSize((prev) => (prev.width === width && prev.height === height ? prev : { width, height }));
   };
 
-  // edge treatment and decorations are independent axes packed into one string — see cardTheme.ts
-  const { edge: borderEdge, stickers: hasStickers, pattern: hasPattern } = parseBorderStyle(borderStyle);
+  // both border-frame accents are independently toggleable — see cardTheme.ts
+  const { lace: hasLace, pattern: hasPattern } = parseBorderFrame(borderStyle);
 
-  // border frame treatment for the hero card
-  const heroBorderStyle =
-    borderEdge === 'polaroid' ? { borderWidth: 10, borderColor: '#ffffff' } :
-    borderEdge === 'torn' ? { borderBottomWidth: 0 } :
-    borderEdge === 'lace' ? { borderWidth: 0 } :
-    null; // '' keeps the default 1px solid border
+  // lace draws its own frame, so it replaces the hero's default 1px solid border
+  const heroBorderStyle = hasLace ? { borderWidth: 0 } : null;
 
   // ── Hero: identity only — everything else lives in its own section below ──
   const heroContent = (
@@ -179,7 +172,6 @@ export function ProfileCard({
       {showPairedIdentity ? (
         <View style={styles.pairedWrap}>
           <View style={styles.pairedAvatarOuter}>
-            <AvatarFrame kind={avatarFrame} url={avatarFrameUrl} size={74} />
             <View style={[styles.pairedAvatar, { backgroundColor: fallbackColor }]}>
               {photoUri ? (
                 <Image source={{ uri: photoUri }} style={styles.pairedAvatarImg} contentFit="cover" />
@@ -192,7 +184,6 @@ export function ProfileCard({
             <Heart size={13} color={Colors.sakuraDeep} />
           </View>
           <View style={styles.pairedAvatarOuter}>
-            <AvatarFrame kind={avatarFrame} url={avatarFrameUrl} size={74} />
             <View style={[styles.pairedAvatar, { backgroundColor: pairedFallbackColor }]}>
               {pairedAvatarUri ? (
                 <Image source={{ uri: pairedAvatarUri }} style={styles.pairedAvatarImg} contentFit="cover" />
@@ -204,7 +195,6 @@ export function ProfileCard({
         </View>
       ) : (
         <View style={styles.avatarOuter}>
-          <AvatarFrame kind={avatarFrame} url={avatarFrameUrl} size={96} />
           <View style={styles.avatarWrap}>
             <View style={[styles.avatar, { backgroundColor: fallbackColor }]}>
               {photoUri ? (
@@ -233,9 +223,7 @@ export function ProfileCard({
         <>
           <View style={styles.nameRow}>
             <View style={styles.nameGroup}>
-              {!!nameOrnament && <NameOrnament kind={nameOrnament} size={16} color={ornamentColor} />}
               <Text style={[styles.name, nameFontStyle, textStyle]} numberOfLines={1}>{name || '—'}</Text>
-              {!!nameOrnament && <NameOrnament kind={nameOrnament} size={16} color={ornamentColor} flip />}
             </View>
             {!!username && <Text style={[styles.username, textStyle]}>@{username}</Text>}
             {!!subtitle && <Text style={[styles.subtitle, textStyle]}>{subtitle}</Text>}
@@ -259,13 +247,8 @@ export function ProfileCard({
         </>
       )}
 
-      {borderEdge === 'lace' && heroSize.width > 0 && (
+      {hasLace && heroSize.width > 0 && (
         <LaceFrame width={heroSize.width} height={heroSize.height} />
-      )}
-      {borderEdge === 'torn' && (
-        <View style={styles.tornOverlay} pointerEvents="none">
-          <TornEdge width={340} height={12} color={tornColor} />
-        </View>
       )}
     </>
   );
@@ -314,7 +297,6 @@ export function ProfileCard({
             {heroContent}
           </View>
         )}
-        {hasStickers && <StickerCorners />}
       </View>
 
       {/* about */}
@@ -330,15 +312,22 @@ export function ProfileCard({
         </View>
       </View>
 
-      {/* details */}
+      {/* details — one card, grouped by spacing; only type/sharing (real
+          statuses) get a colored pill, everything else is plain text */}
       {stats.length > 0 && (
         <View style={styles.section}>
           <SectionLabel>details</SectionLabel>
-          <View style={styles.statsGrid}>
+          <View style={styles.detailsCard}>
             {stats.map((s) => (
-              <View key={s.label} style={styles.stat}>
-                <Text style={styles.statLabel}>{s.label.toUpperCase()}</Text>
-                <Text style={[styles.statValue, s.color ? { color: s.color } : null]}>{s.value}</Text>
+              <View key={s.label} style={styles.detailItem}>
+                <Text style={styles.detailLabel}>{s.label.toUpperCase()}</Text>
+                {s.pill ? (
+                  <View style={[styles.detailPill, { backgroundColor: PILL_SOFT_BY_DEEP[s.color!] ?? Colors.paperDeep }]}>
+                    <Text style={[styles.detailPillText, { color: s.color }]}>{s.value}</Text>
+                  </View>
+                ) : (
+                  <Text style={styles.detailValue}>{s.value}</Text>
+                )}
               </View>
             ))}
           </View>
@@ -411,7 +400,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.55)',
   },
   heroTransparent: { backgroundColor: 'transparent', ...Platform.select({ ios: { shadowOpacity: 0 }, default: {} }), elevation: 0 },
-  tornOverlay: { position: 'absolute', left: 0, right: 0, bottom: -1 },
   avatarOuter: { position: 'relative', alignItems: 'center', justifyContent: 'center' },
   avatarWrap: {
     padding: 3,
@@ -509,16 +497,26 @@ const styles = StyleSheet.create({
   },
   bioEmpty: { color: Colors.ink3 },
 
-  statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.s2 },
-  stat: {
-    flexBasis: '48%', flexGrow: 1, alignItems: 'center', gap: 2,
-    paddingVertical: Spacing.s3,
+  // one card, same chrome as .aboutCard right above it — items inside are
+  // grouped by space (generous columnGap/rowGap), not by six repeated boxes
+  detailsCard: {
     backgroundColor: Colors.vellum,
-    borderRadius: Radius.r3,
     borderWidth: 1, borderColor: Colors.line,
+    borderRadius: Radius.r4,
+    padding: Spacing.s4,
+    flexDirection: 'row', flexWrap: 'wrap',
+    rowGap: Spacing.s4, columnGap: Spacing.s5,
+    ...Shadow.s1,
   },
-  statLabel: { fontFamily: FontFamily.marker, fontSize: sf(8), color: Colors.ink3, letterSpacing: 1.4 },
-  statValue: { fontFamily: FontFamily.uiMedium, fontSize: sf(13), color: Colors.ink },
+  detailItem: { flexBasis: '28%', flexGrow: 1, gap: 3 },
+  detailLabel: { fontFamily: FontFamily.marker, fontSize: sf(9), color: Colors.ink3, letterSpacing: 1.2 },
+  detailValue: { fontFamily: FontFamily.uiMedium, fontSize: sf(14), color: Colors.ink },
+  detailPill: {
+    alignSelf: 'flex-start',
+    paddingVertical: 3, paddingHorizontal: 11,
+    borderRadius: Radius.pill,
+  },
+  detailPillText: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(12.5) },
 
   songRow: {
     flexDirection: 'row', alignItems: 'center', gap: 12,

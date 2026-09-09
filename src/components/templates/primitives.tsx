@@ -11,7 +11,7 @@ import Svg, {
   Pattern as SvgPattern,
   SvgXml,
 } from 'react-native-svg';
-import { FontFamily ,sf } from '@/constants/theme';
+import { FontFamily ,sf, SHARING_TEMPLATE_OPTS, type SharingTemplateLabel } from '@/constants/theme';
 
 export const INK = '#1f1219';
 export const FILL_GRAY = '#e9d8cb';
@@ -262,12 +262,12 @@ export function Dichotomy({ left, right, choice, onChoiceChange }: DichotomyProp
 }
 
 // ─── SharingRow ───────────────────────────────────────────────
-export function SharingRow({ choice, onChoiceChange }: { choice?: 'Yes' | 'No' | 'Selective'; onChoiceChange?: (c: 'Yes' | 'No' | 'Selective') => void }) {
+export function SharingRow({ choice, onChoiceChange }: { choice?: SharingTemplateLabel; onChoiceChange?: (c: SharingTemplateLabel) => void }) {
   const ink = useThemedInk();
   return (
     <View style={s.sharingRow}>
       <Text style={[s.sharingLabel, { color: ink }]}>♡ Sharing:</Text>
-      {(['Yes', 'No', 'Selective'] as const).map((c) => (
+      {SHARING_TEMPLATE_OPTS.map((c) => (
         <Pressable key={c} style={s.sharingOption} onPress={() => onChoiceChange?.(c)} disabled={!onChoiceChange} hitSlop={4}>
           <Check on={choice === c} size={13} />
           <Text style={[s.sharingText, { color: ink }, choice === c && s.sharingActive]}>{c}</Text>

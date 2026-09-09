@@ -17,12 +17,15 @@ type BState = {
   tint: string;
   stroke: string;
   desc: string;
+  /** which shareStatus this card represents — shared with the boundaries template,
+   *  which reads and writes these same `states` */
+  stance?: string;
   checks: { label: string; on: boolean }[];
 };
 
 const DEFAULT_STATES: BState[] = [
   {
-    title: 'NO SHARING', ja: '夢', tint: '#ffd6e2', stroke: '#c44e75',
+    title: 'NO SHARING', ja: '夢', tint: '#ffd6e2', stroke: '#c44e75', stance: 'no',
     desc: "they're mine. doubles dni.",
     checks: [
       { label: 'doubles interact', on: false },
@@ -32,7 +35,7 @@ const DEFAULT_STATES: BState[] = [
     ],
   },
   {
-    title: 'SELECTIVE', ja: '限', tint: '#fde9c6', stroke: '#b58732',
+    title: 'SELECTIVE', ja: '限', tint: '#fde9c6', stroke: '#b58732', stance: 'selective',
     desc: 'case by case. ask me first.',
     checks: [
       { label: 'mutuals only', on: true },
@@ -42,13 +45,23 @@ const DEFAULT_STATES: BState[] = [
     ],
   },
   {
-    title: 'OK SHARING', ja: '可', tint: '#d6ecda', stroke: '#3f8157',
+    title: 'OK SHARING', ja: '可', tint: '#d6ecda', stroke: '#3f8157', stance: 'yes',
     desc: 'the more the merrier.',
     checks: [
       { label: 'all doubles welcome', on: true },
       { label: 'co-headcanons', on: true },
       { label: 'polyship intros', on: true },
       { label: 'scenario swaps', on: true },
+    ],
+  },
+  {
+    title: 'MIRROR', ja: '鏡', tint: '#fbecc4', stroke: '#b8902a', stance: 'mirror',
+    desc: "whatever you're comfy with. tell me yours.",
+    checks: [
+      { label: 'i follow your lead', on: true },
+      { label: 'ask before tagging', on: true },
+      { label: 'quiet if you prefer', on: true },
+      { label: 'close if you are', on: true },
     ],
   },
 ];

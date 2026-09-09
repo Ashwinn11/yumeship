@@ -1,5 +1,6 @@
 import { createContext, useContext } from 'react';
 import { getDb } from '@/db/client';
+import { SharingTemplateLabels } from '@/constants/theme';
 import type { Ship } from './ships';
 import { isPoly } from './ships';
 import { getGlobalSetting } from './onboarding';
@@ -55,7 +56,7 @@ const MEMORY_FIELDS: Record<string, string> = {
 // mainPhoto = primary portrait/photo of the F/O
 const FIELD_MAP: Record<string, Record<string, string>> = {
   'get-to-know': { ...MEMORY_FIELDS, foName: 'themName', myName: 'meName', sharing: 'sharing', song: 'song', mainPhoto: 'themPhoto', myPhoto: 'mePhoto' },
-  'kawaii-ui':   { ...MEMORY_FIELDS, shipName: 'shipName', foName: 'theirName', myName: 'myName', sharing: 'sharing', anniv: 'anniv', mainPhoto: 'theirPortrait', myPhoto: 'myPortrait' },
+  'kawaii-ui':   { ...MEMORY_FIELDS, shipName: 'shipName', foName: 'theirName', myName: 'myName', sharing: 'sharing', relType: 'type', anniv: 'anniv', mainPhoto: 'theirPortrait', myPhoto: 'myPortrait' },
   'heart-frame': { ...MEMORY_FIELDS, foName: 'themName', myName: 'meName', sharing: 'sharing', anniv: 'anniv', mainPhoto: 'themPhoto', myPhoto: 'mePhoto' },
   'love-letter': { foName: 'dearName', myName: 'signName' },
   'aesthetic':   { foName: 'foName', myName: 'meName', mainPhoto: 'foPhoto', myPhoto: 'mePhoto' },
@@ -64,6 +65,9 @@ const FIELD_MAP: Record<string, Record<string, string>> = {
   'talking-about': { ...MEMORY_FIELDS, foName: 'foName', myName: 'meName', sharing: 'sharing', song: 'song', mainPhoto: 'photoL', myPhoto: 'photoR' },
   'flip-phone':  { ...MEMORY_FIELDS, foName: 'name', myName: 'myName', sharing: 'sharing', song: 'song' },
   'bond-banner': { myName: 'meName', foName: 'foName', sharing: 'sharing', anniv: 'anniv', mainPhoto: 'shieldPhoto' },
+  'boundaries':  { sharing: 'sharing' },
+  'storyline':   { foName: 'foName', myName: 'meName' },
+  // declared ahead of their screens — keep the field shapes with the plan
   'ask-meme':    { sharing: 'sharing' },
   'playlist':    {},
   'bucket-list': {},
@@ -107,8 +111,7 @@ export function migrateTemplateData(shipId: string, fromKey: string, toKey: stri
 // initData merge — prefill only ever fills gaps, never overwrites saved edits).
 export function buildPreFill(ship: Ship, templateKey: string): Record<string, string> {
   const base: Record<string, string> = {};
-  // Templates store the same yes/no/selective vocabulary, just capitalized for display.
-  const shareMap: Record<string, string> = { yes: 'Yes', no: 'No', selective: 'Selective' };
+  const shareMap: Record<string, string> = SharingTemplateLabels;
   const userName = ship.myName || getGlobalSetting('user_name');
   const userPronouns = getGlobalSetting('user_pronouns');
   const userHeight = getGlobalSetting('user_height');
@@ -127,6 +130,8 @@ export function buildPreFill(ship: Ship, templateKey: string): Record<string, st
       if (userHeight)     base['meFilled'] = JSON.stringify({ height: userHeight });
       break;
     case 'kawaii-ui':
+      if (ship.shareType) base['sharing'] = shareMap[ship.shareType] ?? '';
+      if (ship.startDate) base['anniv'] = ship.startDate;
       if (foSeed)         base['shipName'] = foSeed;
       if (ship.fandom)    base['from'] = ship.fandom;
       if (ship.relType)   base['type'] = ship.relType;
@@ -140,6 +145,8 @@ export function buildPreFill(ship: Ship, templateKey: string): Record<string, st
       if (userPhoto)      base['myPortrait'] = userPhoto;
       break;
     case 'heart-frame':
+      if (ship.shareType) base['sharing'] = shareMap[ship.shareType] ?? '';
+      if (ship.startDate) base['anniv'] = ship.startDate;
       if (foSeed)         base['themName'] = foSeed;
       if (userName)       base['meName'] = userName;
       if (fo?.photoUri)   base['themPhoto'] = fo.photoUri;
@@ -179,6 +186,9 @@ export function buildPreFill(ship: Ship, templateKey: string): Record<string, st
       if (fo?.height)     base['foH'] = fo.height;
       if (userHeight)     base['meH'] = userHeight;
       break;
+    case 'boundaries':
+      if (ship.shareType) base['sharing'] = shareMap[ship.shareType] ?? '';
+      break;
     case 'flip-phone':
       if (foSeed)         base['name'] = foSeed;
       if (foSeed)         base['chat'] = `${foSeed} says:\ni miss you\n${foSeed} says:\ncome over?\n${foSeed} says:\n♡♡♡`;
@@ -186,12 +196,17 @@ export function buildPreFill(ship: Ship, templateKey: string): Record<string, st
       if (userName)       base['myName'] = userName;
       break;
     case 'bond-banner':
+      if (ship.startDate) base['anniv'] = ship.startDate;
       if (foSeed)         base['foName'] = foSeed;
       if (userName)       base['meName'] = userName;
       if (fo?.pronouns)   base['foPronouns'] = fo.pronouns;
       if (userPronouns)   base['mePronouns'] = userPronouns;
       if (fo?.photoUri)   base['shieldPhoto'] = fo.photoUri;
       if (ship.shareType) base['sharing'] = shareMap[ship.shareType] ?? '';
+      break;
+    case 'storyline':
+      if (foSeed)         base['foName'] = foSeed;
+      if (userName)       base['meName'] = userName;
       break;
     case 'how-we-met':
       if (foSeed)         base['foName'] = foSeed;

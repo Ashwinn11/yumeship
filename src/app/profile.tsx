@@ -197,6 +197,8 @@ export default function MyProfileScreen() {
               fallbackColor={me.color}
               height={me.height}
               weight={me.weight}
+              age={me.age}
+              birthday={me.birthday}
               song={me.song}
               songLink={me.songLink}
               gallery={me.gallery}
@@ -207,10 +209,7 @@ export default function MyProfileScreen() {
               textColor={me.textColor}
               borderStyle={me.borderStyle}
               nameFont={me.nameFont}
-              nameOrnament={me.nameOrnament}
               flags={me.flags}
-              avatarFrame={me.avatarFrame}
-              avatarFrameUrl={me.avatarFrameUrl}
               {...pairedProps(pairedFo && { name: pairedFo.name, pronouns: pairedFo.pronouns, avatarUri: pairedFo.photoUri })}
               followerCount={counts.followerCount}
               followingCount={counts.followingCount}

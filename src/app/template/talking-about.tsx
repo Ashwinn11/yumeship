@@ -6,7 +6,7 @@ import { TemplateScreenWrapper } from '@/components/templates/TemplateScreenWrap
 import { PhotoBox, MarkerCard, DualSlider, INK, useThemedInk, getContrastColor } from '@/components/templates/primitives';
 import { Sparkle } from '@/components/deco';
 import { useTemplateCtx } from '@/store/templateData';
-import { Colors, FontFamily, Radius, SheetColumn, Spacing ,sf } from '@/constants/theme';
+import { Colors, FontFamily, Radius, SheetColumn, Spacing ,sf, SHARING_TEMPLATE_OPTS } from '@/constants/theme';
 
 // ─── Palette options (same as aesthetic template) ──────────────
 const PALETTE_OPTIONS = [
@@ -345,7 +345,7 @@ export function TalkingAboutContent({ editing = false }: { editing?: boolean }) 
       <View style={s.sharingWrap}>
         <Text style={[s.sharingTitle, { color: ink }]}>Sharing status</Text>
         <View style={s.sharingRow}>
-          {(['Yes','No','Selective'] as const).map(opt => {
+          {SHARING_TEMPLATE_OPTS.map(opt => {
             const on = vals.sharing === opt;
             return (
               <Pressable key={opt} onPress={() => e && setVal('sharing', opt)} style={s.sharingOpt}>

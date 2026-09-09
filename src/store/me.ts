@@ -9,21 +9,20 @@ import { getGlobalSettings, saveGlobalSetting } from './onboarding';
 
 export const ME_KEYS = [
   'user_name', 'user_pronouns', 'user_username', 'user_color', 'user_avatar', 'user_bio', 'user_tagline',
-  'user_height', 'user_weight', 'user_song', 'user_song_link', 'user_gallery',
+  'user_height', 'user_weight', 'user_age', 'user_birthday', 'user_song', 'user_song_link', 'user_gallery',
   'user_page_bg_color', 'user_page_bg_image', 'user_card_bg_color', 'user_card_bg_image',
   'user_card_bg_gradient', 'user_card_transparent', 'user_text_color', 'user_border_style',
-  'user_name_font', 'user_name_ornament', 'user_identify_fo_id',
-  'user_flags', 'user_avatar_frame', 'user_avatar_frame_url',
+  'user_name_font', 'user_identify_fo_id', 'user_flags',
 ] as const;
 
 export type Me = {
   name: string; pronouns: string; username: string; color: string; avatar: string;
-  bio: string; tagline: string; height: string; weight: string;
+  bio: string; tagline: string; height: string; weight: string; age: string; birthday: string;
   song: string; songLink: string; gallery: GalleryPhoto[];
   pageBgColor: string; pageBgImage: string; cardBgColor: string; cardBgImage: string;
   cardBgGradient: string; cardTransparent: boolean; textColor: string;
-  borderStyle: string; nameFont: string; nameOrnament: string; identifyFoId: string;
-  flags: ProfileFlag[]; avatarFrame: string; avatarFrameUrl: string;
+  borderStyle: string; nameFont: string; identifyFoId: string;
+  flags: ProfileFlag[];
 };
 
 /** One query rather than one per field — this runs on every focus. */
@@ -39,6 +38,8 @@ export function readMe(): Me {
     tagline: g.user_tagline,
     height: g.user_height,
     weight: g.user_weight,
+    age: g.user_age,
+    birthday: g.user_birthday,
     song: g.user_song,
     songLink: g.user_song_link,
     gallery: parseGallery(g.user_gallery),
@@ -51,11 +52,8 @@ export function readMe(): Me {
     textColor: g.user_text_color,
     borderStyle: g.user_border_style,
     nameFont: g.user_name_font,
-    nameOrnament: g.user_name_ornament,
     identifyFoId: g.user_identify_fo_id,
     flags: parseProfileFlags(g.user_flags),
-    avatarFrame: g.user_avatar_frame,
-    avatarFrameUrl: g.user_avatar_frame_url,
   };
 }
 
@@ -66,8 +64,6 @@ export function meCardTheme(me: Me): CardTheme {
     cardBgColor: me.cardBgColor, cardBgImage: me.cardBgImage,
     cardBgGradient: me.cardBgGradient, cardTransparent: me.cardTransparent,
     textColor: me.textColor, borderStyle: me.borderStyle, nameFont: me.nameFont,
-    nameOrnament: me.nameOrnament,
-    avatarFrame: me.avatarFrame, avatarFrameUrl: me.avatarFrameUrl,
   };
 }
 
@@ -76,14 +72,12 @@ const THEME_KEYS: Record<keyof CardTheme, string> = {
   cardBgColor: 'user_card_bg_color', cardBgImage: 'user_card_bg_image',
   cardBgGradient: 'user_card_bg_gradient', cardTransparent: 'user_card_transparent',
   textColor: 'user_text_color', borderStyle: 'user_border_style', nameFont: 'user_name_font',
-  nameOrnament: 'user_name_ornament',
-  avatarFrame: 'user_avatar_frame', avatarFrameUrl: 'user_avatar_frame_url',
 };
 
 const FIELD_KEYS: Partial<Record<keyof Me, string>> = {
   name: 'user_name', pronouns: 'user_pronouns', username: 'user_username',
   color: 'user_color', avatar: 'user_avatar', bio: 'user_bio', tagline: 'user_tagline',
-  height: 'user_height', weight: 'user_weight', song: 'user_song', songLink: 'user_song_link',
+  height: 'user_height', weight: 'user_weight', age: 'user_age', birthday: 'user_birthday', song: 'user_song', songLink: 'user_song_link',
   identifyFoId: 'user_identify_fo_id',
 };
 

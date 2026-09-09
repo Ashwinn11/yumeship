@@ -7,7 +7,7 @@ import {
   MarkerCard, TitleHeader, SharingRow, TwinProfile, HeartClipPhoto, BlankPill, PolarSlider, MemoriesPhotoRow, INK, FILL_GRAY,
 } from '@/components/templates/primitives';
 import { Heart } from '@/components/deco/Heart';
-import { FontFamily ,sf } from '@/constants/theme';
+import { FontFamily ,sf, type SharingTemplateLabel } from '@/constants/theme';
 import { useTemplateCtx } from '@/store/templateData';
 import { DateField, calcElapsed } from '@/components/ui/DateField';
 
@@ -29,7 +29,7 @@ export function HeartFrameContent({ editing = false }: { editing?: boolean }) {
   const ink = ctx.textColor || INK;
 
   const [vals, setVals] = useState<{
-    sharing: 'Yes' | 'No' | 'Selective' | undefined;
+    sharing: SharingTemplateLabel | undefined;
     meName: string;
     themName: string;
     meInfo: string[];
@@ -44,7 +44,7 @@ export function HeartFrameContent({ editing = false }: { editing?: boolean }) {
   }>(() => {
     const sharingRaw = ctx.get('sharing');
     return {
-      sharing: (sharingRaw as 'Yes' | 'No' | 'Selective') || undefined,
+      sharing: (sharingRaw as SharingTemplateLabel) || undefined,
       meName: ctx.get('meName'),
       themName: ctx.get('themName'),
       meInfo: JSON.parse(ctx.get('meInfo', 'null')) ?? [...BLANK_INFO],
@@ -71,7 +71,7 @@ export function HeartFrameContent({ editing = false }: { editing?: boolean }) {
     ctx.set(key, v);
   };
 
-  const setSharing = (v: 'Yes' | 'No' | 'Selective') => {
+  const setSharing = (v: SharingTemplateLabel) => {
     setVals((p) => ({ ...p, sharing: v }));
     ctx.set('sharing', v);
   };

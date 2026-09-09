@@ -38,6 +38,8 @@ const TAPE_BY_REL: Record<string, { color: string; pattern: 'stripe' | 'dot' | '
   romantic: { color: 'rgba(255,255,255,0.9)', pattern: 'heart' },
   platonic: { color: 'rgba(255,255,255,0.8)', pattern: 'dot' },
   familial: { color: 'rgba(255,255,255,0.8)', pattern: 'stripe' },
+  queerplatonic: { color: 'rgba(255,255,255,0.85)', pattern: 'check' },
+  comfort: { color: 'rgba(255,255,255,0.8)', pattern: 'dot' },
 };
 
 export default function OnbRules() {

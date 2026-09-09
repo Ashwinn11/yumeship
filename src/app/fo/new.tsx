@@ -5,7 +5,7 @@ import { FoEditor, type FoDraft } from '@/components/fo/FoEditor';
 import { addFo } from '@/store/fo';
 
 const EMPTY: FoDraft = {
-  name: '', pronouns: '', fandom: '', relStatus: 'romantic', shareStatus: 'selective',
+  name: '', pronouns: '', fandom: '', relStatus: 'romantic', shareStatus: 'selective', color: '',
   bio: '', tagline: '', height: '', weight: '', age: '', birthday: '',
   photoUri: '', song: '', songLink: '', gallery: [], flags: [],
 };

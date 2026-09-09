@@ -11,8 +11,8 @@ export type Fo = {
   name: string;
   pronouns: string;
   fandom: string;
-  relStatus: 'romantic' | 'platonic' | 'familial';
-  shareStatus: 'yes' | 'no' | 'selective';
+  relStatus: 'romantic' | 'platonic' | 'familial' | 'queerplatonic' | 'comfort';
+  shareStatus: 'yes' | 'no' | 'selective' | 'mirror';
   bio: string;
   /** short bio shown on the card itself; `bio` keeps its own about section */
   tagline: string;
@@ -35,11 +35,13 @@ export type Fo = {
   /** hero card has no fill at all, letting the page background show through */
   cardTransparent: boolean;
   textColor: string;
-  /** comma-joined edge + decorations — see cardTheme.ts parseBorderStyle/buildBorderStyle */
+  /** comma-joined border-frame accents — see cardTheme.ts parseBorderFrame/buildBorderFrame */
   borderStyle: string;
   /** '' (default display font) | 'script' | 'marker' */
   nameFont: string;
-  nameOrnament: string;
+  /** avatar fallback tint — the F/O counterpart to Me.color, so both profile
+   *  screens tint a photoless F/O the same instead of each picking a constant */
+  color: string;
   /** theme song shown in its own row */
   song: string;
   /** optional Spotify/YouTube/etc link for the theme song */
@@ -48,13 +50,8 @@ export type Fo = {
   gallery: GalleryPhoto[];
   /** everything they fly under the name — identity flags, symbols, their words */
   flags: ProfileFlag[];
-  /** '' (none) | 'custom' — frames just the avatar photo; more presets coming */
-  avatarFrame: string;
-  /** local uri (pre-sync) or remote url of the uploaded custom frame image/gif */
-  avatarFrameUrl: string;
-  /** local avatar-frame uri last uploaded — skip re-upload when unchanged */
-  avatarFrameSyncedUri: string;
-  /** whether this F/O has an opt-in public profile in community (gated by shareStatus !== 'no') */
+  /** whether this F/O has an opt-in public profile in community — independent of
+   *  shareStatus, which is a stated boundary toward doubles, not a visibility switch */
   isPublic: boolean;
   /** local avatar uri last uploaded to the public fo_profiles row — skip re-upload when unchanged */
   avatarSyncedUri: string;
@@ -105,14 +102,11 @@ function rowToFo(row: Record<string, unknown>): Fo {
     textColor: (row.text_color as string) ?? '',
     borderStyle: (row.border_style as string) ?? '',
     nameFont: (row.name_font as string) ?? '',
-    nameOrnament: (row.name_ornament as string) ?? '',
+    color: (row.color as string) ?? '',
     song: (row.song as string) ?? '',
     songLink: (row.song_link as string) ?? '',
     gallery: parseGallery(row.gallery),
     flags: parseProfileFlags((row.flags as string) ?? ''),
-    avatarFrame: (row.avatar_frame as string) ?? '',
-    avatarFrameUrl: (row.avatar_animation_url as string) ?? '',
-    avatarFrameSyncedUri: (row.avatar_animation_synced_uri as string) ?? '',
     isPublic: !!(row.is_public as number),
     avatarSyncedUri: (row.avatar_synced_uri as string) ?? '',
     gallerySyncMap: parseSyncMap(row.gallery_sync_map),
@@ -209,15 +203,12 @@ export function updateFo(id: string, d: Partial<Omit<Fo, 'id' | 'createdAt'>>) {
   if (d.cardTransparent !== undefined) { fields.push('card_transparent = ?'); values.push(d.cardTransparent ? 1 : 0); }
   if (d.textColor !== undefined)   { fields.push('text_color = ?');   values.push(d.textColor); }
   if (d.borderStyle !== undefined) { fields.push('border_style = ?'); values.push(d.borderStyle); }
+  if (d.color !== undefined)      { fields.push('color = ?');        values.push(d.color); }
   if (d.nameFont !== undefined)    { fields.push('name_font = ?');    values.push(d.nameFont); }
-  if (d.nameOrnament !== undefined) { fields.push('name_ornament = ?'); values.push(d.nameOrnament); }
   if (d.song !== undefined)        { fields.push('song = ?');         values.push(d.song); }
   if (d.songLink !== undefined)    { fields.push('song_link = ?');    values.push(d.songLink); }
   if (d.gallery !== undefined)     { fields.push('gallery = ?');      values.push(JSON.stringify(d.gallery)); }
   if (d.flags !== undefined)       { fields.push('flags = ?');        values.push(JSON.stringify(d.flags)); }
-  if (d.avatarFrame !== undefined) { fields.push('avatar_frame = ?'); values.push(d.avatarFrame); }
-  if (d.avatarFrameUrl !== undefined) { fields.push('avatar_animation_url = ?'); values.push(d.avatarFrameUrl); }
-  if (d.avatarFrameSyncedUri !== undefined) { fields.push('avatar_animation_synced_uri = ?'); values.push(d.avatarFrameSyncedUri); }
   if (d.isPublic !== undefined)       { fields.push('is_public = ?');         values.push(d.isPublic ? 1 : 0); }
   if (d.avatarSyncedUri !== undefined) { fields.push('avatar_synced_uri = ?'); values.push(d.avatarSyncedUri); }
   if (d.gallerySyncMap !== undefined)  { fields.push('gallery_sync_map = ?');  values.push(JSON.stringify(d.gallerySyncMap)); }

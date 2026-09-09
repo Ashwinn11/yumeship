@@ -11,7 +11,7 @@ import Svg, { Path, Defs, ClipPath, Image as SvgImage } from 'react-native-svg';
 import * as ImagePicker from 'expo-image-picker';
 import { Ribbon } from '@/components/deco/Ribbon';
 import { useTemplateCtx } from '@/store/templateData';
-import { Colors, FontFamily, Radius, SheetColumn, Spacing, sf } from '@/constants/theme';
+import { Colors, FontFamily, Radius, SheetColumn, Spacing, sf, type SharingTemplateLabel } from '@/constants/theme';
 import { DateField, calcElapsed } from '@/components/ui/DateField';
 
 const ABOUT_FIELDS = ['Name', 'Pronouns', 'Age', 'Birthday', 'Gender', 'Sexuality'] as const;
@@ -127,7 +127,7 @@ export function BondBannerContent({ editing = false }: { editing?: boolean }) {
   const [picking, setPicking] = useState<{ pfx: 'me' | 'fo'; idx: number } | null>(null);
 
   const e = editing;
-  const sharing = (vals.sharing || undefined) as 'Yes' | 'No' | 'Selective' | undefined;
+  const sharing = (vals.sharing || undefined) as SharingTemplateLabel | undefined;
 
   const whoFirst = JSON.parse(vals.whoFirst || JSON.stringify(BLANK4)) as string[];
   const whoLikely = JSON.parse(vals.whoLikely || JSON.stringify(BLANK4)) as string[];

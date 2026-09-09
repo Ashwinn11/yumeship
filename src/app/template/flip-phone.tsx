@@ -8,7 +8,7 @@ import {
 import { WashiTape } from '@/components/deco/WashiTape';
 import { Bullets } from '@/components/deco';
 import { useTemplateCtx } from '@/store/templateData';
-import { Colors, FontFamily ,sf } from '@/constants/theme';
+import { Colors, FontFamily ,sf, SHARING_TEMPLATE_OPTS } from '@/constants/theme';
 
 const REL_TYPES = ['Married', 'Engaged', 'Dating', 'Platonic'] as const;
 const ENDINGS = ['Happy', 'Bad', 'Neutral'] as const;
@@ -187,7 +187,7 @@ export function FlipPhoneContent({ editing = false }: { editing?: boolean }) {
           <Y2KWindow title="⚠ SHARING" tint={Colors.sakura + '80'} ink={ink} mini>
             {e ? (
               <View style={s.sharingPills}>
-                {(['Yes', 'No', 'Selective'] as const).map(opt => (
+                {SHARING_TEMPLATE_OPTS.map(opt => (
                   <Pressable key={opt} onPress={() => setVal('sharing', opt)} style={[s.sPill, { borderColor: ink }, vals.sharing === opt && { backgroundColor: ink }]}>
                     <Text style={[s.sPillText, { color: ink }, vals.sharing === opt && { color: getContrastColor(ink) }]}>{opt}</Text>
                   </Pressable>

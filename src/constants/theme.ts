@@ -68,19 +68,79 @@ export const Ember = {
 } as const;
 
 // ─── Semantic / relationship type colors ─────────────────────────────────────
+// `queerplatonic` and `comfort` are their own stances, not shades of platonic:
+// a QPR isn't "we're friends", and a comfort character is explicitly not a
+// shipped F/O. Collapsing either into platonic loses the distinction.
 export const RelationshipColors = {
   romantic: Sakura.sakuraDeep,
   platonic: Sage.sageDeep,
   familial: Peach.peachDeep,
+  queerplatonic: Lavender.lavenderDeep,
+  comfort: Butter.butterDeep,
 } as const;
+
+export type RelationshipType = keyof typeof RelationshipColors;
+
+export const RelationshipSoft: Record<RelationshipType, string> = {
+  romantic: Sakura.sakuraSoft,
+  platonic: Sage.sageSoft,
+  familial: Peach.peachSoft,
+  queerplatonic: Lavender.lavenderSoft,
+  comfort: Butter.butterSoft,
+};
+
+export const RelationshipLabels: Record<RelationshipType, string> = {
+  romantic: 'romantic',
+  platonic: 'platonic',
+  familial: 'familial',
+  queerplatonic: 'queerplatonic',
+  comfort: 'comfort',
+};
+
+export const REL_ORDER: RelationshipType[] = ['romantic', 'queerplatonic', 'platonic', 'comfort', 'familial'];
 
 // Single shared vocabulary for "sharing status" everywhere it appears —
 // F/O profile, ship badge, and every template's own sharing field.
+//
+// The four stances the community actually uses: `no` is sharing NG, `yes` is
+// doutan kangei, `selective` is case-by-case on your own terms, and `mirror`
+// is mirror-sharing — you adopt whatever stance the other person holds. Note
+// this is a *stated boundary*, never a visibility switch: an F/O set to `no`
+// still publishes, so a double can read the boundary off the profile.
 export const SharingColors = {
   no: Ember.ember,
   yes: Sage.sageDeep,
   selective: Lavender.lavenderDeep,
+  mirror: Butter.butterDeep,
 } as const;
+
+export type SharingStatus = keyof typeof SharingColors;
+
+/** Display text for each stance. Lives beside the colors so a fourth stance
+ *  can't be added to one and missed by the other — which is how the card badge
+ *  and its own editor chips ended up disagreeing on capitalization. */
+export const SharingLabels: Record<SharingStatus, string> = {
+  no: 'no',
+  yes: 'yes',
+  selective: 'selective',
+  mirror: 'mirror',
+};
+
+export const SHARING_ORDER: SharingStatus[] = ['yes', 'selective', 'mirror', 'no'];
+
+/** Templates render in their own capitalized register ("♡ Sharing: Yes"), unlike
+ *  the app's lowercase chrome. Derived from the same keys so a stance can't be
+ *  added to one vocabulary and missed by the other. */
+export const SharingTemplateLabels: Record<SharingStatus, string> = {
+  yes: 'Yes',
+  no: 'No',
+  selective: 'Selective',
+  mirror: 'Mirror',
+};
+
+export type SharingTemplateLabel = 'Yes' | 'No' | 'Selective' | 'Mirror';
+
+export const SHARING_TEMPLATE_OPTS = SHARING_ORDER.map((v) => SharingTemplateLabels[v]) as SharingTemplateLabel[];
 
 // ─── Flat color map (for indexed lookups) ────────────────────────────────────
 export const Colors = {

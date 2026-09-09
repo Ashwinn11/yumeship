@@ -277,4 +277,6 @@ export const REL_GRADS: Record<string, [string, string]> = {
   romantic: ['#f3b6c4', '#d77a8d'],
   platonic: ['#b4c8a5', '#6e8762'],
   familial: ['#f4b89a', '#b76b48'],
+  queerplatonic: ['#c7b5e3', '#8b6fc4'],
+  comfort: ['#f0d189', '#b8902a'],
 };

@@ -2,7 +2,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Pressable, StyleSheet, Text } from 'react-native';
 
 import { ProfileEditor, type EditField, type EditSectionDef } from '@/components/profile/ProfileEditor';
-import { Colors, FontFamily, RelationshipColors, SharingColors, Spacing, sf } from '@/constants/theme';
+import { Colors, FontFamily, REL_ORDER, RelationshipColors, RelationshipLabels, SHARING_ORDER, SharingColors, SharingLabels, Spacing, sf } from '@/constants/theme';
 import { persistImage } from '@/lib/localMedia';
 import type { Fo } from '@/store/fo';
 
@@ -11,20 +11,13 @@ import type { Fo } from '@/store/fo';
 // a person has a handle and a pairing. Everything else they share.
 
 const PRONOUNS = ['she/her', 'he/him', 'they/them'].map((p) => ({ value: p, label: p }));
-const REL = [
-  { value: 'romantic', label: 'romantic', color: RelationshipColors.romantic },
-  { value: 'platonic', label: 'platonic', color: RelationshipColors.platonic },
-  { value: 'familial', label: 'familial', color: RelationshipColors.familial },
-];
-const SHARE = [
-  { value: 'yes', label: 'yes', color: SharingColors.yes },
-  { value: 'no', label: 'no', color: SharingColors.no },
-  { value: 'selective', label: 'selective', color: SharingColors.selective },
-];
+const FO_COLORS = [Colors.sakura, Colors.lavender, Colors.sage, Colors.peach, Colors.butter, Colors.plum];
+const REL = REL_ORDER.map((v) => ({ value: v, label: RelationshipLabels[v], color: RelationshipColors[v] }));
+const SHARE = SHARING_ORDER.map((v) => ({ value: v, label: SharingLabels[v], color: SharingColors[v] }));
 
 export type FoDraft = Pick<
   Fo,
-  'name' | 'pronouns' | 'fandom' | 'relStatus' | 'shareStatus' | 'bio' | 'tagline'
+  'name' | 'pronouns' | 'fandom' | 'relStatus' | 'shareStatus' | 'bio' | 'tagline' | 'color'
   | 'height' | 'weight' | 'age' | 'birthday' | 'photoUri' | 'song' | 'songLink' | 'gallery' | 'flags'
 >;
 
@@ -73,6 +66,7 @@ export function FoEditor({
       fields: [
         { kind: 'chips', key: 'relStatus', label: 'relation', options: REL },
         { kind: 'chips', key: 'shareStatus', label: 'sharing', options: SHARE },
+        { kind: 'swatches', key: 'color', label: 'their colour', options: FO_COLORS, clears: 'photoUri' },
       ],
     },
     {
@@ -122,7 +116,7 @@ export function FoEditor({
       flagsKey="flags"
       avatar={{
         uri: value.photoUri,
-        fallbackColor: Colors.sakura,
+        fallbackColor: value.color || Colors.sakura,
         initial: value.name.trim().charAt(0).toUpperCase(),
         onPick: pickPhoto,
         action: 'change photo',

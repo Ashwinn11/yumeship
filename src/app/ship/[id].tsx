@@ -15,7 +15,7 @@ import { Chip } from '@/components/ui/Chip';
 import { CozyModal } from '@/components/ui/CozyModal';
 import { GradientCover } from '@/components/ui/GradientCover';
 import { IconEdit, IconPlus, IconTrashSolid } from '@/components/ui/Icon';
-import { Colors, FontFamily, FontSize, Radius, Shadow, SheetColumn, Spacing, sf } from '@/constants/theme';
+import { Colors, FontFamily, FontSize, Radius, RelationshipColors, SHARING_ORDER, Shadow, SharingColors, SharingLabels, SheetColumn, Spacing, sf } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
 import {
   addHeadcanon, deleteHeadcanon, updateHeadcanon, useHeadcanonCounts, useHeadcanons,
@@ -41,17 +41,11 @@ const POLY_TEMPLATES = [
   { key: 'poly-dynamics', title: 'Polycule Dynamics',  tapePattern: 'check'  as const, color: Colors.sageDeep,    bg: Colors.sageSoft },
 ];
 
-const REL_CHIP_COLOR: Record<string, string> = {
-  romantic: Colors.sakuraDeep,
-  platonic: Colors.sageDeep,
-  familial: Colors.peachDeep,
-};
+const REL_CHIP_COLOR: Record<string, string> = RelationshipColors;
 
-const SHARE_CHIP: Record<string, { label: string; color: string }> = {
-  yes:       { label: 'Yes',       color: Colors.sageDeep },
-  no:        { label: 'No',        color: Colors.ember },
-  selective: { label: 'Selective', color: Colors.lavenderDeep },
-};
+const SHARE_CHIP: Record<string, { label: string; color: string }> = Object.fromEntries(
+  SHARING_ORDER.map((v) => [v, { label: SharingLabels[v], color: SharingColors[v] }]),
+);
 
 const HC_CATS = [
   { id: 'personality', ja: '性', label: 'Personality', color: Colors.sakuraDeep },

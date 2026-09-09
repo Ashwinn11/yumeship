@@ -81,8 +81,10 @@ export default function EditProfileScreen() {
     {
       id: 'details',
       label: 'details',
-      summary: (v) => [v.height, v.weight].filter(Boolean).join(' · ') || 'not set',
+      summary: (v) => [v.age, v.birthday, v.height, v.weight].filter(Boolean).join(' · ') || 'not set',
       fields: [
+        { kind: 'text', key: 'age', label: 'age', placeholder: 'optional' },
+        { kind: 'text', key: 'birthday', label: 'birthday', placeholder: 'e.g. March 3' },
         { kind: 'text', key: 'height', label: 'height', placeholder: 'e.g. 165 cm' },
         { kind: 'text', key: 'weight', label: 'weight', placeholder: 'optional' },
       ],

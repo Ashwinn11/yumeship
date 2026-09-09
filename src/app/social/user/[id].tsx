@@ -180,6 +180,8 @@ export default function PublicUserProfileScreen() {
               fallbackColor={profile.color || Colors.sakura}
               height={profile.height}
               weight={profile.weight}
+              age={profile.age}
+              birthday={profile.birthday}
               song={profile.song}
               songLink={profile.songLink}
               gallery={profile.gallery}
@@ -190,10 +192,7 @@ export default function PublicUserProfileScreen() {
               textColor={profile.textColor}
               borderStyle={profile.borderStyle}
               nameFont={profile.nameFont}
-              nameOrnament={profile.nameOrnament}
               flags={profile.flags}
-              avatarFrame={profile.avatarFrame}
-              avatarFrameUrl={profile.avatarFrameUrl}
               {...pairedProps(pairedFo && { name: pairedFo.name, pronouns: pairedFo.pronouns, avatarUri: pairedFo.avatarUrl })}
               followerCount={profile.followerCount}
               followingCount={profile.followingCount}

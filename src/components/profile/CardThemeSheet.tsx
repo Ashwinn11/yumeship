@@ -7,16 +7,11 @@ import { useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, TouchableWithoutFeedback, View } from 'react-native';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
-import { Heart } from '@/components/deco/Heart';
 import { LaceFrame } from '@/components/deco/LaceFrame';
 import { PatternBackdrop } from '@/components/deco/PatternBackdrop';
-import { Star } from '@/components/deco/Star';
-import { TornEdge } from '@/components/deco/TornEdge';
-import { AvatarFrame } from './AvatarFrame';
 import { BG_COLORS, TEXT_COLORS } from '@/constants/bgPalette';
 import { Colors, FontFamily, Radius, SheetColumn, Spacing, sf } from '@/constants/theme';
-import { AVATAR_FRAMES, BORDER_DECORATIONS, BORDER_EDGES, GRADIENT_PRESETS, NAME_FONTS, NAME_ORNAMENTS, buildBorderStyle, parseBorderStyle } from './cardTheme';
-import { NameOrnament } from '@/components/deco/NameOrnament';
+import { BORDER_FRAMES, GRADIENT_PRESETS, NAME_FONTS, buildBorderFrame, parseBorderFrame } from './cardTheme';
 import type { CardTheme } from './cardTheme';
 
 type Tab = 'card' | 'page' | 'text' | 'style';
@@ -34,12 +29,7 @@ const NAME_FONT_PREVIEW: Record<string, string> = {
   klee: FontFamily.ja,
 };
 const NAME_FONT_LABEL: Record<string, string> = { '': 'display', script: 'script', marker: 'marker', klee: 'klee' };
-const NAME_ORNAMENT_LABEL: Record<string, string> = {
-  '': 'none', wing: 'wing', swash: 'swash', sparkle: 'sparkle', bow: 'bow', heart: 'heart', star: 'star',
-};
-const BORDER_EDGE_LABEL: Record<string, string> = { '': 'classic', torn: 'torn', polaroid: 'polaroid', lace: 'lace' };
-const BORDER_DECORATION_LABEL: Record<string, string> = { stickers: 'stickers', pattern: 'pattern' };
-const AVATAR_FRAME_LABEL: Record<string, string> = { '': 'none', custom: 'custom' };
+const BORDER_FRAME_LABEL: Record<string, string> = { lace: 'lace', pattern: 'pattern' };
 
 type Props = {
   visible: boolean;
@@ -61,30 +51,10 @@ async function pickImage(): Promise<string | undefined> {
 }
 
 function BorderPreview({ kind }: { kind: string }) {
-  if (kind === 'torn') {
-    return (
-      <View style={[styles.borderPreviewBox, { overflow: 'hidden', borderBottomWidth: 0 }]}>
-        <View style={styles.borderPreviewTorn}>
-          <TornEdge width={28} height={5} color={Colors.paperDeep} />
-        </View>
-      </View>
-    );
-  }
-  if (kind === 'polaroid') {
-    return <View style={[styles.borderPreviewBox, { borderWidth: 4, borderColor: '#ffffff', backgroundColor: Colors.sakuraSoft }]} />;
-  }
   if (kind === 'lace') {
     return (
       <View style={[styles.borderPreviewBox, { overflow: 'hidden' }]}>
         <LaceFrame width={28} height={20} radius={5} bandWidth={4} scallopSize={4} />
-      </View>
-    );
-  }
-  if (kind === 'stickers') {
-    return (
-      <View style={styles.borderPreviewBox}>
-        <View style={styles.borderPreviewStickerTL}><Star size={10} color={Colors.butterDeep} /></View>
-        <View style={styles.borderPreviewStickerBR}><Heart size={9} color={Colors.sakuraDeep} /></View>
       </View>
     );
   }
@@ -96,11 +66,6 @@ function BorderPreview({ kind }: { kind: string }) {
     );
   }
   return <View style={styles.borderPreviewBox} />;
-}
-
-function AvatarFramePreview({ kind }: { kind: string }) {
-  if (kind === 'custom') return <Text style={styles.chipTextIcon}>IMG</Text>;
-  return <View style={styles.avatarFramePreviewCircle} />;
 }
 
 export function CardThemeSheet({ visible, onClose, theme, onChange, premium }: Props) {
@@ -155,23 +120,12 @@ export function CardThemeSheet({ visible, onClose, theme, onChange, premium }: P
     }
   }
 
-  function handlePickBorderEdge(edge: string) {
+  function handleToggleBorderFrame(key: 'lace' | 'pattern') {
     if (!premium) { requirePremium(); return; }
-    const parsed = parseBorderStyle(theme.borderStyle);
-    onChange({ borderStyle: buildBorderStyle(edge, parsed.stickers, parsed.pattern) });
-  }
-
-  function handleToggleBorderDecoration(key: 'stickers' | 'pattern') {
-    if (!premium) { requirePremium(); return; }
-    const parsed = parseBorderStyle(theme.borderStyle);
-    const stickers = key === 'stickers' ? !parsed.stickers : parsed.stickers;
+    const parsed = parseBorderFrame(theme.borderStyle);
+    const lace = key === 'lace' ? !parsed.lace : parsed.lace;
     const pattern = key === 'pattern' ? !parsed.pattern : parsed.pattern;
-    onChange({ borderStyle: buildBorderStyle(parsed.edge, stickers, pattern) });
-  }
-
-  function handlePickNameOrnament(o: string) {
-    if (!premium) { requirePremium(); return; }
-    onChange({ nameOrnament: o });
+    onChange({ borderStyle: buildBorderFrame(lace, pattern) });
   }
 
   function handlePickNameFont(f: string) {
@@ -179,20 +133,9 @@ export function CardThemeSheet({ visible, onClose, theme, onChange, premium }: P
     onChange({ nameFont: f });
   }
 
-  function handlePickAvatarFrame(f: string) {
-    if (!premium) { requirePremium(); return; }
-    onChange({ avatarFrame: f, ...(f !== 'custom' ? { avatarFrameUrl: '' } : null) });
-  }
-
-  async function handlePickAvatarFrameImage() {
-    if (!premium) { requirePremium(); return; }
-    const uri = await pickImage();
-    if (uri) onChange({ avatarFrame: 'custom', avatarFrameUrl: uri });
-  }
-
   const isTransparentActive = isCardTab && !!theme.cardTransparent;
   const activeGradient = isCardTab && theme.cardBgGradient ? theme.cardBgGradient : '';
-  const borderParsed = parseBorderStyle(theme.borderStyle);
+  const borderParsed = parseBorderFrame(theme.borderStyle);
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
@@ -245,31 +188,17 @@ export function CardThemeSheet({ visible, onClose, theme, onChange, premium }: P
               </>
             ) : tab === 'style' ? (
               <>
-                <Text style={styles.sectionLabel}>edge</Text>
+                <Text style={styles.sectionLabel}>border frame</Text>
+                <Text style={styles.sectionHint}>stack these, or leave both off for a plain card</Text>
                 <View style={styles.chipGrid}>
-                  {BORDER_EDGES.map((edge) => (
+                  {BORDER_FRAMES.map((frame) => (
                     <Pressable
-                      key={edge || 'solid'}
-                      onPress={() => handlePickBorderEdge(edge)}
-                      style={[styles.chip, borderParsed.edge === edge && styles.chipActive]}
+                      key={frame}
+                      onPress={() => handleToggleBorderFrame(frame)}
+                      style={[styles.chip, borderParsed[frame] && styles.chipActive]}
                     >
-                      <View style={styles.chipIconBox}><BorderPreview kind={edge} /></View>
-                      <Text style={styles.chipLabel}>{BORDER_EDGE_LABEL[edge]}</Text>
-                    </Pressable>
-                  ))}
-                </View>
-
-                <Text style={[styles.sectionLabel, styles.sectionLabelSpaced]}>decorate</Text>
-                <Text style={styles.sectionHint}>stack these with any edge, or with each other</Text>
-                <View style={styles.chipGrid}>
-                  {BORDER_DECORATIONS.map((deco) => (
-                    <Pressable
-                      key={deco}
-                      onPress={() => handleToggleBorderDecoration(deco)}
-                      style={[styles.chip, borderParsed[deco] && styles.chipActive]}
-                    >
-                      <View style={styles.chipIconBox}><BorderPreview kind={deco} /></View>
-                      <Text style={styles.chipLabel}>{BORDER_DECORATION_LABEL[deco]}</Text>
+                      <View style={styles.chipIconBox}><BorderPreview kind={frame} /></View>
+                      <Text style={styles.chipLabel}>{BORDER_FRAME_LABEL[frame]}</Text>
                     </Pressable>
                   ))}
                 </View>
@@ -289,51 +218,6 @@ export function CardThemeSheet({ visible, onClose, theme, onChange, premium }: P
                     </Pressable>
                   ))}
                 </View>
-
-                <Text style={[styles.sectionLabel, styles.sectionLabelSpaced]}>name ornament</Text>
-                <Text style={styles.sectionHint}>line art either side of your name</Text>
-                <View style={styles.chipGrid}>
-                  {NAME_ORNAMENTS.map((o) => (
-                    <Pressable
-                      key={o || 'none'}
-                      onPress={() => handlePickNameOrnament(o)}
-                      style={[styles.chip, (theme.nameOrnament || '') === o && styles.chipActive]}
-                    >
-                      <View style={styles.chipIconBox}>
-                        {o ? <NameOrnament kind={o} size={20} color={Colors.ink} />
-                           : <Text style={styles.chipTextIcon}>none</Text>}
-                      </View>
-                      <Text style={styles.chipLabel}>{NAME_ORNAMENT_LABEL[o]}</Text>
-                    </Pressable>
-                  ))}
-                </View>
-
-                <Text style={[styles.sectionLabel, styles.sectionLabelSpaced]}>avatar frame</Text>
-                <View style={styles.chipGrid}>
-                  {AVATAR_FRAMES.map((f) => (
-                    <Pressable
-                      key={f || 'none'}
-                      onPress={() => handlePickAvatarFrame(f)}
-                      style={[styles.chip, (theme.avatarFrame || '') === f && styles.chipActive]}
-                    >
-                      <View style={styles.chipIconBox}><AvatarFramePreview kind={f} /></View>
-                      <Text style={styles.chipLabel}>{AVATAR_FRAME_LABEL[f]}</Text>
-                    </Pressable>
-                  ))}
-                </View>
-
-                {theme.avatarFrame === 'custom' && (
-                  <>
-                    <Text style={[styles.sectionLabel, styles.sectionLabelSpaced]}>preview</Text>
-                    <View style={styles.framePreviewBox}>
-                      <AvatarFrame kind="custom" url={theme.avatarFrameUrl} size={64} />
-                      <View style={styles.framePreviewCircle} />
-                    </View>
-                    <Pressable style={styles.uploadFrameBtn} onPress={handlePickAvatarFrameImage}>
-                      <Text style={styles.uploadFrameBtnText}>{theme.avatarFrameUrl ? 'change image' : 'upload an image'}</Text>
-                    </Pressable>
-                  </>
-                )}
               </>
             ) : (
               <>
@@ -485,25 +369,4 @@ const styles = StyleSheet.create({
   chipLabel: { fontFamily: FontFamily.ui, fontSize: sf(9), color: Colors.ink3, textTransform: 'capitalize' },
 
   borderPreviewBox: { width: 28, height: 20, borderRadius: 4, borderWidth: 1.5, borderColor: Colors.ink },
-  borderPreviewTorn: { position: 'absolute', left: 0, right: 0, bottom: -1 },
-  borderPreviewStickerTL: { position: 'absolute', top: -4, left: -3 },
-  borderPreviewStickerBR: { position: 'absolute', bottom: -4, right: -3 },
-  chipTextIcon: { fontSize: sf(9), color: Colors.ink3, fontFamily: FontFamily.uiMedium },
-
-  avatarFramePreviewCircle: { width: 22, height: 22, borderRadius: 11, borderWidth: 1.4, borderColor: Colors.ink },
-
-  framePreviewBox: {
-    width: 96, height: 96, alignSelf: 'center',
-    alignItems: 'center', justifyContent: 'center', position: 'relative',
-  },
-  framePreviewCircle: {
-    width: 64, height: 64, borderRadius: 32,
-    backgroundColor: Colors.paperDeep, borderWidth: 1, borderColor: Colors.line,
-  },
-  uploadFrameBtn: {
-    marginTop: Spacing.s3, alignSelf: 'center',
-    paddingHorizontal: Spacing.s4, paddingVertical: 10,
-    borderRadius: Radius.pill, borderWidth: 1, borderColor: Colors.line, backgroundColor: Colors.vellum,
-  },
-  uploadFrameBtnText: { fontFamily: FontFamily.uiMedium, fontSize: sf(12), color: Colors.ink },
 });

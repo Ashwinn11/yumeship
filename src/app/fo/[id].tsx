@@ -100,7 +100,7 @@ export default function FoDetailScreen() {
   function startEdit() {
     setDraft({
       name: fo!.name, pronouns: fo!.pronouns, fandom: fo!.fandom,
-      relStatus: fo!.relStatus, shareStatus: fo!.shareStatus,
+      relStatus: fo!.relStatus, shareStatus: fo!.shareStatus, color: fo!.color,
       bio: fo!.bio, tagline: fo!.tagline, height: fo!.height, weight: fo!.weight,
       age: fo!.age, birthday: fo!.birthday, photoUri: fo!.photoUri,
       song: fo!.song, songLink: fo!.songLink, gallery: fo!.gallery, flags: fo!.flags,
@@ -211,6 +211,7 @@ export default function FoDetailScreen() {
                 bio={fo.bio}
                 tagline={fo.tagline}
                 photoUri={fo.photoUri}
+                fallbackColor={fo.color || Colors.sakura}
                 height={fo.height}
                 weight={fo.weight}
                 age={fo.age}
@@ -227,10 +228,7 @@ export default function FoDetailScreen() {
                 textColor={fo.textColor}
                 borderStyle={fo.borderStyle}
                 nameFont={fo.nameFont}
-                nameOrnament={fo.nameOrnament}
                 flags={fo.flags}
-                avatarFrame={fo.avatarFrame}
-                avatarFrameUrl={fo.avatarFrameUrl}
               />
               {fo.isPublic && <Text style={styles.postsLabel}>posts about them</Text>}
             </>
@@ -290,8 +288,7 @@ export default function FoDetailScreen() {
           cardBgGradient: fo.cardBgGradient, cardTransparent: fo.cardTransparent,
           textColor: fo.textColor,
           borderStyle: fo.borderStyle,
-          nameFont: fo.nameFont, nameOrnament: fo.nameOrnament,
-          avatarFrame: fo.avatarFrame, avatarFrameUrl: fo.avatarFrameUrl,
+          nameFont: fo.nameFont,
         }}
         onChange={handleThemeChange}
         premium={premium}
