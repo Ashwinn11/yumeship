@@ -15,6 +15,7 @@ import { PostCard } from '@/components/community/PostCard';
 import { FeedSkeleton } from '@/components/community/PostCardSkeleton';
 import { CozyModal } from '@/components/ui/CozyModal';
 import { InlineToast, useInlineToast } from '@/components/ui/InlineToast';
+import { SegmentedTabs } from '@/components/ui/SegmentedTabs';
 import { useAuthUser } from '@/store/auth';
 import {
   deletePost,
@@ -78,6 +79,13 @@ export default function MyProfileScreen() {
     removePost,
   } = useUserPosts(user?.id);
   const { message: toastMsg, nonce: toastNonce, show: showToast } = useInlineToast();
+  const [postsTab, setPostsTab] = useState<'posts' | 'activities'>('posts');
+  // same "post" vs "activity" split the main feed already draws — a plain
+  // post has no activity_id, everything else (a submitted prompt or a
+  // response to one) is an activity
+  const shownPosts = posts.filter((p) =>
+    postsTab === 'activities' ? p.kind === 'activity' || !!p.activityId : p.kind === 'post' && !p.activityId,
+  );
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [togglingFosPublic, setTogglingFosPublic] = useState(false);
@@ -178,7 +186,7 @@ export default function MyProfileScreen() {
         style={styles.scroll}
         contentContainerStyle={[styles.content, column, { paddingBottom: Spacing.s5 }]}
         showsVerticalScrollIndicator={false}
-        data={posts}
+        data={shownPosts}
         keyExtractor={keyExtractor}
         renderItem={renderPost}
         ItemSeparatorComponent={PostSeparator}
@@ -191,7 +199,6 @@ export default function MyProfileScreen() {
               name={me.name || 'someone soft'}
               pronouns={me.pronouns}
               username={me.username}
-              bio={me.bio}
               tagline={me.tagline}
               photoUri={me.avatar}
               fallbackColor={me.color}
@@ -210,11 +217,11 @@ export default function MyProfileScreen() {
               borderStyle={me.borderStyle}
               nameFont={me.nameFont}
               flags={me.flags}
+              links={me.links}
               {...pairedProps(pairedFo && { name: pairedFo.name, pronouns: pairedFo.pronouns, avatarUri: pairedFo.photoUri })}
               followerCount={counts.followerCount}
               followingCount={counts.followingCount}
             />
-            <Text style={styles.footnote}>this is you, in their world ♡</Text>
 
             {fos.length > 0 && (
               <>
@@ -244,8 +251,7 @@ export default function MyProfileScreen() {
                       key={f.id}
                       name={f.name}
                       avatarUri={f.photoUri}
-                      pronouns={f.pronouns}
-                      bio={f.bio}
+                      tagline={f.tagline}
                       onPress={() => router.push(`/fo/${f.id}` as any)}
                     />
                   ))}
@@ -254,13 +260,22 @@ export default function MyProfileScreen() {
             )}
 
             <Text style={styles.postsLabel}>your posts</Text>
+            <View style={styles.postsTabsWrap}>
+              <SegmentedTabs
+                tabs={[{ key: 'posts', label: 'posts' }, { key: 'activities', label: 'activities' }]}
+                value={postsTab}
+                onChange={setPostsTab}
+              />
+            </View>
           </>
         }
         ListEmptyComponent={
           postsLoading ? (
             <FeedSkeleton />
           ) : (
-            <Text style={styles.postsEmpty}>you haven't posted yet</Text>
+            <Text style={styles.postsEmpty}>
+              {postsTab === 'activities' ? "you haven't joined an activity yet" : "you haven't posted yet"}
+            </Text>
           )
         }
       />
@@ -317,13 +332,10 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.uiSemiBold, fontSize: sf(11), color: Colors.ink3,
     textTransform: 'uppercase', letterSpacing: 0.8, marginTop: Spacing.s6, marginBottom: Spacing.s3,
   },
+  postsTabsWrap: { marginBottom: Spacing.s4 },
   postsEmpty: {
     fontFamily: FontFamily.script, fontSize: sf(14), color: Colors.ink3,
     textAlign: 'center', marginTop: Spacing.s3,
-  },
-  footnote: {
-    fontFamily: FontFamily.script, fontSize: sf(15), color: Colors.ink3,
-    textAlign: 'center', marginTop: Spacing.s4,
   },
   decoTL: { position: 'absolute', top: 120, left: 22 },
   decoBR: { position: 'absolute', bottom: 110, right: 28 },

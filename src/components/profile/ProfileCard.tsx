@@ -4,16 +4,31 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
 import { Linking, LayoutChangeEvent, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { BeadedFrame } from '@/components/deco/BeadedFrame';
+import { BracketFrame } from '@/components/deco/BracketFrame';
+import { DoubleLineFrame } from '@/components/deco/DoubleLineFrame';
+import { FlourishCorners } from '@/components/deco/FlourishCorners';
 import { Heart } from '@/components/deco/Heart';
+import { HeartRippleBackdrop } from '@/components/deco/HeartRippleBackdrop';
 import { LaceFrame } from '@/components/deco/LaceFrame';
+import { LatticeFrame } from '@/components/deco/LatticeFrame';
 import { PatternBackdrop } from '@/components/deco/PatternBackdrop';
+import { SakuraDriftBackdrop } from '@/components/deco/SakuraDriftBackdrop';
+import { ScatterBackdrop } from '@/components/deco/ScatterBackdrop';
 import { StickerCassette } from '@/components/deco/Stickers';
-import { WashiTape } from '@/components/deco/WashiTape';
+import { StitchFrame } from '@/components/deco/StitchFrame';
+import { WashBackdrop } from '@/components/deco/WashBackdrop';
 import { Polaroid } from '@/components/templates/primitives';
 import { Colors, FontFamily, Radius, Shadow, Spacing, sf } from '@/constants/theme';
 import type { GalleryPhoto } from '@/store/fo';
 import { ProfileFlags } from './ProfileFlags';
-import { parseBorderFrame, type ProfileFlag } from './cardTheme';
+import { parseBorderFrame, type ProfileFlag, type ProfileLink } from './cardTheme';
+
+function normalizeUrl(url: string): string {
+  const trimmed = url.trim();
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  return `https://${trimmed}`;
+}
 
 const POLAROID_TAPES = [Colors.sakura, Colors.lavender, Colors.butter, Colors.sage, Colors.peach];
 
@@ -40,7 +55,6 @@ type Props = {
   username?: string;
   /** small line under the name, e.g. the F/O's source/fandom */
   subtitle?: string;
-  bio?: string;
   /** short bio shown on the card itself, under the name/handle */
   tagline?: string;
   photoUri?: string;
@@ -70,12 +84,14 @@ type Props = {
   /** no hero fill at all — the page background shows through */
   cardTransparent?: boolean;
   textColor?: string;
-  /** comma-joined border-frame accents: '' (none) | 'lace' | 'pattern' | 'lace,pattern' */
+  /** comma-joined border-frame accents — see cardTheme.ts BORDER_FRAMES; '' for none */
   borderStyle?: string;
   /** '' default display font | 'script' | 'marker' | 'klee' */
   nameFont?: string;
   /** everything they fly under the name */
   flags?: ProfileFlag[];
+  /** external links shown in their own card section — socials, playlists, etc. */
+  links?: ProfileLink[];
   /** community follower/following counts, rendered under pronouns */
   followerCount?: number;
   followingCount?: number;
@@ -109,7 +125,6 @@ export function ProfileCard({
   pronouns,
   username,
   subtitle,
-  bio,
   tagline,
   photoUri,
   fallbackColor = Colors.sakura,
@@ -130,6 +145,7 @@ export function ProfileCard({
   borderStyle = '',
   nameFont = '',
   flags = [],
+  links = [],
   followerCount,
   followingCount,
   followAction,
@@ -160,11 +176,13 @@ export function ProfileCard({
     setHeroSize((prev) => (prev.width === width && prev.height === height ? prev : { width, height }));
   };
 
-  // both border-frame accents are independently toggleable — see cardTheme.ts
-  const { lace: hasLace, pattern: hasPattern } = parseBorderFrame(borderStyle);
+  // every border-frame accent is independently toggleable — see cardTheme.ts
+  const frames = parseBorderFrame(borderStyle);
 
-  // lace draws its own frame, so it replaces the hero's default 1px solid border
-  const heroBorderStyle = hasLace ? { borderWidth: 0 } : null;
+  // lace/lattice draw a full-perimeter band matching the card's own shape,
+  // so they replace the hero's default 1px solid border; the rest are inset
+  // accents or backdrop fills that sit fine alongside the plain border
+  const heroBorderStyle = (frames.lace || frames.lattice) ? { borderWidth: 0 } : null;
 
   // ── Hero: identity only — everything else lives in its own section below ──
   const heroContent = (
@@ -231,6 +249,15 @@ export function ProfileCard({
           {!!pronouns && <Text style={[styles.pronouns, textStyle]}>{pronouns}</Text>}
           <ProfileFlags flags={flags} textColor={textColor} />
           {!!tagline && <Text style={[styles.tagline, textStyle]} numberOfLines={3}>{tagline}</Text>}
+          {links.length > 0 && (
+            <View style={styles.linksRow}>
+              {links.map((l) => (
+                <Pressable key={l.id} style={styles.linkPill} onPress={() => Linking.openURL(normalizeUrl(l.url))}>
+                  <Text style={styles.linkPillText} numberOfLines={1}>{l.label || l.url}</Text>
+                </Pressable>
+              ))}
+            </View>
+          )}
           {(followerCount !== undefined || followingCount !== undefined) && (
             <View style={styles.socialStatsRow}>
               <View style={styles.socialStat}>
@@ -247,14 +274,24 @@ export function ProfileCard({
         </>
       )}
 
-      {hasLace && heroSize.width > 0 && (
-        <LaceFrame width={heroSize.width} height={heroSize.height} />
-      )}
+      {frames.lace && heroSize.width > 0 && <LaceFrame width={heroSize.width} height={heroSize.height} />}
+      {frames.lattice && heroSize.width > 0 && <LatticeFrame width={heroSize.width} height={heroSize.height} />}
+      {frames.stitch && heroSize.width > 0 && <StitchFrame width={heroSize.width} height={heroSize.height} />}
+      {frames.flourish && heroSize.width > 0 && <FlourishCorners width={heroSize.width} height={heroSize.height} />}
+      {frames.bracket && heroSize.width > 0 && <BracketFrame width={heroSize.width} height={heroSize.height} />}
+      {frames.beaded && heroSize.width > 0 && <BeadedFrame width={heroSize.width} height={heroSize.height} />}
+      {frames.double && heroSize.width > 0 && <DoubleLineFrame width={heroSize.width} height={heroSize.height} />}
     </>
   );
 
-  const patternOverlay = hasPattern && heroSize.width > 0 && (
-    <PatternBackdrop width={heroSize.width} height={heroSize.height} />
+  const backdropOverlay = heroSize.width > 0 && (
+    <>
+      {frames.pattern && <PatternBackdrop width={heroSize.width} height={heroSize.height} />}
+      {frames.scatter && <ScatterBackdrop width={heroSize.width} height={heroSize.height} />}
+      {frames.wash && <WashBackdrop width={heroSize.width} height={heroSize.height} />}
+      {frames.heartRipple && <HeartRippleBackdrop width={heroSize.width} height={heroSize.height} />}
+      {frames.sakuraDrift && <SakuraDriftBackdrop width={heroSize.width} height={heroSize.height} />}
+    </>
   );
 
   return (
@@ -269,7 +306,7 @@ export function ProfileCard({
               {...MEDIA_IMAGE}
             />
             <View style={styles.heroImageOverlay} />
-            {patternOverlay}
+            {backdropOverlay}
             {heroContent}
           </View>
         ) : gradientColors && gradientColors.length >= 2 ? (
@@ -280,7 +317,7 @@ export function ProfileCard({
             style={[styles.hero, heroBorderStyle]}
             onLayout={onHeroLayout}
           >
-            {patternOverlay}
+            {backdropOverlay}
             {heroContent}
           </LinearGradient>
         ) : (
@@ -293,23 +330,10 @@ export function ProfileCard({
             ]}
             onLayout={onHeroLayout}
           >
-            {patternOverlay}
+            {backdropOverlay}
             {heroContent}
           </View>
         )}
-      </View>
-
-      {/* about */}
-      <View style={styles.section}>
-        <SectionLabel>about</SectionLabel>
-        <View style={styles.aboutCard}>
-          <View style={styles.aboutTape} pointerEvents="none">
-            <WashiTape width={52} height={12} pattern="dot" color={Colors.lavender} rotate={-5} />
-          </View>
-          <Text style={[styles.bio, !bio && styles.bioEmpty]}>
-            {bio || 'nothing written yet…'}
-          </Text>
-        </View>
       </View>
 
       {/* details — one card, grouped by spacing; only type/sharing (real
@@ -479,26 +503,8 @@ const styles = StyleSheet.create({
     letterSpacing: 1.4, textTransform: 'uppercase',
   },
 
-  aboutCard: {
-    backgroundColor: Colors.vellum,
-    borderWidth: 1, borderColor: Colors.line,
-    borderRadius: Radius.r4,
-    padding: Spacing.s4,
-    paddingTop: Spacing.s5,
-    position: 'relative',
-    ...Shadow.s1,
-  },
-  aboutTape: { position: 'absolute', top: -7, left: 14 },
-  bio: {
-    fontFamily: FontFamily.script,
-    fontSize: sf(17),
-    lineHeight: sf(24),
-    color: Colors.ink2,
-  },
-  bioEmpty: { color: Colors.ink3 },
-
-  // one card, same chrome as .aboutCard right above it — items inside are
-  // grouped by space (generous columnGap/rowGap), not by six repeated boxes
+  // one card — items inside are grouped by space (generous columnGap/rowGap),
+  // not by six repeated boxes
   detailsCard: {
     backgroundColor: Colors.vellum,
     borderWidth: 1, borderColor: Colors.line,
@@ -529,6 +535,19 @@ const styles = StyleSheet.create({
   songTextCol: { flex: 1, gap: 1 },
   songText: { fontFamily: FontFamily.uiMedium, fontSize: sf(14), color: Colors.ink, lineHeight: sf(19) },
   songLinkHint: { fontFamily: FontFamily.ui, fontSize: sf(10), color: Colors.sakuraDeep },
+
+  linksRow: {
+    flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center',
+    gap: 8, marginTop: Spacing.s3, paddingHorizontal: Spacing.s2,
+  },
+  linkPill: {
+    paddingVertical: 6, paddingHorizontal: 14,
+    borderRadius: Radius.pill,
+    backgroundColor: Colors.paperDeep,
+    borderWidth: 1, borderColor: Colors.line,
+    maxWidth: '100%',
+  },
+  linkPillText: { fontFamily: FontFamily.uiMedium, fontSize: sf(12.5), color: Colors.sakuraDeep },
 
   galleryContent: { gap: 14, paddingVertical: 10, paddingHorizontal: 4 },
 });

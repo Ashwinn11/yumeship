@@ -34,3 +34,4 @@ export { Toggle } from './Toggle';
 export { UnderInput } from './UnderInput';
 export { CozyModal } from './CozyModal';
 export { CalloutBubble, ThoughtCloud } from './Callouts';
+export { SegmentedTabs, type SegmentedTab } from './SegmentedTabs';

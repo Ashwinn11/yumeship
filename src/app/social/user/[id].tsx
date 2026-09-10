@@ -9,6 +9,7 @@ import { FeedSkeleton } from '@/components/community/PostCardSkeleton';
 import { pairedProps } from '@/components/profile/cardProps';
 import { FoAvatarCard } from '@/components/profile/FoAvatarCard';
 import { InlineToast, useInlineToast } from '@/components/ui/InlineToast';
+import { SegmentedTabs } from '@/components/ui/SegmentedTabs';
 import { PageBackground } from '@/components/profile/PageBackground';
 import { ProfileCard } from '@/components/profile/ProfileCard';
 import { ProfileCardSkeleton } from '@/components/profile/ProfileCardSkeleton';
@@ -80,6 +81,10 @@ export default function PublicUserProfileScreen() {
   const isMe = me?.id === id;
 
   const { posts, loading: postsLoading, refreshing, refresh: refreshPosts, loadMore, toggleLikeOptimistic, pollVoteOptimistic } = useUserPosts(id);
+  const [postsTab, setPostsTab] = useState<'posts' | 'activities'>('posts');
+  const shownPosts = posts.filter((p) =>
+    postsTab === 'activities' ? p.kind === 'activity' || !!p.activityId : p.kind === 'post' && !p.activityId,
+  );
 
   const renderPost = useCallback(
     ({ item }: { item: CommunityPost }) => (
@@ -161,7 +166,7 @@ export default function PublicUserProfileScreen() {
         style={styles.scroll}
         contentContainerStyle={[styles.content, column]}
         showsVerticalScrollIndicator={false}
-        data={posts}
+        data={shownPosts}
         keyExtractor={keyExtractor}
         renderItem={renderPost}
         ItemSeparatorComponent={PostSeparator}
@@ -174,8 +179,7 @@ export default function PublicUserProfileScreen() {
               name={profile.name || 'someone soft'}
               pronouns={profile.pronouns}
               username={profile.username}
-              bio={profile.bio}
-                tagline={profile.tagline}
+              tagline={profile.tagline}
               photoUri={profile.avatarUrl}
               fallbackColor={profile.color || Colors.sakura}
               height={profile.height}
@@ -193,6 +197,7 @@ export default function PublicUserProfileScreen() {
               borderStyle={profile.borderStyle}
               nameFont={profile.nameFont}
               flags={profile.flags}
+              links={profile.links}
               {...pairedProps(pairedFo && { name: pairedFo.name, pronouns: pairedFo.pronouns, avatarUri: pairedFo.avatarUrl })}
               followerCount={profile.followerCount}
               followingCount={profile.followingCount}
@@ -216,8 +221,7 @@ export default function PublicUserProfileScreen() {
                       key={f.id}
                       name={f.name}
                       avatarUri={f.avatarUrl}
-                      pronouns={f.pronouns}
-                      bio={f.bio}
+                      tagline={f.tagline}
                       onPress={() => router.push(`/social/fo/${f.id}` as any)}
                     />
                   ))}
@@ -226,13 +230,22 @@ export default function PublicUserProfileScreen() {
             )}
 
             <Text style={styles.postsLabel}>posts</Text>
+            <View style={styles.postsTabsWrap}>
+              <SegmentedTabs
+                tabs={[{ key: 'posts', label: 'posts' }, { key: 'activities', label: 'activities' }]}
+                value={postsTab}
+                onChange={setPostsTab}
+              />
+            </View>
           </>
         }
         ListEmptyComponent={
           relationship.blocked ? null : postsLoading ? (
             <FeedSkeleton />
           ) : (
-            <Text style={styles.postsEmpty}>no posts yet</Text>
+            <Text style={styles.postsEmpty}>
+              {postsTab === 'activities' ? 'no activities yet' : 'no posts yet'}
+            </Text>
           )
         }
       />
@@ -280,6 +293,7 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.uiSemiBold, fontSize: sf(11), color: Colors.ink3,
     textTransform: 'uppercase', letterSpacing: 0.8, marginTop: Spacing.s6, marginBottom: Spacing.s3,
   },
+  postsTabsWrap: { marginBottom: Spacing.s4 },
   postsEmpty: {
     fontFamily: FontFamily.script, fontSize: sf(14), color: Colors.ink3,
     textAlign: 'center', marginTop: Spacing.s3,

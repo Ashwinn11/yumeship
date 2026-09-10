@@ -26,7 +26,6 @@ export function WebProfileCard({ profile, pairedFo, followAction }: WebProfileCa
       name={profile.name || 'someone soft'}
       pronouns={profile.pronouns}
       username={profile.username}
-      bio={profile.bio}
       tagline={profile.tagline}
       photoUri={profile.avatarUrl}
       fallbackColor={profile.color}
@@ -47,6 +46,7 @@ export function WebProfileCard({ profile, pairedFo, followAction }: WebProfileCa
       borderStyle={profile.borderStyle}
       nameFont={profile.nameFont}
       flags={profile.flags}
+      links={profile.links}
       {...pairedProps(pairedData)}
       followerCount={profile.followerCount}
       followingCount={profile.followingCount}

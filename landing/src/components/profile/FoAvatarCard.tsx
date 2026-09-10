@@ -1,25 +1,16 @@
 import { Link } from 'react-router-dom';
-import type { ProfileFlag } from '../../lib/profile';
-import { SEXUALITY_OPTIONS } from '../../constants/sexualities';
-import { FlagIcon } from './ProfileFlags';
-
-const BY_KEY = new Map(SEXUALITY_OPTIONS.map((o) => [o.key, o]));
 
 type Props = {
   id?: string;
   href?: string;
   name: string;
   avatarUri?: string;
-  pronouns?: string;
-  bio?: string;
-  flags?: ProfileFlag[];
+  tagline?: string;
   onClick?: () => void;
 };
 
-/** F/O preview card shown in the horizontal row on a profile — matching mobile app FoAvatarCard */
-export function FoAvatarCard({ id, href, name, avatarUri, pronouns, bio, flags = [], onClick }: Props) {
-  const first = flags.find((f) => f.imageUrl || BY_KEY.get(f.flag?.toLowerCase())?.colors || f.flag) ?? null;
-  const stripes = first ? BY_KEY.get(first.flag?.toLowerCase())?.colors : undefined;
+/** F/O preview card shown in the horizontal row on a profile — name and bio only, matching mobile app FoAvatarCard */
+export function FoAvatarCard({ id, href, name, avatarUri, tagline, onClick }: Props) {
   const initial = name.trim().charAt(0).toUpperCase() || '♡';
   const targetHref = href || (id ? `/fo/${id}` : undefined);
 
@@ -33,19 +24,7 @@ export function FoAvatarCard({ id, href, name, avatarUri, pronouns, bio, flags =
         )}
       </div>
       <div className="fo-card-name" title={name}>{name || 'untitled'}</div>
-      <div className="fo-card-pronouns-row">
-        {!!pronouns && <span className="fo-card-pronouns">{pronouns}</span>}
-      </div>
-      <div className="fo-card-flag-row">
-        {first?.imageUrl ? (
-          <img src={first.imageUrl} alt="" className="fo-card-flag-img" />
-        ) : stripes ? (
-          <FlagIcon colors={stripes} width={18} height={12} />
-        ) : first?.flag ? (
-          <span className="fo-card-flag-glyph">{first.flag}</span>
-        ) : null}
-      </div>
-      <div className="fo-card-bio">{bio ?? ''}</div>
+      <div className="fo-card-bio">{tagline ?? ''}</div>
     </>
   );
 

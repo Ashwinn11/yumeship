@@ -11,18 +11,24 @@ export type ProfileFlag = {
   text: string;
 };
 
+export type ProfileLink = {
+  id: string;
+  label: string;
+  url: string;
+};
+
 export type WebProfile = {
   id: string;
   username: string;
   name: string;
   pronouns: string;
-  bio: string;
   tagline: string;
   avatarUrl: string;
   song: string;
   songLink: string;
   gallery: GalleryPhoto[];
   flags: ProfileFlag[];
+  links: ProfileLink[];
   identifyFoId: string | null;
   followerCount: number;
   followingCount: number;
@@ -45,13 +51,13 @@ export type WebFoProfile = {
   id: string;
   name: string;
   pronouns: string;
-  bio: string;
   tagline: string;
   avatarUrl: string;
   song: string;
   songLink: string;
   gallery: GalleryPhoto[];
   flags: ProfileFlag[];
+  links: ProfileLink[];
   fandom: string;
   relStatus: string;
   shareStatus: string;
@@ -79,11 +85,11 @@ const CARD_THEME_FIELDS =
   'card_bg_gradient, card_transparent, text_color, border_style, name_font';
 
 const PROFILE_FIELDS =
-  `id, username, name, pronouns, bio, tagline, avatar_url, song, song_link, gallery, flags, ` +
+  `id, username, name, pronouns, tagline, avatar_url, song, song_link, gallery, flags, links, ` +
   `color, identify_fo_id, follower_count, following_count, ${CARD_THEME_FIELDS}`;
 
 const FO_PROFILE_FIELDS =
-  `id, name, pronouns, bio, tagline, avatar_url, song, song_link, gallery, flags, ` +
+  `id, name, pronouns, tagline, avatar_url, song, song_link, gallery, flags, links, ` +
   `fandom, rel_status, share_status, age, birthday, ${CARD_THEME_FIELDS}`;
 
 // ─── Row mappers ──────────────────────────────────────────────────────────────
@@ -104,6 +110,17 @@ function parseFlags(raw: unknown): ProfileFlag[] {
       flag: ((f.flag ?? f.icon) as string) ?? '',
       imageUrl: (f.imageUrl as string) ?? '',
       text: f.text as string,
+    }));
+}
+
+function parseLinks(raw: unknown): ProfileLink[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((l) => l && typeof l.url === 'string' && l.url)
+    .map((l) => ({
+      id: (l.id as string) ?? '',
+      label: (l.label as string) ?? '',
+      url: l.url as string,
     }));
 }
 
@@ -131,13 +148,13 @@ function rowToProfile(row: Record<string, unknown>): WebProfile {
     username: (row.username as string) ?? '',
     name: (row.name as string) ?? '',
     pronouns: (row.pronouns as string) ?? '',
-    bio: (row.bio as string) ?? '',
     tagline: (row.tagline as string) ?? '',
     avatarUrl: (row.avatar_url as string) ?? '',
     song: (row.song as string) ?? '',
     songLink: (row.song_link as string) ?? '',
     gallery: parseGallery(row.gallery),
     flags: parseFlags(row.flags),
+    links: parseLinks(row.links),
     identifyFoId: (row.identify_fo_id as string) ?? null,
     followerCount: (row.follower_count as number) ?? 0,
     followingCount: (row.following_count as number) ?? 0,
@@ -150,13 +167,13 @@ function rowToFoProfile(row: Record<string, unknown>): WebFoProfile {
     id: row.id as string,
     name: (row.name as string) ?? '',
     pronouns: (row.pronouns as string) ?? '',
-    bio: (row.bio as string) ?? '',
     tagline: (row.tagline as string) ?? '',
     avatarUrl: (row.avatar_url as string) ?? '',
     song: (row.song as string) ?? '',
     songLink: (row.song_link as string) ?? '',
     gallery: parseGallery(row.gallery),
     flags: parseFlags(row.flags),
+    links: parseLinks(row.links),
     fandom: (row.fandom as string) ?? '',
     relStatus: (row.rel_status as string) ?? 'romantic',
     shareStatus: (row.share_status as string) ?? 'selective',

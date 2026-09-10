@@ -2,6 +2,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Pressable, StyleSheet, Text } from 'react-native';
 
 import { ProfileEditor, type EditField, type EditSectionDef } from '@/components/profile/ProfileEditor';
+import { ProfileLinksEditor } from '@/components/profile/ProfileLinksEditor';
 import { Colors, FontFamily, REL_ORDER, RelationshipColors, RelationshipLabels, SHARING_ORDER, SharingColors, SharingLabels, Spacing, sf } from '@/constants/theme';
 import { persistImage } from '@/lib/localMedia';
 import type { Fo } from '@/store/fo';
@@ -17,8 +18,8 @@ const SHARE = SHARING_ORDER.map((v) => ({ value: v, label: SharingLabels[v], col
 
 export type FoDraft = Pick<
   Fo,
-  'name' | 'pronouns' | 'fandom' | 'relStatus' | 'shareStatus' | 'bio' | 'tagline' | 'color'
-  | 'height' | 'weight' | 'age' | 'birthday' | 'photoUri' | 'song' | 'songLink' | 'gallery' | 'flags'
+  'name' | 'pronouns' | 'fandom' | 'relStatus' | 'shareStatus' | 'tagline' | 'color'
+  | 'height' | 'weight' | 'age' | 'birthday' | 'photoUri' | 'song' | 'songLink' | 'gallery' | 'flags' | 'links'
 >;
 
 export function FoEditor({
@@ -70,12 +71,6 @@ export function FoEditor({
       ],
     },
     {
-      id: 'about',
-      label: 'about them',
-      summary: (v) => v.bio || 'not set',
-      fields: [{ kind: 'text', key: 'bio', label: 'about them', placeholder: 'a few soft lines about them…', multiline: true }],
-    },
-    {
       id: 'details',
       label: 'details',
       summary: (v) => [v.age, v.birthday, v.height, v.weight].filter(Boolean).join(' · ') || 'not set',
@@ -100,6 +95,16 @@ export function FoEditor({
       label: 'gallery',
       summary: (v) => (v.gallery.length ? `${v.gallery.length} photos` : 'none yet'),
       fields: [{ kind: 'gallery', key: 'gallery' }],
+    },
+    {
+      id: 'links',
+      label: 'links',
+      summary: (v) => (v.links.length ? `${v.links.length} link${v.links.length === 1 ? '' : 's'}` : 'none yet'),
+      fields: [{
+        kind: 'node', label: 'links', render: () => (
+          <ProfileLinksEditor links={value.links} onChange={(links) => onChange({ links })} />
+        ),
+      }],
     },
   ];
 

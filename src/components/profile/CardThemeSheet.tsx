@@ -7,11 +7,21 @@ import { useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, TouchableWithoutFeedback, View } from 'react-native';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
+import { BeadedFrame } from '@/components/deco/BeadedFrame';
+import { BracketFrame } from '@/components/deco/BracketFrame';
+import { DoubleLineFrame } from '@/components/deco/DoubleLineFrame';
+import { FlourishCorners } from '@/components/deco/FlourishCorners';
+import { HeartRippleBackdrop } from '@/components/deco/HeartRippleBackdrop';
 import { LaceFrame } from '@/components/deco/LaceFrame';
+import { LatticeFrame } from '@/components/deco/LatticeFrame';
 import { PatternBackdrop } from '@/components/deco/PatternBackdrop';
+import { SakuraDriftBackdrop } from '@/components/deco/SakuraDriftBackdrop';
+import { ScatterBackdrop } from '@/components/deco/ScatterBackdrop';
+import { StitchFrame } from '@/components/deco/StitchFrame';
+import { WashBackdrop } from '@/components/deco/WashBackdrop';
 import { BG_COLORS, TEXT_COLORS } from '@/constants/bgPalette';
 import { Colors, FontFamily, Radius, SheetColumn, Spacing, sf } from '@/constants/theme';
-import { BORDER_FRAMES, GRADIENT_PRESETS, NAME_FONTS, buildBorderFrame, parseBorderFrame } from './cardTheme';
+import { BORDER_FRAMES, GRADIENT_PRESETS, NAME_FONTS, buildBorderFrame, parseBorderFrame, type BorderFrameKey } from './cardTheme';
 import type { CardTheme } from './cardTheme';
 
 type Tab = 'card' | 'page' | 'text' | 'style';
@@ -29,7 +39,12 @@ const NAME_FONT_PREVIEW: Record<string, string> = {
   klee: FontFamily.ja,
 };
 const NAME_FONT_LABEL: Record<string, string> = { '': 'display', script: 'script', marker: 'marker', klee: 'klee' };
-const BORDER_FRAME_LABEL: Record<string, string> = { lace: 'lace', pattern: 'pattern' };
+const BORDER_FRAME_LABEL: Record<BorderFrameKey, string> = {
+  lace: 'lace', lattice: 'lattice', stitch: 'stitch', flourish: 'flourish',
+  bracket: 'bracket', beaded: 'beaded', double: 'double-line',
+  pattern: 'pattern', scatter: 'scatter', wash: 'wash',
+  heartRipple: 'heart ripple', sakuraDrift: 'sakura drift',
+};
 
 type Props = {
   visible: boolean;
@@ -50,22 +65,25 @@ async function pickImage(): Promise<string | undefined> {
   return undefined;
 }
 
-function BorderPreview({ kind }: { kind: string }) {
-  if (kind === 'lace') {
-    return (
-      <View style={[styles.borderPreviewBox, { overflow: 'hidden' }]}>
-        <LaceFrame width={28} height={20} radius={5} bandWidth={4} scallopSize={4} />
-      </View>
-    );
-  }
-  if (kind === 'pattern') {
-    return (
-      <View style={[styles.borderPreviewBox, { overflow: 'hidden' }]}>
-        <PatternBackdrop width={28} height={20} />
-      </View>
-    );
-  }
-  return <View style={styles.borderPreviewBox} />;
+const BORDER_PREVIEW: Partial<Record<BorderFrameKey, (w: number, h: number) => React.ReactElement>> = {
+  lace: (w, h) => <LaceFrame width={w} height={h} radius={5} bandWidth={4} scallopSize={4} />,
+  lattice: (w, h) => <LatticeFrame width={w} height={h} radius={5} bandWidth={4} cell={5} />,
+  stitch: (w, h) => <StitchFrame width={w} height={h} radius={5} inset={3} />,
+  flourish: (w, h) => <FlourishCorners width={w} height={h} size={9} inset={3} />,
+  bracket: (w, h) => <BracketFrame width={w} height={h} size={8} inset={3} />,
+  beaded: (w, h) => <BeadedFrame width={w} height={h} radius={5} inset={3} />,
+  double: (w, h) => <DoubleLineFrame width={w} height={h} radius={5} />,
+  pattern: (w, h) => <PatternBackdrop width={w} height={h} />,
+  scatter: (w, h) => <ScatterBackdrop width={w} height={h} />,
+  wash: (w, h) => <WashBackdrop width={w} height={h} />,
+  heartRipple: (w, h) => <HeartRippleBackdrop width={w} height={h} />,
+  sakuraDrift: (w, h) => <SakuraDriftBackdrop width={w} height={h} />,
+};
+
+function BorderPreview({ kind }: { kind: BorderFrameKey }) {
+  const render = BORDER_PREVIEW[kind];
+  if (!render) return <View style={styles.borderPreviewBox} />;
+  return <View style={[styles.borderPreviewBox, { overflow: 'hidden' }]}>{render(28, 20)}</View>;
 }
 
 export function CardThemeSheet({ visible, onClose, theme, onChange, premium }: Props) {
@@ -120,12 +138,10 @@ export function CardThemeSheet({ visible, onClose, theme, onChange, premium }: P
     }
   }
 
-  function handleToggleBorderFrame(key: 'lace' | 'pattern') {
+  function handleToggleBorderFrame(key: BorderFrameKey) {
     if (!premium) { requirePremium(); return; }
     const parsed = parseBorderFrame(theme.borderStyle);
-    const lace = key === 'lace' ? !parsed.lace : parsed.lace;
-    const pattern = key === 'pattern' ? !parsed.pattern : parsed.pattern;
-    onChange({ borderStyle: buildBorderFrame(lace, pattern) });
+    onChange({ borderStyle: buildBorderFrame({ ...parsed, [key]: !parsed[key] }) });
   }
 
   function handlePickNameFont(f: string) {
@@ -189,7 +205,7 @@ export function CardThemeSheet({ visible, onClose, theme, onChange, premium }: P
             ) : tab === 'style' ? (
               <>
                 <Text style={styles.sectionLabel}>border frame</Text>
-                <Text style={styles.sectionHint}>stack these, or leave both off for a plain card</Text>
+                <Text style={styles.sectionHint}>stack any of these, or leave them all off for a plain card</Text>
                 <View style={styles.chipGrid}>
                   {BORDER_FRAMES.map((frame) => (
                     <Pressable

@@ -49,6 +49,10 @@ export function initDb() {
   // the short bio that sits on the card itself — see migrateFlags below
   try { db.execSync(`ALTER TABLE fo ADD COLUMN flags TEXT NOT NULL DEFAULT '[]'`); } catch (_) {}
   try { db.execSync(`ALTER TABLE fo ADD COLUMN tagline TEXT NOT NULL DEFAULT ''`); } catch (_) {}
+  try { db.execSync(`ALTER TABLE fo ADD COLUMN links TEXT NOT NULL DEFAULT '[]'`); } catch (_) {}
+  // the profile card's "about" section is gone — tagline is the one bio-like
+  // field that lives on the card itself now
+  try { db.execSync(`ALTER TABLE fo DROP COLUMN bio`); } catch (_) {}
   db.execSync(`
     CREATE TABLE IF NOT EXISTS ships (
       id TEXT PRIMARY KEY,
@@ -80,8 +84,8 @@ export function initDb() {
       fandom TEXT NOT NULL DEFAULT '',
       rel_status TEXT NOT NULL DEFAULT 'romantic',
       share_status TEXT NOT NULL DEFAULT 'selective',
-      bio TEXT NOT NULL DEFAULT '',
       tagline TEXT NOT NULL DEFAULT '',
+      links TEXT NOT NULL DEFAULT '[]',
       height TEXT NOT NULL DEFAULT '',
       weight TEXT NOT NULL DEFAULT '',
       age TEXT NOT NULL DEFAULT '',
@@ -278,13 +282,13 @@ function migrateShareVocabulary() {
 function backfillFos() {
   const db = getDb();
   const orphans = db.getAllSync(
-    `SELECT id, name, fandom, rel_type, share_type, about_text FROM ships WHERE kind = 'single' AND fo_id = ''`
-  ) as { id: string; name: string; fandom: string; rel_type: string; share_type: string; about_text: string }[];
+    `SELECT id, name, fandom, rel_type, share_type FROM ships WHERE kind = 'single' AND fo_id = ''`
+  ) as { id: string; name: string; fandom: string; rel_type: string; share_type: string }[];
   for (const s of orphans) {
     const foId = newId();
     db.runSync(
-      `INSERT INTO fo (id, name, fandom, rel_status, share_status, bio, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      foId, s.name ?? '', s.fandom ?? '', s.rel_type || 'romantic', s.share_type || 'selective', s.about_text ?? '', Date.now(),
+      `INSERT INTO fo (id, name, fandom, rel_status, share_status, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
+      foId, s.name ?? '', s.fandom ?? '', s.rel_type || 'romantic', s.share_type || 'selective', Date.now(),
     );
     db.runSync(`UPDATE ships SET fo_id = ? WHERE id = ?`, foId, s.id);
   }

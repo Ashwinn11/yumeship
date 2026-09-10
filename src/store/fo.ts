@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { type RelationshipType } from '@/constants/theme';
 import { getDb, newId } from '@/db/client';
-import { parseProfileFlags, type ProfileFlag } from '@/components/profile/cardTheme';
+import { parseProfileFlags, parseProfileLinks, type ProfileFlag, type ProfileLink } from '@/components/profile/cardTheme';
 import { notifyShips } from './ships';
 import { getGlobalSetting, saveGlobalSetting } from './onboarding';
 
@@ -14,8 +14,7 @@ export type Fo = {
   fandom: string;
   relStatus: RelationshipType;
   shareStatus: 'yes' | 'no' | 'selective' | 'mirror';
-  bio: string;
-  /** short bio shown on the card itself; `bio` keeps its own about section */
+  /** short bio shown on the card itself */
   tagline: string;
   height: string;
   weight: string;
@@ -51,6 +50,8 @@ export type Fo = {
   gallery: GalleryPhoto[];
   /** everything they fly under the name — identity flags, symbols, their words */
   flags: ProfileFlag[];
+  /** external links shown in their own card section — socials, playlists, etc. */
+  links: ProfileLink[];
   /** whether this F/O has an opt-in public profile in community — independent of
    *  shareStatus, which is a stated boundary toward doubles, not a visibility switch */
   isPublic: boolean;
@@ -86,7 +87,6 @@ function rowToFo(row: Record<string, unknown>): Fo {
     fandom: (row.fandom as string) ?? '',
     relStatus: (row.rel_status as Fo['relStatus']) ?? 'romantic',
     shareStatus: (row.share_status as Fo['shareStatus']) ?? 'selective',
-    bio: (row.bio as string) ?? '',
     tagline: (row.tagline as string) ?? '',
     height: (row.height as string) ?? '',
     weight: (row.weight as string) ?? '',
@@ -108,6 +108,7 @@ function rowToFo(row: Record<string, unknown>): Fo {
     songLink: (row.song_link as string) ?? '',
     gallery: parseGallery(row.gallery),
     flags: parseProfileFlags((row.flags as string) ?? ''),
+    links: parseProfileLinks((row.links as string) ?? ''),
     isPublic: !!(row.is_public as number),
     avatarSyncedUri: (row.avatar_synced_uri as string) ?? '',
     gallerySyncMap: parseSyncMap(row.gallery_sync_map),
@@ -142,7 +143,6 @@ export function addFo(d: {
   fandom?: string;
   relStatus?: string;
   shareStatus?: string;
-  bio?: string;
   tagline?: string;
   height?: string;
   weight?: string;
@@ -155,15 +155,14 @@ export function addFo(d: {
 }): string {
   const id = newId();
   getDb().runSync(
-    `INSERT INTO fo (id, name, pronouns, fandom, rel_status, share_status, bio, tagline, height, weight, age, birthday, photo_uri, song, song_link, gallery, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO fo (id, name, pronouns, fandom, rel_status, share_status, tagline, height, weight, age, birthday, photo_uri, song, song_link, gallery, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     id,
     d.name,
     d.pronouns ?? '',
     d.fandom ?? '',
     d.relStatus ?? 'romantic',
     d.shareStatus ?? 'selective',
-    d.bio ?? '',
     d.tagline ?? '',
     d.height ?? '',
     d.weight ?? '',
@@ -188,7 +187,6 @@ export function updateFo(id: string, d: Partial<Omit<Fo, 'id' | 'createdAt'>>) {
   if (d.fandom !== undefined)      { fields.push('fandom = ?');       values.push(d.fandom); }
   if (d.relStatus !== undefined)   { fields.push('rel_status = ?');   values.push(d.relStatus); }
   if (d.shareStatus !== undefined) { fields.push('share_status = ?'); values.push(d.shareStatus); }
-  if (d.bio !== undefined)         { fields.push('bio = ?');          values.push(d.bio); }
   if (d.tagline !== undefined)     { fields.push('tagline = ?');      values.push(d.tagline); }
   if (d.height !== undefined)      { fields.push('height = ?');       values.push(d.height); }
   if (d.weight !== undefined)      { fields.push('weight = ?');       values.push(d.weight); }
@@ -210,6 +208,7 @@ export function updateFo(id: string, d: Partial<Omit<Fo, 'id' | 'createdAt'>>) {
   if (d.songLink !== undefined)    { fields.push('song_link = ?');    values.push(d.songLink); }
   if (d.gallery !== undefined)     { fields.push('gallery = ?');      values.push(JSON.stringify(d.gallery)); }
   if (d.flags !== undefined)       { fields.push('flags = ?');        values.push(JSON.stringify(d.flags)); }
+  if (d.links !== undefined)       { fields.push('links = ?');        values.push(JSON.stringify(d.links)); }
   if (d.isPublic !== undefined)       { fields.push('is_public = ?');         values.push(d.isPublic ? 1 : 0); }
   if (d.avatarSyncedUri !== undefined) { fields.push('avatar_synced_uri = ?'); values.push(d.avatarSyncedUri); }
   if (d.gallerySyncMap !== undefined)  { fields.push('gallery_sync_map = ?');  values.push(JSON.stringify(d.gallerySyncMap)); }
@@ -228,7 +227,6 @@ export function updateFo(id: string, d: Partial<Omit<Fo, 'id' | 'createdAt'>>) {
   if (d.fandom !== undefined)      { shipFields.push('fandom = ?');     shipValues.push(d.fandom); }
   if (d.relStatus !== undefined)   { shipFields.push('rel_type = ?');   shipValues.push(d.relStatus); }
   if (d.shareStatus !== undefined) { shipFields.push('share_type = ?'); shipValues.push(d.shareStatus); }
-  if (d.bio !== undefined)         { shipFields.push('about_text = ?'); shipValues.push(d.bio); }
   if (shipFields.length) {
     getDb().runSync(
       `UPDATE ships SET ${shipFields.join(', ')} WHERE fo_id = ?`,

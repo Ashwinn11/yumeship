@@ -2,14 +2,15 @@ import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Keyboard, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Keyboard, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Sparkle } from '@/components/deco/Sparkle';
 import { StickerSakuraBranch } from '@/components/deco';
 import { GalleryPicker } from '@/components/profile/GalleryPicker';
 import { ProfileFlagsEditor } from '@/components/profile/ProfileFlagsEditor';
-import { parseProfileFlags, type ProfileFlag } from '@/components/profile/cardTheme';
+import { ProfileLinksEditor } from '@/components/profile/ProfileLinksEditor';
+import { parseProfileFlags, parseProfileLinks, type ProfileFlag, type ProfileLink } from '@/components/profile/cardTheme';
 import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
 import { EditSection, styles as editSection } from '@/components/ui/EditSection';
@@ -50,25 +51,25 @@ export default function OnbPersona() {
     return i >= 0 ? i : 0;
   });
   const [avatar, setAvatar] = useState(() => getGlobalSetting('user_avatar'));
-  const [bio, setBio] = useState(() => getGlobalSetting('user_bio'));
   const [height, setHeight] = useState(() => getGlobalSetting('user_height'));
   const [weight, setWeight] = useState(() => getGlobalSetting('user_weight'));
   const [song, setSong] = useState(() => getGlobalSetting('user_song'));
   const [songLink, setSongLink] = useState(() => getGlobalSetting('user_song_link'));
   const [gallery, setGallery] = useState<GalleryPhoto[]>(() => parseGallery(getGlobalSetting('user_gallery')));
   const [flags, setFlags] = useState<ProfileFlag[]>(() => parseProfileFlags(getGlobalSetting('user_flags')));
+  const [links, setLinks] = useState<ProfileLink[]>(() => parseProfileLinks(getGlobalSetting('user_links')));
   const [identifyFoId, setIdentifyFoId] = useState(() => getGlobalSetting('user_identify_fo_id'));
   const [showFoPicker, setShowFoPicker] = useState(false);
   const fos = useFos();
 
   const handleNameChange = (v: string) => { setName(v); setOnbField('userName', v); };
-  const handleBioChange = (v: string) => { setBio(v); saveGlobalSetting('user_bio', v); };
   const handleHeightChange = (v: string) => { setHeight(v); saveGlobalSetting('user_height', v); };
   const handleWeightChange = (v: string) => { setWeight(v); saveGlobalSetting('user_weight', v); };
   const handleSongChange = (v: string) => { setSong(v); saveGlobalSetting('user_song', v); };
   const handleSongLinkChange = (v: string) => { setSongLink(v); saveGlobalSetting('user_song_link', v); };
   const handleGalleryChange = (g: GalleryPhoto[]) => { setGallery(g); saveGlobalSetting('user_gallery', JSON.stringify(g)); };
   const handleFlagsChange = (f: ProfileFlag[]) => { setFlags(f); saveGlobalSetting('user_flags', JSON.stringify(f)); };
+  const handleLinksChange = (l: ProfileLink[]) => { setLinks(l); saveGlobalSetting('user_links', JSON.stringify(l)); };
   const handlePronounChange = (p: string) => {
     setPronoun(p);
     setOnbField('pronouns', p);
@@ -256,17 +257,6 @@ export default function OnbPersona() {
 
         {isEdit && (
           <View style={editSection.sectionsWrap}>
-            <EditSection label="about you">
-              <TextInput
-                value={bio}
-                onChangeText={handleBioChange}
-                placeholder="a few soft lines about you…"
-                placeholderTextColor={Colors.ink3}
-                multiline
-                style={styles.bioInput}
-              />
-            </EditSection>
-
             <EditSection label="details">
               <Row gap={14}>
                 <Field label="Height (optional)" style={{ flex: 1 }}>
@@ -303,6 +293,12 @@ export default function OnbPersona() {
 
             <EditSection label="gallery">
               <GalleryPicker photos={gallery} onChange={handleGalleryChange} />
+            </EditSection>
+
+            <EditSection label="links">
+              <Text style={editSection.sectionHint}>socials, playlists, anywhere else you'd point them</Text>
+              <View style={editSection.innerSpacer} />
+              <ProfileLinksEditor links={links} onChange={handleLinksChange} />
             </EditSection>
 
             {fos.length > 0 && (
@@ -466,12 +462,6 @@ const styles = StyleSheet.create({
   imageSwatchThumb: { width: 26, height: 26, borderRadius: Radius.pill },
   imageSwatchPlus: { fontSize: sf(15), color: Colors.ink3, fontFamily: FontFamily.ui, lineHeight: sf(18) },
   imageHint: { fontFamily: FontFamily.ui, fontSize: sf(9), color: Colors.ink3, marginTop: 8 },
-  bioInput: {
-    borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.r3,
-    backgroundColor: Colors.paperDeep,
-    padding: Spacing.s3, minHeight: 76, textAlignVertical: 'top',
-    fontFamily: FontFamily.ui, fontSize: sf(13), color: Colors.ink, lineHeight: sf(19),
-  },
   actions: {
     paddingHorizontal: Spacing.s6,
     paddingBottom: Spacing.s3,

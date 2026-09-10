@@ -101,9 +101,9 @@ export default function FoDetailScreen() {
     setDraft({
       name: fo!.name, pronouns: fo!.pronouns, fandom: fo!.fandom,
       relStatus: fo!.relStatus, shareStatus: fo!.shareStatus, color: fo!.color,
-      bio: fo!.bio, tagline: fo!.tagline, height: fo!.height, weight: fo!.weight,
+      tagline: fo!.tagline, height: fo!.height, weight: fo!.weight,
       age: fo!.age, birthday: fo!.birthday, photoUri: fo!.photoUri,
-      song: fo!.song, songLink: fo!.songLink, gallery: fo!.gallery, flags: fo!.flags,
+      song: fo!.song, songLink: fo!.songLink, gallery: fo!.gallery, flags: fo!.flags, links: fo!.links,
     });
     setEditing(true);
   }
@@ -208,7 +208,6 @@ export default function FoDetailScreen() {
                 name={fo.name || 'untitled'}
                 pronouns={fo.pronouns}
                 subtitle={fo.fandom}
-                bio={fo.bio}
                 tagline={fo.tagline}
                 photoUri={fo.photoUri}
                 fallbackColor={fo.color || Colors.sakura}
@@ -229,6 +228,7 @@ export default function FoDetailScreen() {
                 borderStyle={fo.borderStyle}
                 nameFont={fo.nameFont}
                 flags={fo.flags}
+                links={fo.links}
               />
               {fo.isPublic && <Text style={styles.postsLabel}>posts about them</Text>}
             </>

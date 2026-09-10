@@ -105,7 +105,6 @@ export function FoProfilePage() {
                 name={profile.name || 'untitled'}
                 pronouns={profile.pronouns}
                 subtitle={profile.fandom} // F/O fandom shown as subtitle; NO username!
-                bio={profile.bio}
                 tagline={profile.tagline}
                 photoUri={profile.avatarUrl}
                 fallbackColor={profile.color || Colors.lavender}
@@ -126,6 +125,7 @@ export function FoProfilePage() {
                 borderStyle={profile.borderStyle}
                 nameFont={profile.nameFont}
                 flags={profile.flags}
+                links={profile.links}
                 followAction={
                   <a
                     href={`yumeship://fo/${profile.id}`}
@@ -136,8 +136,6 @@ export function FoProfilePage() {
                   </a>
                 }
               />
-
-              <p className="profile-footnote">this is you, in their world ♡</p>
 
               {/* Engagement CTA */}
               <CreateProfileCta />

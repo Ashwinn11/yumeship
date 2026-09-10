@@ -21,7 +21,6 @@ import {
   addHeadcanon, deleteHeadcanon, updateHeadcanon, useHeadcanonCounts, useHeadcanons,
 } from '@/store/headcanons';
 import { getGlobalSetting, saveGlobalSetting } from '@/store/onboarding';
-import { getFo, updateFo } from '@/store/fo';
 import { deleteShip, daysTogetherLabel, isPoly, membersLabel, shipTitle, updateShip, useShip } from '@/store/ships';
 
 const TEMPLATES = [
@@ -178,12 +177,7 @@ function ProfileTab({ ship, id }: { ship: NonNullable<ReturnType<typeof useShip>
 const daysLabel = daysTogetherLabel(ship!.startDate);
 
   function saveAbout() {
-    // single ships mirror their linked F/O's bio; the ship's about_text is just the read cache
-    if (ship!.foId && getFo(ship!.foId)) {
-      updateFo(ship!.foId, { bio: aboutDraft });
-    } else {
-      updateShip(id, { aboutText: aboutDraft });
-    }
+    updateShip(id, { aboutText: aboutDraft });
     setEditingAbout(false);
   }
 

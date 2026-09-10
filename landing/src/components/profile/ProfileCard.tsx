@@ -1,14 +1,23 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Colors } from '../../constants/theme';
 import { Heart } from '../deco/Heart';
-import { WashiTape } from '../deco/WashiTape';
 import { StickerCassette } from '../deco/StickerCassette';
 import { LaceFrame } from '../deco/LaceFrame';
+import { LatticeFrame } from '../deco/LatticeFrame';
+import { StitchFrame } from '../deco/StitchFrame';
+import { FlourishCorners } from '../deco/FlourishCorners';
+import { BracketFrame } from '../deco/BracketFrame';
+import { BeadedFrame } from '../deco/BeadedFrame';
+import { DoubleLineFrame } from '../deco/DoubleLineFrame';
 import { PatternBackdrop } from '../deco/PatternBackdrop';
+import { ScatterBackdrop } from '../deco/ScatterBackdrop';
+import { WashBackdrop } from '../deco/WashBackdrop';
+import { HeartRippleBackdrop } from '../deco/HeartRippleBackdrop';
+import { SakuraDriftBackdrop } from '../deco/SakuraDriftBackdrop';
 import { ProfileFlags } from './ProfileFlags';
 import { Polaroid } from './Polaroid';
 import { parseBorderFrame, type ProfileFlag } from './cardTheme';
-import type { GalleryPhoto } from '../../lib/profile';
+import type { GalleryPhoto, ProfileLink } from '../../lib/profile';
 
 const POLAROID_TAPES = [Colors.sakura, Colors.lavender, Colors.butter, Colors.sage, Colors.peach];
 
@@ -30,7 +39,6 @@ export type ProfileCardProps = {
   username?: string;
   /** small line under the name, e.g. the F/O's source/fandom */
   subtitle?: string;
-  bio?: string;
   /** short bio shown on the card itself, under the name/handle */
   tagline?: string;
   photoUri?: string;
@@ -60,12 +68,14 @@ export type ProfileCardProps = {
   /** no hero fill at all — the page background shows through */
   cardTransparent?: boolean;
   textColor?: string;
-  /** comma-joined border-frame accents: '' (none) | 'lace' | 'pattern' | 'lace,pattern' */
+  /** comma-joined border-frame accents — see cardTheme.ts BORDER_FRAMES; '' for none */
   borderStyle?: string;
   /** '' default display font | 'script' | 'marker' | 'klee' */
   nameFont?: string;
   /** everything they fly under the name */
   flags?: ProfileFlag[];
+  /** external links shown as pill chips on the card itself */
+  links?: ProfileLink[];
   /** community follower/following counts, rendered under pronouns */
   followerCount?: number;
   followingCount?: number;
@@ -100,7 +110,6 @@ export function ProfileCard({
   pronouns,
   username,
   subtitle,
-  bio,
   tagline,
   photoUri,
   fallbackColor = Colors.sakura,
@@ -121,6 +130,7 @@ export function ProfileCard({
   borderStyle = '',
   nameFont = '',
   flags = [],
+  links = [],
   followerCount,
   followingCount,
   followAction,
@@ -142,7 +152,7 @@ export function ProfileCard({
   const textStyle: React.CSSProperties | undefined = textColor ? { color: textColor } : undefined;
   const nameFontClass = nameFont ? `name-font-${nameFont}` : '';
 
-  const { lace: hasLace, pattern: hasPattern } = parseBorderFrame(borderStyle);
+  const frames = parseBorderFrame(borderStyle);
 
   // Measure hero card for SVG overlays (lace / pattern)
   const heroRef = useRef<HTMLDivElement>(null);
@@ -188,7 +198,7 @@ export function ProfileCard({
           className={[
             'hero-card',
             cardTransparent ? 'hero-transparent' : '',
-            hasLace ? 'hero-lace-border' : '',
+            (frames.lace || frames.lattice) ? 'hero-lace-border' : '',
           ].filter(Boolean).join(' ')}
           style={heroBgStyle}
         >
@@ -202,8 +212,14 @@ export function ProfileCard({
             </>
           )}
 
-          {hasPattern && heroSize.width > 0 && (
-            <PatternBackdrop width={heroSize.width} height={heroSize.height} />
+          {heroSize.width > 0 && (
+            <>
+              {frames.pattern && <PatternBackdrop width={heroSize.width} height={heroSize.height} />}
+              {frames.scatter && <ScatterBackdrop width={heroSize.width} height={heroSize.height} />}
+              {frames.wash && <WashBackdrop width={heroSize.width} height={heroSize.height} />}
+              {frames.heartRipple && <HeartRippleBackdrop width={heroSize.width} height={heroSize.height} />}
+              {frames.sakuraDrift && <SakuraDriftBackdrop width={heroSize.width} height={heroSize.height} />}
+            </>
           )}
 
           <div className="hero-content">
@@ -277,6 +293,21 @@ export function ProfileCard({
                 {pronouns && <span className="pronouns-text" style={textStyle}>{pronouns}</span>}
                 <ProfileFlags flags={flags} textColor={textColor} />
                 {tagline && <p className="tagline-text" style={textStyle}>{tagline}</p>}
+                {links.length > 0 && (
+                  <div className="links-row">
+                    {links.map((l) => (
+                      <a
+                        key={l.id}
+                        href={normalizeUrl(l.url)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="link-pill"
+                      >
+                        {l.label || l.url}
+                      </a>
+                    ))}
+                  </div>
+                )}
                 {(followerCount !== undefined || followingCount !== undefined) && (
                   <div className="social-stats-row">
                     <div className="social-stat">
@@ -294,22 +325,17 @@ export function ProfileCard({
             )}
           </div>
 
-          {hasLace && heroSize.width > 0 && (
-            <LaceFrame width={heroSize.width} height={heroSize.height} />
+          {heroSize.width > 0 && (
+            <>
+              {frames.lace && <LaceFrame width={heroSize.width} height={heroSize.height} />}
+              {frames.lattice && <LatticeFrame width={heroSize.width} height={heroSize.height} />}
+              {frames.stitch && <StitchFrame width={heroSize.width} height={heroSize.height} />}
+              {frames.flourish && <FlourishCorners width={heroSize.width} height={heroSize.height} />}
+              {frames.bracket && <BracketFrame width={heroSize.width} height={heroSize.height} />}
+              {frames.beaded && <BeadedFrame width={heroSize.width} height={heroSize.height} />}
+              {frames.double && <DoubleLineFrame width={heroSize.width} height={heroSize.height} />}
+            </>
           )}
-        </div>
-      </div>
-
-      {/* ── about ── */}
-      <div className="profile-section-block">
-        <SectionLabel>about</SectionLabel>
-        <div className="about-card">
-          <div className="about-tape-wrap">
-            <WashiTape width={52} height={12} pattern="dot" color={Colors.lavender} rotate={-5} />
-          </div>
-          <p className={`about-bio-text ${!bio ? 'empty' : ''}`}>
-            {bio || 'nothing written yet…'}
-          </p>
         </div>
       </div>
 

@@ -6,7 +6,7 @@ import { deleteFromBucketByUrl, isManagedMediaUrl, uploadToBucket } from '@/lib/
 import { FunctionsHttpError } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 
-import { parseProfileFlags, type ProfileFlag } from '@/components/profile/cardTheme';
+import { parseProfileFlags, parseProfileLinks, type ProfileFlag, type ProfileLink } from '@/components/profile/cardTheme';
 import { getAllFos, getFo, parseGallery, updateFo, type Fo, type GalleryPhoto } from './fo';
 import { getGlobalSetting, saveGlobalSetting } from './onboarding';
 
@@ -35,7 +35,6 @@ export type CommunityProfile = CommunityCardTheme & {
   username: string;
   name: string;
   pronouns: string;
-  bio: string;
   /** short bio shown on the card itself, under the name */
   tagline: string;
   avatarUrl: string;
@@ -45,6 +44,7 @@ export type CommunityProfile = CommunityCardTheme & {
   birthday: string;
   gallery: GalleryPhoto[];
   flags: ProfileFlag[];
+  links: ProfileLink[];
   /** published F/O shown paired on this card, when "profile identify" is on */
   identifyFoId: string | null;
   followerCount: number;
@@ -55,7 +55,6 @@ export type CommunityFoProfile = CommunityCardTheme & {
   id: string;
   name: string;
   pronouns: string;
-  bio: string;
   /** short bio shown on the card itself, under the name */
   tagline: string;
   avatarUrl: string;
@@ -63,6 +62,7 @@ export type CommunityFoProfile = CommunityCardTheme & {
   songLink: string;
   gallery: GalleryPhoto[];
   flags: ProfileFlag[];
+  links: ProfileLink[];
   fandom: string;
   relStatus: Fo['relStatus'];
   shareStatus: Fo['shareStatus'];
@@ -153,6 +153,18 @@ function rowToFlags(raw: unknown): ProfileFlag[] {
     }));
 }
 
+/** Tolerates a missing/malformed column the same way the rest of this file treats gaps. */
+function rowToLinks(raw: unknown): ProfileLink[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((l) => l && typeof l.url === 'string' && l.url)
+    .map((l) => ({
+      id: (l.id as string) ?? '',
+      label: (l.label as string) ?? '',
+      url: l.url as string,
+    }));
+}
+
 /** Remote gallery rows are already {url, caption} — reshape to the local {uri, caption}. */
 function rowToGallery(raw: unknown): GalleryPhoto[] {
   if (!Array.isArray(raw)) return [];
@@ -168,7 +180,6 @@ function rowToProfile(row: Record<string, any>): CommunityProfile {
     username: row.username ?? '',
     name: row.name ?? '',
     pronouns: row.pronouns ?? '',
-    bio: row.bio ?? '',
     tagline: row.tagline ?? '',
     avatarUrl: row.avatar_url ?? '',
     song: row.song ?? '',
@@ -177,6 +188,7 @@ function rowToProfile(row: Record<string, any>): CommunityProfile {
     birthday: row.birthday ?? '',
     gallery: rowToGallery(row.gallery),
     flags: rowToFlags(row.flags),
+    links: rowToLinks(row.links),
     identifyFoId: row.identify_fo_id ?? null,
     followerCount: row.follower_count ?? 0,
     followingCount: row.following_count ?? 0,
@@ -189,13 +201,13 @@ function rowToFoProfile(row: Record<string, any>): CommunityFoProfile {
     id: row.id,
     name: row.name ?? '',
     pronouns: row.pronouns ?? '',
-    bio: row.bio ?? '',
     tagline: row.tagline ?? '',
     avatarUrl: row.avatar_url ?? '',
     song: row.song ?? '',
     songLink: row.song_link ?? '',
     gallery: rowToGallery(row.gallery),
     flags: rowToFlags(row.flags),
+    links: rowToLinks(row.links),
     fandom: row.fandom ?? '',
     relStatus: (row.rel_status as Fo['relStatus']) ?? 'romantic',
     shareStatus: (row.share_status as Fo['shareStatus']) ?? 'selective',
@@ -281,11 +293,11 @@ const CARD_THEME_FIELDS =
 const cols = (s: string) => s.replace(/\s+/g, ' ').trim();
 
 const PROFILE_FIELDS = cols(`
-  id, username, name, pronouns, bio, tagline, avatar_url, song, song_link, age, birthday, gallery, flags,
+  id, username, name, pronouns, tagline, avatar_url, song, song_link, age, birthday, gallery, flags, links,
   color, identify_fo_id, follower_count, following_count, ${CARD_THEME_FIELDS}
 `);
 const FO_PROFILE_FIELDS = cols(`
-  id, name, pronouns, bio, tagline, avatar_url, song, song_link, gallery, flags,
+  id, name, pronouns, tagline, avatar_url, song, song_link, gallery, flags, links,
   color, fandom, rel_status, share_status, age, birthday, ${CARD_THEME_FIELDS}
 `);
 
@@ -294,10 +306,10 @@ const FO_PROFILE_FIELDS = cols(`
 // payload for data no card in the list renders. rowToProfile tolerates the gaps.
 const PROFILE_SUMMARY_FIELDS = 'id, username, name, pronouns, avatar_url';
 const FO_SUMMARY_FIELDS = 'id, name, pronouns, avatar_url';
-// The F/O preview row on a profile shows a real card (bio, pronouns, flag), not
-// just an avatar+name chip — a richer, standalone select so post embeds above
-// stay on the narrow field set.
-const FO_ROW_FIELDS = 'id, name, pronouns, avatar_url, bio, flags';
+// The F/O preview row on a profile shows a real card (tagline, pronouns, flag),
+// not just an avatar+name chip — a richer, standalone select so post embeds
+// above stay on the narrow field set.
+const FO_ROW_FIELDS = 'id, name, pronouns, avatar_url, tagline, flags';
 const POST_SELECT = cols(`
   id, author_id, fo_profile_id, title, body, media, like_count, comment_count, created_at,
   kind, featured_date, poll_options, poll_counts, activity_id,
@@ -495,8 +507,8 @@ export async function pushOwnProfile(): Promise<PushResult> {
     id: user.id,
     name: getGlobalSetting('user_name'),
     pronouns: getGlobalSetting('user_pronouns', 'she/her'),
-    bio: getGlobalSetting('user_bio'),
     tagline: getGlobalSetting('user_tagline'),
+    links: parseProfileLinks(getGlobalSetting('user_links')),
     song: getGlobalSetting('user_song'),
     song_link: getGlobalSetting('user_song_link'),
     age: getGlobalSetting('user_age'),
@@ -587,8 +599,8 @@ export async function pushFoProfile(foId: string): Promise<PushResult> {
     owner_id: user.id,
     name: fo.name,
     pronouns: fo.pronouns,
-    bio: fo.bio,
     tagline: fo.tagline,
+    links: fo.links,
     song: fo.song,
     song_link: fo.songLink,
     height: fo.height,
@@ -684,7 +696,6 @@ export type CommunityFoSummary = {
   name: string;
   avatarUrl: string;
   pronouns: string;
-  bio: string;
   /** short bio shown on the card itself, under the name */
   tagline: string;
 };
@@ -695,7 +706,6 @@ function rowToFoSummary(row: Record<string, any>): CommunityFoSummary {
     name: row.name ?? '',
     avatarUrl: row.avatar_url ?? '',
     pronouns: row.pronouns ?? '',
-    bio: row.bio ?? '',
     tagline: row.tagline ?? '',
   };
 }

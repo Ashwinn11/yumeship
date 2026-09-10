@@ -6,8 +6,8 @@ import { addFo } from '@/store/fo';
 
 const EMPTY: FoDraft = {
   name: '', pronouns: '', fandom: '', relStatus: 'romantic', shareStatus: 'selective', color: '',
-  bio: '', tagline: '', height: '', weight: '', age: '', birthday: '',
-  photoUri: '', song: '', songLink: '', gallery: [], flags: [],
+  tagline: '', height: '', weight: '', age: '', birthday: '',
+  photoUri: '', song: '', songLink: '', gallery: [], flags: [], links: [],
 };
 
 export default function NewFoScreen() {

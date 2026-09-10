@@ -8,9 +8,7 @@ export function WebFoAvatarCard({ fo }: { fo: WebFoProfile }) {
     <FoAvatarCard
       name={fo.name}
       avatarUri={fo.avatarUrl}
-      pronouns={fo.pronouns}
-      bio={fo.bio}
-      flags={fo.flags}
+      tagline={fo.tagline}
     />
   );
 }

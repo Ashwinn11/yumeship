@@ -6,7 +6,7 @@ import type { ProfileStatus } from './ProfileCard';
  * F/O, public profile, public F/O), so a field can't be added to one screen and
  * missed on its counterpart — the exact failure that left the local profile
  * screen showing no follower/following counts while the public one had them.
- * Each screen still passes its own 1:1 fields (name, bio, photo…) directly;
+ * Each screen still passes its own 1:1 fields (name, tagline, photo…) directly;
  * only the values that involve a lookup or a shape transform go through here.
  */
 

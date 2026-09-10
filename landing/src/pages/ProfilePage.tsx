@@ -127,7 +127,6 @@ export function ProfilePage() {
                 name={profile.name || 'someone soft'}
                 pronouns={profile.pronouns}
                 username={profile.username}
-                bio={profile.bio}
                 tagline={profile.tagline}
                 photoUri={profile.avatarUrl}
                 fallbackColor={profile.color}
@@ -144,6 +143,7 @@ export function ProfilePage() {
                 borderStyle={profile.borderStyle}
                 nameFont={profile.nameFont}
                 flags={profile.flags}
+                links={profile.links}
                 {...pairedProps(
                   pairedFo && {
                     name: pairedFo.name,
@@ -164,8 +164,6 @@ export function ProfilePage() {
                 }
               />
 
-              <p className="profile-footnote">this is you, in their world ♡</p>
-
               {/* F/Os Section */}
               {fos.length > 0 && (
                 <div className="profile-posts-block">
@@ -178,9 +176,7 @@ export function ProfilePage() {
                         href={`/@${username}/${fo.id}`}
                         name={fo.name}
                         avatarUri={fo.avatarUrl}
-                        pronouns={fo.pronouns}
-                        bio={fo.bio}
-                        flags={fo.flags}
+                        tagline={fo.tagline}
                       />
                     ))}
                   </div>

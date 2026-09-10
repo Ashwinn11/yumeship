@@ -91,7 +91,6 @@ export default function PublicFoProfileScreen() {
                 name={profile.name || 'untitled'}
                 pronouns={profile.pronouns}
                 subtitle={profile.fandom}
-                bio={profile.bio}
                 tagline={profile.tagline}
                 photoUri={profile.avatarUrl}
                 fallbackColor={profile.color || Colors.sakura}
@@ -112,6 +111,7 @@ export default function PublicFoProfileScreen() {
                 borderStyle={profile.borderStyle}
                 nameFont={profile.nameFont}
                 flags={profile.flags}
+                links={profile.links}
               />
               <Text style={styles.postsLabel}>posts about them</Text>
             </>

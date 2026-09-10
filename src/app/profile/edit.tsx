@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Keyboard, StyleSheet, Text, View } from 'react-native';
 
 import { ProfileEditor, type EditField, type EditSectionDef } from '@/components/profile/ProfileEditor';
+import { ProfileLinksEditor } from '@/components/profile/ProfileLinksEditor';
 import { Toggle } from '@/components/ui/Toggle';
 import { Colors, FontFamily, sf } from '@/constants/theme';
 import { persistImage } from '@/lib/localMedia';
@@ -70,15 +71,6 @@ export default function EditProfileScreen() {
 
   const sections: EditSectionDef[] = [
     {
-      id: 'about',
-      label: 'about',
-      summary: (v) => v.bio || 'not set',
-      fields: [{
-        kind: 'text', key: 'bio', label: 'about', placeholder: 'a few soft lines about you…',
-        multiline: true, hint: 'the longer piece, in its own section under your card',
-      }],
-    },
-    {
       id: 'details',
       label: 'details',
       summary: (v) => [v.age, v.birthday, v.height, v.weight].filter(Boolean).join(' · ') || 'not set',
@@ -103,6 +95,16 @@ export default function EditProfileScreen() {
       label: 'gallery',
       summary: (v) => (v.gallery.length ? `${v.gallery.length} photos` : 'none yet'),
       fields: [{ kind: 'gallery', key: 'gallery' }],
+    },
+    {
+      id: 'links',
+      label: 'links',
+      summary: (v) => (v.links.length ? `${v.links.length} link${v.links.length === 1 ? '' : 's'}` : 'none yet'),
+      fields: [{
+        kind: 'node', label: 'links', render: () => (
+          <ProfileLinksEditor links={me.links} onChange={(links) => patch({ links })} />
+        ),
+      }],
     },
     ...(fos.length > 0 ? ([{
       id: 'paired',
