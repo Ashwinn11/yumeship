@@ -10,11 +10,14 @@ import { DoubleLineFrame } from '@/components/deco/DoubleLineFrame';
 import { FlourishCorners } from '@/components/deco/FlourishCorners';
 import { Heart } from '@/components/deco/Heart';
 import { HeartRippleBackdrop } from '@/components/deco/HeartRippleBackdrop';
+import { HeartsBackdrop } from '@/components/deco/HeartsBackdrop';
 import { LaceFrame } from '@/components/deco/LaceFrame';
 import { LatticeFrame } from '@/components/deco/LatticeFrame';
+import { MixedBackdrop } from '@/components/deco/MixedBackdrop';
 import { PatternBackdrop } from '@/components/deco/PatternBackdrop';
 import { SakuraDriftBackdrop } from '@/components/deco/SakuraDriftBackdrop';
 import { ScatterBackdrop } from '@/components/deco/ScatterBackdrop';
+import { StarsBackdrop } from '@/components/deco/StarsBackdrop';
 import { StickerCassette } from '@/components/deco/Stickers';
 import { StitchFrame } from '@/components/deco/StitchFrame';
 import { WashBackdrop } from '@/components/deco/WashBackdrop';
@@ -291,6 +294,9 @@ export function ProfileCard({
       {frames.wash && <WashBackdrop width={heroSize.width} height={heroSize.height} />}
       {frames.heartRipple && <HeartRippleBackdrop width={heroSize.width} height={heroSize.height} />}
       {frames.sakuraDrift && <SakuraDriftBackdrop width={heroSize.width} height={heroSize.height} />}
+      {frames.hearts && <HeartsBackdrop width={heroSize.width} height={heroSize.height} />}
+      {frames.stars && <StarsBackdrop width={heroSize.width} height={heroSize.height} />}
+      {frames.mixed && <MixedBackdrop width={heroSize.width} height={heroSize.height} />}
     </>
   );
 

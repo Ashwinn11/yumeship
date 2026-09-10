@@ -98,7 +98,7 @@ export const GRADIENT_PRESETS: [string, string][] = [
 // or full-card backdrop fills that sit fine alongside the plain border.
 export const BORDER_FRAMES = [
   'lace', 'lattice', 'stitch', 'flourish', 'bracket', 'beaded', 'double',
-  'pattern', 'scatter', 'wash', 'heartRipple', 'sakuraDrift',
+  'pattern', 'scatter', 'wash', 'heartRipple', 'sakuraDrift', 'hearts', 'stars', 'mixed',
 ] as const;
 export type BorderFrameKey = (typeof BORDER_FRAMES)[number];
 

@@ -14,6 +14,9 @@ import { ScatterBackdrop } from '../deco/ScatterBackdrop';
 import { WashBackdrop } from '../deco/WashBackdrop';
 import { HeartRippleBackdrop } from '../deco/HeartRippleBackdrop';
 import { SakuraDriftBackdrop } from '../deco/SakuraDriftBackdrop';
+import { HeartsBackdrop } from '../deco/HeartsBackdrop';
+import { StarsBackdrop } from '../deco/StarsBackdrop';
+import { MixedBackdrop } from '../deco/MixedBackdrop';
 import { ProfileFlags } from './ProfileFlags';
 import { Polaroid } from './Polaroid';
 import { parseBorderFrame, type ProfileFlag } from './cardTheme';
@@ -219,6 +222,9 @@ export function ProfileCard({
               {frames.wash && <WashBackdrop width={heroSize.width} height={heroSize.height} />}
               {frames.heartRipple && <HeartRippleBackdrop width={heroSize.width} height={heroSize.height} />}
               {frames.sakuraDrift && <SakuraDriftBackdrop width={heroSize.width} height={heroSize.height} />}
+              {frames.hearts && <HeartsBackdrop width={heroSize.width} height={heroSize.height} />}
+              {frames.stars && <StarsBackdrop width={heroSize.width} height={heroSize.height} />}
+              {frames.mixed && <MixedBackdrop width={heroSize.width} height={heroSize.height} />}
             </>
           )}
 

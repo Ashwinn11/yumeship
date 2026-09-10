@@ -12,11 +12,14 @@ import { BracketFrame } from '@/components/deco/BracketFrame';
 import { DoubleLineFrame } from '@/components/deco/DoubleLineFrame';
 import { FlourishCorners } from '@/components/deco/FlourishCorners';
 import { HeartRippleBackdrop } from '@/components/deco/HeartRippleBackdrop';
+import { HeartsBackdrop } from '@/components/deco/HeartsBackdrop';
 import { LaceFrame } from '@/components/deco/LaceFrame';
 import { LatticeFrame } from '@/components/deco/LatticeFrame';
+import { MixedBackdrop } from '@/components/deco/MixedBackdrop';
 import { PatternBackdrop } from '@/components/deco/PatternBackdrop';
 import { SakuraDriftBackdrop } from '@/components/deco/SakuraDriftBackdrop';
 import { ScatterBackdrop } from '@/components/deco/ScatterBackdrop';
+import { StarsBackdrop } from '@/components/deco/StarsBackdrop';
 import { StitchFrame } from '@/components/deco/StitchFrame';
 import { WashBackdrop } from '@/components/deco/WashBackdrop';
 import { BG_COLORS, TEXT_COLORS } from '@/constants/bgPalette';
@@ -44,6 +47,7 @@ const BORDER_FRAME_LABEL: Record<BorderFrameKey, string> = {
   bracket: 'bracket', beaded: 'beaded', double: 'double-line',
   pattern: 'pattern', scatter: 'scatter', wash: 'wash',
   heartRipple: 'heart ripple', sakuraDrift: 'sakura drift',
+  hearts: 'hearts', stars: 'stars', mixed: 'mixed',
 };
 
 type Props = {
@@ -78,6 +82,9 @@ const BORDER_PREVIEW: Partial<Record<BorderFrameKey, (w: number, h: number) => R
   wash: (w, h) => <WashBackdrop width={w} height={h} />,
   heartRipple: (w, h) => <HeartRippleBackdrop width={w} height={h} />,
   sakuraDrift: (w, h) => <SakuraDriftBackdrop width={w} height={h} />,
+  hearts: (w, h) => <HeartsBackdrop width={w} height={h} />,
+  stars: (w, h) => <StarsBackdrop width={w} height={h} />,
+  mixed: (w, h) => <MixedBackdrop width={w} height={h} />,
 };
 
 function BorderPreview({ kind }: { kind: BorderFrameKey }) {
