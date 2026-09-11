@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Keyboard, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { newId } from '@/db/client';
 import { Colors, FontFamily, Radius, Spacing, sf } from '@/constants/theme';
@@ -75,6 +75,8 @@ export function ProfileLinksEditor({
             maxLength={LINK_LABEL_MAX}
             style={styles.textInput}
             autoFocus={isNew}
+            returnKeyType="done"
+            onSubmitEditing={() => Keyboard.dismiss()}
           />
           <View style={styles.editorRow}>
             <TextInput
@@ -85,6 +87,8 @@ export function ProfileLinksEditor({
               autoCapitalize="none"
               autoCorrect={false}
               keyboardType="url"
+              returnKeyType="done"
+              onSubmitEditing={() => Keyboard.dismiss()}
               style={[styles.textInput, styles.urlInput]}
             />
             <Pressable onPress={save} style={styles.doneBtn}>

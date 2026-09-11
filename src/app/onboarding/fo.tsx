@@ -10,6 +10,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Bullets, Sparkle, StickerWaxSeal } from '@/components/deco';
 import { ThoughtCloud } from '@/components/ui';
 import { Button } from '@/components/ui/Button';
+import { DismissKeyboardView } from '@/components/ui/DismissKeyboardView';
 import { Mark } from '@/components/ui/Mark';
 import { StepDots } from '@/components/ui/StepDots';
 import { Colors, FontFamily, FontSize, REL_ORDER, Radius, RelationshipColors, RelationshipSoft, Spacing, type RelationshipType ,sf } from '@/constants/theme';
@@ -130,6 +131,7 @@ export default function OnbFO() {
       )}
 
       <ScrollView style={styles.scroll} contentContainerStyle={[styles.scrollContent, scrollFill]} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" onScrollBeginDrag={() => Keyboard.dismiss()}>
+        <DismissKeyboardView>
         <View style={[column, { position: 'relative' }]}>
           <View style={styles.decoTR} pointerEvents="none">
             <StickerWaxSeal size={60} />
@@ -191,6 +193,8 @@ export default function OnbFO() {
                 onChangeText={handleShipName}
                 placeholder="e.g. kurotsuki"
                 placeholderTextColor={Colors.ink3}
+                returnKeyType="done"
+                onSubmitEditing={() => Keyboard.dismiss()}
                 style={{ flex: 1, paddingVertical: 4, fontFamily: FontFamily.ui, fontSize: sf(18), color: Colors.ink, lineHeight: sf(24) }}
               />
               <Bullets.Heart size={12} color={Colors.sakuraDeep} />
@@ -264,6 +268,8 @@ export default function OnbFO() {
                   onChangeText={handleFoName}
                   placeholder="e.g. Kuroo Tetsurou"
                   placeholderTextColor={Colors.ink3}
+                  returnKeyType="done"
+                  onSubmitEditing={() => Keyboard.dismiss()}
                   style={{ borderBottomWidth: 1, borderBottomColor: Colors.line, paddingVertical: 4, fontFamily: FontFamily.ui, fontSize: sf(15), color: Colors.ink, lineHeight: sf(21) }}
                 />
               </View>
@@ -275,6 +281,8 @@ export default function OnbFO() {
                   onChangeText={handleFandom}
                   placeholder="e.g. Haikyuu!! · canon"
                   placeholderTextColor={Colors.ink3}
+                  returnKeyType="done"
+                  onSubmitEditing={() => Keyboard.dismiss()}
                   style={{ borderBottomWidth: 1, borderBottomColor: Colors.line, paddingVertical: 4, fontFamily: FontFamily.ui, fontSize: sf(12), color: Colors.ink2, lineHeight: sf(18) }}
                 />
               </View>
@@ -383,6 +391,7 @@ export default function OnbFO() {
           </ThoughtCloud>
         </View>
         </View>
+        </DismissKeyboardView>
       </ScrollView>
 
       <View style={[styles.actions, column]}>

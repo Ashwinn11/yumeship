@@ -4,6 +4,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import {
   ActivityIndicator,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -19,6 +20,7 @@ import Svg, { Path, Rect, Text as SvgText } from 'react-native-svg';
 import { BingoComposerAttachment } from '@/components/community/BingoComposerAttachment';
 import { MediaComposer, mediaFromAssets } from '@/components/community/MediaComposer';
 import { MIN_POLL_OPTIONS, PollComposer } from '@/components/community/PollComposer';
+import { DismissKeyboardView } from '@/components/ui/DismissKeyboardView';
 import { useIPad } from '@/hooks/use-ipad';
 import { AVATAR_IMAGE } from '@/lib/imageProps';
 import { defaultBingoStyle, makeBingoCells, type BingoCard } from '@/lib/bingo';
@@ -214,7 +216,10 @@ export default function NewPostScreen() {
         contentContainerStyle={[styles.content, column]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        onScrollBeginDrag={() => Keyboard.dismiss()}
       >
+        <DismissKeyboardView>
         {tab === 'activity' && <Text style={styles.kindLabel}>submitting an activity — everyone can vote on it</Text>}
         {tab === 'post' && !!activityId && <Text style={styles.kindLabel}>posting a response to this activity</Text>}
         {tab === 'bingo' && <Text style={styles.kindLabel}>share a filled card — anyone can tap "use this template" for their own</Text>}
@@ -280,6 +285,7 @@ export default function NewPostScreen() {
         {tab === 'bingo' && <BingoComposerAttachment card={bingoCard} onChange={setBingoCard} />}
 
         {!!error && <Text style={styles.error}>{error}</Text>}
+        </DismissKeyboardView>
       </ScrollView>
 
       {tab === 'post' ? (

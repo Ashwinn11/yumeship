@@ -1,10 +1,11 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Heart } from '@/components/deco/Heart';
 import { Sparkle } from '@/components/deco/Sparkle';
+import { DismissKeyboardView } from '@/components/ui/DismissKeyboardView';
 import { IconLock, IconSend } from '@/components/ui/Icon';
 import { Colors, FontFamily, FontSize, Radius, Spacing ,sf } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
@@ -47,9 +48,14 @@ export default function MessagesScreen() {
         style={styles.scroll}
         contentContainerStyle={[styles.emptyContainer, column]}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        onScrollBeginDrag={() => Keyboard.dismiss()}
       >
-        <Text style={styles.emptyText}>no messages yet</Text>
-        <Text style={styles.emptySub}>write what you'd imagine them saying</Text>
+        <DismissKeyboardView>
+          <Text style={styles.emptyText}>no messages yet</Text>
+          <Text style={styles.emptySub}>write what you'd imagine them saying</Text>
+        </DismissKeyboardView>
       </ScrollView>
 
       {/* Composer */}
@@ -74,6 +80,8 @@ export default function MessagesScreen() {
             style={styles.input}
             placeholder={side === 'them' ? "write what they'd say…" : "write what you'd say…"}
             placeholderTextColor={Colors.ink3}
+            returnKeyType="done"
+            onSubmitEditing={() => Keyboard.dismiss()}
           />
           <Pressable style={styles.sendBtn}>
             <IconSend size={14} color={Colors.vellum} />

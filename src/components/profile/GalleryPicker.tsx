@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
 import { persistImage } from '@/lib/localMedia';
 import * as ImagePicker from 'expo-image-picker';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Keyboard, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { Colors, FontFamily, Radius, sf } from '@/constants/theme';
 import type { GalleryPhoto } from '@/store/fo';
@@ -45,6 +45,8 @@ export function GalleryPicker({ photos, onChange }: Props) {
             onChangeText={(v) => setCaption(i, v)}
             placeholder="a little caption…"
             placeholderTextColor={Colors.ink3}
+            returnKeyType="done"
+            onSubmitEditing={() => Keyboard.dismiss()}
             style={styles.captionInput}
           />
           <Pressable onPress={() => removePhoto(i)} style={styles.removeBadge} hitSlop={6}>

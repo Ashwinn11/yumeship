@@ -83,12 +83,15 @@ export default function HomeScreen() {
                 autoCapitalize="none"
                 autoCorrect={false}
                 autoFocus={true}
+                returnKeyType="done"
+                onSubmitEditing={() => Keyboard.dismiss()}
               />
               <Pressable
                 style={styles.clearBtn}
                 onPress={() => {
                   setSearchQuery('');
                   setShowSearch(false);
+                  Keyboard.dismiss();
                 }}
                 id="search-close-btn"
               >
@@ -159,6 +162,7 @@ export default function HomeScreen() {
               setSearchQuery('');
               setShowSearch(false);
             }
+            Keyboard.dismiss();
           }}
         >
           <View style={[styles.emptyState, { paddingTop: 40, paddingHorizontal: 20, gap: 12 }]}>
@@ -177,6 +181,7 @@ export default function HomeScreen() {
                 setSearchQuery('');
                 setShowSearch(false);
               }
+              Keyboard.dismiss();
             }}
           >
             {filteredShips.map((ship) => (

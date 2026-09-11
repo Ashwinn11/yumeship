@@ -22,6 +22,7 @@ import { PollView } from '@/components/community/PollView';
 import { PostAuthorHeader } from '@/components/community/PostAuthorHeader';
 import { PostDetailSkeleton } from '@/components/community/PostDetailSkeleton';
 import { useIPad } from '@/hooks/use-ipad';
+import { DismissKeyboardView } from '@/components/ui/DismissKeyboardView';
 import { Mark } from '@/components/ui/Mark';
 import { Colors, FontFamily, FontSize, Radius, Spacing, sf } from '@/constants/theme';
 import { addComment, deleteComment, deletePost, logSyncFailure, useCommunityPost } from '@/store/community';
@@ -139,7 +140,10 @@ export default function PostDetailScreen() {
         contentContainerStyle={[styles.content, column]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        onScrollBeginDrag={() => Keyboard.dismiss()}
       >
+        <DismissKeyboardView>
         <PostAuthorHeader author={post.author} fo={post.fo} createdAt={post.createdAt} size="lg" />
 
         {!!post.title && <Text style={styles.title}>{post.title}</Text>}
@@ -185,6 +189,7 @@ export default function PostDetailScreen() {
           viewerId={me?.id}
           onDelete={handleDeleteComment}
         />
+        </DismissKeyboardView>
       </ScrollView>
 
       {/* the raised keyboard already covers the home indicator, so the safe-area

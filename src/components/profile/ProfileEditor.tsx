@@ -1,11 +1,12 @@
 import { Image } from 'expo-image';
 import { useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TextInputProps, TouchableWithoutFeedback, View } from 'react-native';
+import { Keyboard, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TextInputProps, TouchableWithoutFeedback, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { GalleryPicker } from '@/components/profile/GalleryPicker';
 import { ProfileFlagsEditor } from '@/components/profile/ProfileFlagsEditor';
 import { Chip } from '@/components/ui/Chip';
+import { DismissKeyboardView } from '@/components/ui/DismissKeyboardView';
 import { Colors, FontFamily, Radius, SheetColumn, Spacing, sf } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
 import type { GalleryPhoto } from '@/store/fo';
@@ -106,62 +107,70 @@ export function ProfileEditor({
         </View>
       )}
 
-      <ScrollView contentContainerStyle={[styles.content, column]} showsVerticalScrollIndicator={false}>
-        <Pressable onPress={avatar.onPick} style={styles.avatarBlock}>
-          <View style={[styles.avatar, { backgroundColor: avatar.fallbackColor }]}>
-            {avatar.uri ? (
-              <Image source={{ uri: avatar.uri }} style={styles.avatarImg} contentFit="cover" />
-            ) : (
-              <Text style={styles.avatarInitial}>{avatar.initial || '♡'}</Text>
-            )}
-          </View>
-          <Text style={styles.avatarAction}>{avatar.action}</Text>
-        </Pressable>
+      <ScrollView
+        contentContainerStyle={[styles.content, column]}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        onScrollBeginDrag={() => Keyboard.dismiss()}
+      >
+        <DismissKeyboardView>
+          <Pressable onPress={avatar.onPick} style={styles.avatarBlock}>
+            <View style={[styles.avatar, { backgroundColor: avatar.fallbackColor }]}>
+              {avatar.uri ? (
+                <Image source={{ uri: avatar.uri }} style={styles.avatarImg} contentFit="cover" />
+              ) : (
+                <Text style={styles.avatarInitial}>{avatar.initial || '♡'}</Text>
+              )}
+            </View>
+            <Text style={styles.avatarAction}>{avatar.action}</Text>
+          </Pressable>
 
-        {!!headerFields?.length && (
-          <View style={styles.headerCard}>
-            {headerFields.map((f, i) => (
-              <View key={('key' in f ? f.key : f.label) ?? i} style={[styles.headerField, i > 0 && styles.headerFieldDivider]}>
-                <Field field={f} value={value} onChange={onChange} />
-              </View>
-            ))}
-          </View>
-        )}
-
-        {!!flagsKey && (
-          <View style={styles.flagsCard}>
-            <Text style={styles.flagsLabel}>flags</Text>
-            <ProfileFlagsEditor
-              flags={value[flagsKey] ?? []}
-              onChange={(flags) => onChange({ [flagsKey]: flags })}
-            />
-          </View>
-        )}
-
-        <View style={styles.list}>
-          {sections.map((s, i) => {
-            const summary = s.summary?.(value) ?? '';
-            const accessory = s.accessory?.(value);
-            return (
-              <Pressable
-                key={s.id}
-                onPress={() => (s.onPress ? s.onPress() : setOpen(s.id))}
-                style={[styles.row, i < sections.length - 1 && styles.rowDivider]}
-              >
-                <Text style={styles.rowLabel}>{s.label}</Text>
-                <View style={styles.rowValueWrap}>
-                  {accessory}
-                  {!!summary && <Text style={styles.rowValue} numberOfLines={1}>{summary}</Text>}
+          {!!headerFields?.length && (
+            <View style={styles.headerCard}>
+              {headerFields.map((f, i) => (
+                <View key={('key' in f ? f.key : f.label) ?? i} style={[styles.headerField, i > 0 && styles.headerFieldDivider]}>
+                  <Field field={f} value={value} onChange={onChange} />
                 </View>
-                <Text style={styles.chevron}>›</Text>
-              </Pressable>
-            );
-          })}
-        </View>
+              ))}
+            </View>
+          )}
 
-        {footer}
+          {!!flagsKey && (
+            <View style={styles.flagsCard}>
+              <Text style={styles.flagsLabel}>flags</Text>
+              <ProfileFlagsEditor
+                flags={value[flagsKey] ?? []}
+                onChange={(flags) => onChange({ [flagsKey]: flags })}
+              />
+            </View>
+          )}
 
-        <View style={{ height: insets.bottom + Spacing.s6 }} />
+          <View style={styles.list}>
+            {sections.map((s, i) => {
+              const summary = s.summary?.(value) ?? '';
+              const accessory = s.accessory?.(value);
+              return (
+                <Pressable
+                  key={s.id}
+                  onPress={() => (s.onPress ? s.onPress() : setOpen(s.id))}
+                  style={[styles.row, i < sections.length - 1 && styles.rowDivider]}
+                >
+                  <Text style={styles.rowLabel}>{s.label}</Text>
+                  <View style={styles.rowValueWrap}>
+                    {accessory}
+                    {!!summary && <Text style={styles.rowValue} numberOfLines={1}>{summary}</Text>}
+                  </View>
+                  <Text style={styles.chevron}>›</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          {footer}
+
+          <View style={{ height: insets.bottom + Spacing.s6 }} />
+        </DismissKeyboardView>
       </ScrollView>
 
       {/* one section at a time — the sheet holds only its own fields */}
@@ -183,10 +192,14 @@ export function ProfileEditor({
                 contentContainerStyle={styles.sheetBody}
                 showsVerticalScrollIndicator={false}
                 keyboardShouldPersistTaps="handled"
+                keyboardDismissMode="on-drag"
+                onScrollBeginDrag={() => Keyboard.dismiss()}
               >
-                {openSection.fields.map((f, i) => (
-                  <Field key={('key' in f ? f.key : f.label) ?? i} field={f} value={value} onChange={onChange} />
-                ))}
+                <DismissKeyboardView>
+                  {openSection.fields.map((f, i) => (
+                    <Field key={('key' in f ? f.key : f.label) ?? i} field={f} value={value} onChange={onChange} />
+                  ))}
+                </DismissKeyboardView>
               </ScrollView>
             </View>
           </View>
@@ -273,6 +286,8 @@ function Field({ field, value, onChange }: { field: EditField; value: Value; onC
         autoCapitalize={field.autoCapitalize}
         autoCorrect={field.autoCorrect}
         keyboardType={field.keyboardType}
+        returnKeyType={field.multiline ? undefined : 'done'}
+        onSubmitEditing={field.multiline ? undefined : () => Keyboard.dismiss()}
         style={[styles.input, field.multiline && styles.inputTall]}
       />
       {!!field.hint && <Text style={styles.hint}>{field.hint}</Text>}

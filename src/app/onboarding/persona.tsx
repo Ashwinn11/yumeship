@@ -19,6 +19,7 @@ import { Mark } from '@/components/ui/Mark';
 import { Row } from '@/components/ui/Row';
 import { StepDots } from '@/components/ui/StepDots';
 import { Toggle } from '@/components/ui/Toggle';
+import { DismissKeyboardView } from '@/components/ui/DismissKeyboardView';
 import { UnderInput } from '@/components/ui/UnderInput';
 import { CalloutBubble } from '@/components/ui';
 import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing ,sf } from '@/constants/theme';
@@ -155,6 +156,7 @@ export default function OnbPersona() {
         keyboardDismissMode="on-drag"
         onScrollBeginDrag={() => Keyboard.dismiss()}
       >
+        <DismissKeyboardView>
         <View style={[column, { position: 'relative' }]}>
           <View style={styles.decoTR} pointerEvents="none">
             <StickerSakuraBranch size={60} />
@@ -331,6 +333,7 @@ export default function OnbPersona() {
           </View>
         )}
         </View>
+        </DismissKeyboardView>
       </ScrollView>
 
       <View style={[styles.actions, column]}>

@@ -22,6 +22,7 @@ import { ScenariosFeature } from '@/components/tabs/ScenariosFeature';
 import { StorylineTab } from '@/components/tabs/StorylineTab';
 import { ThisOrThatTab } from '@/components/tabs/ThisOrThatTab';
 import { INK } from '@/components/templates/primitives';
+import { DismissKeyboardView } from '@/components/ui/DismissKeyboardView';
 import { IconChevronLeft } from '@/components/ui/Icon';
 import { Mark } from '@/components/ui/Mark';
 import { Colors, FontFamily, FontSize, Radius, sf, Shadow, SheetColumn, Spacing } from '@/constants/theme';
@@ -184,7 +185,7 @@ export default function VaultScreen() {
         <View style={styles.featureWrap}>
           {activeFeature === 'messages' ? renderFeature() : (
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[column, { flexGrow: 1 }]} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" onScrollBeginDrag={() => Keyboard.dismiss()}>
-              {renderFeature()}
+              <DismissKeyboardView>{renderFeature()}</DismissKeyboardView>
             </ScrollView>
           )}
         </View>

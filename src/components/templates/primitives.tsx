@@ -1,5 +1,5 @@
 import { useState, useRef, createContext, useContext } from 'react';
-import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
+import { Keyboard, View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
 import { persistImage } from '@/lib/localMedia';
 import { MEDIA_IMAGE } from '@/lib/imageProps';
@@ -133,6 +133,8 @@ export function BlankPill({ width = '100%' as number | string, value, onChangeTe
         placeholder={placeholder}
         placeholderTextColor={ink + '88'}
         multiline={multiline}
+        returnKeyType={multiline ? undefined : 'done'}
+        onSubmitEditing={multiline ? undefined : () => Keyboard.dismiss()}
         style={[s.blankPill, s.blankPillInput, typeof width === 'number' ? { width } : { flex: 1 }, { color: ink, borderColor: ink }, style]}
       />
     );
@@ -175,6 +177,8 @@ export function TemplateField({ label, value, valueWidth = 90, onChangeText, key
           placeholder="——"
           placeholderTextColor={ink + '88'}
           keyboardType={keyboardType}
+          returnKeyType="done"
+          onSubmitEditing={() => Keyboard.dismiss()}
           style={[s.fieldValueBox, s.fieldValueInput, { width: valueWidth, color: ink, borderColor: ink }, boxTint]}
         />
       ) : value ? (
@@ -649,6 +653,8 @@ export function Polaroid({ size = 130, rotate = -4, caption, onCaptionChange, ta
           placeholder="caption..."
           placeholderTextColor={ink + '88'}
           underlineColorAndroid="transparent"
+          returnKeyType="done"
+          onSubmitEditing={() => Keyboard.dismiss()}
           style={[s.polaroidCaptionInput, { color: ink }]}
         />
       ) : caption ? (
@@ -719,6 +725,8 @@ export function MemoriesFooter({ editing, photos, onPhotoChange, onCaptionChange
               placeholder="song title..."
               placeholderTextColor={ink + '88'}
               underlineColorAndroid="transparent"
+              returnKeyType="done"
+              onSubmitEditing={() => Keyboard.dismiss()}
               style={[s.memoriesSongInput, { color: ink }]}
             />
           ) : song ? (
@@ -873,6 +881,8 @@ export function ProfileBlock({ who, filled = {}, onFilledChange, dicho = {}, onD
               onChangeText={f('good')}
               placeholder="your strengths"
               placeholderTextColor={ink + '88'}
+              returnKeyType="done"
+              onSubmitEditing={() => Keyboard.dismiss()}
               style={[s.profileGoodInput, { color: ink }]}
             />
           ) : (
@@ -916,6 +926,8 @@ export function TwinProfile({ who, info, onInfoChange, transparent }: TwinProfil
                 onChangeText={(t) => onInfoChange(i, t)}
                 placeholder="——"
                 placeholderTextColor={ink + '88'}
+                returnKeyType="done"
+                onSubmitEditing={() => Keyboard.dismiss()}
                 style={[s.twinProfileVal, s.twinProfileInput, { color: ink, borderColor: ink + '55' }]}
               />
             ) : v ? (

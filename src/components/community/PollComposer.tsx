@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Keyboard, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { Colors, FontFamily, Radius, Spacing, sf } from '@/constants/theme';
 
@@ -40,6 +40,8 @@ export function PollComposer({ options, onChange, onRemove }: Props) {
             placeholder={`option ${i + 1}`}
             placeholderTextColor={Colors.ink3}
             maxLength={60}
+            returnKeyType="done"
+            onSubmitEditing={() => Keyboard.dismiss()}
             style={styles.input}
           />
           {options.length > MIN_POLL_OPTIONS && (

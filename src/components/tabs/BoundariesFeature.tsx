@@ -176,6 +176,8 @@ export function BoundariesFeature({ shipId }: { shipId: string }) {
                   style={[bn.sealJa, { color: st.stroke }]}
                   maxLength={2}
                   textAlign="center"
+                  returnKeyType="done"
+                  onSubmitEditing={() => Keyboard.dismiss()}
                 />
               ) : (
                 <Text style={[bn.sealJa, { color: st.stroke }]}>{st.ja}</Text>
@@ -188,6 +190,8 @@ export function BoundariesFeature({ shipId }: { shipId: string }) {
                   value={st.title}
                   onChangeText={(v) => updateField(si, 'title', v)}
                   style={[bn.stateTitle, { color: st.stroke }]}
+                  returnKeyType="done"
+                  onSubmitEditing={() => Keyboard.dismiss()}
                 />
               ) : (
                 <Text style={[bn.stateTitle, { color: st.stroke }]}>{st.title}</Text>
@@ -215,6 +219,8 @@ export function BoundariesFeature({ shipId }: { shipId: string }) {
                         value={c.label}
                         onChangeText={(v) => updateCheckLabel(si, ci, v)}
                         style={bn.checkInput}
+                        returnKeyType="done"
+                        onSubmitEditing={() => Keyboard.dismiss()}
                       />
                     ) : (
                       <Text style={[bn.checkText, { opacity: c.on ? 1 : 0.6 }]}>{c.label}</Text>
@@ -252,6 +258,8 @@ export function BoundariesFeature({ shipId }: { shipId: string }) {
           onChangeText={(v) => { setFooter(v); persist(states, v); }}
           style={bn.footerInput}
           textAlign="center"
+          returnKeyType="done"
+          onSubmitEditing={() => Keyboard.dismiss()}
         />
       ) : (
         <Text style={bn.footer}>{footer}</Text>

@@ -188,6 +188,8 @@ function HCEditor({ shipId, cats, onDone }: { shipId: string; cats: typeof DEFAU
                 onChangeText={(v) => updateTitle(cat.id, v)}
                 style={[hc.catLabelText, { flex: 1 }]}
                 autoCapitalize="words"
+                returnKeyType="done"
+                onSubmitEditing={() => Keyboard.dismiss()}
               />
               <IconEdit size={11} color={Colors.ink3} />
               <Pressable hitSlop={10} onPress={() => removeCategory(cat.id)}>

@@ -187,6 +187,7 @@ export function IncorrectQuotesTab({ shipId }: { shipId: string }) {
           value={draftText}
           onChangeText={setDraftText}
           onSubmitEditing={addLine}
+          returnKeyType="done"
           placeholder="write your own line…"
           placeholderTextColor={Colors.ink3}
           style={s.addInput}

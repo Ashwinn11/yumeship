@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, TextInput, StyleSheet } from 'react-native';
+import { Keyboard, View, Text, TextInput, StyleSheet } from 'react-native';
 import Svg, { Line } from 'react-native-svg';
 import { useLocalSearchParams } from 'expo-router';
 import { TemplateScreenWrapper } from '@/components/templates/TemplateScreenWrapper';
@@ -95,6 +95,8 @@ export function StorylineContent({ editing = false }: { editing?: boolean }) {
                         placeholderTextColor={ink + '55'}
                         autoCapitalize="characters"
                         underlineColorAndroid="transparent"
+                        returnKeyType="done"
+                        onSubmitEditing={() => Keyboard.dismiss()}
                         style={[s.eventTitle, { color: ink }]}
                       />
                     ) : (

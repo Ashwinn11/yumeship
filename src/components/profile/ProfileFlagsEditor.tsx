@@ -2,7 +2,7 @@ import { Image } from 'expo-image';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 import { useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Keyboard, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { newId } from '@/db/client';
 import { FlagIcon } from '@/components/deco/FlagIcon';
@@ -155,6 +155,8 @@ export function ProfileFlagsEditor({
             maxLength={FLAG_TEXT_MAX}
             style={styles.textInput}
             autoFocus={isNew}
+            returnKeyType="done"
+            onSubmitEditing={() => Keyboard.dismiss()}
           />
           <Pressable onPress={save} style={styles.doneBtn}>
             <Text style={styles.doneBtnText}>{isNew ? 'add' : 'done'}</Text>

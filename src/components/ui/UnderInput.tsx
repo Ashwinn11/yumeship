@@ -1,4 +1,4 @@
-import { TextInput, TextInputProps, StyleSheet } from 'react-native';
+import { Keyboard, TextInput, TextInputProps, StyleSheet } from 'react-native';
 import { Colors, FontFamily, FontSize } from '@/constants/theme';
 
 type Props = {
@@ -8,9 +8,15 @@ type Props = {
   autoCapitalize?: TextInputProps['autoCapitalize'];
   autoCorrect?: boolean;
   keyboardType?: TextInputProps['keyboardType'];
+  multiline?: boolean;
+  returnKeyType?: TextInputProps['returnKeyType'];
+  onSubmitEditing?: TextInputProps['onSubmitEditing'];
 };
 
-export function UnderInput({ value, onChangeText, placeholder, autoCapitalize, autoCorrect, keyboardType }: Props) {
+export function UnderInput({
+  value, onChangeText, placeholder, autoCapitalize, autoCorrect, keyboardType,
+  multiline, returnKeyType, onSubmitEditing,
+}: Props) {
   return (
     <TextInput
       style={styles.input}
@@ -21,6 +27,9 @@ export function UnderInput({ value, onChangeText, placeholder, autoCapitalize, a
       autoCapitalize={autoCapitalize}
       autoCorrect={autoCorrect}
       keyboardType={keyboardType}
+      multiline={multiline}
+      returnKeyType={multiline ? returnKeyType : (returnKeyType ?? 'done')}
+      onSubmitEditing={multiline ? onSubmitEditing : (onSubmitEditing ?? (() => Keyboard.dismiss()))}
     />
   );
 }

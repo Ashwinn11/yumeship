@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  Keyboard,
   Platform,
   Pressable,
   RefreshControl,
@@ -27,6 +28,7 @@ import { StickerEnvelope, StickerPolaroid } from '@/components/deco/Stickers';
 import { useIPad } from '@/hooks/use-ipad';
 import Svg, { Path } from 'react-native-svg';
 import { CozyModal } from '@/components/ui/CozyModal';
+import { DismissKeyboardView } from '@/components/ui/DismissKeyboardView';
 import { Image } from 'expo-image';
 import { AccountSheet } from '@/components/community/AccountSheet';
 import { AVATAR_IMAGE } from '@/lib/imageProps';
@@ -149,6 +151,8 @@ function UsernameClaim({ onClaimed }: { onClaimed: (username: string) => void })
           placeholderTextColor={Colors.ink3}
           autoCapitalize="none"
           autoCorrect={false}
+          returnKeyType="done"
+          onSubmitEditing={() => Keyboard.dismiss()}
           style={styles.claimInput}
         />
         {checking && <ActivityIndicator size="small" color={Colors.ink3} />}
@@ -331,6 +335,9 @@ function Feed({ insets }: { insets: { top: number } }) {
         onEndReached={activityData ? undefined : loadMore}
         onEndReachedThreshold={0.4}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        onScrollBeginDrag={() => Keyboard.dismiss()}
         // posts carry photos, so keep the mounted window tight — offscreen cards
         // hold decoded bitmaps that add up fast on older devices
         initialNumToRender={6}
@@ -519,7 +526,11 @@ export default function CommunityScreen() {
           style={styles.scroll}
           contentContainerStyle={[styles.emptyContainer, column]}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          onScrollBeginDrag={() => Keyboard.dismiss()}
         >
+          <DismissKeyboardView>
           {!user ? (
             // 1. UNAUTHENTICATED empty/sign-in state matching other app empty states
             <>
@@ -569,6 +580,7 @@ export default function CommunityScreen() {
           ) : (
             <UsernameClaim onClaimed={setUsername} />
           )}
+          </DismissKeyboardView>
         </ScrollView>
       )}
       <AccountSheet visible={showAccount} onClose={() => setShowAccount(false)} anchorTop={menuTop} />

@@ -519,6 +519,8 @@ function FoCompose({ shipName, ship, initialMessage, onQueue }: {
             onChangeText={setSenderName}
             placeholder={shipName}
             placeholderTextColor={Colors.ink3}
+            returnKeyType="done"
+            onSubmitEditing={() => Keyboard.dismiss()}
             style={fo.fromInput}
           />
         </View>

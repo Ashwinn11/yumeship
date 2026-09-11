@@ -13,6 +13,7 @@ import { Sakura } from '@/components/deco/Sakura';
 import { WashiTape, Sparkle } from '@/components/deco';
 import { Chip } from '@/components/ui/Chip';
 import { CozyModal } from '@/components/ui/CozyModal';
+import { DismissKeyboardView } from '@/components/ui/DismissKeyboardView';
 import { GradientCover } from '@/components/ui/GradientCover';
 import { IconEdit, IconPlus, IconTrashSolid } from '@/components/ui/Icon';
 import { Colors, FontFamily, FontSize, Radius, RelationshipColors, SHARING_ORDER, Shadow, SharingColors, SharingLabels, SheetColumn, Spacing, sf } from '@/constants/theme';
@@ -110,6 +111,7 @@ export default function ShipDetail() {
       </View>
 
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" onScrollBeginDrag={() => Keyboard.dismiss()}>
+        <DismissKeyboardView>
         <View style={column}>
         <GradientCover gradStart={ship.gradStart} gradEnd={ship.gradEnd} style={styles.hero}>
           <Text style={styles.heroInitial}>{ship.name.charAt(0).toUpperCase() || '♡'}</Text>
@@ -159,6 +161,7 @@ export default function ShipDetail() {
           </View>
         </View>
         </View>
+        </DismissKeyboardView>
       </ScrollView>
     </View>
   );
@@ -198,6 +201,8 @@ const daysLabel = daysTogetherLabel(ship!.startDate);
           placeholderTextColor={Colors.ink3}
           style={styles.dateInput}
           autoFocus
+          returnKeyType="done"
+          onSubmitEditing={() => Keyboard.dismiss()}
         />
       </CozyModal>
 
@@ -343,7 +348,7 @@ function HCSheet({
         <View style={styles.sheetOverlay} />
       </TouchableWithoutFeedback>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.sheetWrap}>
-        <View style={[styles.sheet, SheetColumn]}>
+        <DismissKeyboardView style={[styles.sheet, SheetColumn]}>
           <View style={styles.sheetHandle} />
           <View style={styles.sheetHeader}>
             <Text style={[styles.sheetJa, { color: cat.color }]}>{cat.ja}</Text>
@@ -353,6 +358,7 @@ function HCSheet({
                 onChangeText={setTitleDraft}
                 onBlur={saveTitle}
                 onSubmitEditing={saveTitle}
+                returnKeyType="done"
                 autoFocus
                 style={[styles.sheetTitle, { borderBottomWidth: 1, borderBottomColor: cat.color, flex: 1 }]}
               />
@@ -365,7 +371,12 @@ function HCSheet({
               <Text style={styles.sheetClose}>✕</Text>
             </Pressable>
           </View>
-          <ScrollView style={styles.sheetList} keyboardShouldPersistTaps="handled">
+          <ScrollView
+            style={styles.sheetList}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
+            onScrollBeginDrag={() => Keyboard.dismiss()}
+          >
             {hcs.length === 0 && (
               <Text style={styles.sheetEmpty}>nothing yet · add one below</Text>
             )}
@@ -377,6 +388,7 @@ function HCSheet({
                       value={editDraft}
                       onChangeText={setEditDraft}
                       onSubmitEditing={saveEdit}
+                      returnKeyType="done"
                       autoFocus
                       style={[styles.hcEditInput, { flex: 1 }]}
                       multiline
@@ -418,7 +430,7 @@ function HCSheet({
               <IconPlus size={14} color={Colors.vellum} />
             </Pressable>
           </View>
-        </View>
+        </DismissKeyboardView>
       </KeyboardAvoidingView>
       </View>
     </Modal>

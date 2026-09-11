@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  Modal, Pressable, ScrollView,
+  Keyboard, Modal, Pressable, ScrollView,
   StyleSheet, Switch, Text, TextInput, TouchableWithoutFeedback, View,
 } from 'react-native';
 import { useIPad } from '@/hooks/use-ipad';
@@ -8,6 +8,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 import { StickerTicket, WashiTape, Bullets, Sparkle } from '@/components/deco';
 import { CozyModal } from '@/components/ui/CozyModal';
+import { DismissKeyboardView } from '@/components/ui/DismissKeyboardView';
 import { IconPlus } from '@/components/ui/Icon';
 import { Colors, FontFamily, FontSize, Radius, Shadow, SheetColumn, Spacing ,sf } from '@/constants/theme';
 import { addDate, deleteDate, daysUntil, parseLocalDate, useDates } from '@/store/dates';
@@ -218,13 +219,21 @@ export function DatesTab({ shipId, shipName }: { shipId: string; shipName?: stri
             </Pressable>
           </View>
 
-          <ScrollView contentContainerStyle={s.sheetContent} keyboardShouldPersistTaps="handled">
+          <ScrollView
+            contentContainerStyle={s.sheetContent}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
+            onScrollBeginDrag={() => Keyboard.dismiss()}
+          >
+            <DismissKeyboardView>
             <Text style={s.fieldLabel}>what is this date?</Text>
             <TextInput
               value={title}
               onChangeText={setTitle}
               placeholder="e.g. their birthday, our anniversary"
               placeholderTextColor={Colors.ink3}
+              returnKeyType="done"
+              onSubmitEditing={() => Keyboard.dismiss()}
               style={s.input}
             />
 
@@ -234,6 +243,8 @@ export function DatesTab({ shipId, shipName }: { shipId: string; shipName?: stri
               onChangeText={setSubtitle}
               placeholder="e.g. fictional pisces ♡, we hold hands here"
               placeholderTextColor={Colors.ink3}
+              returnKeyType="done"
+              onSubmitEditing={() => Keyboard.dismiss()}
               style={[s.input, { fontFamily: FontFamily.script, fontSize: sf(16), paddingTop: 4, paddingBottom: 4 }]}
             />
 
@@ -293,6 +304,7 @@ export function DatesTab({ shipId, shipName }: { shipId: string; shipName?: stri
             >
               <Text style={s.saveBtnText}>save date</Text>
             </Pressable>
+            </DismissKeyboardView>
           </ScrollView>
         </View>
         </View>

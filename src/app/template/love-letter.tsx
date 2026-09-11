@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Keyboard, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { TemplateScreenWrapper } from '@/components/templates/TemplateScreenWrapper';
 import {
@@ -70,6 +70,8 @@ export function LoveLetterContent({ editing = false, ship }: { editing?: boolean
                 placeholder="name"
                 placeholderTextColor={ink + '88'}
                 underlineColorAndroid="transparent"
+                returnKeyType="done"
+                onSubmitEditing={() => Keyboard.dismiss()}
                 style={[s.dearNameInput, { color: ink }]}
               />
             ) : (
@@ -102,6 +104,8 @@ export function LoveLetterContent({ editing = false, ship }: { editing?: boolean
                      placeholder="your name..."
                      placeholderTextColor={ink + '88'}
                      underlineColorAndroid="transparent"
+                     returnKeyType="done"
+                     onSubmitEditing={() => Keyboard.dismiss()}
                      style={{
                        fontFamily: FontFamily.ui,
                        fontSize: sf(15),
@@ -135,6 +139,8 @@ export function LoveLetterContent({ editing = false, ship }: { editing?: boolean
                     onChangeText={setThing(i)}
                     placeholder=""
                     underlineColorAndroid="transparent"
+                    returnKeyType="done"
+                    onSubmitEditing={() => Keyboard.dismiss()}
                     style={[
                       { fontFamily: FontFamily.ja, fontSize: sf(11), color: ink, padding: 0, minHeight: 18 },
                       !things[i] && {

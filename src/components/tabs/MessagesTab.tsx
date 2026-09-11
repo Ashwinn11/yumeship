@@ -10,6 +10,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useIPad } from '@/hooks/use-ipad';
 
 import { CozyModal } from '@/components/ui/CozyModal';
+import { DismissKeyboardView } from '@/components/ui/DismissKeyboardView';
 import { IconSend, IconPhoto } from '@/components/ui/Icon';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
@@ -296,6 +297,7 @@ function ThreadView({
           keyboardShouldPersistTaps="handled"
           onScrollBeginDrag={() => Keyboard.dismiss()}
         >
+          <DismissKeyboardView style={messages.length === 0 ? { flex: 1 } : undefined}>
           {messages.length === 0 ? (
             <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 40, paddingHorizontal: 20, gap: 12 }}>
               <StickerEnvelope size={88} />
@@ -437,6 +439,7 @@ function ThreadView({
               return list;
             })()
           )}
+          </DismissKeyboardView>
         </ScrollView>
       </View>
 

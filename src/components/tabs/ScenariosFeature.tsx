@@ -8,6 +8,7 @@ import {
 import { StickerSakuraBranch, WashiTape } from '@/components/deco';
 
 import { CozyModal } from '@/components/ui/CozyModal';
+import { DismissKeyboardView } from '@/components/ui/DismissKeyboardView';
 import { IconPlus, IconTrashSolid } from '@/components/ui/Icon';
 import {
   Colors, FontFamily, FontSize, Radius, RelationshipBase, RelationshipColors, RelationshipSoft,
@@ -266,7 +267,7 @@ export function ScenariosFeature({ shipId, shipName, setCustomBack }: { shipId: 
         <TouchableWithoutFeedback onPress={() => setShowIdeas(false)}>
           <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.3)' }} />
         </TouchableWithoutFeedback>
-        <View style={[{ backgroundColor: Colors.paper, borderTopLeftRadius: Radius.r5, borderTopRightRadius: Radius.r5, paddingBottom: 34, maxHeight: '80%' }, SheetColumn]}>
+        <DismissKeyboardView style={[{ backgroundColor: Colors.paper, borderTopLeftRadius: Radius.r5, borderTopRightRadius: Radius.r5, paddingBottom: 34, maxHeight: '80%' }, SheetColumn]}>
           <View style={{ width: 40, height: 4, backgroundColor: Colors.line, borderRadius: 2, alignSelf: 'center', marginTop: 10 }} />
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: Spacing.s5, paddingTop: Spacing.s3 }}>
             <Text style={{ fontFamily: FontFamily.uiSemiBold, fontSize: sf(18), color: Colors.ink }}>prompts</Text>
@@ -297,7 +298,13 @@ export function ScenariosFeature({ shipId, shipName, setCustomBack }: { shipId: 
             </Pressable>
           </View>
 
-          <ScrollView contentContainerStyle={{ gap: 8, padding: Spacing.s5 }} showsVerticalScrollIndicator={false}>
+          <ScrollView
+            contentContainerStyle={{ gap: 8, padding: Spacing.s5 }}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
+            onScrollBeginDrag={() => Keyboard.dismiss()}
+          >
             {ideaDeck.map((p, i) => {
               const isCustom = 'id' in p;
               return (
@@ -335,7 +342,7 @@ export function ScenariosFeature({ shipId, shipName, setCustomBack }: { shipId: 
             <Text style={{ fontSize: sf(13), color: accent }}>↻</Text>
             <Text style={{ fontFamily: FontFamily.uiMedium, fontSize: sf(13), color: accent }}>shuffle prompts</Text>
           </Pressable>
-        </View>
+        </DismissKeyboardView>
         </View>
       </Modal>
     </View>
@@ -417,7 +424,6 @@ function ScenarioEditor({ initial, shipName, accent, accentLight, onSave, onDele
           borderRadius: 16,
           borderWidth: 1,
           borderColor: Colors.line,
-          padding: 18,
           position: 'relative',
           overflow: 'visible',
           shadowColor: 'rgba(110, 58, 90, 0.05)',
@@ -432,42 +438,53 @@ function ScenarioEditor({ initial, shipName, accent, accentLight, onSave, onDele
           <WashiTape width={70} height={14} pattern="dot" color={accentLight} rotate={0} />
         </View>
 
-        {/* Moment name — Fredoka (matches body, easier on the eyes) */}
-        <TextInput
-          value={title}
-          onChangeText={setTitle}
-          placeholder="give this moment a name..."
-          placeholderTextColor={Colors.ink3}
-          multiline
-          style={{
-            fontFamily: FontFamily.uiSemiBold,
-            fontSize: sf(18),
-            color: Colors.ink,
-            borderBottomWidth: 1,
-            borderBottomColor: accentLight,
-            paddingVertical: 8,
-            marginBottom: 12,
-          }}
-        />
+        <ScrollView
+          contentContainerStyle={{ padding: 18, flexGrow: 1 }}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          onScrollBeginDrag={() => Keyboard.dismiss()}
+        >
+          <DismissKeyboardView style={{ flex: 1 }}>
+            {/* Moment name — Fredoka (matches body, easier on the eyes) */}
+            <TextInput
+              value={title}
+              onChangeText={setTitle}
+              placeholder="give this moment a name..."
+              placeholderTextColor={Colors.ink3}
+              multiline
+              style={{
+                fontFamily: FontFamily.uiSemiBold,
+                fontSize: sf(18),
+                color: Colors.ink,
+                borderBottomWidth: 1,
+                borderBottomColor: accentLight,
+                paddingVertical: 8,
+                marginBottom: 12,
+              }}
+            />
 
-        {/* Body Input — Cursive Caveat script font */}
-        <TextInput
-          value={body}
-          onChangeText={setBody}
-          placeholder="what happens in this scene..."
-          placeholderTextColor={Colors.ink3}
-          style={{
-            fontFamily: FontFamily.ui,
-            fontSize: sf(15),
-            color: Colors.ink2,
-            lineHeight: sf(24),
-            flex: 1,
-            textAlignVertical: 'top',
-          }}
-          multiline
-          textAlignVertical="top"
-          autoFocus={!initial.body}
-        />
+            {/* Body Input — Cursive Caveat script font */}
+            <TextInput
+              value={body}
+              onChangeText={setBody}
+              placeholder="what happens in this scene..."
+              placeholderTextColor={Colors.ink3}
+              style={{
+                fontFamily: FontFamily.ui,
+                fontSize: sf(15),
+                color: Colors.ink2,
+                lineHeight: sf(24),
+                flex: 1,
+                minHeight: 260,
+                textAlignVertical: 'top',
+              }}
+              multiline
+              textAlignVertical="top"
+              autoFocus={!initial.body}
+            />
+          </DismissKeyboardView>
+        </ScrollView>
       </View>
     </KeyboardAvoidingView>
   );

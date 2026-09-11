@@ -10,6 +10,7 @@ import { Sparkle } from '@/components/deco/Sparkle';
 import { Star } from '@/components/deco/Star';
 import { WashiTape } from '@/components/deco/WashiTape';
 import { CozyModal } from '@/components/ui/CozyModal';
+import { DismissKeyboardView } from '@/components/ui/DismissKeyboardView';
 import { IconEdit, IconExport, IconTrashSolid } from '@/components/ui/Icon';
 import { Colors, FontFamily, Radius, Shadow, SheetColumn, Spacing ,sf } from '@/constants/theme';
 import { BG_COLORS, TEXT_COLORS } from '@/constants/bgPalette';
@@ -311,21 +312,23 @@ export function TemplateScreenWrapper({ templateKey, shipId, children }: Props) 
           keyboardDismissMode="on-drag"
           onScrollBeginDrag={() => Keyboard.dismiss()}
         >
-          <View ref={exportRef} style={s.exportCapture} collapsable={false}>
-            {bgImage ? (
-              <Image
-                source={{ uri: bgImage }}
-                style={StyleSheet.absoluteFill}
-                contentFit="cover"
-                {...MEDIA_IMAGE}
-              />
-            ) : bgColor ? (
-              <View style={[StyleSheet.absoluteFill, { backgroundColor: bgColor }]} />
-            ) : null}
-            <TemplateTextColorCtx.Provider value={textColor}>
-              {children}
-            </TemplateTextColorCtx.Provider>
-          </View>
+          <DismissKeyboardView>
+            <View ref={exportRef} style={s.exportCapture} collapsable={false}>
+              {bgImage ? (
+                <Image
+                  source={{ uri: bgImage }}
+                  style={StyleSheet.absoluteFill}
+                  contentFit="cover"
+                  {...MEDIA_IMAGE}
+                />
+              ) : bgColor ? (
+                <View style={[StyleSheet.absoluteFill, { backgroundColor: bgColor }]} />
+              ) : null}
+              <TemplateTextColorCtx.Provider value={textColor}>
+                {children}
+              </TemplateTextColorCtx.Provider>
+            </View>
+          </DismissKeyboardView>
         </ScrollView>
 
         {/* Background customizer */}

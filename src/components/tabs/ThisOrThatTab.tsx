@@ -6,6 +6,7 @@ import { ThisOrThatContent, DEFAULT_PAIRS } from '@/app/template/this-or-that';
 import { getShip } from '@/store/ships';
 import { TemplateDataCtx, loadTemplateData, saveTemplateData, buildPreFill } from '@/store/templateData';
 import { Colors, FontFamily, Radius, Spacing, sf } from '@/constants/theme';
+import { DismissKeyboardView } from '@/components/ui/DismissKeyboardView';
 import { IconPlus, IconTrashSolid } from '@/components/ui/Icon';
 
 export function ThisOrThatTab({ shipId }: { shipId: string }) {
@@ -92,7 +93,14 @@ function PairsEditor({ initialPairs, onDone }: {
           <Text style={e.doneBtnText}>done</Text>
         </Pressable>
       </View>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={e.list}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={e.list}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        onScrollBeginDrag={() => Keyboard.dismiss()}
+      >
+        <DismissKeyboardView>
         {pairs.map(([a, b], i) => (
           <View key={i} style={e.row}>
             <Text style={e.rowNum}>{String(i + 1).padStart(2, '0')}</Text>
@@ -101,6 +109,8 @@ function PairsEditor({ initialPairs, onDone }: {
               onChangeText={(v) => update(i, 0, v)}
               placeholder="this"
               placeholderTextColor={Colors.ink3}
+              returnKeyType="done"
+              onSubmitEditing={() => Keyboard.dismiss()}
               style={e.input}
             />
             <Text style={e.slash}>/</Text>
@@ -109,6 +119,8 @@ function PairsEditor({ initialPairs, onDone }: {
               onChangeText={(v) => update(i, 1, v)}
               placeholder="that"
               placeholderTextColor={Colors.ink3}
+              returnKeyType="done"
+              onSubmitEditing={() => Keyboard.dismiss()}
               style={e.input}
             />
             <Pressable hitSlop={8} onPress={() => remove(i)}>
@@ -120,6 +132,7 @@ function PairsEditor({ initialPairs, onDone }: {
           <IconPlus size={13} color={Colors.sakuraDeep} />
           <Text style={e.addText}>add pair</Text>
         </Pressable>
+        </DismissKeyboardView>
       </ScrollView>
     </KeyboardAvoidingView>
   );
