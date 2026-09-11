@@ -35,12 +35,17 @@ const PILL_SOFT_BY_DEEP: Record<string, string> = {
 
 export type ProfileStatus = { label: string; color: string };
 
-/** "YYYY-MM-DD" → "Mar 3, 2024" — parsed as local time, not UTC, or the day shifts. */
-function formatSince(value: string): string {
+/** "YYYY-MM-DD" → "214d" / "1y 35d" — mirrors mobile's DateField.calcElapsed. */
+function elapsedSince(value: string): string | null {
   const m = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(value.trim());
   const d = m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : new Date(value);
-  if (isNaN(d.getTime())) return value;
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  if (isNaN(d.getTime())) return null;
+  const diffMs = Date.now() - d.getTime();
+  if (diffMs < 0) return null;
+  const totalDays = Math.floor(diffMs / 86400000);
+  const years = Math.floor(totalDays / 365);
+  const days = totalDays % 365;
+  return years > 0 ? `${years}y ${days}d` : `${totalDays}d`;
 }
 
 export type ProfileCardProps = {
@@ -88,12 +93,6 @@ export type ProfileCardProps = {
   followingCount?: number;
   /** follow/unfollow button slot, rendered under the counts */
   followAction?: React.ReactNode;
-  /** "profile identify" — show [me] ♡ [F/O] paired avatars instead of the solo one */
-  showPairedIdentity?: boolean;
-  pairedName?: string;
-  pairedPronouns?: string;
-  pairedAvatarUri?: string;
-  pairedFallbackColor?: string;
 };
 
 function SectionLabel({ children }: { children: string }) {
@@ -138,16 +137,12 @@ export function ProfileCard({
   followerCount,
   followingCount,
   followAction,
-  showPairedIdentity,
-  pairedName,
-  pairedPronouns,
-  pairedAvatarUri,
-  pairedFallbackColor = Colors.lavender,
 }: ProfileCardProps) {
+  const elapsed = since ? elapsedSince(since) : null;
   const stats = [
     type ? { label: 'type', value: type.label, color: type.color, pill: true } : null,
     sharing ? { label: 'sharing', value: sharing.label, color: sharing.color, pill: true } : null,
-    since ? { label: 'since', value: formatSince(since) } : null,
+    elapsed ? { label: 'since', value: elapsed } : null,
   ].filter(Boolean) as { label: string; value: string; color?: string; pill?: boolean }[];
 
   const textStyle: React.CSSProperties | undefined = textColor ? { color: textColor } : undefined;
@@ -188,7 +183,6 @@ export function ProfileCard({
   }
 
   const initial = name.trim().charAt(0).toUpperCase() || '♡';
-  const pairedInitial = (pairedName ?? '').trim().charAt(0).toUpperCase() || '♡';
 
   return (
     <div className="profile-card-container">
@@ -227,128 +221,80 @@ export function ProfileCard({
           )}
 
           <div className="hero-content">
-            {showPairedIdentity ? (
-              <div className="paired-wrap">
-                <div className="paired-avatar-outer">
-                  <div className="paired-avatar" style={{ backgroundColor: fallbackColor }}>
-                    {photoUri ? (
-                      <img src={photoUri} alt={name} className="paired-avatar-img" />
-                    ) : (
-                      <span className="paired-avatar-initial">{initial}</span>
-                    )}
-                  </div>
-                </div>
-                <div className="paired-heart-badge">
-                  <Heart size={13} color={Colors.sakuraDeep} />
-                </div>
-                <div className="paired-avatar-outer">
-                  <div className="paired-avatar" style={{ backgroundColor: pairedFallbackColor }}>
-                    {pairedAvatarUri ? (
-                      <img src={pairedAvatarUri} alt={pairedName || ''} className="paired-avatar-img" />
-                    ) : (
-                      <span className="paired-avatar-initial">{pairedInitial}</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="avatar-outer">
-                <div className="avatar-wrap">
-                  <div className="avatar-circle" style={{ backgroundColor: fallbackColor }}>
-                    {photoUri ? (
-                      <img src={photoUri} alt={name} className="avatar-img" />
-                    ) : (
-                      <span className="avatar-initial">{initial}</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {showPairedIdentity ? (
-              <div className="paired-name-row">
-                <div className="paired-name-col">
-                  <span className={`paired-name-text ${nameFontClass}`} style={textStyle}>
-                    {name || '—'}
-                  </span>
-                  {pronouns && <span className="paired-pronouns-text" style={textStyle}>{pronouns}</span>}
-                </div>
-                <Heart size={10} color={Colors.sakuraDeep} />
-                <div className="paired-name-col">
-                  <span className={`paired-name-text ${nameFontClass}`} style={textStyle}>
-                    {pairedName || '—'}
-                  </span>
-                  {pairedPronouns && (
-                    <span className="paired-pronouns-text" style={textStyle}>{pairedPronouns}</span>
+            <div className="avatar-outer">
+              <div className="avatar-wrap">
+                <div className="avatar-circle" style={{ backgroundColor: fallbackColor }}>
+                  {photoUri ? (
+                    <img src={photoUri} alt={name} className="avatar-img" />
+                  ) : (
+                    <span className="avatar-initial">{initial}</span>
                   )}
                 </div>
               </div>
-            ) : (
-              <>
-                <div className="name-row">
-                  <div className="name-group">
-                    <h1 className={`name-text ${nameFontClass}`} style={textStyle}>
-                      {name || '—'}
-                    </h1>
-                  </div>
-                  {username && <span className="username-text" style={textStyle}>@{username}</span>}
-                  {subtitle && <span className="subtitle-text" style={textStyle}>{subtitle}</span>}
-                </div>
-                {pronouns && <span className="pronouns-text" style={textStyle}>{pronouns}</span>}
-                <ProfileFlags flags={flags} textColor={textColor} />
-                {tagline && <p className="tagline-text" style={textStyle}>{tagline}</p>}
-                {links.length > 0 && (
-                  <div className="links-row">
-                    {links.map((l) => (
-                      <a
-                        key={l.id}
-                        href={normalizeUrl(l.url)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="link-pill"
-                      >
-                        {l.label || l.url}
-                      </a>
-                    ))}
-                  </div>
-                )}
-                {stats.length > 0 && (
-                  <div className="details-grid">
-                    {stats.map((s) => (
-                      <div key={s.label} className="detail-item">
-                        <span className="detail-label">{s.label.toUpperCase()}</span>
-                        {s.pill ? (
-                          <span
-                            className="detail-pill"
-                            style={{
-                              backgroundColor: PILL_SOFT_BY_DEEP[s.color!] ?? Colors.paperDeep,
-                              color: s.color,
-                            }}
-                          >
-                            {s.value}
-                          </span>
-                        ) : (
-                          <span className="detail-value" style={textStyle}>{s.value}</span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {(followerCount !== undefined || followingCount !== undefined) && (
-                  <div className="social-stats-row">
-                    <div className="social-stat">
-                      <span className="social-stat-value" style={textStyle}>{followerCount ?? 0}</span>
-                      <span className="social-stat-label">followers</span>
-                    </div>
-                    <div className="social-stat">
-                      <span className="social-stat-value" style={textStyle}>{followingCount ?? 0}</span>
-                      <span className="social-stat-label">following</span>
-                    </div>
-                  </div>
-                )}
-                {followAction && <div className="follow-action-row">{followAction}</div>}
-              </>
+            </div>
+
+            <div className="name-row">
+              <div className="name-group">
+                <h1 className={`name-text ${nameFontClass}`} style={textStyle}>
+                  {name || '—'}
+                </h1>
+              </div>
+              {username && <span className="username-text" style={textStyle}>@{username}</span>}
+              {subtitle && <span className="subtitle-text" style={textStyle}>{subtitle}</span>}
+            </div>
+            {pronouns && <span className="pronouns-text" style={textStyle}>{pronouns}</span>}
+            <ProfileFlags flags={flags} textColor={textColor} />
+            {tagline && <p className="tagline-text" style={textStyle}>{tagline}</p>}
+            {links.length > 0 && (
+              <div className="links-row">
+                {links.map((l) => (
+                  <a
+                    key={l.id}
+                    href={normalizeUrl(l.url)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="link-pill"
+                  >
+                    {l.label || l.url}
+                  </a>
+                ))}
+              </div>
             )}
+            {stats.length > 0 && (
+              <div className="details-grid">
+                {stats.map((s, i) => (
+                  <div key={s.label} className={`detail-item${i > 0 ? ' detail-item-divider' : ''}`}>
+                    <span className="detail-label">{s.label.toUpperCase()}</span>
+                    {s.pill ? (
+                      <span
+                        className="detail-pill"
+                        style={{
+                          backgroundColor: PILL_SOFT_BY_DEEP[s.color!] ?? Colors.paperDeep,
+                          color: s.color,
+                        }}
+                      >
+                        {s.value}
+                      </span>
+                    ) : (
+                      <span className="detail-value" style={textStyle}>{s.value}</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+            {(followerCount !== undefined || followingCount !== undefined) && (
+              <div className="social-stats-row">
+                <div className="social-stat">
+                  <span className="social-stat-value" style={textStyle}>{followerCount ?? 0}</span>
+                  <span className="social-stat-label">followers</span>
+                </div>
+                <div className="social-stat">
+                  <span className="social-stat-value" style={textStyle}>{followingCount ?? 0}</span>
+                  <span className="social-stat-label">following</span>
+                </div>
+              </div>
+            )}
+            {followAction && <div className="follow-action-row">{followAction}</div>}
           </div>
 
           {heroSize.width > 0 && (

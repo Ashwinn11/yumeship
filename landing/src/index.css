@@ -710,86 +710,6 @@ a:hover {
   font-style: italic;
 }
 
-/* ── Paired Identity Avatar ─────────────────────────────────────────────── */
-.paired-wrap {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-}
-.paired-avatar-outer {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.paired-avatar {
-  width: 74px;
-  height: 74px;
-  border-radius: 999px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  border: 1.4px solid var(--line);
-}
-.paired-avatar-img {
-  width: 74px;
-  height: 74px;
-  border-radius: 999px;
-  object-fit: cover;
-  display: block;
-}
-.paired-avatar-initial {
-  font-family: var(--font-display);
-  font-size: 30px;
-  color: #fff;
-  font-style: italic;
-}
-.paired-heart-badge {
-  width: 26px;
-  height: 26px;
-  border-radius: 999px;
-  background-color: var(--vellum);
-  border: 1.4px solid var(--line);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 -7px;
-  z-index: 2;
-  box-shadow: 0 2px 6px rgba(110, 58, 90, 0.05);
-}
-.paired-name-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  margin-top: 12px;
-  max-width: 100%;
-}
-.paired-name-col {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  max-width: 120px;
-  gap: 1px;
-}
-.paired-name-text {
-  font-family: var(--font-display);
-  font-size: 19px;
-  line-height: 23px;
-  color: var(--ink);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-style: italic;
-}
-.paired-pronouns-text {
-  font-family: var(--font-ui);
-  font-size: 11px;
-  color: var(--ink2);
-}
-
 /* ── Name Row & Identity ────────────────────────────────────────────────── */
 .name-row {
   display: flex;
@@ -897,25 +817,6 @@ a:hover {
   justify-content: center;
   margin-top: 12px;
 }
-.open-in-app-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 18px;
-  border-radius: 999px;
-  background: var(--sakura-soft);
-  border: 1px solid var(--sakura);
-  font-family: var(--font-ui-medium);
-  font-size: 12px;
-  color: var(--sakura-ink);
-  text-decoration: none;
-  transition: background 0.15s, transform 0.15s;
-}
-.open-in-app-pill:hover {
-  background: var(--sakura);
-  transform: translateY(-1px);
-}
-
 /* ── Profile Flags ──────────────────────────────────────────────────────── */
 .profile-flags-row {
   display: flex;
@@ -973,13 +874,12 @@ a:hover {
   width: 100%;
 }
 
-/* ── Details grid — part of the hero now, not its own card ─────────────── */
+/* ── Details grid — part of the hero now, not its own card. Up to three
+   equal columns (type/sharing/since), each spanning its full share of the
+   card edge-to-edge rather than a compact wrapped cluster — relation and
+   sharing are free text now and need room for more than a one-word label ── */
 .details-grid {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  row-gap: 12px;
-  column-gap: 20px;
   margin-top: 14px;
   padding-top: 12px;
   border-top: 1px solid rgba(0, 0, 0, 0.06);
@@ -987,9 +887,15 @@ a:hover {
 }
 .detail-item {
   display: flex;
+  flex: 1;
   flex-direction: column;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
+  padding: 0 8px;
+  min-width: 0;
+}
+.detail-item-divider {
+  border-left: 1px solid rgba(0, 0, 0, 0.08);
 }
 .detail-label {
   font-family: var(--font-ui);
@@ -1002,13 +908,19 @@ a:hover {
   font-family: var(--font-ui-medium);
   font-size: 14px;
   color: var(--ink);
+  text-align: center;
+  overflow-wrap: break-word;
+  max-width: 100%;
 }
 .detail-pill {
-  align-self: flex-start;
+  display: inline-block;
+  max-width: 100%;
   padding: 3px 11px;
   border-radius: 999px;
   font-family: var(--font-ui-semibold);
   font-size: 12.5px;
+  text-align: center;
+  overflow-wrap: break-word;
 }
 
 /* ── Theme Song Card ────────────────────────────────────────────────────── */

@@ -666,7 +666,7 @@ export async function unpublishFoProfile(foId: string): Promise<void> {
   // fetched before the row goes away — it's the only place these urls live
   const { data: existing } = await supabase
     .from('fo_profiles')
-    .select('avatar_url, gallery, card_bg_image, page_bg_image, avatar_animation_url, flags')
+    .select('avatar_url, gallery, card_bg_image, page_bg_image, flags')
     .eq('id', foId)
     .maybeSingle();
 
@@ -683,7 +683,6 @@ export async function unpublishFoProfile(foId: string): Promise<void> {
   if (existing?.avatar_url) deleteFromBucketByUrl('avatars', existing.avatar_url);
   if (existing?.card_bg_image) deleteFromBucketByUrl('avatars', existing.card_bg_image);
   if (existing?.page_bg_image) deleteFromBucketByUrl('avatars', existing.page_bg_image);
-  if (existing?.avatar_animation_url) deleteFromBucketByUrl('avatars', existing.avatar_animation_url);
   for (const g of (existing?.gallery ?? []) as { url?: string }[]) {
     if (g.url) deleteFromBucketByUrl('avatars', g.url);
   }

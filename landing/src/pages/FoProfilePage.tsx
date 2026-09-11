@@ -123,15 +123,6 @@ export function FoProfilePage() {
                 nameFont={profile.nameFont}
                 flags={profile.flags}
                 links={profile.links}
-                followAction={
-                  <a
-                    href={`yumeship://fo/${profile.id}`}
-                    className="open-in-app-pill"
-                    aria-label="Open in YumeShip app"
-                  >
-                    open in app ✦
-                  </a>
-                }
               />
 
               {/* Engagement CTA */}

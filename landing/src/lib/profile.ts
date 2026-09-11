@@ -29,7 +29,6 @@ export type WebProfile = {
   gallery: GalleryPhoto[];
   flags: ProfileFlag[];
   links: ProfileLink[];
-  identifyFoId: string | null;
   followerCount: number;
   followingCount: number;
   // card theme
@@ -82,7 +81,7 @@ const CARD_THEME_FIELDS =
 
 const PROFILE_FIELDS =
   `id, username, name, pronouns, tagline, avatar_url, song, song_link, gallery, flags, links, ` +
-  `color, identify_fo_id, follower_count, following_count, ${CARD_THEME_FIELDS}`;
+  `color, follower_count, following_count, ${CARD_THEME_FIELDS}`;
 
 const FO_PROFILE_FIELDS =
   `id, name, pronouns, tagline, avatar_url, song, song_link, gallery, flags, links, ` +
@@ -149,7 +148,6 @@ function rowToProfile(row: Record<string, unknown>): WebProfile {
     gallery: parseGallery(row.gallery),
     flags: parseFlags(row.flags),
     links: parseLinks(row.links),
-    identifyFoId: (row.identify_fo_id as string) ?? null,
     followerCount: (row.follower_count as number) ?? 0,
     followingCount: (row.following_count as number) ?? 0,
   };

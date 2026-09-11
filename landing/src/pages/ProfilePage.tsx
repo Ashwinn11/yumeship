@@ -3,12 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
   fetchProfileByUsername,
   fetchUserFoProfiles,
-  fetchFoProfile,
   type WebProfile,
   type WebFoProfile,
 } from '../lib/profile';
 import { ProfileCard } from '../components/profile/ProfileCard';
-import { pairedProps } from '../components/profile/cardProps';
 import { FoAvatarCard } from '../components/profile/FoAvatarCard';
 import { ProfileScreenHeader } from '../components/profile/ProfileScreenHeader';
 import { CreateProfileCta } from '../components/profile/CreateProfileCta';
@@ -48,7 +46,6 @@ export function ProfilePage() {
   }
   const [profile, setProfile] = useState<WebProfile | null | undefined>(undefined); // undefined = loading
   const [fos, setFos] = useState<WebFoProfile[]>([]);
-  const [pairedFo, setPairedFo] = useState<WebFoProfile | null>(null);
 
   useEffect(() => {
     if (!username) return;
@@ -59,7 +56,6 @@ export function ProfilePage() {
     // oxlint-disable-next-line react/set-state-in-effect
     setProfile(undefined);
     setFos([]);
-    setPairedFo(null);
 
     // Resolve username → profile + fo list
     fetchProfileByUsername(username).then(async (p) => {
@@ -77,16 +73,6 @@ export function ProfilePage() {
       const foList = await fetchUserFoProfiles(p.id);
       if (cancelled) return;
       setFos(foList);
-
-      if (p.identifyFoId) {
-        const inList = foList.find((f) => f.id === p.identifyFoId);
-        if (inList) {
-          setPairedFo(inList);
-        } else {
-          const fo = await fetchFoProfile(p.identifyFoId);
-          if (!cancelled) setPairedFo(fo);
-        }
-      }
     });
 
     return () => { cancelled = true; };
@@ -142,24 +128,8 @@ export function ProfilePage() {
                 nameFont={profile.nameFont}
                 flags={profile.flags}
                 links={profile.links}
-                {...pairedProps(
-                  pairedFo && {
-                    name: pairedFo.name,
-                    pronouns: pairedFo.pronouns,
-                    avatarUri: pairedFo.avatarUrl,
-                  }
-                )}
                 followerCount={profile.followerCount}
                 followingCount={profile.followingCount}
-                followAction={
-                  <a
-                    href={`yumeship://user/${profile.id}`}
-                    className="open-in-app-pill"
-                    aria-label="Open in YumeShip app"
-                  >
-                    open in app ✦
-                  </a>
-                }
               />
 
               {/* F/Os Section */}

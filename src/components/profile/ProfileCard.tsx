@@ -22,6 +22,7 @@ import { StickerCassette } from '@/components/deco/Stickers';
 import { StitchFrame } from '@/components/deco/StitchFrame';
 import { WashBackdrop } from '@/components/deco/WashBackdrop';
 import { Polaroid } from '@/components/templates/primitives';
+import { calcElapsed } from '@/components/ui/DateField';
 import { Colors, FontFamily, Radius, Shadow, Spacing, sf } from '@/constants/theme';
 import type { GalleryPhoto } from '@/store/fo';
 import { ProfileFlags } from './ProfileFlags';
@@ -33,13 +34,6 @@ function normalizeUrl(url: string): string {
   return `https://${trimmed}`;
 }
 
-/** "YYYY-MM-DD" → "Mar 3, 2024" — parsed as local time, not UTC, or the day shifts. */
-function formatSince(value: string): string {
-  const m = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(value.trim());
-  const d = m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : new Date(value);
-  if (isNaN(d.getTime())) return value;
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-}
 
 const POLAROID_TAPES = [Colors.sakura, Colors.lavender, Colors.butter, Colors.sage, Colors.peach];
 
@@ -148,10 +142,11 @@ export function ProfileCard({
   followingCount,
   followAction,
 }: Props) {
+  const elapsed = since ? calcElapsed(since) : null;
   const stats = [
     type ? { label: 'type', value: type.label, color: type.color, pill: true } : null,
     sharing ? { label: 'sharing', value: sharing.label, color: sharing.color, pill: true } : null,
-    since ? { label: 'since', value: formatSince(since) } : null,
+    elapsed ? { label: 'since', value: elapsed.label } : null,
   ].filter(Boolean) as { label: string; value: string; color?: string; pill?: boolean }[];
 
   const textStyle = textColor ? { color: textColor } : null;
@@ -210,15 +205,15 @@ export function ProfileCard({
       )}
       {stats.length > 0 && (
         <View style={styles.detailsGrid}>
-          {stats.map((s) => (
-            <View key={s.label} style={styles.detailItem}>
+          {stats.map((s, i) => (
+            <View key={s.label} style={[styles.detailItem, i > 0 && styles.detailItemDivider]}>
               <Text style={styles.detailLabel}>{s.label.toUpperCase()}</Text>
               {s.pill ? (
                 <View style={[styles.detailPill, { backgroundColor: PILL_SOFT_BY_DEEP[s.color!] ?? Colors.paperDeep }]}>
-                  <Text style={[styles.detailPillText, { color: s.color }]}>{s.value}</Text>
+                  <Text style={[styles.detailPillText, { color: s.color }]} numberOfLines={2}>{s.value}</Text>
                 </View>
               ) : (
-                <Text style={[styles.detailValue, textStyle]}>{s.value}</Text>
+                <Text style={[styles.detailValue, textStyle]} numberOfLines={2}>{s.value}</Text>
               )}
             </View>
           ))}
@@ -421,24 +416,26 @@ const styles = StyleSheet.create({
     letterSpacing: 1.4, textTransform: 'uppercase',
   },
 
-  // part of the hero now, not its own card — grouped by space (generous
-  // columnGap/rowGap) and centered like the rest of the identity block
+  // part of the hero now, not its own card — up to three equal columns
+  // (type/sharing/since), each getting the full edge-to-edge width divided
+  // evenly rather than a compact wrapped cluster, since relation and sharing
+  // are free text now and need room for more than a one-word label
   detailsGrid: {
-    flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center',
-    rowGap: Spacing.s3, columnGap: Spacing.s5,
+    flexDirection: 'row',
     marginTop: Spacing.s4, paddingTop: Spacing.s3,
     borderTopWidth: 1, borderTopColor: 'rgba(0,0,0,0.06)',
     width: '100%',
   },
-  detailItem: { alignItems: 'center', gap: 3 },
+  detailItem: { flex: 1, alignItems: 'center', gap: 4, paddingHorizontal: Spacing.s2 },
+  detailItemDivider: { borderLeftWidth: 1, borderLeftColor: 'rgba(0,0,0,0.08)' },
   detailLabel: { fontFamily: FontFamily.marker, fontSize: sf(9), color: Colors.ink3, letterSpacing: 1.2 },
-  detailValue: { fontFamily: FontFamily.uiMedium, fontSize: sf(14), color: Colors.ink },
+  detailValue: { fontFamily: FontFamily.uiMedium, fontSize: sf(14), color: Colors.ink, textAlign: 'center' },
   detailPill: {
-    alignSelf: 'flex-start',
+    alignSelf: 'center', maxWidth: '100%',
     paddingVertical: 3, paddingHorizontal: 11,
     borderRadius: Radius.pill,
   },
-  detailPillText: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(12.5) },
+  detailPillText: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(12.5), textAlign: 'center' },
 
   songRow: {
     flexDirection: 'row', alignItems: 'center', gap: 12,

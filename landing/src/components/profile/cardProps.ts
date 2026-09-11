@@ -19,22 +19,3 @@ export function sharingStatus(shareStatus: string): ProfileStatus {
     color: SharingColors[shareStatus as keyof typeof SharingColors] ?? SharingColors.selective,
   };
 }
-
-export type PairedSource = {
-  name: string;
-  pronouns: string;
-  avatarUri: string;
-} | null | undefined;
-
-/**
- * Spreads a paired F/O (or lack of one) into ProfileCard's separate
- * `paired*` props. Identical to mobile cardProps.ts.
- */
-export function pairedProps(paired: PairedSource) {
-  return {
-    showPairedIdentity: !!paired,
-    pairedName: paired?.name,
-    pairedPronouns: paired?.pronouns,
-    pairedAvatarUri: paired?.avatarUri,
-  };
-}
