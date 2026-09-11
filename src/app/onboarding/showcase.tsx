@@ -18,7 +18,6 @@ const SHOWCASE = [
   { key: 'storyline', title: 'Storyline', desc: 'your story with them, chapter by chapter', color: Colors.plum },
   { key: 'scenarios', title: 'Scenarios', desc: 'write every what-if and soft little moment', color: Colors.sakuraDeep },
   { key: 'love-letter', title: 'Love Letter', desc: 'something soft, sealed and saved just for you', color: Colors.sakuraDeep },
-  { key: 'polycule-bingo', title: 'Polycule Bingo', desc: 'tap the squares as they happen to your ship ♡', color: Colors.plum },
   { key: 'kawaii-ui', title: 'Kawaii UI', desc: 'a little stats card for the bond', color: Colors.lavenderDeep },
 ] as const;
 

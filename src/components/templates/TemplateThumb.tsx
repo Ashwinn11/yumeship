@@ -14,28 +14,16 @@ import { FlipPhoneContent } from '@/app/template/flip-phone';
 import { TalkingAboutContent } from '@/app/template/talking-about';
 import { BondBannerContent } from '@/app/template/bond-banner';
 import { PolyChartContent } from '@/app/template/poly-chart';
-import { PolycaleBingoTab } from '@/components/tabs/PolycaleBingoTab';
 import { ScenariosPreview } from '@/components/templates/ScenariosPreview';
 import { TemplateDataCtx } from '@/store/templateData';
 
 // Natural render width of templates (matches scroll padding on a ~390px screen)
 const FULL_W = 360;
-// Bounded height for tab-style previews that render their own ScrollView.
-const APPROX_H = 680;
 
 type ContentFC = React.FC<{ editing?: boolean }>;
 
-// Bingo is a tab (renders its own ScrollView), so it needs a bounded height to
-// lay out inside the thumb's unconstrained clip view.
-const BingoPreview: ContentFC = () => (
-  <View style={{ height: APPROX_H }}>
-    <PolycaleBingoTab shipId="preview" />
-  </View>
-);
-
 const CONTENT_MAP: Record<string, ContentFC> = {
   'poly-chart': PolyChartContent,
-  'polycule-bingo': BingoPreview,
   'scenarios': ScenariosPreview,
   'get-to-know': GetToKnowContent,
   'kawaii-ui': KawaiiUIContent,

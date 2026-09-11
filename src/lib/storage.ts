@@ -35,10 +35,16 @@ export function isManagedMediaUrl(url: string): boolean {
 export async function uploadToBucket(
   bucket: string,
   path: string,
-  localUri: string,
+  /** a local file uri, or (e.g. re-uploading a "use this template" clone's
+   *  source image under its own post) an http(s) url to fetch bytes from —
+   *  every post ends up owning an independent copy either way, so deleting
+   *  one post's asset can never take down another's */
+  uri: string,
   contentType: string,
 ): Promise<string> {
-  const bytes = await new File(localUri).arrayBuffer();
+  const bytes = /^https?:\/\//.test(uri)
+    ? await (await fetch(uri)).arrayBuffer()
+    : await new File(uri).arrayBuffer();
   const { data, error } = await supabase.functions.invoke('media', {
     body: { action: 'sign', bucket, key: path, contentType },
   });

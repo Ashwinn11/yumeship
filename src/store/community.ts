@@ -7,6 +7,7 @@ import { FunctionsHttpError } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 
 import { parseProfileFlags, parseProfileLinks, type ProfileFlag, type ProfileLink } from '@/components/profile/cardTheme';
+import type { BingoCard } from '@/lib/bingo';
 import { getAllFos, getFo, parseGallery, updateFo, type Fo, type GalleryPhoto } from './fo';
 import { getGlobalSetting, saveGlobalSetting } from './onboarding';
 
@@ -107,6 +108,8 @@ export type CommunityPost = {
   featuredDate: string | null;
   /** null when this post has no poll attached */
   poll: Poll | null;
+  /** null when this post has no bingo card attached — mutually exclusive with poll/media */
+  bingo: BingoCard | null;
   /** set when this post is a response to a featured activity — null otherwise */
   activityId: string | null;
 };
@@ -238,6 +241,21 @@ function rowToPoll(row: Record<string, any>, myPollVote: number | undefined): Po
   };
 }
 
+function rowToBingo(row: Record<string, any>): BingoCard | null {
+  if (!row.bingo_cells) return null;
+  try {
+    const v = row.bingo_cells;
+    if (!v || !Array.isArray(v.cells) || v.cells.length !== 25) return null;
+    return {
+      cells: v.cells,
+      markerKey: typeof v.markerKey === 'string' ? v.markerKey : 'heart',
+      markerImageUri: typeof v.markerImageUri === 'string' ? v.markerImageUri : '',
+      bgColor: typeof v.bgColor === 'string' ? v.bgColor : '',
+      bgImage: typeof v.bgImage === 'string' ? v.bgImage : '',
+    };
+  } catch { return null; }
+}
+
 function rowToPost(
   row: Record<string, any>,
   likedPostIds: Set<string>,
@@ -257,6 +275,7 @@ function rowToPost(
     kind: (row.kind as CommunityPost['kind']) ?? 'post',
     featuredDate: row.featured_date ?? null,
     poll: rowToPoll(row, myPollVotes.get(row.id)),
+    bingo: rowToBingo(row),
     activityId: row.activity_id ?? null,
   };
 }
@@ -312,7 +331,7 @@ const FO_SUMMARY_FIELDS = 'id, name, pronouns, avatar_url';
 const FO_ROW_FIELDS = 'id, name, pronouns, avatar_url, tagline, flags';
 const POST_SELECT = cols(`
   id, author_id, fo_profile_id, title, body, media, like_count, comment_count, created_at,
-  kind, featured_date, poll_options, poll_counts, activity_id,
+  kind, featured_date, poll_options, poll_counts, bingo_cells, activity_id,
   author:profiles!posts_author_id_fkey(${PROFILE_SUMMARY_FIELDS}),
   fo:fo_profiles!posts_fo_profile_id_fkey(${FO_SUMMARY_FIELDS})
 `);
@@ -1000,6 +1019,27 @@ export async function votePoll(postId: string, optionIndex: number): Promise<voi
   if (error) throw error;
 }
 
+/**
+ * A bingo card's marker/background image starts out as either a local file
+ * uri (picked in the composer) or, when the card was cloned from someone
+ * else's post via "use this template", that post's already-uploaded url.
+ * Either way this post gets its own fresh copy — uploadToBucket reads from
+ * a url just as readily as a local file — so later deleting one post's copy
+ * can never take down the original it was cloned from.
+ */
+async function resolveBingoAsset(
+  uri: string,
+  userId: string,
+  batchId: string,
+  filename: string,
+  preset: 'thumb' | 'post',
+): Promise<{ url: string; uploaded: boolean }> {
+  if (!uri) return { url: '', uploaded: false };
+  const source = isManagedMediaUrl(uri) ? uri : await compressImage(uri, preset);
+  const url = await uploadToBucket('post-media', `${userId}/${batchId}/${filename}`, source, 'image/jpeg');
+  return { url, uploaded: true };
+}
+
 export async function createPost(input: {
   /** optional — posts are body/media-first, a title is just an extra flourish */
   title?: string;
@@ -1008,8 +1048,10 @@ export async function createPost(input: {
   foProfileId?: string;
   /** defaults to 'post' — pass 'activity' to submit a prompt to the vote pool */
   kind?: 'post' | 'activity';
-  /** 2-4 option labels — mutually exclusive with media, same as Twitter/IG */
+  /** 2-4 option labels — mutually exclusive with media/bingo, same as Twitter/IG */
   poll?: string[];
+  /** a filled bingo card — mutually exclusive with media/poll */
+  bingo?: BingoCard;
   /** set to post as a response to a featured activity, kept off the main feed */
   activityId?: string;
 }): Promise<CommunityPost> {
@@ -1050,6 +1092,24 @@ export async function createPost(input: {
     }),
   );
 
+  let bingoPayload: Record<string, unknown> | null = null;
+  const bingoCleanupUrls: string[] = [];
+  if (input.bingo) {
+    const [marker, bg] = await Promise.all([
+      resolveBingoAsset(input.bingo.markerImageUri, user.id, batchId, 'bingo-marker.jpg', 'thumb'),
+      resolveBingoAsset(input.bingo.bgImage, user.id, batchId, 'bingo-bg.jpg', 'post'),
+    ]);
+    if (marker.uploaded) bingoCleanupUrls.push(marker.url);
+    if (bg.uploaded) bingoCleanupUrls.push(bg.url);
+    bingoPayload = {
+      cells: input.bingo.cells,
+      markerKey: input.bingo.markerKey,
+      markerImageUri: marker.url,
+      bgColor: input.bingo.bgColor,
+      bgImage: bg.url,
+    };
+  }
+
   const { data, error } = await supabase
     .from('posts')
     .insert({
@@ -1061,6 +1121,7 @@ export async function createPost(input: {
       kind: input.kind ?? 'post',
       poll_options: input.poll ?? null,
       poll_counts: input.poll ? input.poll.map(() => 0) : null,
+      bingo_cells: bingoPayload,
       activity_id: input.activityId ?? null,
     })
     .select(POST_SELECT)
@@ -1072,14 +1133,15 @@ export async function createPost(input: {
       deleteFromBucketByUrl('post-media', m.url);
       if (m.thumbnailUrl) deleteFromBucketByUrl('post-media', m.thumbnailUrl);
     }
+    for (const url of bingoCleanupUrls) deleteFromBucketByUrl('post-media', url);
     throw error;
   }
   return rowToPost(data, new Set(), new Map());
 }
 
 export async function deletePost(id: string): Promise<void> {
-  // fetched before the row goes away — it's the only place the media urls live
-  const { data: existing } = await supabase.from('posts').select('media').eq('id', id).maybeSingle();
+  // fetched before the row goes away — it's the only place the media/bingo urls live
+  const { data: existing } = await supabase.from('posts').select('media, bingo_cells').eq('id', id).maybeSingle();
 
   const { error } = await supabase.from('posts').delete().eq('id', id);
   if (error) throw error;
@@ -1091,6 +1153,11 @@ export async function deletePost(id: string): Promise<void> {
     if (m.url) deleteFromBucketByUrl('post-media', m.url);
     if (m.thumbnailUrl) deleteFromBucketByUrl('post-media', m.thumbnailUrl);
   }
+  // safe unconditionally — createPost always uploads a fresh, post-owned copy
+  // even when a bingo card was cloned from another post's template
+  const bingo = existing?.bingo_cells as { markerImageUri?: string; bgImage?: string } | null;
+  if (bingo?.markerImageUri) deleteFromBucketByUrl('post-media', bingo.markerImageUri);
+  if (bingo?.bgImage) deleteFromBucketByUrl('post-media', bingo.bgImage);
 }
 
 export async function toggleLike(postId: string, currentlyLiked: boolean): Promise<void> {

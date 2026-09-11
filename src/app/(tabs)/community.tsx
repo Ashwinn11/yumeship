@@ -311,12 +311,14 @@ function Feed({ insets }: { insets: { top: number } }) {
         <InlineToast message={toastMsg} nonce={toastNonce} />
       </View>
 
-      <View style={[styles.tabsRow, column]}>
-        {(['global', 'following', 'activities'] as const).map((m) => (
-          <Pressable key={m} onPress={() => selectTab(m)} style={[styles.tab, tab === m && styles.tabActive]}>
-            <Text style={[styles.tabText, tab === m && styles.tabTextActive]}>{m}</Text>
-          </Pressable>
-        ))}
+      <View style={[styles.tabsWrap, column]}>
+        <View style={styles.tabsRow}>
+          {(['global', 'following', 'activities'] as const).map((m) => (
+            <Pressable key={m} onPress={() => selectTab(m)} style={[styles.tab, tab === m && styles.tabActive]}>
+              <Text style={[styles.tabText, tab === m && styles.tabTextActive]}>{m}</Text>
+            </Pressable>
+          ))}
+        </View>
       </View>
 
       <FlatList
@@ -761,23 +763,29 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: Radius.r4, borderBottomRightRadius: Radius.r4,
     paddingVertical: Spacing.s6,
   },
-  tabsRow: {
-    flexDirection: 'row',
-    gap: 8,
+  tabsWrap: {
     paddingHorizontal: Spacing.s5,
     paddingBottom: Spacing.s3,
   },
-  tab: {
-    paddingHorizontal: 16,
-    paddingVertical: 7,
-    borderRadius: Radius.pill,
+  // one pill "track" behind all three segments — same chrome as the message
+  // sender toggle — rather than three separately-bordered buttons
+  tabsRow: {
+    flexDirection: 'row',
     backgroundColor: Colors.paperDeep,
+    borderRadius: Radius.pill,
+    padding: 3,
     borderWidth: 1,
     borderColor: Colors.line,
   },
-  tabActive: { backgroundColor: Colors.sakuraSoft, borderColor: Colors.sakuraDeep },
+  tab: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 7,
+    borderRadius: Radius.pill,
+  },
+  tabActive: { backgroundColor: Colors.sakuraDeep },
   tabText: { fontFamily: FontFamily.uiMedium, fontSize: sf(12), color: Colors.ink3, textTransform: 'capitalize' },
-  tabTextActive: { color: Colors.sakuraDeep },
+  tabTextActive: { color: '#fff', fontFamily: FontFamily.uiSemiBold },
   feedContent: { paddingHorizontal: Spacing.s5, paddingBottom: Spacing.s8 },
   feedSeparator: { height: 12 },
   feedEmpty: { alignItems: 'center', paddingTop: 60 },

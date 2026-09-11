@@ -19,7 +19,6 @@ import { BoundariesFeature } from '@/components/tabs/BoundariesFeature';
 import { FoMessagesFeature } from '@/components/tabs/FoMessagesFeature';
 import { HeadcanonsFeature } from '@/components/tabs/HeadcanonsFeature';
 import { ScenariosFeature } from '@/components/tabs/ScenariosFeature';
-import { PolycaleBingoTab } from '@/components/tabs/PolycaleBingoTab';
 import { StorylineTab } from '@/components/tabs/StorylineTab';
 import { ThisOrThatTab } from '@/components/tabs/ThisOrThatTab';
 import { INK } from '@/components/templates/primitives';
@@ -50,7 +49,6 @@ type Feature =
   | 'fo-messages'
   | 'this-or-that'
   | 'love-letter'
-  | 'polycule-bingo'
   | 'incorrect-quotes';
 
 const FEATURES: { id: Feature; ja: string; label: string; desc: string; color: string; bg: string; availableFor?: 'single' | 'poly' }[] = [
@@ -64,7 +62,6 @@ const FEATURES: { id: Feature; ja: string; label: string; desc: string; color: s
   { id: 'fo-messages', ja: '通', label: 'F/O Notifications', desc: 'notes & nudges from them', color: Colors.sakuraInk, bg: Colors.sakuraSoft },
   { id: 'this-or-that', ja: '択', label: 'This or That', desc: 'how do they choose?', color: Colors.lavenderDeep, bg: Colors.lavenderSoft, availableFor: 'single' },
   { id: 'love-letter', ja: '文', label: 'Love Letters', desc: 'letters to & from them', color: Colors.sakuraDeep, bg: Colors.sakuraSoft },
-  { id: 'polycule-bingo', ja: '札', label: 'Polycule Bingo', desc: 'mark it when it happens ♡', color: Colors.plum, bg: Colors.lavenderSoft, availableFor: 'poly' },
   { id: 'incorrect-quotes', ja: '劇', label: 'Incorrect Quotes', desc: 'cast your polycule in a bit', color: Colors.lavenderDeep, bg: Colors.lavenderSoft, availableFor: 'poly' },
 ];
 
@@ -110,7 +107,6 @@ export default function VaultScreen() {
       case 'fo-messages': return <FoMessagesFeature shipId={ship.id} shipName={ship.name} setCustomBack={setCustomBack} />;
       case 'this-or-that': return <ThisOrThatTab shipId={ship.id} />;
       case 'love-letter': return <LoveLetterTab shipId={ship.id} />;
-      case 'polycule-bingo': return <PolycaleBingoTab shipId={ship.id} />;
       case 'incorrect-quotes': return <IncorrectQuotesTab shipId={ship.id} />;
     }
   }

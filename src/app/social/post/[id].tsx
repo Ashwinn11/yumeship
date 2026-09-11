@@ -14,6 +14,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 
+import { BingoCardView } from '@/components/community/BingoCardView';
 import { CommentThread } from '@/components/community/CommentThread';
 import { LikeButton } from '@/components/community/LikeButton';
 import { MediaCarousel } from '@/components/community/MediaCarousel';
@@ -163,6 +164,8 @@ export default function PostDetailScreen() {
             onVote={(i) => pollVoteOptimistic(i, () => showToast("couldn't update vote — try again"))}
           />
         )}
+
+        {!!post.bingo && <BingoCardView card={post.bingo} postId={post.id} />}
 
         <View style={styles.likeRow}>
           <LikeButton

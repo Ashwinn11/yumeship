@@ -16,10 +16,12 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path, Rect, Text as SvgText } from 'react-native-svg';
 
+import { BingoComposerAttachment } from '@/components/community/BingoComposerAttachment';
 import { MediaComposer, mediaFromAssets } from '@/components/community/MediaComposer';
 import { MIN_POLL_OPTIONS, PollComposer } from '@/components/community/PollComposer';
 import { useIPad } from '@/hooks/use-ipad';
 import { AVATAR_IMAGE } from '@/lib/imageProps';
+import { defaultBingoStyle, makeBingoCells, type BingoCard } from '@/lib/bingo';
 import { Colors, FontFamily, Radius, Spacing, sf } from '@/constants/theme';
 import { createPost, MAX_IMAGES, type LocalPickedMedia } from '@/store/community';
 import { getGlobalSetting } from '@/store/onboarding';
@@ -66,11 +68,20 @@ function GifIcon({ size = 21, color = Colors.sakuraDeep }: { size?: number; colo
   );
 }
 
+type ComposeTab = 'post' | 'activity' | 'bingo';
+
+function freshBingoCard(): BingoCard {
+  return { cells: makeBingoCells(), ...defaultBingoStyle() };
+}
+
 export default function NewPostScreen() {
   const insets = useSafeAreaInsets();
   const { column } = useIPad();
   const { kind, activityId } = useLocalSearchParams<{ kind?: string; activityId?: string }>();
-  const isActivity = kind === 'activity';
+
+  // which of the three creation modes is active — freely switchable, but the
+  // "submit an activity" deep link still opens straight into that one
+  const [tab, setTab] = useState<ComposeTab>(kind === 'activity' ? 'activity' : 'post');
 
   // whichever F/O is paired in edit profile tags every post automatically —
   // no separate per-post picker to choose from. Skipped for an activity
@@ -82,19 +93,32 @@ export default function NewPostScreen() {
     color: getGlobalSetting('user_color') || Colors.sakura,
   };
 
+  // each tab keeps its own draft so switching between them never loses work
   const [body, setBody] = useState('');
   const [media, setMedia] = useState<LocalPickedMedia[]>([]);
   // null = no poll attached; an array (starts at 2 blank options) = poll mode,
   // mutually exclusive with media — same as Twitter/IG
   const [poll, setPoll] = useState<string[] | null>(null);
+
+  const [activityBody, setActivityBody] = useState('');
+
+  const [bingoBody, setBingoBody] = useState('');
+  const [bingoCard, setBingoCard] = useState<BingoCard>(freshBingoCard);
+
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState('');
 
   const filledPollOptions = poll?.map((o) => o.trim()).filter(Boolean) ?? [];
   const pollReady = poll ? filledPollOptions.length >= MIN_POLL_OPTIONS : true;
   // a post just needs *something* in it — words, a photo, a gif, or a poll, any one is enough
-  const canPost = (body.trim().length > 0 || media.length > 0 || !!poll) && pollReady && !posting;
-  const remaining = MAX_BODY - body.length;
+  const canPostPost = (body.trim().length > 0 || media.length > 0 || !!poll) && pollReady;
+  const canPostActivity = activityBody.trim().length > 0;
+  // the board itself is the content — a still-blank shuffled card is a valid
+  // post (an invite to fill it), same as a poll is postable at zero votes
+  const canPost = !posting && (tab === 'post' ? canPostPost : tab === 'activity' ? canPostActivity : true);
+
+  const activeBody = tab === 'post' ? body : tab === 'activity' ? activityBody : bingoBody;
+  const remaining = MAX_BODY - activeBody.length;
   // photos, gif, and poll are three mutually exclusive attachment modes —
   // picking one clears the others, same as Twitter
   const hasGif = media[0]?.type === 'gif';
@@ -128,14 +152,19 @@ export default function NewPostScreen() {
     setPosting(true);
     setError('');
     try {
-      await createPost({
-        body,
-        media: poll ? [] : media,
-        foProfileId: isActivity ? undefined : identifyFoId || undefined,
-        kind: isActivity ? 'activity' : undefined,
-        poll: poll ? filledPollOptions : undefined,
-        activityId,
-      });
+      if (tab === 'activity') {
+        await createPost({ body: activityBody, media: [], kind: 'activity' });
+      } else if (tab === 'bingo') {
+        await createPost({ body: bingoBody, media: [], bingo: bingoCard, foProfileId: identifyFoId || undefined });
+      } else {
+        await createPost({
+          body,
+          media: poll ? [] : media,
+          foProfileId: identifyFoId || undefined,
+          poll: poll ? filledPollOptions : undefined,
+          activityId,
+        });
+      }
       router.canGoBack() ? router.back() : router.replace('/(tabs)/community' as any);
     } catch (e: any) {
       setError(e?.message ?? 'something went wrong — try again');
@@ -165,9 +194,19 @@ export default function NewPostScreen() {
           {posting ? (
             <ActivityIndicator size="small" color="#fff" />
           ) : (
-            <Text style={styles.postBtnText}>{isActivity ? 'submit' : 'post'}</Text>
+            <Text style={styles.postBtnText}>{tab === 'activity' ? 'submit' : 'post'}</Text>
           )}
         </Pressable>
+      </View>
+
+      <View style={[styles.tabWrap, column]}>
+        <View style={styles.tabRow}>
+          {(['post', 'activity', 'bingo'] as const).map((t) => (
+            <Pressable key={t} onPress={() => setTab(t)} style={[styles.tabBtn, tab === t && styles.tabBtnActive]}>
+              <Text style={[styles.tabText, tab === t && styles.tabTextActive]}>{t}</Text>
+            </Pressable>
+          ))}
+        </View>
       </View>
 
       <ScrollView
@@ -176,8 +215,9 @@ export default function NewPostScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        {isActivity && <Text style={styles.kindLabel}>submitting an activity — everyone can vote on it</Text>}
-        {!isActivity && !!activityId && <Text style={styles.kindLabel}>posting a response to this activity</Text>}
+        {tab === 'activity' && <Text style={styles.kindLabel}>submitting an activity — everyone can vote on it</Text>}
+        {tab === 'post' && !!activityId && <Text style={styles.kindLabel}>posting a response to this activity</Text>}
+        {tab === 'bingo' && <Text style={styles.kindLabel}>share a filled card — anyone can tap "use this template" for their own</Text>}
 
         <View style={styles.composerRow}>
           <View style={[styles.avatar, { backgroundColor: me.color }]}>
@@ -188,34 +228,61 @@ export default function NewPostScreen() {
             )}
           </View>
 
-          <TextInput
-            value={body}
-            onChangeText={setBody}
-            placeholder={isActivity ? 'what should everyone try? e.g. "show your F/O\'s comfort outfit"' : "what's on your mind?"}
-            placeholderTextColor={Colors.ink3}
-            multiline
-            autoFocus
-            maxLength={MAX_BODY}
-            style={styles.bodyInput}
-          />
+          {tab === 'post' && (
+            <TextInput
+              value={body}
+              onChangeText={setBody}
+              placeholder="what's on your mind?"
+              placeholderTextColor={Colors.ink3}
+              multiline
+              autoFocus
+              maxLength={MAX_BODY}
+              style={styles.bodyInput}
+            />
+          )}
+          {tab === 'activity' && (
+            <TextInput
+              value={activityBody}
+              onChangeText={setActivityBody}
+              placeholder={'what should everyone try? e.g. "show your F/O\'s comfort outfit"'}
+              placeholderTextColor={Colors.ink3}
+              multiline
+              autoFocus
+              maxLength={MAX_BODY}
+              style={styles.bodyInput}
+            />
+          )}
+          {tab === 'bingo' && (
+            <TextInput
+              value={bingoBody}
+              onChangeText={setBingoBody}
+              placeholder="say something about your card (optional)"
+              placeholderTextColor={Colors.ink3}
+              multiline
+              maxLength={MAX_BODY}
+              style={styles.bodyInput}
+            />
+          )}
         </View>
 
-        {!isActivity && !!poll && (
+        {tab === 'post' && !!poll && (
           <View style={styles.attachWrap}>
             <PollComposer options={poll} onChange={setPoll} onRemove={() => setPoll(null)} />
           </View>
         )}
 
-        {!isActivity && media.length > 0 && !poll && (
+        {tab === 'post' && media.length > 0 && !poll && (
           <View style={styles.mediaWrap}>
             <MediaComposer media={media} onChange={setMedia} />
           </View>
         )}
 
+        {tab === 'bingo' && <BingoComposerAttachment card={bingoCard} onChange={setBingoCard} />}
+
         {!!error && <Text style={styles.error}>{error}</Text>}
       </ScrollView>
 
-      {!isActivity ? (
+      {tab === 'post' ? (
         <View style={[styles.toolbar, column]}>
           <Pressable style={styles.toolbarBtn} disabled={!!poll || hasGif} onPress={pickImages}>
             <ImageIcon color={poll || hasGif ? Colors.line : Colors.sakuraDeep} />
@@ -261,6 +328,18 @@ const styles = StyleSheet.create({
   postBtnDisabled: { opacity: 0.35 },
   postBtnPressed: { opacity: 0.8, transform: [{ scale: 0.96 }] },
   postBtnText: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(13), color: '#fff' },
+
+  tabWrap: {
+    paddingHorizontal: Spacing.s5, paddingVertical: Spacing.s3,
+    borderBottomWidth: 1, borderBottomColor: Colors.line,
+  },
+  // one pill "track" behind all three segments — same chrome as the message
+  // sender toggle — rather than three separately-bordered buttons
+  tabRow: { flexDirection: 'row', backgroundColor: Colors.paperDeep, borderRadius: Radius.pill, padding: 3, borderWidth: 1, borderColor: Colors.line },
+  tabBtn: { flex: 1, alignItems: 'center', paddingVertical: 7, borderRadius: Radius.pill },
+  tabBtnActive: { backgroundColor: Colors.sakuraDeep },
+  tabText: { fontFamily: FontFamily.uiMedium, fontSize: sf(13), color: Colors.ink2, textTransform: 'capitalize' },
+  tabTextActive: { color: '#fff', fontFamily: FontFamily.uiSemiBold },
 
   scroll: { flex: 1 },
   content: { paddingHorizontal: Spacing.s5, paddingTop: Spacing.s4, paddingBottom: Spacing.s6 },

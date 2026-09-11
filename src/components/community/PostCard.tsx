@@ -8,6 +8,7 @@ import { IconTrashSolid } from '@/components/ui/Icon';
 import { Colors, FontFamily, Radius, Shadow, Spacing, sf } from '@/constants/theme';
 import type { CommunityPost } from '@/store/community';
 
+import { BingoCardView } from './BingoCardView';
 import { LikeButton } from './LikeButton';
 import { MediaCarousel } from './MediaCarousel';
 import { PollView } from './PollView';
@@ -75,6 +76,8 @@ function PostCardImpl({ post, onToggleLike, onPollVote, onRequestDelete }: Props
       )}
 
       {!!post.poll && <PollView poll={post.poll} onVote={(i) => onPollVote?.(i)} />}
+
+      {!!post.bingo && <BingoCardView card={post.bingo} postId={post.id} />}
 
       {!isFeaturedActivity && (
         <>
