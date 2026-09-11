@@ -2,7 +2,6 @@ import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { Heart } from '@/components/deco/Heart';
 import { AVATAR_IMAGE } from '@/lib/imageProps';
 import { Colors, FontFamily, Radius, sf } from '@/constants/theme';
 import { timeAgo } from '@/lib/relativeTime';
@@ -60,9 +59,7 @@ export function PostAuthorHeader({ author, fo, createdAt, size = 'sm' }: Props) 
           <Pressable onPress={() => router.push(`/social/user/${author.id}` as any)}>
             <Avatar uri={author.avatarUrl} name={author.name} size={pairedAvatarSize} color={Colors.sakura} fontSize={big ? 15 : 13} />
           </Pressable>
-          <View style={styles.pairedHeartBadge}>
-            <Heart size={9} color={Colors.sakuraDeep} />
-          </View>
+          <Text style={styles.pairedHeartSymbol}>♥</Text>
           <Pressable onPress={() => router.push(`/social/fo/${fo.id}` as any)}>
             <Avatar
               uri={fo.avatarUrl}
@@ -77,12 +74,13 @@ export function PostAuthorHeader({ author, fo, createdAt, size = 'sm' }: Props) 
         <View style={styles.textCol}>
           <View style={styles.nameRow}>
             <Text style={[styles.name, big && styles.nameLg]} numberOfLines={1}>
-              {author.name || 'someone'} ♡ {fo.name}
+              {author.name || 'someone'}
             </Text>
-          </View>
-          <View style={styles.nameRow}>
             {!!author.username && <Text style={styles.username}>@{author.username}</Text>}
             {!!createdAt && <Text style={styles.meta}>· {timeAgo(createdAt)}</Text>}
+          </View>
+          <View style={styles.foBadge}>
+            <Text style={styles.foBadgeText} numberOfLines={1}>{fo.name}</Text>
           </View>
         </View>
       </View>
@@ -112,17 +110,18 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   avatar: { alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   avatarInitial: { fontFamily: FontFamily.displayItalic, color: '#fff' },
-  pairedAvatars: { flexDirection: 'row', alignItems: 'center' },
-  pairedHeartBadge: {
-    width: 18, height: 18, borderRadius: Radius.pill,
-    backgroundColor: Colors.vellum, borderWidth: 1, borderColor: Colors.line,
-    alignItems: 'center', justifyContent: 'center',
-    marginHorizontal: -6, zIndex: 1,
-  },
-  textCol: { flex: 1, minWidth: 0, gap: 1 },
+  pairedAvatars: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  pairedHeartSymbol: { fontSize: sf(13), color: '#000' },
+  textCol: { flex: 1, minWidth: 0, gap: 2 },
   nameRow: { flexDirection: 'row', alignItems: 'baseline', gap: 6, flexWrap: 'wrap' },
   name: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(13), color: Colors.ink },
   nameLg: { fontSize: sf(15) },
+  foBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 3, alignSelf: 'flex-start',
+    paddingHorizontal: 6, paddingVertical: 2, borderRadius: Radius.pill,
+    backgroundColor: Colors.lavenderSoft, borderWidth: 1, borderColor: Colors.lavender,
+  },
+  foBadgeText: { fontFamily: FontFamily.uiMedium, fontSize: sf(10), color: Colors.lavenderDeep },
   username: { fontFamily: FontFamily.uiMedium, fontSize: sf(11.5), color: Colors.sakuraDeep },
   meta: { fontFamily: FontFamily.ui, fontSize: sf(10.5), color: Colors.ink3 },
 });

@@ -100,12 +100,6 @@ type Props = {
   followingCount?: number;
   /** follow/unfollow button slot, rendered under the counts — caller owns its state/handlers */
   followAction?: React.ReactNode;
-  /** "profile identify" — show [me] ♡ [F/O] paired avatars instead of the solo one */
-  showPairedIdentity?: boolean;
-  pairedName?: string;
-  pairedPronouns?: string;
-  pairedAvatarUri?: string;
-  pairedFallbackColor?: string;
 };
 
 const NAME_FONT_MAP: Record<string, string> = {
@@ -152,11 +146,6 @@ export function ProfileCard({
   followerCount,
   followingCount,
   followAction,
-  showPairedIdentity,
-  pairedName,
-  pairedPronouns,
-  pairedAvatarUri,
-  pairedFallbackColor = Colors.lavender,
 }: Props) {
   const stats = [
     type ? { label: 'type', value: type.label, color: type.color, pill: true } : null,
@@ -190,92 +179,50 @@ export function ProfileCard({
   // ── Hero: identity only — everything else lives in its own section below ──
   const heroContent = (
     <>
-      {showPairedIdentity ? (
-        <View style={styles.pairedWrap}>
-          <View style={styles.pairedAvatarOuter}>
-            <View style={[styles.pairedAvatar, { backgroundColor: fallbackColor }]}>
-              {photoUri ? (
-                <Image source={{ uri: photoUri }} style={styles.pairedAvatarImg} contentFit="cover" />
-              ) : (
-                <Text style={styles.pairedAvatarInitial}>{name.trim().charAt(0).toUpperCase() || '♡'}</Text>
-              )}
-            </View>
-          </View>
-          <View style={styles.pairedHeartBadge}>
-            <Heart size={13} color={Colors.sakuraDeep} />
-          </View>
-          <View style={styles.pairedAvatarOuter}>
-            <View style={[styles.pairedAvatar, { backgroundColor: pairedFallbackColor }]}>
-              {pairedAvatarUri ? (
-                <Image source={{ uri: pairedAvatarUri }} style={styles.pairedAvatarImg} contentFit="cover" />
-              ) : (
-                <Text style={styles.pairedAvatarInitial}>{(pairedName ?? '').trim().charAt(0).toUpperCase() || '♡'}</Text>
-              )}
-            </View>
+      <View style={styles.avatarOuter}>
+        <View style={styles.avatarWrap}>
+          <View style={[styles.avatar, { backgroundColor: fallbackColor }]}>
+            {photoUri ? (
+              <Image source={{ uri: photoUri }} style={styles.avatarImg} contentFit="cover" />
+            ) : (
+              <Text style={styles.avatarInitial}>{name.trim().charAt(0).toUpperCase() || '♡'}</Text>
+            )}
           </View>
         </View>
-      ) : (
-        <View style={styles.avatarOuter}>
-          <View style={styles.avatarWrap}>
-            <View style={[styles.avatar, { backgroundColor: fallbackColor }]}>
-              {photoUri ? (
-                <Image source={{ uri: photoUri }} style={styles.avatarImg} contentFit="cover" />
-              ) : (
-                <Text style={styles.avatarInitial}>{name.trim().charAt(0).toUpperCase() || '♡'}</Text>
-              )}
-            </View>
-          </View>
-        </View>
-      )}
+      </View>
 
-      {showPairedIdentity ? (
-        <View style={styles.pairedNameRow}>
-          <View style={styles.pairedNameCol}>
-            <Text style={[styles.pairedNameText, nameFontStyle, textStyle]} numberOfLines={1}>{name || '—'}</Text>
-            {!!pronouns && <Text style={[styles.pairedPronounsText, textStyle]}>{pronouns}</Text>}
+      <View style={styles.nameRow}>
+        <View style={styles.nameGroup}>
+          <Text style={[styles.name, nameFontStyle, textStyle]} numberOfLines={1}>{name || '—'}</Text>
+        </View>
+        {!!username && <Text style={[styles.username, textStyle]}>@{username}</Text>}
+        {!!subtitle && <Text style={[styles.subtitle, textStyle]}>{subtitle}</Text>}
+      </View>
+      {!!pronouns && <Text style={[styles.pronouns, textStyle]}>{pronouns}</Text>}
+      <ProfileFlags flags={flags} textColor={textColor} />
+      {!!tagline && <Text style={[styles.tagline, textStyle]} numberOfLines={3}>{tagline}</Text>}
+      {links.length > 0 && (
+        <View style={styles.linksRow}>
+          {links.map((l) => (
+            <Pressable key={l.id} style={styles.linkPill} onPress={() => Linking.openURL(normalizeUrl(l.url))}>
+              <Text style={styles.linkPillText} numberOfLines={1}>{l.label || l.url}</Text>
+            </Pressable>
+          ))}
+        </View>
+      )}
+      {(followerCount !== undefined || followingCount !== undefined) && (
+        <View style={styles.socialStatsRow}>
+          <View style={styles.socialStat}>
+            <Text style={[styles.socialStatValue, textStyle]}>{followerCount ?? 0}</Text>
+            <Text style={styles.socialStatLabel}>followers</Text>
           </View>
-          <Heart size={10} color={Colors.sakuraDeep} />
-          <View style={styles.pairedNameCol}>
-            <Text style={[styles.pairedNameText, nameFontStyle, textStyle]} numberOfLines={1}>{pairedName || '—'}</Text>
-            {!!pairedPronouns && <Text style={[styles.pairedPronounsText, textStyle]}>{pairedPronouns}</Text>}
+          <View style={styles.socialStat}>
+            <Text style={[styles.socialStatValue, textStyle]}>{followingCount ?? 0}</Text>
+            <Text style={styles.socialStatLabel}>following</Text>
           </View>
         </View>
-      ) : (
-        <>
-          <View style={styles.nameRow}>
-            <View style={styles.nameGroup}>
-              <Text style={[styles.name, nameFontStyle, textStyle]} numberOfLines={1}>{name || '—'}</Text>
-            </View>
-            {!!username && <Text style={[styles.username, textStyle]}>@{username}</Text>}
-            {!!subtitle && <Text style={[styles.subtitle, textStyle]}>{subtitle}</Text>}
-          </View>
-          {!!pronouns && <Text style={[styles.pronouns, textStyle]}>{pronouns}</Text>}
-          <ProfileFlags flags={flags} textColor={textColor} />
-          {!!tagline && <Text style={[styles.tagline, textStyle]} numberOfLines={3}>{tagline}</Text>}
-          {links.length > 0 && (
-            <View style={styles.linksRow}>
-              {links.map((l) => (
-                <Pressable key={l.id} style={styles.linkPill} onPress={() => Linking.openURL(normalizeUrl(l.url))}>
-                  <Text style={styles.linkPillText} numberOfLines={1}>{l.label || l.url}</Text>
-                </Pressable>
-              ))}
-            </View>
-          )}
-          {(followerCount !== undefined || followingCount !== undefined) && (
-            <View style={styles.socialStatsRow}>
-              <View style={styles.socialStat}>
-                <Text style={[styles.socialStatValue, textStyle]}>{followerCount ?? 0}</Text>
-                <Text style={styles.socialStatLabel}>followers</Text>
-              </View>
-              <View style={styles.socialStat}>
-                <Text style={[styles.socialStatValue, textStyle]}>{followingCount ?? 0}</Text>
-                <Text style={styles.socialStatLabel}>following</Text>
-              </View>
-            </View>
-          )}
-          {!!followAction && <View style={styles.followActionRow}>{followAction}</View>}
-        </>
       )}
+      {!!followAction && <View style={styles.followActionRow}>{followAction}</View>}
 
       {frames.lace && heroSize.width > 0 && <LaceFrame width={heroSize.width} height={heroSize.height} />}
       {frames.lattice && heroSize.width > 0 && <LatticeFrame width={heroSize.width} height={heroSize.height} />}
@@ -445,33 +392,6 @@ const styles = StyleSheet.create({
   },
   avatarImg: { width: 96, height: 96, borderRadius: Radius.pill },
   avatarInitial: { fontFamily: FontFamily.displayItalic, fontSize: sf(40), color: '#fff' },
-  pairedWrap: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 2,
-  },
-  pairedAvatarOuter: { position: 'relative', alignItems: 'center', justifyContent: 'center' },
-  pairedAvatar: {
-    width: 74, height: 74, borderRadius: Radius.pill,
-    alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
-    borderWidth: 1.4, borderColor: Colors.line,
-  },
-  pairedAvatarImg: { width: 74, height: 74, borderRadius: Radius.pill },
-  pairedAvatarInitial: { fontFamily: FontFamily.displayItalic, fontSize: sf(30), color: '#fff' },
-  pairedHeartBadge: {
-    width: 26, height: 26, borderRadius: Radius.pill,
-    backgroundColor: Colors.vellum, borderWidth: 1.4, borderColor: Colors.line,
-    alignItems: 'center', justifyContent: 'center',
-    marginHorizontal: -7, zIndex: 1,
-    ...Shadow.s1,
-  },
-  pairedNameRow: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
-    marginTop: Spacing.s3, maxWidth: '100%',
-  },
-  pairedNameCol: { alignItems: 'center', maxWidth: 108, gap: 1 },
-  pairedNameText: {
-    fontFamily: FontFamily.displayItalic, fontSize: sf(19), lineHeight: sf(23), color: Colors.ink,
-  },
-  pairedPronounsText: { fontFamily: FontFamily.ui, fontSize: sf(11), color: Colors.ink2 },
   nameGroup: { flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 1 },
   nameRow: {
     flexDirection: 'row',

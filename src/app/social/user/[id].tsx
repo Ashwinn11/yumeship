@@ -6,7 +6,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FollowButton } from '@/components/community/FollowButton';
 import { PostCard } from '@/components/community/PostCard';
 import { FeedSkeleton } from '@/components/community/PostCardSkeleton';
-import { pairedProps } from '@/components/profile/cardProps';
 import { FoAvatarCard } from '@/components/profile/FoAvatarCard';
 import { InlineToast, useInlineToast } from '@/components/ui/InlineToast';
 import { SegmentedTabs } from '@/components/ui/SegmentedTabs';
@@ -20,14 +19,12 @@ import { useIPad } from '@/hooks/use-ipad';
 import { useAuthUser } from '@/store/auth';
 import {
   blockUser,
-  fetchFoProfile,
   fetchProfile,
   fetchRelationship,
   fetchUserFoProfiles,
   subscribeProfile,
   unblockUser,
   useUserPosts,
-  type CommunityFoProfile,
   type CommunityFoSummary,
   type CommunityPost,
   type CommunityProfile,
@@ -42,7 +39,6 @@ export default function PublicUserProfileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const me = useAuthUser();
   const [profile, setProfile] = useState<CommunityProfile | null>(null);
-  const [pairedFo, setPairedFo] = useState<CommunityFoProfile | null>(null);
   const [fos, setFos] = useState<CommunityFoSummary[]>([]);
   const [relationship, setRelationship] = useState({ following: false, blocked: false });
   const [loading, setLoading] = useState(true);
@@ -52,20 +48,12 @@ export default function PublicUserProfileScreen() {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    Promise.all([fetchProfile(id), fetchRelationship(id), fetchUserFoProfiles(id)]).then(async ([p, r, foList]) => {
+    Promise.all([fetchProfile(id), fetchRelationship(id), fetchUserFoProfiles(id)]).then(([p, r, foList]) => {
       if (cancelled) return;
       setProfile(p);
       setRelationship(r);
       setFos(foList);
       setLoading(false);
-      // their paired F/O lives in its own row — fetch it after the card is up
-      // rather than blocking the whole screen on a second round trip
-      if (p?.identifyFoId) {
-        const fo = await fetchFoProfile(p.identifyFoId);
-        if (!cancelled) setPairedFo(fo);
-      } else {
-        setPairedFo(null);
-      }
     });
     return () => {
       cancelled = true;
@@ -198,7 +186,6 @@ export default function PublicUserProfileScreen() {
               nameFont={profile.nameFont}
               flags={profile.flags}
               links={profile.links}
-              {...pairedProps(pairedFo && { name: pairedFo.name, pronouns: pairedFo.pronouns, avatarUri: pairedFo.avatarUrl })}
               followerCount={profile.followerCount}
               followingCount={profile.followingCount}
               followAction={

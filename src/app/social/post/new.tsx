@@ -79,7 +79,7 @@ function freshBingoCard(): BingoCard {
 export default function NewPostScreen() {
   const insets = useSafeAreaInsets();
   const { column } = useIPad();
-  const { kind, activityId } = useLocalSearchParams<{ kind?: string; activityId?: string }>();
+  const { kind } = useLocalSearchParams<{ kind?: string }>();
 
   // which of the three creation modes is active — freely switchable, but the
   // "submit an activity" deep link still opens straight into that one
@@ -164,7 +164,6 @@ export default function NewPostScreen() {
           media: poll ? [] : media,
           foProfileId: identifyFoId || undefined,
           poll: poll ? filledPollOptions : undefined,
-          activityId,
         });
       }
       router.canGoBack() ? router.back() : router.replace('/(tabs)/community' as any);
@@ -221,7 +220,6 @@ export default function NewPostScreen() {
       >
         <DismissKeyboardView>
         {tab === 'activity' && <Text style={styles.kindLabel}>submitting an activity — everyone can vote on it</Text>}
-        {tab === 'post' && !!activityId && <Text style={styles.kindLabel}>posting a response to this activity</Text>}
         {tab === 'bingo' && <Text style={styles.kindLabel}>share a filled card — anyone can tap "use this template" for their own</Text>}
 
         <View style={styles.composerRow}>

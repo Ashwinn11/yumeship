@@ -7,7 +7,6 @@ import { Sakura } from '@/components/deco/Sakura';
 import { Sparkle } from '@/components/deco/Sparkle';
 import { CardThemeSheet } from '@/components/profile/CardThemeSheet';
 import { type CardTheme } from '@/components/profile/cardTheme';
-import { pairedProps } from '@/components/profile/cardProps';
 import { FoAvatarCard } from '@/components/profile/FoAvatarCard';
 import { PageBackground } from '@/components/profile/PageBackground';
 import { ProfileScreenHeader } from '@/components/profile/ProfileScreenHeader';
@@ -47,7 +46,6 @@ export default function MyProfileScreen() {
   const premium = usePremium();
   const [showCustomize, setShowCustomize] = useState(false);
   const fos = useFos();
-  const pairedFo = fos.find((f) => f.id === me.identifyFoId);
 
   // Follower/following counts live only on the server — local storage never
   // had them, which is exactly why this screen showed none while the public
@@ -218,7 +216,6 @@ export default function MyProfileScreen() {
               nameFont={me.nameFont}
               flags={me.flags}
               links={me.links}
-              {...pairedProps(pairedFo && { name: pairedFo.name, pronouns: pairedFo.pronouns, avatarUri: pairedFo.photoUri })}
               followerCount={counts.followerCount}
               followingCount={counts.followingCount}
             />

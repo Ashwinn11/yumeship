@@ -2105,5 +2105,12 @@ export function useActivityDetail(activityId: string) {
     }
   }, []);
 
-  return { activity, responses, loading, toggleResponseLikeOptimistic, pollVoteOptimistic };
+  // shown immediately rather than waiting on the realtime echo, which never
+  // arrives if the channel is down — onResponseInsert above already dedupes
+  // by id, so the echo landing later is a harmless no-op
+  const insertResponse = useCallback((p: CommunityPost) => {
+    setResponses((prev) => (prev.some((x) => x.id === p.id) ? prev : [p, ...prev]));
+  }, []);
+
+  return { activity, responses, loading, toggleResponseLikeOptimistic, pollVoteOptimistic, insertResponse };
 }
