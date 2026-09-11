@@ -42,6 +42,7 @@ export type WebProfile = {
   textColor: string;
   borderStyle: string;
   nameFont: string;
+  cardLayout: string;
 };
 
 export type WebFoProfile = {
@@ -71,13 +72,14 @@ export type WebFoProfile = {
   textColor: string;
   borderStyle: string;
   nameFont: string;
+  cardLayout: string;
 };
 
 // ─── Field lists (mirrors community.ts in the app) ────────────────────────────
 
 const CARD_THEME_FIELDS =
   'page_bg_color, page_bg_image, card_bg_color, card_bg_image, ' +
-  'card_bg_gradient, card_transparent, text_color, border_style, name_font';
+  'card_bg_gradient, card_transparent, text_color, border_style, name_font, card_layout';
 
 const PROFILE_FIELDS =
   `id, username, name, pronouns, tagline, avatar_url, song, song_link, gallery, flags, links, ` +
@@ -131,6 +133,7 @@ function parseCardTheme(row: Record<string, unknown>) {
     textColor: (row.text_color as string) ?? '',
     borderStyle: (row.border_style as string) ?? '',
     nameFont: (row.name_font as string) ?? '',
+    cardLayout: (row.card_layout as string) ?? '',
   };
 }
 

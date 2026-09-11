@@ -24,7 +24,8 @@ import { StitchFrame } from '@/components/deco/StitchFrame';
 import { WashBackdrop } from '@/components/deco/WashBackdrop';
 import { BG_COLORS, TEXT_COLORS } from '@/constants/bgPalette';
 import { Colors, FontFamily, Radius, SheetColumn, Spacing, sf } from '@/constants/theme';
-import { BORDER_FRAMES, GRADIENT_PRESETS, NAME_FONTS, buildBorderFrame, parseBorderFrame, type BorderFrameKey } from './cardTheme';
+import { IconLockSolid } from '@/components/ui/Icon';
+import { BORDER_FRAMES, CARD_LAYOUTS, GRADIENT_PRESETS, NAME_FONTS, buildBorderFrame, parseBorderFrame, type BorderFrameKey } from './cardTheme';
 import type { CardTheme } from './cardTheme';
 
 type Tab = 'card' | 'page' | 'text' | 'style';
@@ -42,6 +43,7 @@ const NAME_FONT_PREVIEW: Record<string, string> = {
   klee: FontFamily.ja,
 };
 const NAME_FONT_LABEL: Record<string, string> = { '': 'display', script: 'script', marker: 'marker', klee: 'klee' };
+const CARD_LAYOUT_LABEL: Record<string, string> = { '': 'center', left: 'left' };
 const BORDER_FRAME_LABEL: Record<BorderFrameKey, string> = {
   lace: 'lace', lattice: 'lattice', stitch: 'stitch', flourish: 'flourish',
   bracket: 'bracket', beaded: 'beaded', double: 'double-line',
@@ -86,6 +88,38 @@ const BORDER_PREVIEW: Partial<Record<BorderFrameKey, (w: number, h: number) => R
   stars: (w, h) => <StarsBackdrop width={w} height={h} />,
   mixed: (w, h) => <MixedBackdrop width={w} height={h} />,
 };
+
+// Marks an option as premium without hiding it — the whole point is that a
+// free user can still see every color/frame/font before deciding whether to
+// tap it, rather than finding out only after landing on the paywall.
+function LockBadge() {
+  return (
+    <View style={styles.lockBadge}>
+      <IconLockSolid size={7} color="#fff" />
+    </View>
+  );
+}
+
+function CardLayoutPreview({ layout }: { layout: string }) {
+  if (layout === 'left') {
+    return (
+      <View style={styles.layoutPreviewLeftRow}>
+        <View style={styles.layoutPreviewDot} />
+        <View style={styles.layoutPreviewLinesCol}>
+          <View style={styles.layoutPreviewLine} />
+          <View style={[styles.layoutPreviewLine, styles.layoutPreviewLineShort]} />
+        </View>
+      </View>
+    );
+  }
+  return (
+    <View style={styles.layoutPreviewCenterCol}>
+      <View style={styles.layoutPreviewDot} />
+      <View style={styles.layoutPreviewLine} />
+      <View style={[styles.layoutPreviewLine, styles.layoutPreviewLineShort]} />
+    </View>
+  );
+}
 
 function BorderPreview({ kind }: { kind: BorderFrameKey }) {
   const render = BORDER_PREVIEW[kind];
@@ -156,6 +190,11 @@ export function CardThemeSheet({ visible, onClose, theme, onChange, premium }: P
     onChange({ nameFont: f });
   }
 
+  function handlePickCardLayout(l: string) {
+    if (!premium) { requirePremium(); return; }
+    onChange({ cardLayout: l });
+  }
+
   const isTransparentActive = isCardTab && !!theme.cardTransparent;
   const activeGradient = isCardTab && theme.cardBgGradient ? theme.cardBgGradient : '';
   const borderParsed = parseBorderFrame(theme.borderStyle);
@@ -187,7 +226,7 @@ export function CardThemeSheet({ visible, onClose, theme, onChange, premium }: P
             ))}
           </View>
 
-          <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          <ScrollView style={styles.scrollBody} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
             {tab === 'text' ? (
               <>
                 <Text style={styles.sectionLabel}>text color</Text>
@@ -205,6 +244,7 @@ export function CardThemeSheet({ visible, onClose, theme, onChange, premium }: P
                       style={[styles.swatch, { backgroundColor: c }, theme.textColor === c && styles.swatchSelected]}
                     >
                       {theme.textColor === c && <View style={styles.swatchCheck}><Text style={styles.swatchCheckText}>✓</Text></View>}
+                      {!premium && <LockBadge />}
                     </Pressable>
                   ))}
                 </View>
@@ -220,6 +260,7 @@ export function CardThemeSheet({ visible, onClose, theme, onChange, premium }: P
                       onPress={() => handleToggleBorderFrame(frame)}
                       style={[styles.chip, borderParsed[frame] && styles.chipActive]}
                     >
+                      {!premium && <LockBadge />}
                       <View style={styles.chipIconBox}><BorderPreview kind={frame} /></View>
                       <Text style={styles.chipLabel}>{BORDER_FRAME_LABEL[frame]}</Text>
                     </Pressable>
@@ -234,10 +275,26 @@ export function CardThemeSheet({ visible, onClose, theme, onChange, premium }: P
                       onPress={() => handlePickNameFont(f)}
                       style={[styles.chip, (theme.nameFont || '') === f && styles.chipActive]}
                     >
+                      {!premium && <LockBadge />}
                       <View style={styles.chipIconBox}>
                         <Text style={{ fontFamily: NAME_FONT_PREVIEW[f], fontSize: sf(18), color: Colors.ink }}>Aa</Text>
                       </View>
                       <Text style={styles.chipLabel}>{NAME_FONT_LABEL[f]}</Text>
+                    </Pressable>
+                  ))}
+                </View>
+
+                <Text style={[styles.sectionLabel, styles.sectionLabelSpaced]}>layout</Text>
+                <View style={styles.chipGrid}>
+                  {CARD_LAYOUTS.map((l) => (
+                    <Pressable
+                      key={l || 'center'}
+                      onPress={() => handlePickCardLayout(l)}
+                      style={[styles.chip, (theme.cardLayout || '') === l && styles.chipActive]}
+                    >
+                      {!premium && <LockBadge />}
+                      <View style={styles.chipIconBox}><CardLayoutPreview layout={l} /></View>
+                      <Text style={styles.chipLabel}>{CARD_LAYOUT_LABEL[l]}</Text>
                     </Pressable>
                   ))}
                 </View>
@@ -246,6 +303,7 @@ export function CardThemeSheet({ visible, onClose, theme, onChange, premium }: P
               <>
                 <View style={styles.actionRow}>
                   <Pressable style={styles.actionBtn} onPress={handlePickImage}>
+                    {!premium && <LockBadge />}
                     <Svg width={20} height={20} viewBox="0 0 22 22" fill="none">
                       <Rect x="2" y="4" width="18" height="14" rx="2" stroke={Colors.ink} strokeWidth="1.4" />
                       <Path d="M2 15l5-5 4 4 3-3 6 6" stroke={Colors.ink} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
@@ -258,6 +316,7 @@ export function CardThemeSheet({ visible, onClose, theme, onChange, premium }: P
                       style={[styles.actionBtn, isTransparentActive && styles.actionBtnActive]}
                       onPress={handlePickTransparent}
                     >
+                      {!premium && <LockBadge />}
                       <View style={styles.checkerIcon}>
                         <View style={[styles.checkerCell, { top: 0, left: 0 }]} />
                         <View style={[styles.checkerCell, { top: 10, left: 10 }]} />
@@ -297,6 +356,7 @@ export function CardThemeSheet({ visible, onClose, theme, onChange, premium }: P
                           >
                             <LinearGradient colors={[c1, c2]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.gradientSwatch}>
                               {activeGradient === key && <View style={styles.swatchCheck}><Text style={styles.swatchCheckText}>✓</Text></View>}
+                              {!premium && <LockBadge />}
                             </LinearGradient>
                           </Pressable>
                         );
@@ -319,6 +379,7 @@ export function CardThemeSheet({ visible, onClose, theme, onChange, premium }: P
                       ]}
                     >
                       {currentColor === c && !isTransparentActive && <View style={styles.swatchCheck}><Text style={styles.swatchCheckText}>✓</Text></View>}
+                      {!premium && <LockBadge />}
                     </Pressable>
                   ))}
                 </View>
@@ -334,7 +395,16 @@ export function CardThemeSheet({ visible, onClose, theme, onChange, premium }: P
 const styles = StyleSheet.create({
   wrap: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'flex-end' },
   overlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.3)' },
-  sheet: { backgroundColor: Colors.paper, borderTopLeftRadius: Radius.r5, borderTopRightRadius: Radius.r5, paddingBottom: 34, maxHeight: '80%' },
+  sheet: {
+    backgroundColor: Colors.paper, borderTopLeftRadius: Radius.r5, borderTopRightRadius: Radius.r5,
+    paddingBottom: 34, maxHeight: '80%', overflow: 'hidden',
+  },
+  // flexShrink (not flex/flexGrow) — `sheet` has no fixed height, only a
+  // maxHeight cap, so a flexGrow child has nothing determinate to grow into
+  // and collapses to zero. flexShrink lets this size to its content up to
+  // that cap, only shrinking (and becoming internally scrollable) once
+  // content actually exceeds it.
+  scrollBody: { flexShrink: 1 },
   handle: { width: 40, height: 4, backgroundColor: Colors.line, borderRadius: 2, alignSelf: 'center', marginTop: 10 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: Spacing.s4, borderBottomWidth: 1, borderBottomColor: Colors.line },
   title: { fontFamily: FontFamily.displayItalic, fontSize: sf(17), color: Colors.ink },
@@ -348,7 +418,7 @@ const styles = StyleSheet.create({
   tabBtnActive: { backgroundColor: Colors.sakuraSoft, borderColor: Colors.sakuraDeep },
   tabText: { fontFamily: FontFamily.uiMedium, fontSize: sf(12), color: Colors.ink2, textTransform: 'capitalize' },
   tabTextActive: { color: Colors.sakuraDeep },
-  content: { padding: Spacing.s5, paddingBottom: 40 },
+  content: { padding: Spacing.s5 },
   actionRow: { flexDirection: 'row', gap: 10, marginBottom: Spacing.s4, flexWrap: 'wrap' },
   actionBtn: {
     width: 64, height: 56, borderRadius: Radius.r3,
@@ -392,4 +462,18 @@ const styles = StyleSheet.create({
   chipLabel: { fontFamily: FontFamily.ui, fontSize: sf(9), color: Colors.ink3, textTransform: 'capitalize' },
 
   borderPreviewBox: { width: 28, height: 20, borderRadius: 4, borderWidth: 1.5, borderColor: Colors.ink },
+
+  layoutPreviewCenterCol: { alignItems: 'center', gap: 3 },
+  layoutPreviewLeftRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  layoutPreviewDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: Colors.sakuraDeep },
+  layoutPreviewLinesCol: { gap: 3 },
+  layoutPreviewLine: { width: 16, height: 3, borderRadius: 2, backgroundColor: Colors.ink3 },
+  layoutPreviewLineShort: { width: 10 },
+
+  lockBadge: {
+    position: 'absolute', top: 2, right: 2,
+    width: 13, height: 13, borderRadius: 7,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    alignItems: 'center', justifyContent: 'center',
+  },
 });

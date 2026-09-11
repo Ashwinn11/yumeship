@@ -223,6 +223,7 @@ export default function FoDetailScreen() {
                 textColor={fo.textColor}
                 borderStyle={fo.borderStyle}
                 nameFont={fo.nameFont}
+                cardLayout={fo.cardLayout}
                 flags={fo.flags}
                 links={fo.links}
               />
@@ -285,6 +286,7 @@ export default function FoDetailScreen() {
           textColor: fo.textColor,
           borderStyle: fo.borderStyle,
           nameFont: fo.nameFont,
+          cardLayout: fo.cardLayout,
         }}
         onChange={handleThemeChange}
         premium={premium}

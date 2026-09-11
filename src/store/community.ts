@@ -27,6 +27,7 @@ export type CommunityCardTheme = {
   textColor: string;
   borderStyle: string;
   nameFont: string;
+  cardLayout: string;
 };
 
 export type CommunityProfile = CommunityCardTheme & {
@@ -135,6 +136,7 @@ function rowToCardTheme(row: Record<string, any>): CommunityCardTheme {
     textColor: row.text_color ?? '',
     borderStyle: row.border_style ?? '',
     nameFont: row.name_font ?? '',
+    cardLayout: row.card_layout ?? '',
   };
 }
 
@@ -297,7 +299,7 @@ function parseSyncMap(raw: string): Record<string, string> {
 /** Everything a full profile card needs to render as its owner styled it. */
 const CARD_THEME_FIELDS =
   'page_bg_color, page_bg_image, card_bg_color, card_bg_image, ' +
-  'card_bg_gradient, card_transparent, text_color, border_style, name_font';
+  'card_bg_gradient, card_transparent, text_color, border_style, name_font, card_layout';
 /**
  * PostgREST silently ignores a `select` that starts with whitespace and returns
  * *every* column instead — so a readable multi-line list quietly turns into
@@ -533,6 +535,7 @@ export async function pushOwnProfile(): Promise<PushResult> {
     text_color: getGlobalSetting('user_text_color'),
     border_style: getGlobalSetting('user_border_style'),
     name_font: getGlobalSetting('user_name_font'),
+    card_layout: getGlobalSetting('user_card_layout'),
   };
 
   // identify_fo_id is a real FK, so confirm the row is actually there rather than
@@ -625,6 +628,7 @@ export async function pushFoProfile(foId: string): Promise<PushResult> {
     text_color: fo.textColor,
     border_style: fo.borderStyle,
     name_font: fo.nameFont,
+    card_layout: fo.cardLayout,
   };
 
   // See pushOwnProfile: unpublishing deletes the row outright, so a re-publish

@@ -60,6 +60,7 @@ export function initDb() {
   try { db.execSync(`ALTER TABLE fo DROP COLUMN age`); } catch (_) {}
   try { db.execSync(`ALTER TABLE fo DROP COLUMN birthday`); } catch (_) {}
   try { db.execSync(`ALTER TABLE fo ADD COLUMN since_date TEXT NOT NULL DEFAULT ''`); } catch (_) {}
+  try { db.execSync(`ALTER TABLE fo ADD COLUMN card_layout TEXT NOT NULL DEFAULT ''`); } catch (_) {}
   db.execSync(`
     CREATE TABLE IF NOT EXISTS ships (
       id TEXT PRIMARY KEY,
@@ -111,6 +112,7 @@ export function initDb() {
       card_transparent INTEGER NOT NULL DEFAULT 0,
       border_style TEXT NOT NULL DEFAULT '',
       name_font TEXT NOT NULL DEFAULT '',
+      card_layout TEXT NOT NULL DEFAULT '',
       color TEXT NOT NULL DEFAULT '',
       status_label TEXT NOT NULL DEFAULT '',
       flags TEXT NOT NULL DEFAULT '[]',

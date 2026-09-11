@@ -12,7 +12,7 @@ export const ME_KEYS = [
   'user_song', 'user_song_link', 'user_gallery',
   'user_page_bg_color', 'user_page_bg_image', 'user_card_bg_color', 'user_card_bg_image',
   'user_card_bg_gradient', 'user_card_transparent', 'user_text_color', 'user_border_style',
-  'user_name_font', 'user_identify_fo_id', 'user_flags', 'user_links',
+  'user_name_font', 'user_card_layout', 'user_identify_fo_id', 'user_flags', 'user_links',
 ] as const;
 
 export type Me = {
@@ -21,7 +21,7 @@ export type Me = {
   song: string; songLink: string; gallery: GalleryPhoto[];
   pageBgColor: string; pageBgImage: string; cardBgColor: string; cardBgImage: string;
   cardBgGradient: string; cardTransparent: boolean; textColor: string;
-  borderStyle: string; nameFont: string; identifyFoId: string;
+  borderStyle: string; nameFont: string; cardLayout: string; identifyFoId: string;
   flags: ProfileFlag[];
   links: ProfileLink[];
 };
@@ -48,6 +48,7 @@ export function readMe(): Me {
     textColor: g.user_text_color,
     borderStyle: g.user_border_style,
     nameFont: g.user_name_font,
+    cardLayout: g.user_card_layout,
     identifyFoId: g.user_identify_fo_id,
     flags: parseProfileFlags(g.user_flags),
     links: parseProfileLinks(g.user_links),
@@ -61,6 +62,7 @@ export function meCardTheme(me: Me): CardTheme {
     cardBgColor: me.cardBgColor, cardBgImage: me.cardBgImage,
     cardBgGradient: me.cardBgGradient, cardTransparent: me.cardTransparent,
     textColor: me.textColor, borderStyle: me.borderStyle, nameFont: me.nameFont,
+    cardLayout: me.cardLayout,
   };
 }
 
@@ -69,6 +71,7 @@ const THEME_KEYS: Record<keyof CardTheme, string> = {
   cardBgColor: 'user_card_bg_color', cardBgImage: 'user_card_bg_image',
   cardBgGradient: 'user_card_bg_gradient', cardTransparent: 'user_card_transparent',
   textColor: 'user_text_color', borderStyle: 'user_border_style', nameFont: 'user_name_font',
+  cardLayout: 'user_card_layout',
 };
 
 const FIELD_KEYS: Partial<Record<keyof Me, string>> = {

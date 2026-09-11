@@ -672,6 +672,50 @@ a:hover {
   align-items: center;
   width: 100%;
 }
+/* ── Left-aligned layout: avatar beside name/username/pronouns ──────────── */
+.left-header-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+.avatar-wrap-left {
+  padding: 3px;
+  border-radius: 999px;
+  border: 1.4px dashed var(--line);
+  flex-shrink: 0;
+}
+.avatar-circle-left {
+  width: 72px;
+  height: 72px;
+}
+.avatar-img-left {
+  width: 72px;
+  height: 72px;
+}
+.avatar-initial-left {
+  font-size: 30px;
+}
+.left-text-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.left-name-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.name-text-left {
+  font-size: 20px;
+  line-height: 25px;
+}
+.pronouns-text-left {
+  margin-top: 1px;
+}
 
 /* ── Solo Avatar ────────────────────────────────────────────────────────── */
 .avatar-outer {

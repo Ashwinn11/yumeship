@@ -210,6 +210,7 @@ export default function MyProfileScreen() {
               textColor={me.textColor}
               borderStyle={me.borderStyle}
               nameFont={me.nameFont}
+              cardLayout={me.cardLayout}
               flags={me.flags}
               links={me.links}
               followerCount={counts.followerCount}

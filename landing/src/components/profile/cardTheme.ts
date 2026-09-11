@@ -16,6 +16,8 @@ export type CardTheme = {
   borderStyle: string;
   /** '' (default display font) | 'script' | 'marker' | 'klee' */
   nameFont: string;
+  /** '' (avatar above name, everything centered) | 'left' (avatar beside name, Instagram-style) */
+  cardLayout: string;
 };
 
 /** One flag on a profile. */

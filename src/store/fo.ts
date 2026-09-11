@@ -37,6 +37,8 @@ export type Fo = {
   borderStyle: string;
   /** '' (default display font) | 'script' | 'marker' */
   nameFont: string;
+  /** '' (avatar above name, centered) | 'left' (avatar beside name, Instagram-style) */
+  cardLayout: string;
   /** avatar fallback tint — the F/O counterpart to Me.color, so both profile
    *  screens tint a photoless F/O the same instead of each picking a constant */
   color: string;
@@ -98,6 +100,7 @@ function rowToFo(row: Record<string, unknown>): Fo {
     textColor: (row.text_color as string) ?? '',
     borderStyle: (row.border_style as string) ?? '',
     nameFont: (row.name_font as string) ?? '',
+    cardLayout: (row.card_layout as string) ?? '',
     color: (row.color as string) ?? '',
     song: (row.song as string) ?? '',
     songLink: (row.song_link as string) ?? '',
@@ -190,6 +193,7 @@ export function updateFo(id: string, d: Partial<Omit<Fo, 'id' | 'createdAt'>>) {
   if (d.borderStyle !== undefined) { fields.push('border_style = ?'); values.push(d.borderStyle); }
   if (d.color !== undefined)      { fields.push('color = ?');        values.push(d.color); }
   if (d.nameFont !== undefined)    { fields.push('name_font = ?');    values.push(d.nameFont); }
+  if (d.cardLayout !== undefined)  { fields.push('card_layout = ?');  values.push(d.cardLayout); }
   if (d.song !== undefined)        { fields.push('song = ?');         values.push(d.song); }
   if (d.songLink !== undefined)    { fields.push('song_link = ?');    values.push(d.songLink); }
   if (d.gallery !== undefined)     { fields.push('gallery = ?');      values.push(JSON.stringify(d.gallery)); }

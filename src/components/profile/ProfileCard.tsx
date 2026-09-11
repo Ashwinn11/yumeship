@@ -89,6 +89,8 @@ type Props = {
   borderStyle?: string;
   /** '' default display font | 'script' | 'marker' | 'klee' */
   nameFont?: string;
+  /** '' (avatar above name, everything centered) | 'left' (avatar beside name, Instagram-style) */
+  cardLayout?: string;
   /** everything they fly under the name */
   flags?: ProfileFlag[];
   /** external links shown in their own card section — socials, playlists, etc. */
@@ -136,6 +138,7 @@ export function ProfileCard({
   textColor,
   borderStyle = '',
   nameFont = '',
+  cardLayout = '',
   flags = [],
   links = [],
   followerCount,
@@ -151,6 +154,7 @@ export function ProfileCard({
 
   const textStyle = textColor ? { color: textColor } : null;
   const nameFontStyle = nameFont && NAME_FONT_MAP[nameFont] ? { fontFamily: NAME_FONT_MAP[nameFont] } : null;
+  const isLeft = cardLayout === 'left';
 
   const gradientColors = cardBgGradient ? (cardBgGradient.split(',').filter(Boolean) as string[]) : null;
 
@@ -172,28 +176,54 @@ export function ProfileCard({
   // ── Hero: identity only — everything else lives in its own section below ──
   const heroContent = (
     <>
-      <View style={styles.avatarOuter}>
-        <View style={styles.avatarWrap}>
-          <View style={[styles.avatar, { backgroundColor: fallbackColor }]}>
-            {photoUri ? (
-              <Image source={{ uri: photoUri }} style={styles.avatarImg} contentFit="cover" />
-            ) : (
-              <Text style={styles.avatarInitial}>{name.trim().charAt(0).toUpperCase() || '♡'}</Text>
-            )}
+      {isLeft ? (
+        <View style={styles.leftHeaderRow}>
+          <View style={styles.avatarWrapLeft}>
+            <View style={[styles.avatarLeft, { backgroundColor: fallbackColor }]}>
+              {photoUri ? (
+                <Image source={{ uri: photoUri }} style={styles.avatarImgLeft} contentFit="cover" />
+              ) : (
+                <Text style={styles.avatarInitialLeft}>{name.trim().charAt(0).toUpperCase() || '♡'}</Text>
+              )}
+            </View>
+          </View>
+          <View style={styles.leftTextCol}>
+            <View style={styles.leftNameRow}>
+              <Text style={[styles.name, styles.nameLeft, nameFontStyle, textStyle]} numberOfLines={1}>{name || '—'}</Text>
+              {!!username && <Text style={[styles.username, textStyle]}>@{username}</Text>}
+            </View>
+            {!!subtitle && <Text style={[styles.subtitle, textStyle]}>{subtitle}</Text>}
+            {!!pronouns && <Text style={[styles.pronouns, styles.pronounsLeft, textStyle]}>{pronouns}</Text>}
           </View>
         </View>
-      </View>
+      ) : (
+        <>
+          <View style={styles.avatarOuter}>
+            <View style={styles.avatarWrap}>
+              <View style={[styles.avatar, { backgroundColor: fallbackColor }]}>
+                {photoUri ? (
+                  <Image source={{ uri: photoUri }} style={styles.avatarImg} contentFit="cover" />
+                ) : (
+                  <Text style={styles.avatarInitial}>{name.trim().charAt(0).toUpperCase() || '♡'}</Text>
+                )}
+              </View>
+            </View>
+          </View>
 
-      <View style={styles.nameRow}>
-        <View style={styles.nameGroup}>
-          <Text style={[styles.name, nameFontStyle, textStyle]} numberOfLines={1}>{name || '—'}</Text>
-        </View>
-        {!!username && <Text style={[styles.username, textStyle]}>@{username}</Text>}
-        {!!subtitle && <Text style={[styles.subtitle, textStyle]}>{subtitle}</Text>}
-      </View>
-      {!!pronouns && <Text style={[styles.pronouns, textStyle]}>{pronouns}</Text>}
+          <View style={styles.nameRow}>
+            <View style={styles.nameGroup}>
+              <Text style={[styles.name, nameFontStyle, textStyle]} numberOfLines={1}>{name || '—'}</Text>
+            </View>
+            {!!username && <Text style={[styles.username, textStyle]}>@{username}</Text>}
+            {!!subtitle && <Text style={[styles.subtitle, textStyle]}>{subtitle}</Text>}
+          </View>
+          {!!pronouns && <Text style={[styles.pronouns, textStyle]}>{pronouns}</Text>}
+        </>
+      )}
       <ProfileFlags flags={flags} textColor={textColor} />
-      {!!tagline && <Text style={[styles.tagline, textStyle]} numberOfLines={3}>{tagline}</Text>}
+      {!!tagline && (
+        <Text style={[styles.tagline, textStyle]} numberOfLines={3}>{tagline}</Text>
+      )}
       {links.length > 0 && (
         <View style={styles.linksRow}>
           {links.map((l) => (
@@ -379,6 +409,28 @@ const styles = StyleSheet.create({
   },
   avatarImg: { width: 96, height: 96, borderRadius: Radius.pill },
   avatarInitial: { fontFamily: FontFamily.displayItalic, fontSize: sf(40), color: '#fff' },
+
+  // ── left-aligned layout: avatar beside name/username/pronouns, Instagram-style ──
+  leftHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.s4, width: '100%' },
+  avatarWrapLeft: {
+    padding: 3,
+    borderRadius: Radius.pill,
+    borderWidth: 1.4,
+    borderColor: Colors.line,
+    borderStyle: 'dashed',
+    flexShrink: 0,
+  },
+  avatarLeft: {
+    width: 72, height: 72, borderRadius: Radius.pill,
+    alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+  },
+  avatarImgLeft: { width: 72, height: 72, borderRadius: Radius.pill },
+  avatarInitialLeft: { fontFamily: FontFamily.displayItalic, fontSize: sf(30), color: '#fff' },
+  leftTextCol: { flex: 1, minWidth: 0, gap: 2 },
+  leftNameRow: { flexDirection: 'row', alignItems: 'baseline', gap: 6, flexWrap: 'wrap' },
+  nameLeft: { fontSize: sf(20), lineHeight: sf(25) },
+  pronounsLeft: { marginTop: 1 },
+
   nameGroup: { flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 1 },
   nameRow: {
     flexDirection: 'row',

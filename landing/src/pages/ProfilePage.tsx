@@ -126,6 +126,7 @@ export function ProfilePage() {
                 textColor={profile.textColor}
                 borderStyle={profile.borderStyle}
                 nameFont={profile.nameFont}
+                cardLayout={profile.cardLayout}
                 flags={profile.flags}
                 links={profile.links}
                 followerCount={profile.followerCount}

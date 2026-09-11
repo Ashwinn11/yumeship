@@ -16,6 +16,8 @@ export type CardTheme = {
   borderStyle: string;
   /** '' (default display font) | 'script' | 'marker' | 'klee' */
   nameFont: string;
+  /** '' (avatar above name, everything centered) | 'left' (avatar beside name, Instagram-style) */
+  cardLayout: string;
 };
 
 /** One flag on a profile. Sexuality and badges used to be two separate fields
@@ -113,3 +115,6 @@ export function buildBorderFrame(active: Partial<Record<BorderFrameKey, boolean>
 
 export const NAME_FONTS = ['', 'script', 'marker', 'klee'] as const;
 export type NameFontKey = (typeof NAME_FONTS)[number];
+
+export const CARD_LAYOUTS = ['', 'left'] as const;
+export type CardLayoutKey = (typeof CARD_LAYOUTS)[number];

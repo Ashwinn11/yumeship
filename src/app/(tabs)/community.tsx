@@ -62,6 +62,7 @@ function cachedUsernameFor(userId: string | undefined): string {
   return getGlobalSetting('user_username_uid') === userId ? getGlobalSetting('user_username') : '';
 }
 import { InlineToast, useInlineToast } from '@/components/ui/InlineToast';
+import { SegmentedTabs } from '@/components/ui/SegmentedTabs';
 import { FeedSkeleton } from '@/components/community/PostCardSkeleton';
 import { getGlobalSetting, saveGlobalSetting } from '@/store/onboarding';
 
@@ -316,13 +317,15 @@ function Feed({ insets }: { insets: { top: number } }) {
       </View>
 
       <View style={[styles.tabsWrap, column]}>
-        <View style={styles.tabsRow}>
-          {(['global', 'following', 'activities'] as const).map((m) => (
-            <Pressable key={m} onPress={() => selectTab(m)} style={[styles.tab, tab === m && styles.tabActive]}>
-              <Text style={[styles.tabText, tab === m && styles.tabTextActive]}>{m}</Text>
-            </Pressable>
-          ))}
-        </View>
+        <SegmentedTabs
+          tabs={[
+            { key: 'global', label: 'global' },
+            { key: 'following', label: 'following' },
+            { key: 'activities', label: 'activities' },
+          ]}
+          value={tab}
+          onChange={selectTab}
+        />
       </View>
 
       <FlatList
@@ -779,25 +782,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.s5,
     paddingBottom: Spacing.s3,
   },
-  // one pill "track" behind all three segments — same chrome as the message
-  // sender toggle — rather than three separately-bordered buttons
-  tabsRow: {
-    flexDirection: 'row',
-    backgroundColor: Colors.paperDeep,
-    borderRadius: Radius.pill,
-    padding: 3,
-    borderWidth: 1,
-    borderColor: Colors.line,
-  },
-  tab: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 7,
-    borderRadius: Radius.pill,
-  },
-  tabActive: { backgroundColor: Colors.sakuraDeep },
-  tabText: { fontFamily: FontFamily.uiMedium, fontSize: sf(12), color: Colors.ink3, textTransform: 'capitalize' },
-  tabTextActive: { color: '#fff', fontFamily: FontFamily.uiSemiBold },
   feedContent: { paddingHorizontal: Spacing.s5, paddingBottom: Spacing.s8 },
   feedSeparator: { height: 12 },
   feedEmpty: { alignItems: 'center', paddingTop: 60 },

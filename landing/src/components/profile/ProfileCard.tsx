@@ -84,6 +84,8 @@ export type ProfileCardProps = {
   borderStyle?: string;
   /** '' default display font | 'script' | 'marker' | 'klee' */
   nameFont?: string;
+  /** '' (avatar above name, everything centered) | 'left' (avatar beside name, Instagram-style) */
+  cardLayout?: string;
   /** everything they fly under the name */
   flags?: ProfileFlag[];
   /** external links shown as pill chips on the card itself */
@@ -132,6 +134,7 @@ export function ProfileCard({
   textColor,
   borderStyle = '',
   nameFont = '',
+  cardLayout = '',
   flags = [],
   links = [],
   followerCount,
@@ -147,6 +150,7 @@ export function ProfileCard({
 
   const textStyle: React.CSSProperties | undefined = textColor ? { color: textColor } : undefined;
   const nameFontClass = nameFont ? `name-font-${nameFont}` : '';
+  const isLeft = cardLayout === 'left';
 
   const frames = parseBorderFrame(borderStyle);
 
@@ -221,28 +225,54 @@ export function ProfileCard({
           )}
 
           <div className="hero-content">
-            <div className="avatar-outer">
-              <div className="avatar-wrap">
-                <div className="avatar-circle" style={{ backgroundColor: fallbackColor }}>
-                  {photoUri ? (
-                    <img src={photoUri} alt={name} className="avatar-img" />
-                  ) : (
-                    <span className="avatar-initial">{initial}</span>
-                  )}
+            {isLeft ? (
+              <div className="left-header-row">
+                <div className="avatar-wrap-left">
+                  <div className="avatar-circle avatar-circle-left" style={{ backgroundColor: fallbackColor }}>
+                    {photoUri ? (
+                      <img src={photoUri} alt={name} className="avatar-img avatar-img-left" />
+                    ) : (
+                      <span className="avatar-initial avatar-initial-left">{initial}</span>
+                    )}
+                  </div>
+                </div>
+                <div className="left-text-col">
+                  <div className="left-name-row">
+                    <h1 className={`name-text name-text-left ${nameFontClass}`} style={textStyle}>
+                      {name || '—'}
+                    </h1>
+                    {username && <span className="username-text" style={textStyle}>@{username}</span>}
+                  </div>
+                  {subtitle && <span className="subtitle-text" style={textStyle}>{subtitle}</span>}
+                  {pronouns && <span className="pronouns-text pronouns-text-left" style={textStyle}>{pronouns}</span>}
                 </div>
               </div>
-            </div>
+            ) : (
+              <>
+                <div className="avatar-outer">
+                  <div className="avatar-wrap">
+                    <div className="avatar-circle" style={{ backgroundColor: fallbackColor }}>
+                      {photoUri ? (
+                        <img src={photoUri} alt={name} className="avatar-img" />
+                      ) : (
+                        <span className="avatar-initial">{initial}</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
 
-            <div className="name-row">
-              <div className="name-group">
-                <h1 className={`name-text ${nameFontClass}`} style={textStyle}>
-                  {name || '—'}
-                </h1>
-              </div>
-              {username && <span className="username-text" style={textStyle}>@{username}</span>}
-              {subtitle && <span className="subtitle-text" style={textStyle}>{subtitle}</span>}
-            </div>
-            {pronouns && <span className="pronouns-text" style={textStyle}>{pronouns}</span>}
+                <div className="name-row">
+                  <div className="name-group">
+                    <h1 className={`name-text ${nameFontClass}`} style={textStyle}>
+                      {name || '—'}
+                    </h1>
+                  </div>
+                  {username && <span className="username-text" style={textStyle}>@{username}</span>}
+                  {subtitle && <span className="subtitle-text" style={textStyle}>{subtitle}</span>}
+                </div>
+                {pronouns && <span className="pronouns-text" style={textStyle}>{pronouns}</span>}
+              </>
+            )}
             <ProfileFlags flags={flags} textColor={textColor} />
             {tagline && <p className="tagline-text" style={textStyle}>{tagline}</p>}
             {links.length > 0 && (
