@@ -213,14 +213,18 @@ export default function PublicUserProfileScreen() {
               </>
             )}
 
-            <Text style={styles.postsLabel}>posts</Text>
-            <View style={styles.postsTabsWrap}>
-              <SegmentedTabs
-                tabs={[{ key: 'posts', label: 'posts' }, { key: 'activities', label: 'activities' }]}
-                value={postsTab}
-                onChange={setPostsTab}
-              />
-            </View>
+            {!relationship.blocked && (postsLoading || posts.length > 0) && (
+              <>
+                <Text style={styles.postsLabel}>posts</Text>
+                <View style={styles.postsTabsWrap}>
+                  <SegmentedTabs
+                    tabs={[{ key: 'posts', label: 'posts' }, { key: 'activities', label: 'activities' }]}
+                    value={postsTab}
+                    onChange={setPostsTab}
+                  />
+                </View>
+              </>
+            )}
           </>
         }
         ListEmptyComponent={

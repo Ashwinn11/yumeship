@@ -263,7 +263,10 @@ export function ScenariosFeature({ shipId, shipName, setCustomBack }: { shipId: 
 
       {/* Ideas — browsable, relationship-aware prompt deck + your own */}
       <Modal visible={showIdeas} transparent animationType="slide" onRequestClose={() => setShowIdeas(false)}>
-        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'flex-end' }}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'flex-end' }}
+        >
         <TouchableWithoutFeedback onPress={() => setShowIdeas(false)}>
           <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.3)' }} />
         </TouchableWithoutFeedback>
@@ -343,7 +346,7 @@ export function ScenariosFeature({ shipId, shipName, setCustomBack }: { shipId: 
             <Text style={{ fontFamily: FontFamily.uiMedium, fontSize: sf(13), color: accent }}>shuffle prompts</Text>
           </Pressable>
         </DismissKeyboardView>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );

@@ -24,7 +24,6 @@ import { StitchFrame } from '@/components/deco/StitchFrame';
 import { WashBackdrop } from '@/components/deco/WashBackdrop';
 import { BG_COLORS, TEXT_COLORS } from '@/constants/bgPalette';
 import { Colors, FontFamily, Radius, SheetColumn, Spacing, sf } from '@/constants/theme';
-import { IconLockSolid } from '@/components/ui/Icon';
 import { BORDER_FRAMES, CARD_LAYOUTS, GRADIENT_PRESETS, NAME_FONTS, buildBorderFrame, parseBorderFrame, type BorderFrameKey } from './cardTheme';
 import type { CardTheme } from './cardTheme';
 
@@ -88,17 +87,6 @@ const BORDER_PREVIEW: Partial<Record<BorderFrameKey, (w: number, h: number) => R
   stars: (w, h) => <StarsBackdrop width={w} height={h} />,
   mixed: (w, h) => <MixedBackdrop width={w} height={h} />,
 };
-
-// Marks an option as premium without hiding it — the whole point is that a
-// free user can still see every color/frame/font before deciding whether to
-// tap it, rather than finding out only after landing on the paywall.
-function LockBadge() {
-  return (
-    <View style={styles.lockBadge}>
-      <IconLockSolid size={7} color="#fff" />
-    </View>
-  );
-}
 
 function CardLayoutPreview({ layout }: { layout: string }) {
   if (layout === 'left') {
@@ -244,7 +232,6 @@ export function CardThemeSheet({ visible, onClose, theme, onChange, premium }: P
                       style={[styles.swatch, { backgroundColor: c }, theme.textColor === c && styles.swatchSelected]}
                     >
                       {theme.textColor === c && <View style={styles.swatchCheck}><Text style={styles.swatchCheckText}>✓</Text></View>}
-                      {!premium && <LockBadge />}
                     </Pressable>
                   ))}
                 </View>
@@ -260,7 +247,6 @@ export function CardThemeSheet({ visible, onClose, theme, onChange, premium }: P
                       onPress={() => handleToggleBorderFrame(frame)}
                       style={[styles.chip, borderParsed[frame] && styles.chipActive]}
                     >
-                      {!premium && <LockBadge />}
                       <View style={styles.chipIconBox}><BorderPreview kind={frame} /></View>
                       <Text style={styles.chipLabel}>{BORDER_FRAME_LABEL[frame]}</Text>
                     </Pressable>
@@ -275,7 +261,6 @@ export function CardThemeSheet({ visible, onClose, theme, onChange, premium }: P
                       onPress={() => handlePickNameFont(f)}
                       style={[styles.chip, (theme.nameFont || '') === f && styles.chipActive]}
                     >
-                      {!premium && <LockBadge />}
                       <View style={styles.chipIconBox}>
                         <Text style={{ fontFamily: NAME_FONT_PREVIEW[f], fontSize: sf(18), color: Colors.ink }}>Aa</Text>
                       </View>
@@ -292,7 +277,6 @@ export function CardThemeSheet({ visible, onClose, theme, onChange, premium }: P
                       onPress={() => handlePickCardLayout(l)}
                       style={[styles.chip, (theme.cardLayout || '') === l && styles.chipActive]}
                     >
-                      {!premium && <LockBadge />}
                       <View style={styles.chipIconBox}><CardLayoutPreview layout={l} /></View>
                       <Text style={styles.chipLabel}>{CARD_LAYOUT_LABEL[l]}</Text>
                     </Pressable>
@@ -303,7 +287,6 @@ export function CardThemeSheet({ visible, onClose, theme, onChange, premium }: P
               <>
                 <View style={styles.actionRow}>
                   <Pressable style={styles.actionBtn} onPress={handlePickImage}>
-                    {!premium && <LockBadge />}
                     <Svg width={20} height={20} viewBox="0 0 22 22" fill="none">
                       <Rect x="2" y="4" width="18" height="14" rx="2" stroke={Colors.ink} strokeWidth="1.4" />
                       <Path d="M2 15l5-5 4 4 3-3 6 6" stroke={Colors.ink} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
@@ -316,7 +299,6 @@ export function CardThemeSheet({ visible, onClose, theme, onChange, premium }: P
                       style={[styles.actionBtn, isTransparentActive && styles.actionBtnActive]}
                       onPress={handlePickTransparent}
                     >
-                      {!premium && <LockBadge />}
                       <View style={styles.checkerIcon}>
                         <View style={[styles.checkerCell, { top: 0, left: 0 }]} />
                         <View style={[styles.checkerCell, { top: 10, left: 10 }]} />
@@ -356,7 +338,6 @@ export function CardThemeSheet({ visible, onClose, theme, onChange, premium }: P
                           >
                             <LinearGradient colors={[c1, c2]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.gradientSwatch}>
                               {activeGradient === key && <View style={styles.swatchCheck}><Text style={styles.swatchCheckText}>✓</Text></View>}
-                              {!premium && <LockBadge />}
                             </LinearGradient>
                           </Pressable>
                         );
@@ -379,7 +360,6 @@ export function CardThemeSheet({ visible, onClose, theme, onChange, premium }: P
                       ]}
                     >
                       {currentColor === c && !isTransparentActive && <View style={styles.swatchCheck}><Text style={styles.swatchCheckText}>✓</Text></View>}
-                      {!premium && <LockBadge />}
                     </Pressable>
                   ))}
                 </View>
@@ -469,11 +449,4 @@ const styles = StyleSheet.create({
   layoutPreviewLinesCol: { gap: 3 },
   layoutPreviewLine: { width: 16, height: 3, borderRadius: 2, backgroundColor: Colors.ink3 },
   layoutPreviewLineShort: { width: 10 },
-
-  lockBadge: {
-    position: 'absolute', top: 2, right: 2,
-    width: 13, height: 13, borderRadius: 7,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    alignItems: 'center', justifyContent: 'center',
-  },
 });

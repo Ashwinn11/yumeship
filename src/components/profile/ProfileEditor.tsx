@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import { useState } from 'react';
-import { Keyboard, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TextInputProps, TouchableWithoutFeedback, View } from 'react-native';
+import { Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, TextInputProps, TouchableWithoutFeedback, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { GalleryPicker } from '@/components/profile/GalleryPicker';
@@ -184,7 +184,10 @@ export function ProfileEditor({
       {/* one section at a time — the sheet holds only its own fields */}
       {openSection?.fields && (
         <Modal visible transparent animationType="slide" onRequestClose={() => setOpen(null)}>
-          <View style={styles.sheetWrap}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            style={styles.sheetWrap}
+          >
             <TouchableWithoutFeedback onPress={() => setOpen(null)}>
               <View style={styles.sheetOverlay} />
             </TouchableWithoutFeedback>
@@ -210,7 +213,7 @@ export function ProfileEditor({
                 </DismissKeyboardView>
               </ScrollView>
             </View>
-          </View>
+          </KeyboardAvoidingView>
         </Modal>
       )}
     </View>

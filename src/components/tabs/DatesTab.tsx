@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  Keyboard, Modal, Pressable, ScrollView,
+  Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView,
   StyleSheet, Switch, Text, TextInput, TouchableWithoutFeedback, View,
 } from 'react-native';
 import { useIPad } from '@/hooks/use-ipad';
@@ -206,7 +206,10 @@ export function DatesTab({ shipId, shipName }: { shipId: string; shipName?: stri
       )}
 
       <Modal visible={composing} transparent animationType="slide" onRequestClose={() => setComposing(false)}>
-        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'flex-end' }}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'flex-end' }}
+        >
         <TouchableWithoutFeedback onPress={() => setComposing(false)}>
           <View style={s.overlay} />
         </TouchableWithoutFeedback>
@@ -307,7 +310,7 @@ export function DatesTab({ shipId, shipName }: { shipId: string; shipName?: stri
             </DismissKeyboardView>
           </ScrollView>
         </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );

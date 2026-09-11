@@ -253,14 +253,18 @@ export default function MyProfileScreen() {
               </>
             )}
 
-            <Text style={styles.postsLabel}>your posts</Text>
-            <View style={styles.postsTabsWrap}>
-              <SegmentedTabs
-                tabs={[{ key: 'posts', label: 'posts' }, { key: 'activities', label: 'activities' }]}
-                value={postsTab}
-                onChange={setPostsTab}
-              />
-            </View>
+            {(postsLoading || posts.length > 0) && (
+              <>
+                <Text style={styles.postsLabel}>your posts</Text>
+                <View style={styles.postsTabsWrap}>
+                  <SegmentedTabs
+                    tabs={[{ key: 'posts', label: 'posts' }, { key: 'activities', label: 'activities' }]}
+                    value={postsTab}
+                    onChange={setPostsTab}
+                  />
+                </View>
+              </>
+            )}
           </>
         }
         ListEmptyComponent={
