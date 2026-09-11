@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { type RelationshipType } from '@/constants/theme';
+import { relationshipTypeOr } from '@/constants/theme';
 import { getDb, newId } from '@/db/client';
 import { parseProfileFlags, parseProfileLinks, type ProfileFlag, type ProfileLink } from '@/components/profile/cardTheme';
 import { notifyShips } from './ships';
@@ -12,16 +12,14 @@ export type Fo = {
   name: string;
   pronouns: string;
   fandom: string;
-  relStatus: RelationshipType;
-  shareStatus: 'yes' | 'no' | 'selective' | 'mirror';
+  /** free text — a preset chip's value ('romantic' etc.) or anything typed instead */
+  relStatus: string;
+  /** free text — a preset chip's value ('yes'/'no'/'selective'/'mirror') or anything typed instead */
+  shareStatus: string;
   /** short bio shown on the card itself */
   tagline: string;
-  height: string;
-  weight: string;
-  /** free text — canon ages are as often "looks 20, actually 900" as a number */
-  age: string;
-  /** free text — usually a day with no year, e.g. "March 3" */
-  birthday: string;
+  /** free text — usually a day with no year, e.g. "March 3, 2023" */
+  sinceDate: string;
   photoUri: string;
   /** face used on notifications — falls back to photoUri when empty */
   notifPhotoUri: string;
@@ -88,10 +86,7 @@ function rowToFo(row: Record<string, unknown>): Fo {
     relStatus: (row.rel_status as Fo['relStatus']) ?? 'romantic',
     shareStatus: (row.share_status as Fo['shareStatus']) ?? 'selective',
     tagline: (row.tagline as string) ?? '',
-    height: (row.height as string) ?? '',
-    weight: (row.weight as string) ?? '',
-    age: (row.age as string) ?? '',
-    birthday: (row.birthday as string) ?? '',
+    sinceDate: (row.since_date as string) ?? '',
     photoUri: (row.photo_uri as string) ?? '',
     notifPhotoUri: (row.notif_photo_uri as string) ?? '',
     pageBgColor: (row.page_bg_color as string) ?? '',
@@ -144,10 +139,7 @@ export function addFo(d: {
   relStatus?: string;
   shareStatus?: string;
   tagline?: string;
-  height?: string;
-  weight?: string;
-  age?: string;
-  birthday?: string;
+  sinceDate?: string;
   photoUri?: string;
   song?: string;
   songLink?: string;
@@ -155,8 +147,8 @@ export function addFo(d: {
 }): string {
   const id = newId();
   getDb().runSync(
-    `INSERT INTO fo (id, name, pronouns, fandom, rel_status, share_status, tagline, height, weight, age, birthday, photo_uri, song, song_link, gallery, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO fo (id, name, pronouns, fandom, rel_status, share_status, tagline, since_date, photo_uri, song, song_link, gallery, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     id,
     d.name,
     d.pronouns ?? '',
@@ -164,10 +156,7 @@ export function addFo(d: {
     d.relStatus ?? 'romantic',
     d.shareStatus ?? 'selective',
     d.tagline ?? '',
-    d.height ?? '',
-    d.weight ?? '',
-    d.age ?? '',
-    d.birthday ?? '',
+    d.sinceDate ?? '',
     d.photoUri ?? '',
     d.song ?? '',
     d.songLink ?? '',
@@ -188,10 +177,7 @@ export function updateFo(id: string, d: Partial<Omit<Fo, 'id' | 'createdAt'>>) {
   if (d.relStatus !== undefined)   { fields.push('rel_status = ?');   values.push(d.relStatus); }
   if (d.shareStatus !== undefined) { fields.push('share_status = ?'); values.push(d.shareStatus); }
   if (d.tagline !== undefined)     { fields.push('tagline = ?');      values.push(d.tagline); }
-  if (d.height !== undefined)      { fields.push('height = ?');       values.push(d.height); }
-  if (d.weight !== undefined)      { fields.push('weight = ?');       values.push(d.weight); }
-  if (d.age !== undefined)         { fields.push('age = ?');          values.push(d.age); }
-  if (d.birthday !== undefined)    { fields.push('birthday = ?');     values.push(d.birthday); }
+  if (d.sinceDate !== undefined)   { fields.push('since_date = ?');   values.push(d.sinceDate); }
   if (d.photoUri !== undefined)    { fields.push('photo_uri = ?');    values.push(d.photoUri); }
   if (d.notifPhotoUri !== undefined) { fields.push('notif_photo_uri = ?'); values.push(d.notifPhotoUri); }
   if (d.pageBgColor !== undefined) { fields.push('page_bg_color = ?'); values.push(d.pageBgColor); }
@@ -225,7 +211,10 @@ export function updateFo(id: string, d: Partial<Omit<Fo, 'id' | 'createdAt'>>) {
   const shipValues: unknown[] = [];
   if (d.name !== undefined)        { shipFields.push('name = ?');       shipValues.push(d.name); }
   if (d.fandom !== undefined)      { shipFields.push('fandom = ?');     shipValues.push(d.fandom); }
-  if (d.relStatus !== undefined)   { shipFields.push('rel_type = ?');   shipValues.push(d.relStatus); }
+  // the ship's rel_type stays a closed set (it drives scenario prompts and
+  // badge colors elsewhere) even though the F/O's own relStatus is now free
+  // text — a custom value here just leaves the ship's copy at its last known type
+  if (d.relStatus !== undefined)   { shipFields.push('rel_type = ?');   shipValues.push(relationshipTypeOr(d.relStatus)); }
   if (d.shareStatus !== undefined) { shipFields.push('share_type = ?'); shipValues.push(d.shareStatus); }
   if (shipFields.length) {
     getDb().runSync(

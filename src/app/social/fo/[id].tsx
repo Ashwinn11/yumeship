@@ -96,10 +96,7 @@ export default function PublicFoProfileScreen() {
                 fallbackColor={profile.color || Colors.sakura}
                 type={relationshipStatus(profile.relStatus)}
                 sharing={sharingStatus(profile.shareStatus)}
-                height={profile.height}
-                weight={profile.weight}
-                age={profile.age}
-                birthday={profile.birthday}
+                since={profile.sinceDate}
                 song={profile.song}
                 songLink={profile.songLink}
                 gallery={profile.gallery}

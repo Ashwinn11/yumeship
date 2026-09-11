@@ -3,7 +3,8 @@ import { Pressable, StyleSheet, Text } from 'react-native';
 
 import { ProfileEditor, type EditField, type EditSectionDef } from '@/components/profile/ProfileEditor';
 import { ProfileLinksEditor } from '@/components/profile/ProfileLinksEditor';
-import { Colors, FontFamily, REL_ORDER, RelationshipColors, RelationshipLabels, SHARING_ORDER, SharingColors, SharingLabels, Spacing, sf } from '@/constants/theme';
+import { DateField } from '@/components/ui/DateField';
+import { Colors, FontFamily, Radius, REL_ORDER, RelationshipColors, RelationshipLabels, SHARING_ORDER, SharingColors, SharingLabels, Spacing, sf } from '@/constants/theme';
 import { persistImage } from '@/lib/localMedia';
 import type { Fo } from '@/store/fo';
 
@@ -19,7 +20,7 @@ const SHARE = SHARING_ORDER.map((v) => ({ value: v, label: SharingLabels[v], col
 export type FoDraft = Pick<
   Fo,
   'name' | 'pronouns' | 'fandom' | 'relStatus' | 'shareStatus' | 'tagline' | 'color'
-  | 'height' | 'weight' | 'age' | 'birthday' | 'photoUri' | 'song' | 'songLink' | 'gallery' | 'flags' | 'links'
+  | 'sinceDate' | 'photoUri' | 'song' | 'songLink' | 'gallery' | 'flags' | 'links'
 >;
 
 export function FoEditor({
@@ -57,6 +58,8 @@ export function FoEditor({
       kind: 'text', key: 'tagline', label: 'bio', placeholder: 'my beloved ♡',
       multiline: true, maxLength: 80, hint: 'the line or two under their name on their card',
     },
+    // avatar tint, not a relationship attribute — lives with the rest of the identity fields
+    { kind: 'swatches', key: 'color', label: 'their colour', options: FO_COLORS, clears: 'photoUri' },
   ];
 
   const sections: EditSectionDef[] = [
@@ -65,20 +68,20 @@ export function FoEditor({
       label: 'relationship',
       summary: (v) => `${v.relStatus} · sharing ${v.shareStatus}`,
       fields: [
-        { kind: 'chips', key: 'relStatus', label: 'relation', options: REL },
-        { kind: 'chips', key: 'shareStatus', label: 'sharing', options: SHARE },
-        { kind: 'swatches', key: 'color', label: 'their colour', options: FO_COLORS, clears: 'photoUri' },
-      ],
-    },
-    {
-      id: 'details',
-      label: 'details',
-      summary: (v) => [v.age, v.birthday, v.height, v.weight].filter(Boolean).join(' · ') || 'not set',
-      fields: [
-        { kind: 'text', key: 'age', label: 'age', placeholder: 'e.g. 19' },
-        { kind: 'text', key: 'birthday', label: 'birthday', placeholder: 'e.g. March 3' },
-        { kind: 'text', key: 'height', label: 'height', placeholder: 'optional' },
-        { kind: 'text', key: 'weight', label: 'weight', placeholder: 'optional' },
+        { kind: 'chips', key: 'relStatus', label: 'relation', options: REL, allowCustom: true, customPlaceholder: 'e.g. engaged, married, it\'s complicated…' },
+        { kind: 'chips', key: 'shareStatus', label: 'sharing', options: SHARE, allowCustom: true, customPlaceholder: 'e.g. mirror sharing, DTKH…' },
+        {
+          kind: 'node', label: 'together since', render: () => (
+            <DateField
+              value={value.sinceDate}
+              onChange={(v) => onChange({ sinceDate: v })}
+              editing
+              placeholder="e.g. 2024-03-15"
+              style={styles.sinceInput}
+              textStyle={{ fontFamily: FontFamily.ui, fontSize: sf(14), color: value.sinceDate ? Colors.ink : Colors.ink3 }}
+            />
+          ),
+        },
       ],
     },
     {
@@ -139,4 +142,9 @@ export function FoEditor({
 const styles = StyleSheet.create({
   deleteRow: { alignItems: 'center', paddingVertical: Spacing.s4 },
   deleteText: { fontFamily: FontFamily.uiMedium, fontSize: sf(13), color: Colors.ember },
+  sinceInput: {
+    height: 40, justifyContent: 'center', alignSelf: 'stretch',
+    borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.r3,
+    paddingVertical: 8, paddingHorizontal: 12, backgroundColor: Colors.vellum,
+  },
 });

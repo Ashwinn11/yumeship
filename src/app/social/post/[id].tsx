@@ -28,6 +28,7 @@ import { Colors, FontFamily, FontSize, Radius, Spacing, sf } from '@/constants/t
 import { addComment, deleteComment, deletePost, logSyncFailure, useCommunityPost } from '@/store/community';
 import { InlineToast, useInlineToast } from '@/components/ui/InlineToast';
 import { useAuthUser } from '@/store/auth';
+import { getGlobalSetting } from '@/store/onboarding';
 import { CozyModal } from '@/components/ui/CozyModal';
 
 export default function PostDetailScreen() {
@@ -80,7 +81,8 @@ export default function PostDetailScreen() {
       // shown immediately rather than waiting on the realtime echo, which
       // never arrives if the channel is down — insertComment already dedupes
       // by id, so the echo landing later is a harmless no-op
-      const comment = await addComment(post.id, body, parent);
+      const identifyFoId = getGlobalSetting('user_identify_fo_id');
+      const comment = await addComment(post.id, body, parent, identifyFoId || undefined);
       insertComment(comment);
     } catch {
       setDraft(body);
@@ -180,15 +182,20 @@ export default function PostDetailScreen() {
           />
         </View>
 
-        <View style={styles.divider} />
-
-        <Text style={styles.commentsLabel}>comments · {comments.length}</Text>
-        <CommentThread
-          comments={comments}
-          onReply={(pid, name) => setReplyTo({ id: pid, name })}
-          viewerId={me?.id}
-          onDelete={handleDeleteComment}
-        />
+        {/* a response to an activity only ever gets likes — activities are a
+            lightweight vote/prompt format, not a comment thread */}
+        {!post.activityId && (
+          <>
+            <View style={styles.divider} />
+            <Text style={styles.commentsLabel}>comments · {comments.length}</Text>
+            <CommentThread
+              comments={comments}
+              onReply={(pid, name) => setReplyTo({ id: pid, name })}
+              viewerId={me?.id}
+              onDelete={handleDeleteComment}
+            />
+          </>
+        )}
         </DismissKeyboardView>
       </ScrollView>
 
@@ -205,53 +212,55 @@ export default function PostDetailScreen() {
         isDestructive
       />
 
-      <View
-        style={[
-          styles.composerWrap,
-          column,
-          { paddingBottom: (keyboardOpen ? 0 : insets.bottom) + Spacing.s2 },
-        ]}
-      >
-        {replyTo && (
-          <View style={styles.replyBanner}>
-            <Text style={styles.replyBannerText}>replying to {replyTo.name}</Text>
-            <Pressable onPress={() => setReplyTo(null)}>
-              <Text style={styles.replyBannerCancel}>✕</Text>
+      {!post.activityId && (
+        <View
+          style={[
+            styles.composerWrap,
+            column,
+            { paddingBottom: (keyboardOpen ? 0 : insets.bottom) + Spacing.s2 },
+          ]}
+        >
+          {replyTo && (
+            <View style={styles.replyBanner}>
+              <Text style={styles.replyBannerText}>replying to {replyTo.name}</Text>
+              <Pressable onPress={() => setReplyTo(null)}>
+                <Text style={styles.replyBannerCancel}>✕</Text>
+              </Pressable>
+            </View>
+          )}
+          <View style={styles.composerInputRow}>
+            <TextInput
+              value={draft}
+              onChangeText={setDraft}
+              placeholder={replyTo ? `reply to ${replyTo.name}…` : 'add a comment…'}
+              placeholderTextColor={Colors.ink3}
+              style={styles.composerInput}
+              multiline
+            />
+            <Pressable
+              onPress={send}
+              disabled={!draft.trim() || sending}
+              hitSlop={6}
+              style={({ pressed }) => [
+                styles.sendBtn,
+                (!draft.trim() || sending) && styles.sendBtnDisabled,
+                pressed && styles.sendBtnPressed,
+              ]}
+            >
+              <Svg width={16} height={16} viewBox="0 0 16 16">
+                <Path
+                  d="M8 13.5V3M8 3L3.5 7.5M8 3l4.5 4.5"
+                  stroke="#fff"
+                  strokeWidth={1.8}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  fill="none"
+                />
+              </Svg>
             </Pressable>
           </View>
-        )}
-        <View style={styles.composerInputRow}>
-          <TextInput
-            value={draft}
-            onChangeText={setDraft}
-            placeholder={replyTo ? `reply to ${replyTo.name}…` : 'add a comment…'}
-            placeholderTextColor={Colors.ink3}
-            style={styles.composerInput}
-            multiline
-          />
-          <Pressable
-            onPress={send}
-            disabled={!draft.trim() || sending}
-            hitSlop={6}
-            style={({ pressed }) => [
-              styles.sendBtn,
-              (!draft.trim() || sending) && styles.sendBtnDisabled,
-              pressed && styles.sendBtnPressed,
-            ]}
-          >
-            <Svg width={16} height={16} viewBox="0 0 16 16">
-              <Path
-                d="M8 13.5V3M8 3L3.5 7.5M8 3l4.5 4.5"
-                stroke="#fff"
-                strokeWidth={1.8}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                fill="none"
-              />
-            </Svg>
-          </Pressable>
         </View>
-      </View>
+      )}
     </KeyboardAvoidingView>
   );
 }

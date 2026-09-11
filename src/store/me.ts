@@ -9,7 +9,7 @@ import { getGlobalSettings, saveGlobalSetting } from './onboarding';
 
 export const ME_KEYS = [
   'user_name', 'user_pronouns', 'user_username', 'user_color', 'user_avatar', 'user_tagline',
-  'user_height', 'user_weight', 'user_age', 'user_birthday', 'user_song', 'user_song_link', 'user_gallery',
+  'user_song', 'user_song_link', 'user_gallery',
   'user_page_bg_color', 'user_page_bg_image', 'user_card_bg_color', 'user_card_bg_image',
   'user_card_bg_gradient', 'user_card_transparent', 'user_text_color', 'user_border_style',
   'user_name_font', 'user_identify_fo_id', 'user_flags', 'user_links',
@@ -17,7 +17,7 @@ export const ME_KEYS = [
 
 export type Me = {
   name: string; pronouns: string; username: string; color: string; avatar: string;
-  tagline: string; height: string; weight: string; age: string; birthday: string;
+  tagline: string;
   song: string; songLink: string; gallery: GalleryPhoto[];
   pageBgColor: string; pageBgImage: string; cardBgColor: string; cardBgImage: string;
   cardBgGradient: string; cardTransparent: boolean; textColor: string;
@@ -36,10 +36,6 @@ export function readMe(): Me {
     color: g.user_color || Colors.sakura,
     avatar: g.user_avatar,
     tagline: g.user_tagline,
-    height: g.user_height,
-    weight: g.user_weight,
-    age: g.user_age,
-    birthday: g.user_birthday,
     song: g.user_song,
     songLink: g.user_song_link,
     gallery: parseGallery(g.user_gallery),
@@ -78,7 +74,7 @@ const THEME_KEYS: Record<keyof CardTheme, string> = {
 const FIELD_KEYS: Partial<Record<keyof Me, string>> = {
   name: 'user_name', pronouns: 'user_pronouns', username: 'user_username',
   color: 'user_color', avatar: 'user_avatar', tagline: 'user_tagline',
-  height: 'user_height', weight: 'user_weight', age: 'user_age', birthday: 'user_birthday', song: 'user_song', songLink: 'user_song_link',
+  song: 'user_song', songLink: 'user_song_link',
   identifyFoId: 'user_identify_fo_id',
 };
 

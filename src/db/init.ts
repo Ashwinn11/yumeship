@@ -53,6 +53,13 @@ export function initDb() {
   // the profile card's "about" section is gone — tagline is the one bio-like
   // field that lives on the card itself now
   try { db.execSync(`ALTER TABLE fo DROP COLUMN bio`); } catch (_) {}
+  // character stat-sheet fields never matched what this app is for — the
+  // relationship itself is the point, not canon trivia
+  try { db.execSync(`ALTER TABLE fo DROP COLUMN height`); } catch (_) {}
+  try { db.execSync(`ALTER TABLE fo DROP COLUMN weight`); } catch (_) {}
+  try { db.execSync(`ALTER TABLE fo DROP COLUMN age`); } catch (_) {}
+  try { db.execSync(`ALTER TABLE fo DROP COLUMN birthday`); } catch (_) {}
+  try { db.execSync(`ALTER TABLE fo ADD COLUMN since_date TEXT NOT NULL DEFAULT ''`); } catch (_) {}
   db.execSync(`
     CREATE TABLE IF NOT EXISTS ships (
       id TEXT PRIMARY KEY,
@@ -86,10 +93,7 @@ export function initDb() {
       share_status TEXT NOT NULL DEFAULT 'selective',
       tagline TEXT NOT NULL DEFAULT '',
       links TEXT NOT NULL DEFAULT '[]',
-      height TEXT NOT NULL DEFAULT '',
-      weight TEXT NOT NULL DEFAULT '',
-      age TEXT NOT NULL DEFAULT '',
-      birthday TEXT NOT NULL DEFAULT '',
+      since_date TEXT NOT NULL DEFAULT '',
       photo_uri TEXT NOT NULL DEFAULT '',
       notif_photo_uri TEXT NOT NULL DEFAULT '',
       page_bg_color TEXT NOT NULL DEFAULT '',

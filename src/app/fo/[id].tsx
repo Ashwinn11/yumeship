@@ -101,8 +101,7 @@ export default function FoDetailScreen() {
     setDraft({
       name: fo!.name, pronouns: fo!.pronouns, fandom: fo!.fandom,
       relStatus: fo!.relStatus, shareStatus: fo!.shareStatus, color: fo!.color,
-      tagline: fo!.tagline, height: fo!.height, weight: fo!.weight,
-      age: fo!.age, birthday: fo!.birthday, photoUri: fo!.photoUri,
+      tagline: fo!.tagline, sinceDate: fo!.sinceDate, photoUri: fo!.photoUri,
       song: fo!.song, songLink: fo!.songLink, gallery: fo!.gallery, flags: fo!.flags, links: fo!.links,
     });
     setEditing(true);
@@ -211,10 +210,7 @@ export default function FoDetailScreen() {
                 tagline={fo.tagline}
                 photoUri={fo.photoUri}
                 fallbackColor={fo.color || Colors.sakura}
-                height={fo.height}
-                weight={fo.weight}
-                age={fo.age}
-                birthday={fo.birthday}
+                since={fo.sinceDate}
                 type={relationshipStatus(fo.relStatus)}
                 sharing={sharingStatus(fo.shareStatus)}
                 song={fo.song}

@@ -130,8 +130,6 @@ export function ProfilePage() {
                 tagline={profile.tagline}
                 photoUri={profile.avatarUrl}
                 fallbackColor={profile.color}
-                height={profile.height}
-                weight={profile.weight}
                 song={profile.song}
                 songLink={profile.songLink}
                 gallery={profile.gallery}

@@ -114,7 +114,6 @@ export function buildPreFill(ship: Ship, templateKey: string): Record<string, st
   const shareMap: Record<string, string> = SharingTemplateLabels;
   const userName = ship.myName || getGlobalSetting('user_name');
   const userPronouns = getGlobalSetting('user_pronouns');
-  const userHeight = getGlobalSetting('user_height');
   const userPhoto = getGlobalSetting('user_avatar');
   // For polyship, `ship.name` is the ship label, not an F/O — never seed it as a character name.
   const foSeed = isPoly(ship) ? '' : ship.name;
@@ -126,8 +125,6 @@ export function buildPreFill(ship: Ship, templateKey: string): Record<string, st
       if (ship.shareType) base['sharing'] = shareMap[ship.shareType] ?? '';
       if (userName)       base['meName'] = userName;
       if (fo?.photoUri)   base['themPhoto'] = fo.photoUri;
-      if (fo?.height)     base['themFilled'] = JSON.stringify({ height: fo.height });
-      if (userHeight)     base['meFilled'] = JSON.stringify({ height: userHeight });
       break;
     case 'kawaii-ui':
       if (ship.shareType) base['sharing'] = shareMap[ship.shareType] ?? '';
@@ -137,11 +134,9 @@ export function buildPreFill(ship: Ship, templateKey: string): Record<string, st
       if (ship.relType)   base['type'] = ship.relType;
       if (foSeed)         base['theirName'] = foSeed;
       if (fo?.pronouns)   base['theirPronouns'] = fo.pronouns;
-      if (fo?.height)     base['theirHeight'] = fo.height;
       if (fo?.photoUri)   base['theirPortrait'] = fo.photoUri;
       if (userName)       base['myName'] = userName;
       if (userPronouns)   base['myPronouns'] = userPronouns;
-      if (userHeight)     base['myHeight'] = userHeight;
       if (userPhoto)      base['myPortrait'] = userPhoto;
       break;
     case 'heart-frame':
@@ -165,8 +160,6 @@ export function buildPreFill(ship: Ship, templateKey: string): Record<string, st
       if (userName)       base['meName'] = userName;
       if (fo?.photoUri)   base['foPhoto'] = fo.photoUri;
       if (userPhoto)      base['mePhoto'] = userPhoto;
-      if (fo?.height)     base['foHeight'] = fo.height;
-      if (userHeight)     base['meHeight'] = userHeight;
       break;
     case 'this-or-that':
       if (foSeed)         base['name'] = foSeed;
@@ -183,8 +176,6 @@ export function buildPreFill(ship: Ship, templateKey: string): Record<string, st
       if (userPhoto)      base['photoR'] = userPhoto;
       if (fo?.pronouns)   base['foPron'] = fo.pronouns;
       if (userPronouns)   base['mePron'] = userPronouns;
-      if (fo?.height)     base['foH'] = fo.height;
-      if (userHeight)     base['meH'] = userHeight;
       break;
     case 'boundaries':
       if (ship.shareType) base['sharing'] = shareMap[ship.shareType] ?? '';

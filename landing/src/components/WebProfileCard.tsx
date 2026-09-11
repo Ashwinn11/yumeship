@@ -31,10 +31,7 @@ export function WebProfileCard({ profile, pairedFo, followAction }: WebProfileCa
       fallbackColor={profile.color}
       type={pairedFo?.relStatus ? relationshipStatus(pairedFo.relStatus) : undefined}
       sharing={pairedFo?.shareStatus ? sharingStatus(pairedFo.shareStatus) : undefined}
-      height={profile.height}
-      weight={profile.weight}
-      age={pairedFo?.age}
-      birthday={pairedFo?.birthday}
+      since={pairedFo?.sinceDate}
       song={profile.song}
       songLink={profile.songLink}
       gallery={profile.gallery}

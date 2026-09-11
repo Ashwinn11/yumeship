@@ -35,6 +35,14 @@ const PILL_SOFT_BY_DEEP: Record<string, string> = {
 
 export type ProfileStatus = { label: string; color: string };
 
+/** "YYYY-MM-DD" → "Mar 3, 2024" — parsed as local time, not UTC, or the day shifts. */
+function formatSince(value: string): string {
+  const m = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(value.trim());
+  const d = m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : new Date(value);
+  if (isNaN(d.getTime())) return value;
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
 export type ProfileCardProps = {
   name: string;
   pronouns?: string;
@@ -51,12 +59,8 @@ export type ProfileCardProps = {
   type?: ProfileStatus;
   /** sharing status — F/O only, shown in the details grid labeled "sharing" */
   sharing?: ProfileStatus;
-  height?: string;
-  weight?: string;
-  /** free text — F/O ages are as often "looks 20, actually 900" as a number */
-  age?: string;
-  /** free text — usually a day with no year, e.g. "March 3" */
-  birthday?: string;
+  /** together-since date — F/O only, stored as "YYYY-MM-DD", independent of the ship's own start date */
+  since?: string;
   /** theme song shown in its own row */
   song?: string;
   /** optional Spotify/YouTube/etc link — makes the song row tappable */
@@ -118,10 +122,7 @@ export function ProfileCard({
   fallbackColor = Colors.sakura,
   type,
   sharing,
-  height,
-  weight,
-  age,
-  birthday,
+  since,
   song,
   songLink,
   gallery = [],
@@ -146,10 +147,7 @@ export function ProfileCard({
   const stats = [
     type ? { label: 'type', value: type.label, color: type.color, pill: true } : null,
     sharing ? { label: 'sharing', value: sharing.label, color: sharing.color, pill: true } : null,
-    age ? { label: 'age', value: age } : null,
-    birthday ? { label: 'birthday', value: birthday } : null,
-    height ? { label: 'height', value: height } : null,
-    weight ? { label: 'weight', value: weight } : null,
+    since ? { label: 'since', value: formatSince(since) } : null,
   ].filter(Boolean) as { label: string; value: string; color?: string; pill?: boolean }[];
 
   const textStyle: React.CSSProperties | undefined = textColor ? { color: textColor } : undefined;
@@ -314,6 +312,28 @@ export function ProfileCard({
                     ))}
                   </div>
                 )}
+                {stats.length > 0 && (
+                  <div className="details-grid">
+                    {stats.map((s) => (
+                      <div key={s.label} className="detail-item">
+                        <span className="detail-label">{s.label.toUpperCase()}</span>
+                        {s.pill ? (
+                          <span
+                            className="detail-pill"
+                            style={{
+                              backgroundColor: PILL_SOFT_BY_DEEP[s.color!] ?? Colors.paperDeep,
+                              color: s.color,
+                            }}
+                          >
+                            {s.value}
+                          </span>
+                        ) : (
+                          <span className="detail-value" style={textStyle}>{s.value}</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
                 {(followerCount !== undefined || followingCount !== undefined) && (
                   <div className="social-stats-row">
                     <div className="social-stat">
@@ -344,34 +364,6 @@ export function ProfileCard({
           )}
         </div>
       </div>
-
-      {/* ── details ── */}
-      {stats.length > 0 && (
-        <div className="profile-section-block">
-          <SectionLabel>details</SectionLabel>
-          <div className="details-card">
-            {stats.map((s) => (
-              <div key={s.label} className="detail-item">
-                <span className="detail-label">{s.label.toUpperCase()}</span>
-                {s.pill ? (
-                  <span
-                    className="detail-pill"
-                    style={{
-                      backgroundColor: PILL_SOFT_BY_DEEP[s.color!] ?? Colors.paperDeep,
-                      color: s.color,
-                    }}
-                  >
-                    {s.value}
-                  </span>
-                ) : (
-                  <span className="detail-value">{s.value}</span>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
 
       {/* ── theme song ── */}
       {!!song && (

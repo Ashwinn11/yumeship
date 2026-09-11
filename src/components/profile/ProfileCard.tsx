@@ -33,13 +33,21 @@ function normalizeUrl(url: string): string {
   return `https://${trimmed}`;
 }
 
+/** "YYYY-MM-DD" → "Mar 3, 2024" — parsed as local time, not UTC, or the day shifts. */
+function formatSince(value: string): string {
+  const m = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(value.trim());
+  const d = m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : new Date(value);
+  if (isNaN(d.getTime())) return value;
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
 const POLAROID_TAPES = [Colors.sakura, Colors.lavender, Colors.butter, Colors.sage, Colors.peach];
 
 // type/sharing are the only two fields here that are actually a *status*
 // (they share RelationshipColors/SharingColors with badges everywhere else in
-// the app) — so they're the only two that get a colored pill. Age/birthday/
-// height/weight are plain facts; coloring them would be decoration standing
-// in for meaning they don't have, so they stay plain text.
+// the app) — so they're the only two that get a colored pill. "since" is a
+// plain fact; coloring it would be decoration standing in for meaning it
+// doesn't have, so it stays plain text.
 const PILL_SOFT_BY_DEEP: Record<string, string> = {
   [Colors.sakuraDeep]: Colors.sakuraSoft,
   [Colors.sageDeep]: Colors.sageSoft,
@@ -67,12 +75,8 @@ type Props = {
   type?: ProfileStatus;
   /** sharing status — F/O only, shown in the details grid labeled "sharing" */
   sharing?: ProfileStatus;
-  height?: string;
-  weight?: string;
-  /** free text — F/O ages are as often "looks 20, actually 900" as a number */
-  age?: string;
-  /** free text — usually a day with no year, e.g. "March 3" */
-  birthday?: string;
+  /** together-since date — F/O only, stored as "YYYY-MM-DD", independent of the ship's own start date */
+  since?: string;
   /** theme song shown in its own row */
   song?: string;
   /** optional Spotify/YouTube/etc link — makes the song row tappable */
@@ -127,10 +131,7 @@ export function ProfileCard({
   fallbackColor = Colors.sakura,
   type,
   sharing,
-  height,
-  weight,
-  age,
-  birthday,
+  since,
   song,
   songLink,
   gallery = [],
@@ -150,10 +151,7 @@ export function ProfileCard({
   const stats = [
     type ? { label: 'type', value: type.label, color: type.color, pill: true } : null,
     sharing ? { label: 'sharing', value: sharing.label, color: sharing.color, pill: true } : null,
-    age ? { label: 'age', value: age } : null,
-    birthday ? { label: 'birthday', value: birthday } : null,
-    height ? { label: 'height', value: height } : null,
-    weight ? { label: 'weight', value: weight } : null,
+    since ? { label: 'since', value: formatSince(since) } : null,
   ].filter(Boolean) as { label: string; value: string; color?: string; pill?: boolean }[];
 
   const textStyle = textColor ? { color: textColor } : null;
@@ -207,6 +205,22 @@ export function ProfileCard({
             <Pressable key={l.id} style={styles.linkPill} onPress={() => Linking.openURL(normalizeUrl(l.url))}>
               <Text style={styles.linkPillText} numberOfLines={1}>{l.label || l.url}</Text>
             </Pressable>
+          ))}
+        </View>
+      )}
+      {stats.length > 0 && (
+        <View style={styles.detailsGrid}>
+          {stats.map((s) => (
+            <View key={s.label} style={styles.detailItem}>
+              <Text style={styles.detailLabel}>{s.label.toUpperCase()}</Text>
+              {s.pill ? (
+                <View style={[styles.detailPill, { backgroundColor: PILL_SOFT_BY_DEEP[s.color!] ?? Colors.paperDeep }]}>
+                  <Text style={[styles.detailPillText, { color: s.color }]}>{s.value}</Text>
+                </View>
+              ) : (
+                <Text style={[styles.detailValue, textStyle]}>{s.value}</Text>
+              )}
+            </View>
           ))}
         </View>
       )}
@@ -288,28 +302,6 @@ export function ProfileCard({
           </View>
         )}
       </View>
-
-      {/* details — one card, grouped by spacing; only type/sharing (real
-          statuses) get a colored pill, everything else is plain text */}
-      {stats.length > 0 && (
-        <View style={styles.section}>
-          <SectionLabel>details</SectionLabel>
-          <View style={styles.detailsCard}>
-            {stats.map((s) => (
-              <View key={s.label} style={styles.detailItem}>
-                <Text style={styles.detailLabel}>{s.label.toUpperCase()}</Text>
-                {s.pill ? (
-                  <View style={[styles.detailPill, { backgroundColor: PILL_SOFT_BY_DEEP[s.color!] ?? Colors.paperDeep }]}>
-                    <Text style={[styles.detailPillText, { color: s.color }]}>{s.value}</Text>
-                  </View>
-                ) : (
-                  <Text style={styles.detailValue}>{s.value}</Text>
-                )}
-              </View>
-            ))}
-          </View>
-        </View>
-      )}
 
       {/* theme song */}
       {!!song && (
@@ -429,18 +421,16 @@ const styles = StyleSheet.create({
     letterSpacing: 1.4, textTransform: 'uppercase',
   },
 
-  // one card — items inside are grouped by space (generous columnGap/rowGap),
-  // not by six repeated boxes
-  detailsCard: {
-    backgroundColor: Colors.vellum,
-    borderWidth: 1, borderColor: Colors.line,
-    borderRadius: Radius.r4,
-    padding: Spacing.s4,
-    flexDirection: 'row', flexWrap: 'wrap',
-    rowGap: Spacing.s4, columnGap: Spacing.s5,
-    ...Shadow.s1,
+  // part of the hero now, not its own card — grouped by space (generous
+  // columnGap/rowGap) and centered like the rest of the identity block
+  detailsGrid: {
+    flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center',
+    rowGap: Spacing.s3, columnGap: Spacing.s5,
+    marginTop: Spacing.s4, paddingTop: Spacing.s3,
+    borderTopWidth: 1, borderTopColor: 'rgba(0,0,0,0.06)',
+    width: '100%',
   },
-  detailItem: { flexBasis: '28%', flexGrow: 1, gap: 3 },
+  detailItem: { alignItems: 'center', gap: 3 },
   detailLabel: { fontFamily: FontFamily.marker, fontSize: sf(9), color: Colors.ink3, letterSpacing: 1.2 },
   detailValue: { fontFamily: FontFamily.uiMedium, fontSize: sf(14), color: Colors.ink },
   detailPill: {

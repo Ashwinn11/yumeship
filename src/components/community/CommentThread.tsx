@@ -1,11 +1,9 @@
-import { Image } from 'expo-image';
-import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { AVATAR_IMAGE } from '@/lib/imageProps';
 import { Colors, FontFamily, Radius, Shadow, Spacing, sf } from '@/constants/theme';
-import { timeAgo } from '@/lib/relativeTime';
 import type { CommunityComment } from '@/store/community';
+
+import { PostAuthorHeader } from './PostAuthorHeader';
 
 const MAX_VISUAL_DEPTH = 2;
 
@@ -30,6 +28,9 @@ type NodeProps = {
   onDelete: (commentId: string) => void;
 };
 
+// One self-contained card per comment — same shell PostCard uses (avatar(s),
+// name and F/O tag all inside the bordered card, body and actions below) so
+// a comment and a post-in-a-list read as the same kind of thing.
 function CommentNode({ comment, byParent, depth, parentAuthorName, onReply, viewerId, onDelete }: NodeProps) {
   const children = byParent.get(comment.id) ?? [];
   const cappedDepth = Math.min(depth, MAX_VISUAL_DEPTH);
@@ -37,42 +38,19 @@ function CommentNode({ comment, byParent, depth, parentAuthorName, onReply, view
 
   return (
     <View style={[styles.node, { marginLeft: cappedDepth * 18 }]}>
-      <View style={styles.row}>
-        <Pressable onPress={() => router.push(`/social/user/${comment.author.id}` as any)}>
-          <View style={[styles.avatar, { backgroundColor: Colors.sakura }]}>
-            {comment.author.avatarUrl ? (
-              <Image
-                source={{ uri: comment.author.avatarUrl }}
-                style={styles.avatarImg}
-                contentFit="cover"
-                recyclingKey={comment.author.avatarUrl}
-                {...AVATAR_IMAGE}
-              />
-            ) : (
-              <Text style={styles.avatarInitial}>{comment.author.name.trim().charAt(0).toUpperCase() || '♡'}</Text>
-            )}
-          </View>
-        </Pressable>
-        <View style={styles.bubble}>
-          {flattened && !!parentAuthorName && <Text style={styles.replyingTo}>↳ replying to {parentAuthorName}</Text>}
-          <View style={styles.bubbleHeader}>
-            <Pressable onPress={() => router.push(`/social/user/${comment.author.id}` as any)} style={styles.nameRow}>
-              <Text style={styles.name} numberOfLines={1}>{comment.author.name || 'someone'}</Text>
-              {!!comment.author.username && <Text style={styles.username}>@{comment.author.username}</Text>}
+      <View style={styles.bubble}>
+        {flattened && !!parentAuthorName && <Text style={styles.replyingTo}>↳ replying to {parentAuthorName}</Text>}
+        <PostAuthorHeader author={comment.author} fo={comment.fo} createdAt={comment.createdAt} />
+        <Text style={styles.body}>{comment.body}</Text>
+        <View style={styles.actions}>
+          <Pressable onPress={() => onReply(comment.id, comment.author.name)} hitSlop={6}>
+            <Text style={styles.replyAction}>reply</Text>
+          </Pressable>
+          {viewerId === comment.author.id && (
+            <Pressable onPress={() => onDelete(comment.id)} hitSlop={6}>
+              <Text style={[styles.replyAction, styles.deleteAction]}>delete</Text>
             </Pressable>
-            <Text style={styles.time}>{timeAgo(comment.createdAt)}</Text>
-          </View>
-          <Text style={styles.body}>{comment.body}</Text>
-          <View style={styles.actions}>
-            <Pressable onPress={() => onReply(comment.id, comment.author.name)} hitSlop={6}>
-              <Text style={styles.replyAction}>reply</Text>
-            </Pressable>
-            {viewerId === comment.author.id && (
-              <Pressable onPress={() => onDelete(comment.id)} hitSlop={6}>
-                <Text style={[styles.replyAction, styles.deleteAction]}>delete</Text>
-              </Pressable>
-            )}
-          </View>
+          )}
         </View>
       </View>
       {children.map((child) => (
@@ -118,30 +96,18 @@ export function CommentThread({ comments, onReply, viewerId, onDelete }: Props) 
 const styles = StyleSheet.create({
   container: { gap: 14 },
   node: { gap: 10 },
-  row: { flexDirection: 'row', gap: 8, alignItems: 'flex-start' },
-  avatar: {
-    width: 30, height: 30, borderRadius: Radius.pill, alignItems: 'center', justifyContent: 'center',
-    overflow: 'hidden', flexShrink: 0,
-  },
-  avatarImg: { width: 30, height: 30, borderRadius: Radius.pill },
-  avatarInitial: { fontFamily: FontFamily.displayItalic, fontSize: sf(13), color: '#fff' },
   bubble: {
-    flex: 1,
     backgroundColor: Colors.vellum,
     borderWidth: 1,
     borderColor: Colors.line,
     borderRadius: Radius.r3,
     padding: Spacing.s3,
+    gap: 6,
     ...Shadow.s1,
   },
-  bubbleHeader: { flexDirection: 'row', alignItems: 'baseline', gap: 6, flexWrap: 'wrap' },
-  nameRow: { flexDirection: 'row', alignItems: 'baseline', gap: 6, flexShrink: 1 },
-  name: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(12), color: Colors.ink, flexShrink: 1 },
-  username: { fontFamily: FontFamily.uiMedium, fontSize: sf(10.5), color: Colors.sakuraDeep },
-  time: { fontFamily: FontFamily.ui, fontSize: sf(10), color: Colors.ink3, marginLeft: 'auto' },
-  replyingTo: { fontFamily: FontFamily.ui, fontSize: sf(10), color: Colors.sakuraDeep, marginBottom: 2 },
-  body: { fontFamily: FontFamily.ui, fontSize: sf(13), color: Colors.ink2, lineHeight: sf(18), marginTop: 2 },
-  actions: { flexDirection: 'row', gap: 14, marginTop: 4 },
+  replyingTo: { fontFamily: FontFamily.ui, fontSize: sf(10), color: Colors.sakuraDeep },
+  body: { fontFamily: FontFamily.ui, fontSize: sf(13), color: Colors.ink2, lineHeight: sf(18) },
+  actions: { flexDirection: 'row', gap: 14 },
   replyAction: { fontFamily: FontFamily.uiMedium, fontSize: sf(11), color: Colors.ink3 },
   deleteAction: { color: Colors.ember },
   empty: {

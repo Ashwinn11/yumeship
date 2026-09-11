@@ -52,8 +52,6 @@ export default function OnbPersona() {
     return i >= 0 ? i : 0;
   });
   const [avatar, setAvatar] = useState(() => getGlobalSetting('user_avatar'));
-  const [height, setHeight] = useState(() => getGlobalSetting('user_height'));
-  const [weight, setWeight] = useState(() => getGlobalSetting('user_weight'));
   const [song, setSong] = useState(() => getGlobalSetting('user_song'));
   const [songLink, setSongLink] = useState(() => getGlobalSetting('user_song_link'));
   const [gallery, setGallery] = useState<GalleryPhoto[]>(() => parseGallery(getGlobalSetting('user_gallery')));
@@ -64,8 +62,6 @@ export default function OnbPersona() {
   const fos = useFos();
 
   const handleNameChange = (v: string) => { setName(v); setOnbField('userName', v); };
-  const handleHeightChange = (v: string) => { setHeight(v); saveGlobalSetting('user_height', v); };
-  const handleWeightChange = (v: string) => { setWeight(v); saveGlobalSetting('user_weight', v); };
   const handleSongChange = (v: string) => { setSong(v); saveGlobalSetting('user_song', v); };
   const handleSongLinkChange = (v: string) => { setSongLink(v); saveGlobalSetting('user_song_link', v); };
   const handleGalleryChange = (g: GalleryPhoto[]) => { setGallery(g); saveGlobalSetting('user_gallery', JSON.stringify(g)); };
@@ -259,17 +255,6 @@ export default function OnbPersona() {
 
         {isEdit && (
           <View style={editSection.sectionsWrap}>
-            <EditSection label="details">
-              <Row gap={14}>
-                <Field label="Height (optional)" style={{ flex: 1 }}>
-                  <UnderInput value={height} onChangeText={handleHeightChange} placeholder="e.g. 165 cm" />
-                </Field>
-                <Field label="Weight (optional)" style={{ flex: 1 }}>
-                  <UnderInput value={weight} onChangeText={handleWeightChange} placeholder="optional" />
-                </Field>
-              </Row>
-            </EditSection>
-
             <EditSection label="theme song">
               <Field label="Song title">
                 <UnderInput value={song} onChangeText={handleSongChange} placeholder="the song that feels like you" />

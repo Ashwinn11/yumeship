@@ -84,7 +84,8 @@ function PostCardImpl({ post, onToggleLike, onPollVote, onRequestDelete }: Props
           <View style={styles.divider} />
           <View style={styles.footer}>
             <LikeButton liked={post.likedByMe} count={post.likeCount} onToggle={onToggleLike} />
-            {post.kind !== 'activity' && (
+            {/* a response to an activity only ever gets likes — no comment thread */}
+            {post.kind !== 'activity' && !post.activityId && (
               <View style={styles.commentRow}>
                 <CommentBubbleIcon />
                 <Text style={styles.commentCount}>{post.commentCount}</Text>

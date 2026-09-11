@@ -200,10 +200,6 @@ export default function MyProfileScreen() {
               tagline={me.tagline}
               photoUri={me.avatar}
               fallbackColor={me.color}
-              height={me.height}
-              weight={me.weight}
-              age={me.age}
-              birthday={me.birthday}
               song={me.song}
               songLink={me.songLink}
               gallery={me.gallery}

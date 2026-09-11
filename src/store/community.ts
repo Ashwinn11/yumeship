@@ -18,8 +18,6 @@ export const MAX_IMAGES = 4;
 /** Card presentation shared by both public profile shapes — mirrors CardTheme. */
 export type CommunityCardTheme = {
   color: string;
-  height: string;
-  weight: string;
   pageBgColor: string;
   pageBgImage: string;
   cardBgColor: string;
@@ -41,8 +39,6 @@ export type CommunityProfile = CommunityCardTheme & {
   avatarUrl: string;
   song: string;
   songLink: string;
-  age: string;
-  birthday: string;
   gallery: GalleryPhoto[];
   flags: ProfileFlag[];
   links: ProfileLink[];
@@ -67,8 +63,8 @@ export type CommunityFoProfile = CommunityCardTheme & {
   fandom: string;
   relStatus: Fo['relStatus'];
   shareStatus: Fo['shareStatus'];
-  age: string;
-  birthday: string;
+  /** together-since date, independent of the ship's own start date */
+  sinceDate: string;
 };
 
 export type PostMedia = {
@@ -118,6 +114,8 @@ export type CommunityComment = {
   id: string;
   postId: string;
   author: CommunityProfile;
+  /** the commenter's paired F/O, tagged automatically the same way a post is — null when they aren't identifying one */
+  fo: CommunityFoProfile | null;
   parentCommentId: string | null;
   body: string;
   createdAt: string;
@@ -128,8 +126,6 @@ export type CommunityComment = {
 function rowToCardTheme(row: Record<string, any>): CommunityCardTheme {
   return {
     color: row.color ?? '',
-    height: row.height ?? '',
-    weight: row.weight ?? '',
     pageBgColor: row.page_bg_color ?? '',
     pageBgImage: row.page_bg_image ?? '',
     cardBgColor: row.card_bg_color ?? '',
@@ -187,8 +183,6 @@ function rowToProfile(row: Record<string, any>): CommunityProfile {
     avatarUrl: row.avatar_url ?? '',
     song: row.song ?? '',
     songLink: row.song_link ?? '',
-    age: row.age ?? '',
-    birthday: row.birthday ?? '',
     gallery: rowToGallery(row.gallery),
     flags: rowToFlags(row.flags),
     links: rowToLinks(row.links),
@@ -214,8 +208,7 @@ function rowToFoProfile(row: Record<string, any>): CommunityFoProfile {
     fandom: row.fandom ?? '',
     relStatus: (row.rel_status as Fo['relStatus']) ?? 'romantic',
     shareStatus: (row.share_status as Fo['shareStatus']) ?? 'selective',
-    age: row.age ?? '',
-    birthday: row.birthday ?? '',
+    sinceDate: row.since_date ?? '',
   };
 }
 
@@ -285,6 +278,7 @@ function rowToComment(row: Record<string, any>): CommunityComment {
     id: row.id,
     postId: row.post_id,
     author: rowToProfile(row.author),
+    fo: row.fo ? rowToFoProfile(row.fo) : null,
     parentCommentId: row.parent_comment_id,
     body: row.body,
     createdAt: row.created_at,
@@ -302,7 +296,7 @@ function parseSyncMap(raw: string): Record<string, string> {
 
 /** Everything a full profile card needs to render as its owner styled it. */
 const CARD_THEME_FIELDS =
-  'height, weight, page_bg_color, page_bg_image, card_bg_color, card_bg_image, ' +
+  'page_bg_color, page_bg_image, card_bg_color, card_bg_image, ' +
   'card_bg_gradient, card_transparent, text_color, border_style, name_font';
 /**
  * PostgREST silently ignores a `select` that starts with whitespace and returns
@@ -312,12 +306,12 @@ const CARD_THEME_FIELDS =
 const cols = (s: string) => s.replace(/\s+/g, ' ').trim();
 
 const PROFILE_FIELDS = cols(`
-  id, username, name, pronouns, tagline, avatar_url, song, song_link, age, birthday, gallery, flags, links,
+  id, username, name, pronouns, tagline, avatar_url, song, song_link, gallery, flags, links,
   color, identify_fo_id, follower_count, following_count, ${CARD_THEME_FIELDS}
 `);
 const FO_PROFILE_FIELDS = cols(`
   id, name, pronouns, tagline, avatar_url, song, song_link, gallery, flags, links,
-  color, fandom, rel_status, share_status, age, birthday, ${CARD_THEME_FIELDS}
+  color, fandom, rel_status, share_status, since_date, ${CARD_THEME_FIELDS}
 `);
 
 // Feed rows only ever draw an avatar + name, so post embeds stay on this narrow
@@ -337,7 +331,8 @@ const POST_SELECT = cols(`
 `);
 const COMMENT_SELECT = cols(`
   id, post_id, parent_comment_id, body, created_at,
-  author:profiles!comments_author_id_fkey(${PROFILE_SUMMARY_FIELDS})
+  author:profiles!comments_author_id_fkey(${PROFILE_SUMMARY_FIELDS}),
+  fo:fo_profiles!comments_fo_profile_id_fkey(${FO_SUMMARY_FIELDS})
 `);
 
 /**
@@ -530,10 +525,6 @@ export async function pushOwnProfile(): Promise<PushResult> {
     links: parseProfileLinks(getGlobalSetting('user_links')),
     song: getGlobalSetting('user_song'),
     song_link: getGlobalSetting('user_song_link'),
-    age: getGlobalSetting('user_age'),
-    birthday: getGlobalSetting('user_birthday'),
-    height: getGlobalSetting('user_height'),
-    weight: getGlobalSetting('user_weight'),
     color: getGlobalSetting('user_color'),
     page_bg_color: getGlobalSetting('user_page_bg_color'),
     card_bg_color: getGlobalSetting('user_card_bg_color'),
@@ -622,10 +613,7 @@ export async function pushFoProfile(foId: string): Promise<PushResult> {
     links: fo.links,
     song: fo.song,
     song_link: fo.songLink,
-    height: fo.height,
-    weight: fo.weight,
-    age: fo.age,
-    birthday: fo.birthday,
+    since_date: fo.sinceDate,
     color: fo.color,
     fandom: fo.fandom,
     rel_status: fo.relStatus,
@@ -1187,7 +1175,12 @@ export async function fetchComments(postId: string): Promise<CommunityComment[]>
   return data.map(rowToComment);
 }
 
-export async function addComment(postId: string, body: string, parentCommentId?: string): Promise<CommunityComment> {
+export async function addComment(
+  postId: string,
+  body: string,
+  parentCommentId?: string,
+  foProfileId?: string,
+): Promise<CommunityComment> {
   const {
     data: { session },
   } = await supabase.auth.getSession();
@@ -1200,6 +1193,7 @@ export async function addComment(postId: string, body: string, parentCommentId?:
       author_id: user.id,
       parent_comment_id: parentCommentId ?? null,
       body: body.trim(),
+      fo_profile_id: foProfileId ?? null,
     })
     .select(COMMENT_SELECT)
     .single();
@@ -2058,6 +2052,26 @@ export function useActivityDetail(activityId: string) {
       onResponseDelete: (id) => setResponses((prev) => prev.filter((p) => p.id !== id)),
     });
   }, [activityId]);
+
+  // a like or a new comment on a response someone's already looking at should
+  // still move without a manual refresh — same scoped-list counts feed the
+  // profile/F/O post lists use above
+  useEffect(() => {
+    return subscribePostCounts((patch) =>
+      setResponses((prev) =>
+        prev.map((p) =>
+          p.id === patch.id
+            ? {
+                ...p,
+                likeCount: patch.likeCount,
+                commentCount: patch.commentCount,
+                poll: withPollCounts(p.poll, patch.pollCounts),
+              }
+            : p,
+        ),
+      ),
+    );
+  }, []);
 
   const responsesRef = useRef(responses);
   responsesRef.current = responses;

@@ -4,9 +4,9 @@ import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, Keyboard, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { ActivityResponseCard } from '@/components/community/ActivityResponseCard';
 import { MediaComposer, mediaFromAssets } from '@/components/community/MediaComposer';
 import { PostAuthorHeader } from '@/components/community/PostAuthorHeader';
-import { PostCard } from '@/components/community/PostCard';
 import { PostDetailSkeleton } from '@/components/community/PostDetailSkeleton';
 import { DismissKeyboardView } from '@/components/ui/DismissKeyboardView';
 import { IconPhoto, IconSend } from '@/components/ui/Icon';
@@ -21,7 +21,7 @@ export default function ActivityDetailScreen() {
   const insets = useSafeAreaInsets();
   const { column } = useIPad();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { activity, responses, loading, toggleResponseLikeOptimistic, pollVoteOptimistic, insertResponse } = useActivityDetail(id);
+  const { activity, responses, loading, toggleResponseLikeOptimistic, insertResponse } = useActivityDetail(id);
   const { message: toastMsg, nonce: toastNonce, show: showToast } = useInlineToast();
 
   // replying lives on this screen — it's a response to the activity right
@@ -76,13 +76,12 @@ export default function ActivityDetailScreen() {
 
   const renderResponse = useCallback(
     ({ item }: { item: CommunityPost }) => (
-      <PostCard
+      <ActivityResponseCard
         post={item}
         onToggleLike={() => toggleResponseLikeOptimistic(item.id, () => showToast("couldn't update like — try again"))}
-        onPollVote={(i) => pollVoteOptimistic(item.id, i, () => showToast("couldn't update vote — try again"))}
       />
     ),
-    [toggleResponseLikeOptimistic, pollVoteOptimistic, showToast],
+    [toggleResponseLikeOptimistic, showToast],
   );
 
   if (loading || !activity) {

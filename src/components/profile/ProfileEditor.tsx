@@ -31,7 +31,15 @@ export type EditField =
       autoCorrect?: boolean;
       keyboardType?: TextInputProps['keyboardType'];
     }
-  | { kind: 'chips'; key: string; label: string; options: { value: string; label: string; color?: string }[] }
+  | {
+      kind: 'chips';
+      key: string;
+      label: string;
+      options: { value: string; label: string; color?: string }[];
+      /** also shows a free-text field under the chips, so a preset is a shortcut, never a ceiling */
+      allowCustom?: boolean;
+      customPlaceholder?: string;
+    }
   | { kind: 'swatches'; key: string; label: string; options: string[]; /** cleared when a swatch is picked */ clears?: string }
   | { kind: 'gallery'; key: string }
   | { kind: 'node'; label?: string; render: () => React.ReactNode };
@@ -250,6 +258,17 @@ function Field({ field, value, onChange }: { field: EditField; value: Value; onC
             );
           })}
         </View>
+        {field.allowCustom && (
+          <TextInput
+            value={current ?? ''}
+            onChangeText={(v) => onChange({ [field.key]: v })}
+            placeholder={field.customPlaceholder ?? 'or type your own…'}
+            placeholderTextColor={Colors.ink3}
+            returnKeyType="done"
+            onSubmitEditing={() => Keyboard.dismiss()}
+            style={styles.chipCustomInput}
+          />
+        )}
       </View>
     );
   }
@@ -378,6 +397,12 @@ const styles = StyleSheet.create({
   inputTall: { minHeight: 92, textAlignVertical: 'top', lineHeight: sf(20) },
   hint: { fontFamily: FontFamily.ui, fontSize: sf(11.5), color: Colors.ink3, lineHeight: sf(16) },
   chipRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
+  chipCustomInput: {
+    borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.r3,
+    backgroundColor: Colors.vellum,
+    paddingHorizontal: Spacing.s3, paddingVertical: 8,
+    fontFamily: FontFamily.ui, fontSize: sf(13), color: Colors.ink,
+  },
   swatch: { width: 30, height: 30, borderRadius: Radius.pill, borderWidth: 1.5, borderColor: Colors.line },
   swatchOn: { borderColor: Colors.ink, borderWidth: 2.5 },
 });

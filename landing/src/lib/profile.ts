@@ -34,8 +34,6 @@ export type WebProfile = {
   followingCount: number;
   // card theme
   color: string;
-  height: string;
-  weight: string;
   pageBgColor: string;
   pageBgImage: string;
   cardBgColor: string;
@@ -61,12 +59,10 @@ export type WebFoProfile = {
   fandom: string;
   relStatus: string;
   shareStatus: string;
-  age: string;
-  birthday: string;
+  /** together-since date, independent of the ship's own start date */
+  sinceDate: string;
   // card theme
   color: string;
-  height: string;
-  weight: string;
   pageBgColor: string;
   pageBgImage: string;
   cardBgColor: string;
@@ -81,7 +77,7 @@ export type WebFoProfile = {
 // ─── Field lists (mirrors community.ts in the app) ────────────────────────────
 
 const CARD_THEME_FIELDS =
-  'height, weight, page_bg_color, page_bg_image, card_bg_color, card_bg_image, ' +
+  'page_bg_color, page_bg_image, card_bg_color, card_bg_image, ' +
   'card_bg_gradient, card_transparent, text_color, border_style, name_font';
 
 const PROFILE_FIELDS =
@@ -90,7 +86,7 @@ const PROFILE_FIELDS =
 
 const FO_PROFILE_FIELDS =
   `id, name, pronouns, tagline, avatar_url, song, song_link, gallery, flags, links, ` +
-  `fandom, rel_status, share_status, age, birthday, ${CARD_THEME_FIELDS}`;
+  `fandom, rel_status, share_status, since_date, ${CARD_THEME_FIELDS}`;
 
 // ─── Row mappers ──────────────────────────────────────────────────────────────
 
@@ -127,8 +123,6 @@ function parseLinks(raw: unknown): ProfileLink[] {
 function parseCardTheme(row: Record<string, unknown>) {
   return {
     color: (row.color as string) ?? '',
-    height: (row.height as string) ?? '',
-    weight: (row.weight as string) ?? '',
     pageBgColor: (row.page_bg_color as string) ?? '',
     pageBgImage: (row.page_bg_image as string) ?? '',
     cardBgColor: (row.card_bg_color as string) ?? '',
@@ -177,8 +171,7 @@ function rowToFoProfile(row: Record<string, unknown>): WebFoProfile {
     fandom: (row.fandom as string) ?? '',
     relStatus: (row.rel_status as string) ?? 'romantic',
     shareStatus: (row.share_status as string) ?? 'selective',
-    age: (row.age as string) ?? '',
-    birthday: (row.birthday as string) ?? '',
+    sinceDate: (row.since_date as string) ?? '',
   };
 }
 

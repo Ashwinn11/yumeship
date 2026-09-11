@@ -170,10 +170,6 @@ export default function PublicUserProfileScreen() {
               tagline={profile.tagline}
               photoUri={profile.avatarUrl}
               fallbackColor={profile.color || Colors.sakura}
-              height={profile.height}
-              weight={profile.weight}
-              age={profile.age}
-              birthday={profile.birthday}
               song={profile.song}
               songLink={profile.songLink}
               gallery={profile.gallery}

@@ -13,6 +13,7 @@ import { Sakura } from '@/components/deco/Sakura';
 import { WashiTape, Sparkle } from '@/components/deco';
 import { Chip } from '@/components/ui/Chip';
 import { CozyModal } from '@/components/ui/CozyModal';
+import { DateField } from '@/components/ui/DateField';
 import { DismissKeyboardView } from '@/components/ui/DismissKeyboardView';
 import { GradientCover } from '@/components/ui/GradientCover';
 import { IconEdit, IconPlus, IconTrashSolid } from '@/components/ui/Icon';
@@ -194,15 +195,13 @@ const daysLabel = daysTogetherLabel(ship!.startDate);
         onConfirm={() => { updateShip(id, { startDate: dateDraft }); setEditingDate(false); }}
         onClose={() => { setDateDraft(ship!.startDate); setEditingDate(false); }}
       >
-        <TextInput
+        <DateField
           value={dateDraft}
-          onChangeText={setDateDraft}
-          placeholder="YYYY-MM-DD"
-          placeholderTextColor={Colors.ink3}
+          onChange={setDateDraft}
+          editing
+          placeholder="e.g. 2024-03-15"
           style={styles.dateInput}
-          autoFocus
-          returnKeyType="done"
-          onSubmitEditing={() => Keyboard.dismiss()}
+          textStyle={{ fontFamily: FontFamily.ja, fontSize: sf(13), color: dateDraft ? Colors.ink : Colors.ink3 }}
         />
       </CozyModal>
 
@@ -542,7 +541,7 @@ const styles = StyleSheet.create({
   },
   hcShowMoreText: { fontFamily: FontFamily.uiMedium, fontSize: sf(12) },
   dateInput: {
-    fontFamily: FontFamily.ui, fontSize: sf(15), color: Colors.ink,
+    height: 40, justifyContent: 'center',
     borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.r2,
     paddingVertical: 8, paddingHorizontal: 12, backgroundColor: Colors.vellum,
   },
