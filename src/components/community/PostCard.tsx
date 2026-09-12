@@ -11,6 +11,7 @@ import type { CommunityPost } from '@/store/community';
 import { BingoCardView } from './BingoCardView';
 import { LikeButton } from './LikeButton';
 import { MediaCarousel } from './MediaCarousel';
+import { MentionText } from './MentionText';
 import { PollView } from './PollView';
 import { PostAuthorHeader } from './PostAuthorHeader';
 
@@ -60,9 +61,7 @@ function PostCardImpl({ post, onToggleLike, onPollVote, onRequestDelete }: Props
 
       {!!post.title && <Text style={styles.title}>{post.title}</Text>}
       {!!post.body && (
-        <Text style={styles.body} numberOfLines={6}>
-          {post.body}
-        </Text>
+        <MentionText body={post.body} mentions={post.mentions} style={styles.body} numberOfLines={6} />
       )}
 
       {post.media.length > 0 && (

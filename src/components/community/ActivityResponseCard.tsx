@@ -7,6 +7,7 @@ import type { CommunityPost } from '@/store/community';
 
 import { LikeButton } from './LikeButton';
 import { MediaCarousel } from './MediaCarousel';
+import { MentionText } from './MentionText';
 import { PostAuthorHeader } from './PostAuthorHeader';
 
 type Props = {
@@ -24,7 +25,7 @@ function ActivityResponseCardImpl({ post, onToggleLike }: Props) {
     <Pressable style={styles.bubble} onPress={onOpen}>
       <PostAuthorHeader author={post.author} fo={post.fo} createdAt={post.createdAt} />
 
-      {!!post.body && <Text style={styles.body}>{post.body}</Text>}
+      {!!post.body && <MentionText body={post.body} mentions={post.mentions} style={styles.body} />}
 
       {post.media.length > 0 && (
         <View style={styles.mediaWrap}>

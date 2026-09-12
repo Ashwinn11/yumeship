@@ -109,6 +109,8 @@ export type CommunityPost = {
   bingo: BingoCard | null;
   /** set when this post is a response to a featured activity — null otherwise */
   activityId: string | null;
+  /** every @username in `body` that resolved to a real account — see MentionText */
+  mentions: CommunityMention[];
 };
 
 export type CommunityComment = {
@@ -120,7 +122,21 @@ export type CommunityComment = {
   parentCommentId: string | null;
   body: string;
   createdAt: string;
+  /** every @username in `body` that resolved to a real account — see MentionText */
+  mentions: CommunityMention[];
 };
+
+/** One resolved @mention inside a post or comment body — populated server-side
+ *  by the sync_post_mentions/sync_comment_mentions triggers, never written by
+ *  the client. A username here is guaranteed to still exist. */
+export type CommunityMention = { userId: string; username: string };
+
+function rowToMentions(raw: unknown): CommunityMention[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((m): m is { mentioned: { id: string; username: string } } => !!m?.mentioned?.username)
+    .map((m) => ({ userId: m.mentioned.id, username: m.mentioned.username }));
+}
 
 // ─── Row mappers ──────────────────────────────────────────────────────────────
 
@@ -272,6 +288,7 @@ function rowToPost(
     poll: rowToPoll(row, myPollVotes.get(row.id)),
     bingo: rowToBingo(row),
     activityId: row.activity_id ?? null,
+    mentions: rowToMentions(row.mentions),
   };
 }
 
@@ -284,6 +301,7 @@ function rowToComment(row: Record<string, any>): CommunityComment {
     parentCommentId: row.parent_comment_id,
     body: row.body,
     createdAt: row.created_at,
+    mentions: rowToMentions(row.mentions),
   };
 }
 
@@ -325,17 +343,42 @@ const FO_SUMMARY_FIELDS = 'id, name, pronouns, avatar_url';
 // not just an avatar+name chip — a richer, standalone select so post embeds
 // above stay on the narrow field set.
 const FO_ROW_FIELDS = 'id, name, pronouns, avatar_url, tagline, flags';
+// Resolved mentions ride along with the post/comment they're on so
+// MentionText never needs a lookup of its own — `fkey` is whichever side of
+// `mentions` (post_id or comment_id) points back at this row.
+const mentionSelect = (fkey: 'mentions_post_id_fkey' | 'mentions_comment_id_fkey') =>
+  `mentions:mentions!${fkey}(mentioned:profiles!mentions_mentioned_user_id_fkey(id, username))`;
+
 const POST_SELECT = cols(`
   id, author_id, fo_profile_id, title, body, media, like_count, comment_count, created_at,
   kind, featured_date, poll_options, poll_counts, bingo_cells, activity_id,
   author:profiles!posts_author_id_fkey(${PROFILE_SUMMARY_FIELDS}),
-  fo:fo_profiles!posts_fo_profile_id_fkey(${FO_SUMMARY_FIELDS})
+  fo:fo_profiles!posts_fo_profile_id_fkey(${FO_SUMMARY_FIELDS}),
+  ${mentionSelect('mentions_post_id_fkey')}
 `);
 const COMMENT_SELECT = cols(`
   id, post_id, parent_comment_id, body, created_at,
   author:profiles!comments_author_id_fkey(${PROFILE_SUMMARY_FIELDS}),
-  fo:fo_profiles!comments_fo_profile_id_fkey(${FO_SUMMARY_FIELDS})
+  fo:fo_profiles!comments_fo_profile_id_fkey(${FO_SUMMARY_FIELDS}),
+  ${mentionSelect('mentions_comment_id_fkey')}
 `);
+
+/** Username-prefix search for the @mention composer autocomplete — RLS
+ *  (`profiles visible unless blocked`) already keeps blocked accounts out. */
+export type UsernameMatch = { id: string; username: string; name: string; avatarUrl: string };
+export async function searchUsernames(prefix: string, limit = 6): Promise<UsernameMatch[]> {
+  const clean = prefix.trim().toLowerCase();
+  if (!clean) return [];
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, username, name, avatar_url')
+    .neq('username', '')
+    .ilike('username', `${clean}%`)
+    .order('username', { ascending: true })
+    .limit(limit);
+  if (error || !data) return [];
+  return data.map((r: any) => ({ id: r.id, username: r.username, name: r.name ?? '', avatarUrl: r.avatar_url ?? '' }));
+}
 
 /**
  * What a profile push could not carry across.
@@ -1264,6 +1307,181 @@ export async function unblockUser(id: string): Promise<void> {
   if (error) throw error;
 }
 
+/** One profile row from a `follows` page, carrying the edge's own timestamp
+ *  for cursor pagination — `CommunityProfile` has no `createdAt` of its own. */
+export type CommunityFollowRow = CommunityProfile & { followedAt: string };
+
+/** Shared by fetchFollowers/fetchFollowing — same page shape as fetchPostsBy,
+ *  cursored on the `follows` row's `created_at` rather than the post's. */
+async function fetchFollowEdge(
+  userId: string,
+  matchColumn: 'follower_id' | 'following_id',
+  embedColumn: 'follower_id' | 'following_id',
+  opts: PostPageOpts = {},
+): Promise<CommunityFollowRow[]> {
+  const limit = opts.limit ?? 30;
+  let query = supabase
+    .from('follows')
+    .select(`created_at, other:profiles!follows_${embedColumn}_fkey(${PROFILE_SUMMARY_FIELDS})`)
+    .eq(matchColumn, userId)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (opts.before) query = query.lt('created_at', opts.before);
+  const { data, error } = await query;
+  if (error || !data) return [];
+  return data
+    .filter((r: any) => r.other)
+    .map((r: any) => ({ ...rowToProfile(r.other), followedAt: r.created_at as string }));
+}
+
+/** People who follow this user. */
+export function fetchFollowers(userId: string, opts: PostPageOpts = {}): Promise<CommunityFollowRow[]> {
+  return fetchFollowEdge(userId, 'following_id', 'follower_id', opts);
+}
+
+/** People this user follows. */
+export function fetchFollowing(userId: string, opts: PostPageOpts = {}): Promise<CommunityFollowRow[]> {
+  return fetchFollowEdge(userId, 'follower_id', 'following_id', opts);
+}
+
+/** Paginated followers/following list for the follow-list screen — same
+ *  load/refresh/loadMore shape as usePostList, minus the post-only bits. */
+export function useFollowList(userId: string | undefined, mode: 'followers' | 'following') {
+  const [rows, setRows] = useState<CommunityFollowRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const hasMore = useRef(true);
+  const fetchPage = mode === 'followers' ? fetchFollowers : fetchFollowing;
+
+  const load = useCallback(async () => {
+    if (!userId) {
+      setRows([]);
+      setLoading(false);
+      return;
+    }
+    const page = await fetchPage(userId, { limit: 30 });
+    hasMore.current = page.length >= 30;
+    setRows(page);
+    setLoading(false);
+  }, [userId, fetchPage]);
+
+  useEffect(() => {
+    setLoading(true);
+    hasMore.current = true;
+    load();
+  }, [load]);
+
+  const rowsRef = useRef(rows);
+  rowsRef.current = rows;
+
+  const refresh = useCallback(async () => {
+    setRefreshing(true);
+    hasMore.current = true;
+    await load();
+    setRefreshing(false);
+  }, [load]);
+
+  const loadingMore = useRef(false);
+  const loadMore = useCallback(async () => {
+    if (!userId || loadingMore.current || !hasMore.current) return;
+    const current = rowsRef.current;
+    if (current.length === 0) return;
+    loadingMore.current = true;
+    try {
+      const limit = 30;
+      const more = await fetchPage(userId, { before: current[current.length - 1].followedAt, limit });
+      if (more.length < limit) hasMore.current = false;
+      setRows((prev) => {
+        const seen = new Set(prev.map((p) => p.id));
+        return [...prev, ...more.filter((p) => !seen.has(p.id))];
+      });
+    } finally {
+      loadingMore.current = false;
+    }
+  }, [userId, fetchPage]);
+
+  return { rows, loading, refreshing, refresh, loadMore };
+}
+
+/** The notifications screen: paginated list, realtime-appended, with
+ *  optimistic read-state so tapping a row (or "mark all read") reflects
+ *  instantly rather than waiting on the round trip. */
+export function useNotifications() {
+  const [items, setItems] = useState<CommunityNotification[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const hasMore = useRef(true);
+  const itemsRef = useRef(items);
+  itemsRef.current = items;
+
+  const load = useCallback(async () => {
+    const page = await fetchNotifications({ limit: 30 });
+    hasMore.current = page.length >= 30;
+    setItems(page);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    setLoading(true);
+    hasMore.current = true;
+    load();
+  }, [load]);
+
+  useEffect(() => {
+    let unsub: (() => void) | undefined;
+    (async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const user = session?.user;
+      if (!user) return;
+      unsub = subscribeNotifications(user.id, (n) =>
+        setItems((prev) => (prev.some((x) => x.id === n.id) ? prev : [n, ...prev])),
+      );
+    })();
+    return () => unsub?.();
+  }, []);
+
+  const refresh = useCallback(async () => {
+    setRefreshing(true);
+    hasMore.current = true;
+    await load();
+    setRefreshing(false);
+  }, [load]);
+
+  const loadingMore = useRef(false);
+  const loadMore = useCallback(async () => {
+    if (loadingMore.current || !hasMore.current) return;
+    const current = itemsRef.current;
+    if (current.length === 0) return;
+    loadingMore.current = true;
+    try {
+      const limit = 30;
+      const more = await fetchNotifications({ before: current[current.length - 1].createdAt, limit });
+      if (more.length < limit) hasMore.current = false;
+      setItems((prev) => {
+        const seen = new Set(prev.map((n) => n.id));
+        return [...prev, ...more.filter((n) => !seen.has(n.id))];
+      });
+    } finally {
+      loadingMore.current = false;
+    }
+  }, []);
+
+  const markRead = useCallback((id: string) => {
+    setItems((prev) => prev.map((n) => (n.id === id && !n.readAt ? { ...n, readAt: new Date().toISOString() } : n)));
+    markNotificationRead(id).catch(logSyncFailure('mark notification read'));
+  }, []);
+
+  const markAllRead = useCallback(() => {
+    const now = new Date().toISOString();
+    setItems((prev) => prev.map((n) => (n.readAt ? n : { ...n, readAt: now })));
+    markAllNotificationsRead().catch(logSyncFailure('mark all notifications read'));
+  }, []);
+
+  return { items, loading, refreshing, refresh, loadMore, markRead, markAllRead };
+}
+
 export async function fetchBlockedUsers(): Promise<CommunityProfile[]> {
   const {
     data: { session },
@@ -1324,6 +1542,111 @@ export function subscribeBlocks(
   return () => {
     supabase.removeChannel(channel);
   };
+}
+
+// ─── Notifications ────────────────────────────────────────────────────────────
+
+export type CommunityNotification = {
+  id: string;
+  type: 'like' | 'comment' | 'reply' | 'follow' | 'mention';
+  actor: { id: string; username: string; name: string; avatarUrl: string };
+  postId: string | null;
+  commentId: string | null;
+  /** the target post's body, trimmed for a one-line preview — '' for a
+   *  'follow' notification, which has no post */
+  postPreview: string;
+  readAt: string | null;
+  createdAt: string;
+};
+
+const NOTIFICATION_SELECT = cols(`
+  id, type, post_id, comment_id, read_at, created_at,
+  actor:profiles!notifications_actor_id_fkey(${PROFILE_SUMMARY_FIELDS}),
+  post:posts!notifications_post_id_fkey(body)
+`);
+
+function rowToNotification(row: Record<string, any>): CommunityNotification {
+  const actor = rowToProfile(row.actor);
+  return {
+    id: row.id,
+    type: row.type,
+    actor: { id: actor.id, username: actor.username, name: actor.name, avatarUrl: actor.avatarUrl },
+    postId: row.post_id ?? null,
+    commentId: row.comment_id ?? null,
+    postPreview: ((row.post?.body ?? '') as string).slice(0, 140),
+    readAt: row.read_at ?? null,
+    createdAt: row.created_at,
+  };
+}
+
+export async function fetchNotifications(opts: PostPageOpts = {}): Promise<CommunityNotification[]> {
+  const limit = opts.limit ?? 30;
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const user = session?.user;
+  if (!user) return [];
+  let query = supabase
+    .from('notifications')
+    .select(NOTIFICATION_SELECT)
+    .eq('recipient_id', user.id)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (opts.before) query = query.lt('created_at', opts.before);
+  const { data, error } = await query;
+  if (error || !data) return [];
+  return data.map(rowToNotification);
+}
+
+/** For the bell badge — a plain indexed count (notifications_unread_idx),
+ *  not a denormalized column: see notifications_unread_count_not_on_profiles
+ *  for why that stayed off of the publicly-readable profiles table. */
+export async function fetchUnreadNotificationCount(userId: string): Promise<number> {
+  const { count, error } = await supabase
+    .from('notifications')
+    .select('id', { count: 'exact', head: true })
+    .eq('recipient_id', userId)
+    .is('read_at', null);
+  if (error) return 0;
+  return count ?? 0;
+}
+
+async function fetchNotificationById(id: string): Promise<CommunityNotification | null> {
+  const { data, error } = await supabase.from('notifications').select(NOTIFICATION_SELECT).eq('id', id).maybeSingle();
+  if (error || !data) return null;
+  return rowToNotification(data);
+}
+
+/** Sets read_at on one notification — a no-op (and no unread-counter change)
+ *  if it's already read. The `notifications_bump_unread` trigger decrements
+ *  profiles.unread_notifications; this never touches that column directly. */
+export async function markNotificationRead(id: string): Promise<void> {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const user = session?.user;
+  if (!user) return;
+  const { error } = await supabase
+    .from('notifications')
+    .update({ read_at: new Date().toISOString() })
+    .eq('id', id)
+    .eq('recipient_id', user.id)
+    .is('read_at', null);
+  if (error) throw error;
+}
+
+export async function markAllNotificationsRead(): Promise<void> {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const user = session?.user;
+  if (!user) return;
+  const { error } = await supabase
+    .from('notifications')
+    .update({ read_at: new Date().toISOString() })
+    .eq('recipient_id', user.id)
+    .is('read_at', null);
+  if (error) throw error;
 }
 
 // ─── Realtime ─────────────────────────────────────────────────────────────────
@@ -1489,6 +1812,43 @@ export function subscribeProfile(
       (payload) => {
         const row = payload.new as { follower_count: number; following_count: number };
         onUpdate({ followerCount: row.follower_count, followingCount: row.following_count });
+      },
+    )
+    .subscribe();
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}
+
+/** Fires once per new notification for this recipient — no payload, just a
+ *  "count went up by one" signal for the bell badge. Cheaper than
+ *  subscribeNotifications below, which fetches the full joined row for the
+ *  notifications list. */
+export function subscribeUnreadNotificationInserts(userId: string, onInsert: () => void): () => void {
+  const channel = supabase
+    .channel(uniqueTopic(`community-notifications-badge-${userId}`))
+    .on(
+      'postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'notifications', filter: `recipient_id=eq.${userId}` },
+      () => onInsert(),
+    )
+    .subscribe();
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}
+
+/** New notifications, live, for the open notifications screen. */
+export function subscribeNotifications(userId: string, onInsert: (n: CommunityNotification) => void): () => void {
+  const channel = supabase
+    .channel(uniqueTopic(`community-notifications-${userId}`))
+    .on(
+      'postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'notifications', filter: `recipient_id=eq.${userId}` },
+      async (payload) => {
+        const row = payload.new as { id: string };
+        const full = await fetchNotificationById(row.id);
+        if (full) onInsert(full);
       },
     )
     .subscribe();

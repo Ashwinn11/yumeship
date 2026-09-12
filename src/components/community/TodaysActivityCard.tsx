@@ -6,6 +6,8 @@ import { AVATAR_IMAGE } from '@/lib/imageProps';
 import { Colors, FontFamily, Radius, Spacing, sf } from '@/constants/theme';
 import type { CommunityPost } from '@/store/community';
 
+import { MentionText } from './MentionText';
+
 const AVATAR_SIZE = 34;
 
 function Avatar({ uri, name }: { uri: string; name: string }) {
@@ -34,9 +36,7 @@ export function TodaysActivityCard({ activity }: { activity: CommunityPost }) {
       <View style={styles.contentRow}>
         <Avatar uri={activity.author.avatarUrl} name={activity.author.name} />
         <View style={styles.textCol}>
-          <Text style={styles.headline} numberOfLines={3}>
-            {activity.body}
-          </Text>
+          <MentionText body={activity.body} mentions={activity.mentions} style={styles.headline} numberOfLines={3} />
           {!!activity.author.username && <Text style={styles.username}>@{activity.author.username}</Text>}
         </View>
         <Text style={styles.chevron}>›</Text>

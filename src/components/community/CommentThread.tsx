@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Colors, FontFamily, Radius, Shadow, Spacing, sf } from '@/constants/theme';
 import type { CommunityComment } from '@/store/community';
 
+import { MentionText } from './MentionText';
 import { PostAuthorHeader } from './PostAuthorHeader';
 
 const MAX_VISUAL_DEPTH = 2;
@@ -41,7 +42,7 @@ function CommentNode({ comment, byParent, depth, parentAuthorName, onReply, view
       <View style={styles.bubble}>
         {flattened && !!parentAuthorName && <Text style={styles.replyingTo}>↳ replying to {parentAuthorName}</Text>}
         <PostAuthorHeader author={comment.author} fo={comment.fo} createdAt={comment.createdAt} />
-        <Text style={styles.body}>{comment.body}</Text>
+        <MentionText body={comment.body} mentions={comment.mentions} style={styles.body} />
         <View style={styles.actions}>
           <Pressable onPress={() => onReply(comment.id, comment.author.name)} hitSlop={6}>
             <Text style={styles.replyAction}>reply</Text>

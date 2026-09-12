@@ -215,6 +215,8 @@ export default function MyProfileScreen() {
               links={me.links}
               followerCount={counts.followerCount}
               followingCount={counts.followingCount}
+              onPressFollowers={user ? () => router.push(`/social/follow-list/${user.id}?tab=followers&name=${encodeURIComponent(me.name || '')}` as any) : undefined}
+              onPressFollowing={user ? () => router.push(`/social/follow-list/${user.id}?tab=following&name=${encodeURIComponent(me.name || '')}` as any) : undefined}
             />
 
             {fos.length > 0 && (

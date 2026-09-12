@@ -18,6 +18,7 @@ import { BingoCardView } from '@/components/community/BingoCardView';
 import { CommentThread } from '@/components/community/CommentThread';
 import { LikeButton } from '@/components/community/LikeButton';
 import { MediaCarousel } from '@/components/community/MediaCarousel';
+import { MentionAutocomplete } from '@/components/community/MentionAutocomplete';
 import { PollView } from '@/components/community/PollView';
 import { PostAuthorHeader } from '@/components/community/PostAuthorHeader';
 import { PostDetailSkeleton } from '@/components/community/PostDetailSkeleton';
@@ -37,6 +38,7 @@ export default function PostDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { post, comments, loading, toggleLikeOptimistic, pollVoteOptimistic, insertComment } = useCommunityPost(id);
   const [draft, setDraft] = useState('');
+  const [draftSelection, setDraftSelection] = useState(0);
   const [replyTo, setReplyTo] = useState<{ id: string; name: string } | null>(null);
   const [sending, setSending] = useState(false);
   const [keyboardOpen, setKeyboardOpen] = useState(false);
@@ -228,10 +230,19 @@ export default function PostDetailScreen() {
               </Pressable>
             </View>
           )}
+          <MentionAutocomplete
+            value={draft}
+            selection={draftSelection}
+            onPick={({ text, cursor }) => {
+              setDraft(text);
+              setDraftSelection(cursor);
+            }}
+          />
           <View style={styles.composerInputRow}>
             <TextInput
               value={draft}
               onChangeText={setDraft}
+              onSelectionChange={(e) => setDraftSelection(e.nativeEvent.selection.start)}
               placeholder={replyTo ? `reply to ${replyTo.name}…` : 'add a comment…'}
               placeholderTextColor={Colors.ink3}
               style={styles.composerInput}

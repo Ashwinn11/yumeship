@@ -185,6 +185,8 @@ export default function PublicUserProfileScreen() {
               links={profile.links}
               followerCount={profile.followerCount}
               followingCount={profile.followingCount}
+              onPressFollowers={() => router.push(`/social/follow-list/${id}?tab=followers&name=${encodeURIComponent(profile.name || '')}` as any)}
+              onPressFollowing={() => router.push(`/social/follow-list/${id}?tab=following&name=${encodeURIComponent(profile.name || '')}` as any)}
               followAction={
                 !isMe && !relationship.blocked ? (
                   <FollowButton

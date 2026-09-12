@@ -6,6 +6,8 @@ import { AVATAR_IMAGE } from '@/lib/imageProps';
 import { Colors, FontFamily, Radius, Spacing, sf } from '@/constants/theme';
 import type { CommunityPost } from '@/store/community';
 
+import { MentionText } from './MentionText';
+
 const AVATAR_SIZE = 30;
 
 function Avatar({ uri, name }: { uri: string; name: string }) {
@@ -37,9 +39,7 @@ export function ActivityPromptRow({
     <View style={[styles.row, isLast && styles.rowLast]}>
       <Avatar uri={post.author.avatarUrl} name={post.author.name} />
       <View style={styles.textCol}>
-        <Text style={styles.body} numberOfLines={3}>
-          {post.body}
-        </Text>
+        <MentionText body={post.body} mentions={post.mentions} style={styles.body} numberOfLines={3} />
         {!!post.author.username && <Text style={styles.username}>@{post.author.username}</Text>}
       </View>
       <Pressable style={styles.likeChip} onPress={onToggleLike} hitSlop={8}>

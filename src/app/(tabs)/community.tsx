@@ -42,13 +42,16 @@ import {
   fetchActivityPool,
   fetchProfile,
   fetchTodaysActivity,
+  fetchUnreadNotificationCount,
   logSyncFailure,
   pushOwnProfile,
   subscribeActivityPool,
+  subscribeUnreadNotificationInserts,
   syncIdentifyFoPublish,
   toggleLike,
   useCommunityFeed,
 } from '@/store/community';
+import { IconBell } from '@/components/ui/Icon';
 
 /**
  * The locally cached username is only trustworthy for the account it was
@@ -417,6 +420,21 @@ export default function CommunityScreen() {
   const [menuTop, setMenuTop] = useState(0);
   useFocusEffect(useCallback(() => { setAvatarUri(getGlobalSetting('user_avatar')); }, []));
 
+  // Refetched on focus (covers marking things read on the notifications
+  // screen and coming back) and bumped live while this screen stays mounted
+  // — see subscribeUnreadNotificationInserts's doc comment for why this
+  // isn't a denormalized column read instead.
+  const [unreadCount, setUnreadCount] = useState(0);
+  useFocusEffect(
+    useCallback(() => {
+      if (user) fetchUnreadNotificationCount(user.id).then(setUnreadCount);
+    }, [user?.id]),
+  );
+  useEffect(() => {
+    if (!user) return;
+    return subscribeUnreadNotificationInserts(user.id, () => setUnreadCount((c) => c + 1));
+  }, [user?.id]);
+
   useEffect(() => {
     if (!user) return;
     // publish the paired F/O first: the profile row points at it with a foreign
@@ -500,24 +518,34 @@ export default function CommunityScreen() {
             <Sparkle size={18} color={Colors.lavenderDeep} />
           </View>
           {user && (
-            <Pressable
-              onPress={() => setShowAccount(true)}
-              hitSlop={8}
-              onLayout={(e) => {
-                const { y, height } = e.nativeEvent.layout;
-                setMenuTop(insets.top + Spacing.s2 + y + height + 8);
-              }}
-            >
-              <View style={[styles.headerAvatar, { backgroundColor: getGlobalSetting('user_color') || Colors.sakura }]}>
-                {avatarUri ? (
-                  <Image source={{ uri: avatarUri }} style={styles.headerAvatarImg} contentFit="cover" {...AVATAR_IMAGE} />
-                ) : (
-                  <Text style={styles.headerAvatarInitial}>
-                    {getGlobalSetting('user_name').trim().charAt(0).toUpperCase() || '♡'}
-                  </Text>
+            <View style={styles.headerRight}>
+              <Pressable style={styles.bellBtn} onPress={() => router.push('/social/notifications' as any)} hitSlop={8}>
+                <IconBell size={19} color={Colors.ink2} />
+                {unreadCount > 0 && (
+                  <View style={styles.bellBadge}>
+                    <Text style={styles.bellBadgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
+                  </View>
                 )}
-              </View>
-            </Pressable>
+              </Pressable>
+              <Pressable
+                onPress={() => setShowAccount(true)}
+                hitSlop={8}
+                onLayout={(e) => {
+                  const { y, height } = e.nativeEvent.layout;
+                  setMenuTop(insets.top + Spacing.s2 + y + height + 8);
+                }}
+              >
+                <View style={[styles.headerAvatar, { backgroundColor: getGlobalSetting('user_color') || Colors.sakura }]}>
+                  {avatarUri ? (
+                    <Image source={{ uri: avatarUri }} style={styles.headerAvatarImg} contentFit="cover" {...AVATAR_IMAGE} />
+                  ) : (
+                    <Text style={styles.headerAvatarInitial}>
+                      {getGlobalSetting('user_name').trim().charAt(0).toUpperCase() || '♡'}
+                    </Text>
+                  )}
+                </View>
+              </Pressable>
+            </View>
           )}
         </View>
       </View>
@@ -637,6 +665,15 @@ const styles = StyleSheet.create({
     letterSpacing: -0.4,
     color: Colors.ink,
   },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  bellBtn: { width: 34, height: 34, alignItems: 'center', justifyContent: 'center' },
+  bellBadge: {
+    position: 'absolute', top: 2, right: 2,
+    minWidth: 15, height: 15, borderRadius: 8, paddingHorizontal: 3,
+    backgroundColor: Colors.sakuraDeep, alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1.5, borderColor: Colors.paper,
+  },
+  bellBadgeText: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(9), color: '#fff', lineHeight: sf(10) },
   headerAvatar: {
     width: 34, height: 34, borderRadius: Radius.pill,
     alignItems: 'center', justifyContent: 'center', overflow: 'hidden',

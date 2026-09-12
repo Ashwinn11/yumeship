@@ -98,6 +98,9 @@ type Props = {
   /** community follower/following counts, rendered under pronouns */
   followerCount?: number;
   followingCount?: number;
+  /** tap targets for the counts above — omit to render them as plain, unpressable text */
+  onPressFollowers?: () => void;
+  onPressFollowing?: () => void;
   /** follow/unfollow button slot, rendered under the counts — caller owns its state/handlers */
   followAction?: React.ReactNode;
 };
@@ -143,6 +146,8 @@ export function ProfileCard({
   links = [],
   followerCount,
   followingCount,
+  onPressFollowers,
+  onPressFollowing,
   followAction,
 }: Props) {
   const elapsed = since ? calcElapsed(since) : null;
@@ -251,14 +256,24 @@ export function ProfileCard({
       )}
       {(followerCount !== undefined || followingCount !== undefined) && (
         <View style={styles.socialStatsRow}>
-          <View style={styles.socialStat}>
+          <Pressable
+            style={styles.socialStat}
+            onPress={onPressFollowers}
+            disabled={!onPressFollowers}
+            hitSlop={6}
+          >
             <Text style={[styles.socialStatValue, textStyle]}>{followerCount ?? 0}</Text>
             <Text style={styles.socialStatLabel}>followers</Text>
-          </View>
-          <View style={styles.socialStat}>
+          </Pressable>
+          <Pressable
+            style={styles.socialStat}
+            onPress={onPressFollowing}
+            disabled={!onPressFollowing}
+            hitSlop={6}
+          >
             <Text style={[styles.socialStatValue, textStyle]}>{followingCount ?? 0}</Text>
             <Text style={styles.socialStatLabel}>following</Text>
-          </View>
+          </Pressable>
         </View>
       )}
       {!!followAction && <View style={styles.followActionRow}>{followAction}</View>}

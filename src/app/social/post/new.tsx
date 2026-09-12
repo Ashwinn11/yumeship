@@ -19,6 +19,7 @@ import Svg, { Path, Rect, Text as SvgText } from 'react-native-svg';
 
 import { BingoComposerAttachment } from '@/components/community/BingoComposerAttachment';
 import { MediaComposer, mediaFromAssets } from '@/components/community/MediaComposer';
+import { MentionAutocomplete } from '@/components/community/MentionAutocomplete';
 import { MIN_POLL_OPTIONS, PollComposer } from '@/components/community/PollComposer';
 import { DismissKeyboardView } from '@/components/ui/DismissKeyboardView';
 import { useIPad } from '@/hooks/use-ipad';
@@ -97,6 +98,9 @@ export default function NewPostScreen() {
 
   // each tab keeps its own draft so switching between them never loses work
   const [body, setBody] = useState('');
+  // shared across tabs since only one of their TextInputs is ever mounted at
+  // a time — tracks the cursor for @mention autocomplete on whichever is active
+  const [selection, setSelection] = useState(0);
   const [media, setMedia] = useState<LocalPickedMedia[]>([]);
   // null = no poll attached; an array (starts at 2 blank options) = poll mode,
   // mutually exclusive with media — same as Twitter/IG
@@ -120,6 +124,7 @@ export default function NewPostScreen() {
   const canPost = !posting && (tab === 'post' ? canPostPost : tab === 'activity' ? canPostActivity : true);
 
   const activeBody = tab === 'post' ? body : tab === 'activity' ? activityBody : bingoBody;
+  const setActiveBody = tab === 'post' ? setBody : tab === 'activity' ? setActivityBody : setBingoBody;
   const remaining = MAX_BODY - activeBody.length;
   // photos, gif, and poll are three mutually exclusive attachment modes —
   // picking one clears the others, same as Twitter
@@ -235,6 +240,7 @@ export default function NewPostScreen() {
             <TextInput
               value={body}
               onChangeText={setBody}
+              onSelectionChange={(e) => setSelection(e.nativeEvent.selection.start)}
               placeholder="what's on your mind?"
               placeholderTextColor={Colors.ink3}
               multiline
@@ -247,6 +253,7 @@ export default function NewPostScreen() {
             <TextInput
               value={activityBody}
               onChangeText={setActivityBody}
+              onSelectionChange={(e) => setSelection(e.nativeEvent.selection.start)}
               placeholder={'what should everyone try? e.g. "show your F/O\'s comfort outfit"'}
               placeholderTextColor={Colors.ink3}
               multiline
@@ -259,6 +266,7 @@ export default function NewPostScreen() {
             <TextInput
               value={bingoBody}
               onChangeText={setBingoBody}
+              onSelectionChange={(e) => setSelection(e.nativeEvent.selection.start)}
               placeholder="say something about your card (optional)"
               placeholderTextColor={Colors.ink3}
               multiline
@@ -267,6 +275,15 @@ export default function NewPostScreen() {
             />
           )}
         </View>
+
+        <MentionAutocomplete
+          value={activeBody}
+          selection={selection}
+          onPick={({ text, cursor }) => {
+            setActiveBody(text);
+            setSelection(cursor);
+          }}
+        />
 
         {tab === 'post' && !!poll && (
           <View style={styles.attachWrap}>
