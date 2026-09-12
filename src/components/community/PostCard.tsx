@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
 import { Sparkle } from '@/components/deco/Sparkle';
-import { IconTrashSolid } from '@/components/ui/Icon';
+import { IconPin, IconTrashSolid } from '@/components/ui/Icon';
 import { Colors, FontFamily, Radius, Shadow, Spacing, sf } from '@/constants/theme';
 import type { CommunityPost } from '@/store/community';
 
@@ -35,9 +35,13 @@ type Props = {
   onPollVote?: (optionIndex: number) => void;
   /** own-profile posts only — public feed/profile cards never get this */
   onRequestDelete?: () => void;
+  /** own-profile posts only — toggles whether this is the profile's one pinned post */
+  onRequestTogglePin?: () => void;
+  /** true when this is the profile's pinned post — shown to every viewer, not just the owner */
+  pinned?: boolean;
 };
 
-function PostCardImpl({ post, onToggleLike, onPollVote, onRequestDelete }: Props) {
+function PostCardImpl({ post, onToggleLike, onPollVote, onRequestDelete, onRequestTogglePin, pinned }: Props) {
   // a featured activity opens its own responses page; a regular post opens
   // its comments. An unfeatured pool prompt has neither — nothing to see
   // beyond the card itself, so it isn't navigable at all.
@@ -47,13 +51,29 @@ function PostCardImpl({ post, onToggleLike, onPollVote, onRequestDelete }: Props
 
   return (
     <Pressable style={styles.card} onPress={onOpen}>
-      {onRequestDelete ? (
-        <Pressable style={styles.deleteBtn} onPress={onRequestDelete} hitSlop={8}>
-          <IconTrashSolid size={13} color={Colors.ink3} />
-        </Pressable>
+      {onRequestDelete || onRequestTogglePin ? (
+        <View style={styles.cornerActions}>
+          {onRequestTogglePin && (
+            <Pressable style={styles.cornerBtn} onPress={onRequestTogglePin} hitSlop={8}>
+              <IconPin size={13} color={pinned ? Colors.sakuraDeep : Colors.ink3} />
+            </Pressable>
+          )}
+          {onRequestDelete && (
+            <Pressable style={styles.cornerBtn} onPress={onRequestDelete} hitSlop={8}>
+              <IconTrashSolid size={13} color={Colors.ink3} />
+            </Pressable>
+          )}
+        </View>
       ) : (
         <View style={styles.sparkle} pointerEvents="none">
           <Sparkle size={12} color={Colors.lavenderDeep} />
+        </View>
+      )}
+
+      {!!pinned && (
+        <View style={styles.pinnedRow}>
+          <IconPin size={10} color={Colors.ink3} />
+          <Text style={styles.pinnedLabel}>pinned</Text>
         </View>
       )}
 
@@ -110,10 +130,15 @@ const styles = StyleSheet.create({
     ...Shadow.s1,
   },
   sparkle: { position: 'absolute', top: 10, right: 12 },
-  deleteBtn: {
-    position: 'absolute', top: 8, right: 8, zIndex: 1,
+  cornerActions: { position: 'absolute', top: 8, right: 8, zIndex: 1, flexDirection: 'row', gap: 6 },
+  cornerBtn: {
     width: 26, height: 26, borderRadius: Radius.pill,
     backgroundColor: Colors.paperDeep, alignItems: 'center', justifyContent: 'center',
+  },
+  pinnedRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: -2 },
+  pinnedLabel: {
+    fontFamily: FontFamily.uiSemiBold, fontSize: sf(10.5), color: Colors.ink3,
+    textTransform: 'uppercase', letterSpacing: 0.6,
   },
   title: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(16), color: Colors.ink, marginTop: 2 },
   body: { fontFamily: FontFamily.ui, fontSize: sf(13), color: Colors.ink2, lineHeight: sf(19) },

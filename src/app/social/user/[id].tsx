@@ -19,6 +19,7 @@ import { useIPad } from '@/hooks/use-ipad';
 import { useAuthUser } from '@/store/auth';
 import {
   blockUser,
+  fetchPost,
   fetchProfile,
   fetchRelationship,
   fetchUserFoProfiles,
@@ -74,15 +75,37 @@ export default function PublicUserProfileScreen() {
     postsTab === 'activities' ? p.kind === 'activity' || !!p.activityId : p.kind === 'post' && !p.activityId,
   );
 
+  // fetched directly by id, not found-if-lucky in the loaded page — see
+  // profile.tsx's identical pinnedPost effect for why
+  const [pinnedPost, setPinnedPost] = useState<CommunityPost | null>(null);
+  useEffect(() => {
+    if (!profile?.pinnedPostId) {
+      setPinnedPost(null);
+      return;
+    }
+    let cancelled = false;
+    fetchPost(profile.pinnedPostId).then((p) => {
+      if (!cancelled) setPinnedPost(p);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [profile?.pinnedPostId]);
+
+  const orderedPosts = pinnedPost && postsTab === 'posts' && !relationship.blocked
+    ? [pinnedPost, ...shownPosts.filter((p) => p.id !== pinnedPost.id)]
+    : shownPosts;
+
   const renderPost = useCallback(
     ({ item }: { item: CommunityPost }) => (
       <PostCard
         post={item}
         onToggleLike={() => toggleLikeOptimistic(item.id, () => showToast("couldn't update like — try again"))}
         onPollVote={(i) => pollVoteOptimistic(item.id, i, () => showToast("couldn't update vote — try again"))}
+        pinned={item.id === pinnedPost?.id}
       />
     ),
-    [toggleLikeOptimistic, pollVoteOptimistic, showToast],
+    [toggleLikeOptimistic, pollVoteOptimistic, showToast, pinnedPost?.id],
   );
 
   async function handleBlock() {
@@ -154,7 +177,7 @@ export default function PublicUserProfileScreen() {
         style={styles.scroll}
         contentContainerStyle={[styles.content, column]}
         showsVerticalScrollIndicator={false}
-        data={shownPosts}
+        data={orderedPosts}
         keyExtractor={keyExtractor}
         renderItem={renderPost}
         ItemSeparatorComponent={PostSeparator}

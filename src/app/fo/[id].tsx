@@ -206,7 +206,7 @@ export default function FoDetailScreen() {
               <ProfileCard
                 name={fo.name || 'untitled'}
                 pronouns={fo.pronouns}
-                subtitle={fo.fandom}
+                subtitle={fo.fandom ? `#${fo.fandom}` : ''}
                 tagline={fo.tagline}
                 photoUri={fo.photoUri}
                 fallbackColor={fo.color || Colors.sakura}

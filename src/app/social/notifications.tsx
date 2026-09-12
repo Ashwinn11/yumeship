@@ -59,6 +59,8 @@ export default function NotificationsScreen() {
       markRead(n.id);
       if (n.type === 'follow') {
         router.push(`/social/user/${n.actor.id}` as any);
+      } else if (n.groupId) {
+        router.push(`/social/groups/${n.groupId}` as any);
       } else if (n.postId) {
         router.push(`/social/post/${n.postId}` as any);
       }

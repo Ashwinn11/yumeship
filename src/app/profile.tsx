@@ -18,11 +18,14 @@ import { SegmentedTabs } from '@/components/ui/SegmentedTabs';
 import { useAuthUser } from '@/store/auth';
 import {
   deletePost,
+  fetchPost,
   fetchProfile,
   logSyncFailure,
+  pinPost,
   pushFoProfile,
   pushOwnProfile,
   subscribeProfile,
+  unpinPost,
   unpublishFoProfile,
   useUserPosts,
   type CommunityPost,
@@ -53,11 +56,15 @@ export default function MyProfileScreen() {
   // same way the public profile screen does.
   const user = useAuthUser();
   const [counts, setCounts] = useState({ followerCount: 0, followingCount: 0 });
+  const [pinnedPostId, setPinnedPostId] = useState<string | null>(null);
   useEffect(() => {
-    if (!user) { setCounts({ followerCount: 0, followingCount: 0 }); return; }
+    if (!user) { setCounts({ followerCount: 0, followingCount: 0 }); setPinnedPostId(null); return; }
     let cancelled = false;
     fetchProfile(user.id).then((p) => {
-      if (!cancelled && p) setCounts({ followerCount: p.followerCount, followingCount: p.followingCount });
+      if (!cancelled && p) {
+        setCounts({ followerCount: p.followerCount, followingCount: p.followingCount });
+        setPinnedPostId(p.pinnedPostId);
+      }
     });
     return () => { cancelled = true; };
   }, [user?.id]);
@@ -84,6 +91,30 @@ export default function MyProfileScreen() {
   const shownPosts = posts.filter((p) =>
     postsTab === 'activities' ? p.kind === 'activity' || !!p.activityId : p.kind === 'post' && !p.activityId,
   );
+
+  // fetched directly by id rather than found-if-lucky in the loaded page —
+  // the pin needs to surface even if it's old enough to have paged out of
+  // `posts`, same as Twitter/Instagram show it regardless of recency
+  const [pinnedPost, setPinnedPost] = useState<CommunityPost | null>(null);
+  useEffect(() => {
+    if (!pinnedPostId) {
+      setPinnedPost(null);
+      return;
+    }
+    let cancelled = false;
+    fetchPost(pinnedPostId).then((p) => {
+      if (!cancelled) setPinnedPost(p);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [pinnedPostId]);
+
+  // pulled out of its normal chronological spot rather than shown twice —
+  // only in the "posts" tab, since pinning only ever applies to a plain post
+  const orderedPosts = pinnedPost && postsTab === 'posts'
+    ? [pinnedPost, ...shownPosts.filter((p) => p.id !== pinnedPost.id)]
+    : shownPosts;
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [togglingFosPublic, setTogglingFosPublic] = useState(false);
@@ -125,6 +156,18 @@ export default function MyProfileScreen() {
     }
   }
 
+  async function togglePin(postId: string) {
+    const wasPinned = pinnedPostId === postId;
+    const prev = pinnedPostId;
+    setPinnedPostId(wasPinned ? null : postId);
+    try {
+      await (wasPinned ? unpinPost() : pinPost(postId));
+    } catch {
+      setPinnedPostId(prev);
+      showToast("couldn't update pin — try again");
+    }
+  }
+
   const renderPost = useCallback(
     ({ item }: { item: CommunityPost }) => (
       <PostCard
@@ -132,9 +175,11 @@ export default function MyProfileScreen() {
         onToggleLike={() => toggleLikeOptimistic(item.id, () => showToast("couldn't update like — try again"))}
         onPollVote={(i) => pollVoteOptimistic(item.id, i, () => showToast("couldn't update vote — try again"))}
         onRequestDelete={() => setDeleteTarget(item.id)}
+        onRequestTogglePin={() => togglePin(item.id)}
+        pinned={item.id === pinnedPostId}
       />
     ),
-    [toggleLikeOptimistic, pollVoteOptimistic, showToast],
+    [toggleLikeOptimistic, pollVoteOptimistic, showToast, pinnedPostId],
   );
 
   function handleThemeChange(patch: Partial<CardTheme>) {
@@ -184,7 +229,7 @@ export default function MyProfileScreen() {
         style={styles.scroll}
         contentContainerStyle={[styles.content, column, { paddingBottom: Spacing.s5 }]}
         showsVerticalScrollIndicator={false}
-        data={shownPosts}
+        data={orderedPosts}
         keyExtractor={keyExtractor}
         renderItem={renderPost}
         ItemSeparatorComponent={PostSeparator}

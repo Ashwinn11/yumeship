@@ -7,6 +7,7 @@ import {
   Pressable,
   RefreshControl,
   ScrollView,
+  SectionList,
   StyleSheet,
   Text,
   TextInput,
@@ -33,9 +34,12 @@ import { Image } from 'expo-image';
 import { AccountSheet } from '@/components/community/AccountSheet';
 import { AVATAR_IMAGE } from '@/lib/imageProps';
 import { ActivityPromptRow } from '@/components/community/ActivityPromptRow';
+import { GroupCard } from '@/components/community/GroupCard';
+import { MyGroupRow } from '@/components/community/MyGroupRow';
 import { PostCard } from '@/components/community/PostCard';
 import { TodaysActivityCard } from '@/components/community/TodaysActivityCard';
 import type { CommunityPost } from '@/store/community';
+import { fetchGroups, fetchMyGroups, searchGroups, type CommunityGroup } from '@/store/groups';
 import {
   checkUsernameAvailable,
   claimUsername,
@@ -51,7 +55,7 @@ import {
   toggleLike,
   useCommunityFeed,
 } from '@/store/community';
-import { IconBell } from '@/components/ui/Icon';
+import { IconBell, IconSearch } from '@/components/ui/Icon';
 
 /**
  * The locally cached username is only trustworthy for the account it was
@@ -179,22 +183,152 @@ function UsernameClaim({ onClaimed }: { onClaimed: (username: string) => void })
 const FeedSeparator = () => <View style={styles.feedSeparator} />;
 const keyExtractor = (p: CommunityPost) => p.id;
 
+/** "your groups" pinned above "discover" (everything else, most-populated
+ *  first) — a SectionList rather than forcing FlatList's single header into
+ *  a mid-list section break. The search icon next to "your groups" expands
+ *  into a full-width bar that replaces that label; while active, both
+ *  sections are replaced by a single flat set of matches. */
+function GroupsList({ column }: { column: any }) {
+  const [myGroups, setMyGroups] = useState<CommunityGroup[]>([]);
+  const [discover, setDiscover] = useState<CommunityGroup[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const [searchActive, setSearchActive] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<CommunityGroup[]>([]);
+  const [searching, setSearching] = useState(false);
+
+  const load = useCallback(async () => {
+    const [mine, all] = await Promise.all([fetchMyGroups(), fetchGroups()]);
+    setMyGroups(mine);
+    const mineIds = new Set(mine.map((g) => g.id));
+    setDiscover(all.filter((g) => !mineIds.has(g.id)));
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const refresh = useCallback(async () => {
+    setRefreshing(true);
+    await load();
+    setRefreshing(false);
+  }, [load]);
+
+  useEffect(() => {
+    if (!searchActive) return;
+    const q = searchQuery.trim();
+    if (!q) {
+      setSearchResults([]);
+      setSearching(false);
+      return;
+    }
+    setSearching(true);
+    const handle = setTimeout(async () => {
+      setSearchResults(await searchGroups(q));
+      setSearching(false);
+    }, 250);
+    return () => clearTimeout(handle);
+  }, [searchActive, searchQuery]);
+
+  function closeSearch() {
+    setSearchActive(false);
+    setSearchQuery('');
+    setSearchResults([]);
+  }
+
+  const sections = searchActive
+    ? [{ title: 'results', data: searchResults }]
+    : [
+        ...(myGroups.length > 0 ? [{ title: 'your groups', data: myGroups }] : []),
+        ...(discover.length > 0 ? [{ title: 'discover', data: discover }] : []),
+      ];
+
+  return (
+    <View style={{ flex: 1 }}>
+      <View style={[styles.groupsToolbar, column]}>
+        {searchActive ? (
+          <View style={styles.groupsSearchRow}>
+            <TextInput
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholder="search groups or fandoms…"
+              placeholderTextColor={Colors.ink3}
+              style={styles.groupsSearchInput}
+              autoFocus
+              returnKeyType="search"
+            />
+            <Pressable onPress={closeSearch} hitSlop={8}>
+              <Text style={styles.groupsSearchClose}>✕</Text>
+            </Pressable>
+          </View>
+        ) : (
+          <View style={styles.groupsToolbarRow}>
+            <Text style={styles.groupSectionLabel}>your groups</Text>
+            <Pressable onPress={() => setSearchActive(true)} hitSlop={8}>
+              <IconSearch size={16} color={Colors.ink2} />
+            </Pressable>
+          </View>
+        )}
+      </View>
+
+      <SectionList
+        sections={sections}
+        keyExtractor={(g) => g.id}
+        renderItem={({ item, section }) =>
+          section.title === 'your groups' ? <MyGroupRow group={item} /> : <GroupCard group={item} />
+        }
+        renderSectionHeader={({ section }) =>
+          section.title === 'your groups' ? null : <Text style={styles.groupSectionLabel}>{section.title}</Text>
+        }
+        ItemSeparatorComponent={FeedSeparator}
+        contentContainerStyle={[styles.feedContent, column]}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={Colors.sakuraDeep} />}
+        showsVerticalScrollIndicator={false}
+        stickySectionHeadersEnabled={false}
+        keyboardShouldPersistTaps="handled"
+        ListEmptyComponent={
+          searchActive ? (
+            searching ? (
+              <FeedSkeleton />
+            ) : searchQuery.trim() ? (
+              <View style={styles.feedEmpty}>
+                <Text style={styles.emptyTitle}>no groups found</Text>
+              </View>
+            ) : null
+          ) : loading ? (
+            <FeedSkeleton />
+          ) : (
+            <View style={styles.feedEmpty}>
+              <Text style={styles.emptyTitle}>no groups yet</Text>
+              <Text style={styles.claimSub}>start one for your fandom ♡</Text>
+            </View>
+          )
+        }
+      />
+    </View>
+  );
+}
+
 function Feed({ insets }: { insets: { top: number } }) {
   const { column } = useIPad();
   const { tab: initialTab } = useLocalSearchParams<{ tab?: string }>();
-  const [tab, setTab] = useState<'global' | 'following' | 'activities'>(
-    initialTab === 'activities' ? 'activities' : 'global',
+  const [tab, setTab] = useState<'global' | 'following' | 'activities' | 'groups'>(
+    initialTab === 'activities' || initialTab === 'groups' ? initialTab : 'global',
   );
   // the underlying feed hook only ever runs in global/following mode — picking
-  // the activities pill doesn't touch it, just swaps which data source the
-  // list below renders from, so switching back restores it with no re-fetch
+  // the activities or groups pill doesn't touch it, just swaps which data
+  // source the list below renders from, so switching back restores it with
+  // no re-fetch
   const [feedMode, setFeedMode] = useState<'global' | 'following'>('global');
   const { posts, loading, refreshing, refresh, loadMore, toggleLikeOptimistic, pollVoteOptimistic } = useCommunityFeed(feedMode);
   const { message: toastMsg, nonce: toastNonce, show: showToast } = useInlineToast();
 
   function selectTab(t: typeof tab) {
     setTab(t);
-    if (t !== 'activities') setFeedMode(t);
+    if (t === 'global' || t === 'following') setFeedMode(t);
   }
 
   // follows aren't realtime, so the "following" list otherwise won't include
@@ -325,12 +459,16 @@ function Feed({ insets }: { insets: { top: number } }) {
             { key: 'global', label: 'global' },
             { key: 'following', label: 'following' },
             { key: 'activities', label: 'activities' },
+            { key: 'groups', label: 'groups' },
           ]}
           value={tab}
           onChange={selectTab}
         />
       </View>
 
+      {tab === 'groups' ? (
+        <GroupsList column={column} />
+      ) : (
       <FlatList
         data={data}
         keyExtractor={keyExtractor}
@@ -395,8 +533,12 @@ function Feed({ insets }: { insets: { top: number } }) {
           )
         }
       />
+      )}
 
-      <Pressable style={styles.fab} onPress={() => router.push('/social/post/new' as any)}>
+      <Pressable
+        style={styles.fab}
+        onPress={() => router.push((tab === 'groups' ? '/social/groups/new' : '/social/post/new') as any)}
+      >
         <Text style={styles.fabText}>+</Text>
       </Pressable>
     </View>
@@ -822,6 +964,25 @@ const styles = StyleSheet.create({
   feedContent: { paddingHorizontal: Spacing.s5, paddingBottom: Spacing.s8 },
   feedSeparator: { height: 12 },
   feedEmpty: { alignItems: 'center', paddingTop: 60 },
+  groupSectionLabel: {
+    fontFamily: FontFamily.uiSemiBold, fontSize: sf(11), color: Colors.ink3,
+    textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: Spacing.s3,
+  },
+  groupsToolbar: { paddingHorizontal: Spacing.s5, paddingTop: 2 },
+  groupsToolbarRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    marginBottom: Spacing.s3,
+  },
+  groupsSearchRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    marginBottom: Spacing.s3,
+  },
+  groupsSearchInput: {
+    flex: 1, paddingVertical: 8, paddingHorizontal: 14,
+    backgroundColor: Colors.vellum, borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.pill,
+    fontFamily: FontFamily.ui, fontSize: sf(13.5), color: Colors.ink,
+  },
+  groupsSearchClose: { fontSize: sf(15), color: Colors.ink3, fontFamily: FontFamily.ui },
   fab: {
     position: 'absolute',
     bottom: Spacing.s5,

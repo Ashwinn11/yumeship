@@ -1,5 +1,5 @@
 import { Colors } from '@/constants/theme';
-import Svg, { Circle, Path, Rect } from 'react-native-svg';
+import Svg, { Circle, G, Path, Rect } from 'react-native-svg';
 
 // design/components.jsx — I (inline icon set)
 // All icons 14×14, 1.3–1.4px stroke, round caps/joins, no fill
@@ -100,6 +100,25 @@ export function IconBell({ size = 14, color = Colors.ink, solid = false }: IconP
         d="M3 10V6.5a4 4 0 1 1 8 0V10l1 1.5H2L3 10zM5.5 12.5a1.5 1.5 0 0 0 3 0"
         stroke={color} strokeWidth="1.3" fill={solid ? color : 'none'} strokeLinejoin="round"
       />
+    </Svg>
+  );
+}
+
+/** A tilted thumbtack, same "pinned" glyph WhatsApp/Telegram/Instagram use —
+ *  not a map-pin teardrop, which reads as "location" instead. */
+export function IconPin({ size = 14, color = Colors.ink }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 14 14" fill="none">
+      <G rotation={45} origin="7, 7">
+        <Path
+          d="M5.3 2.4h3.4l-.35 3.35 1.55 1.55H4.1l1.55-1.55-.35-3.35z"
+          stroke={color}
+          strokeWidth="1.2"
+          strokeLinejoin="round"
+          strokeLinecap="round"
+        />
+        <Path d="M7 7.3v4.3" stroke={color} strokeWidth="1.3" strokeLinecap="round" />
+      </G>
     </Svg>
   );
 }

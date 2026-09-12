@@ -13,6 +13,11 @@ type Props = {
   style?: StyleProp<TextStyle>;
   mentionStyle?: StyleProp<TextStyle>;
   numberOfLines?: number;
+  /** appended as the last inline span, inside the same <Text> as the body —
+   *  not a separate block, so RN's text layout flows it onto the end of the
+   *  last line when there's room and wraps it below when there isn't (a chat
+   *  bubble's timestamp riding the end of a short message, WhatsApp-style). */
+  trailing?: ReactNode;
 };
 
 /**
@@ -22,10 +27,15 @@ type Props = {
  * account's handle just stays plain text — only tokens present in `mentions`
  * ever link, same as Instagram only linkifying mentions that resolve.
  */
-export function MentionText({ body, mentions, style, mentionStyle, numberOfLines }: Props) {
+export function MentionText({ body, mentions, style, mentionStyle, numberOfLines, trailing }: Props) {
   if (!body) return null;
   if (mentions.length === 0) {
-    return <Text style={style} numberOfLines={numberOfLines}>{body}</Text>;
+    return (
+      <Text style={style} numberOfLines={numberOfLines}>
+        {body}
+        {trailing}
+      </Text>
+    );
   }
 
   const byUsername = new Map(mentions.map((m) => [m.username.toLowerCase(), m.userId]));
@@ -48,7 +58,12 @@ export function MentionText({ body, mentions, style, mentionStyle, numberOfLines
   }
   if (lastIndex < body.length) parts.push(body.slice(lastIndex));
 
-  return <Text style={style} numberOfLines={numberOfLines}>{parts}</Text>;
+  return (
+    <Text style={style} numberOfLines={numberOfLines}>
+      {parts}
+      {trailing}
+    </Text>
+  );
 }
 
 const styles = StyleSheet.create({

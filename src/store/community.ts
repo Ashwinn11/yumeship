@@ -47,6 +47,8 @@ export type CommunityProfile = CommunityCardTheme & {
   identifyFoId: string | null;
   followerCount: number;
   followingCount: number;
+  /** the one post shown pinned above the rest on this profile, if any */
+  pinnedPostId: string | null;
 };
 
 export type CommunityFoProfile = CommunityCardTheme & {
@@ -131,7 +133,7 @@ export type CommunityComment = {
  *  the client. A username here is guaranteed to still exist. */
 export type CommunityMention = { userId: string; username: string };
 
-function rowToMentions(raw: unknown): CommunityMention[] {
+export function rowToMentions(raw: unknown): CommunityMention[] {
   if (!Array.isArray(raw)) return [];
   return raw
     .filter((m): m is { mentioned: { id: string; username: string } } => !!m?.mentioned?.username)
@@ -190,7 +192,7 @@ function rowToGallery(raw: unknown): GalleryPhoto[] {
     .map((g) => ({ uri: g.url as string, caption: (g.caption as string) ?? '' }));
 }
 
-function rowToProfile(row: Record<string, any>): CommunityProfile {
+export function rowToProfile(row: Record<string, any>): CommunityProfile {
   return {
     ...rowToCardTheme(row),
     id: row.id,
@@ -207,6 +209,7 @@ function rowToProfile(row: Record<string, any>): CommunityProfile {
     identifyFoId: row.identify_fo_id ?? null,
     followerCount: row.follower_count ?? 0,
     followingCount: row.following_count ?? 0,
+    pinnedPostId: row.pinned_post_id ?? null,
   };
 }
 
@@ -323,11 +326,11 @@ const CARD_THEME_FIELDS =
  * *every* column instead — so a readable multi-line list quietly turns into
  * `select=*`. Collapse to one line before the value ever leaves here.
  */
-const cols = (s: string) => s.replace(/\s+/g, ' ').trim();
+export const cols = (s: string) => s.replace(/\s+/g, ' ').trim();
 
 const PROFILE_FIELDS = cols(`
   id, username, name, pronouns, tagline, avatar_url, song, song_link, gallery, flags, links,
-  color, identify_fo_id, follower_count, following_count, ${CARD_THEME_FIELDS}
+  color, identify_fo_id, follower_count, following_count, pinned_post_id, ${CARD_THEME_FIELDS}
 `);
 const FO_PROFILE_FIELDS = cols(`
   id, name, pronouns, tagline, avatar_url, song, song_link, gallery, flags, links,
@@ -337,7 +340,7 @@ const FO_PROFILE_FIELDS = cols(`
 // Feed rows only ever draw an avatar + name, so post embeds stay on this narrow
 // set — pulling every author's gallery and theme per post would balloon the feed
 // payload for data no card in the list renders. rowToProfile tolerates the gaps.
-const PROFILE_SUMMARY_FIELDS = 'id, username, name, pronouns, avatar_url';
+export const PROFILE_SUMMARY_FIELDS = 'id, username, name, pronouns, avatar_url';
 const FO_SUMMARY_FIELDS = 'id, name, pronouns, avatar_url';
 // The F/O preview row on a profile shows a real card (tagline, pronouns, flag),
 // not just an avatar+name chip — a richer, standalone select so post embeds
@@ -345,8 +348,9 @@ const FO_SUMMARY_FIELDS = 'id, name, pronouns, avatar_url';
 const FO_ROW_FIELDS = 'id, name, pronouns, avatar_url, tagline, flags';
 // Resolved mentions ride along with the post/comment they're on so
 // MentionText never needs a lookup of its own — `fkey` is whichever side of
-// `mentions` (post_id or comment_id) points back at this row.
-const mentionSelect = (fkey: 'mentions_post_id_fkey' | 'mentions_comment_id_fkey') =>
+// `mentions` (post_id, comment_id, or group_message_id) points back at this
+// row. Exported so groups.ts can embed the same shape onto group_messages.
+export const mentionSelect = (fkey: 'mentions_post_id_fkey' | 'mentions_comment_id_fkey' | 'mentions_group_message_id_fkey') =>
   `mentions:mentions!${fkey}(mentioned:profiles!mentions_mentioned_user_id_fkey(id, username))`;
 
 const POST_SELECT = cols(`
@@ -1194,6 +1198,30 @@ export async function deletePost(id: string): Promise<void> {
   if (bingo?.bgImage) deleteFromBucketByUrl('post-media', bingo.bgImage);
 }
 
+/** One pinned post per profile, Twitter-style — setting a new one replaces
+ *  whichever was pinned before rather than stacking. The `profiles_validate_
+ *  pinned_post` trigger rejects pinning a post that isn't the caller's own,
+ *  on top of the existing owner-only UPDATE policy on `profiles` itself. */
+export async function pinPost(postId: string): Promise<void> {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const user = session?.user;
+  if (!user) throw new Error('not signed in');
+  const { error } = await supabase.from('profiles').update({ pinned_post_id: postId }).eq('id', user.id);
+  if (error) throw error;
+}
+
+export async function unpinPost(): Promise<void> {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const user = session?.user;
+  if (!user) return;
+  const { error } = await supabase.from('profiles').update({ pinned_post_id: null }).eq('id', user.id);
+  if (error) throw error;
+}
+
 export async function toggleLike(postId: string, currentlyLiked: boolean): Promise<void> {
   const {
     data: { session },
@@ -1519,7 +1547,7 @@ let channelSeq = 0;
  * A unique topic per subscription instance sidesteps the reuse lookup
  * entirely, so this is never in play.
  */
-function uniqueTopic(base: string): string {
+export function uniqueTopic(base: string): string {
   return `${base}-${channelSeq++}`;
 }
 
@@ -1552,17 +1580,21 @@ export type CommunityNotification = {
   actor: { id: string; username: string; name: string; avatarUrl: string };
   postId: string | null;
   commentId: string | null;
-  /** the target post's body, trimmed for a one-line preview — '' for a
-   *  'follow' notification, which has no post */
+  /** set instead of postId/commentId for a mention inside a group chat */
+  groupId: string | null;
+  groupMessageId: string | null;
+  /** the target post's (or group message's) body, trimmed for a one-line
+   *  preview — '' for a 'follow' notification, which has neither */
   postPreview: string;
   readAt: string | null;
   createdAt: string;
 };
 
 const NOTIFICATION_SELECT = cols(`
-  id, type, post_id, comment_id, read_at, created_at,
+  id, type, post_id, comment_id, group_id, group_message_id, read_at, created_at,
   actor:profiles!notifications_actor_id_fkey(${PROFILE_SUMMARY_FIELDS}),
-  post:posts!notifications_post_id_fkey(body)
+  post:posts!notifications_post_id_fkey(body),
+  group_message:group_messages!notifications_group_message_id_fkey(body)
 `);
 
 function rowToNotification(row: Record<string, any>): CommunityNotification {
@@ -1573,7 +1605,9 @@ function rowToNotification(row: Record<string, any>): CommunityNotification {
     actor: { id: actor.id, username: actor.username, name: actor.name, avatarUrl: actor.avatarUrl },
     postId: row.post_id ?? null,
     commentId: row.comment_id ?? null,
-    postPreview: ((row.post?.body ?? '') as string).slice(0, 140),
+    groupId: row.group_id ?? null,
+    groupMessageId: row.group_message_id ?? null,
+    postPreview: ((row.post?.body ?? row.group_message?.body ?? '') as string).slice(0, 140),
     readAt: row.read_at ?? null,
     createdAt: row.created_at,
   };

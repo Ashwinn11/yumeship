@@ -90,7 +90,7 @@ export default function PublicFoProfileScreen() {
               <ProfileCard
                 name={profile.name || 'untitled'}
                 pronouns={profile.pronouns}
-                subtitle={profile.fandom}
+                subtitle={profile.fandom ? `#${profile.fandom}` : ''}
                 tagline={profile.tagline}
                 photoUri={profile.avatarUrl}
                 fallbackColor={profile.color || Colors.sakura}
