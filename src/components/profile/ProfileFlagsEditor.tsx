@@ -122,6 +122,16 @@ export function ProfileFlagsEditor({
 
   return (
     <View style={styles.wrap}>
+      {/* the section sheet this opens in already titles itself "flags" — this
+          row only needs to exist while there's a cancel to show */}
+      {!!draft && (
+        <View style={styles.header}>
+          <Pressable onPress={cancel} hitSlop={6}>
+            <Text style={styles.headerCancel}>cancel</Text>
+          </Pressable>
+        </View>
+      )}
+
       <View style={styles.chipRow}>
         {flags.map((f) => (
           <Pressable
@@ -134,18 +144,24 @@ export function ProfileFlagsEditor({
           </Pressable>
         ))}
         {flags.length < FLAGS_MAX && (
-          <Pressable onPress={() => (draft && isNew ? cancel() : openNew())} style={styles.addChip}>
-            <Text style={styles.addChipText}>{draft && isNew ? 'cancel' : '+ flag'}</Text>
+          <Pressable onPress={openNew} style={styles.addChip}>
+            <Text style={styles.addChipText}>+ flag</Text>
           </Pressable>
         )}
       </View>
 
       {draft && (
         <View style={styles.editorRow}>
-          <Pressable onPress={() => setPickerOpen(true)} style={styles.swatch}>
+          {/* dashed border while empty is the same "tap to pick" affordance
+              GalleryPicker's add-tile already uses — a plain "—" in a solid
+              circle read as a settled, already-decided state, not a button */}
+          <Pressable
+            onPress={() => setPickerOpen(true)}
+            style={[styles.swatch, !(draft.imageUrl || BY_KEY.get(draft.flag)?.colors) && styles.swatchEmpty]}
+          >
             {draft.imageUrl || BY_KEY.get(draft.flag)?.colors
               ? <Mark flag={draft.flag} imageUrl={draft.imageUrl} />
-              : <Text style={styles.swatchNone}>—</Text>}
+              : <Text style={styles.swatchNone}>+</Text>}
           </Pressable>
           <TextInput
             value={draft.text}
@@ -211,6 +227,8 @@ export function ProfileFlagsEditor({
 
 const styles = StyleSheet.create({
   wrap: { gap: 10 },
+  header: { flexDirection: 'row', justifyContent: 'flex-end' },
+  headerCancel: { fontFamily: FontFamily.uiMedium, fontSize: sf(12), color: Colors.ink3 },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
   chip: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
@@ -239,6 +257,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.pill, borderWidth: 1.4, borderColor: Colors.line,
     backgroundColor: Colors.vellum,
   },
+  swatchEmpty: { borderStyle: 'dashed' },
   swatchNone: { fontSize: sf(14), color: Colors.ink3 },
   textInput: {
     flex: 1, height: 38,

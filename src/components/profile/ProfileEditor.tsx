@@ -4,7 +4,6 @@ import { Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView,
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { GalleryPicker } from '@/components/profile/GalleryPicker';
-import { ProfileFlagsEditor } from '@/components/profile/ProfileFlagsEditor';
 import { Chip } from '@/components/ui/Chip';
 import { DismissKeyboardView } from '@/components/ui/DismissKeyboardView';
 import { Colors, FontFamily, Radius, SheetColumn, Spacing, sf } from '@/constants/theme';
@@ -70,10 +69,6 @@ type Props = {
   };
   /** the essentials, edited inline under the avatar rather than buried in a sheet */
   headerFields?: EditField[];
-  /** the value key holding ProfileFlag[] — rendered inline too; a chip row plus
-   *  a swatch+text add/edit row is small enough to live on the page, not behind
-   *  a tap into its own titled sheet */
-  flagsKey?: string;
   /** the ✕ — leaving without committing */
   onClose: () => void;
   /** the right-hand action; defaults to onClose when editing in place */
@@ -88,7 +83,7 @@ type Props = {
 };
 
 export function ProfileEditor({
-  title, value, onChange, sections, avatar, headerFields, flagsKey,
+  title, value, onChange, sections, avatar, headerFields,
   onClose, onDone, doneLabel = 'done', initialSection, notice, footer,
 }: Props) {
   const insets = useSafeAreaInsets();
@@ -122,7 +117,11 @@ export function ProfileEditor({
         keyboardDismissMode="on-drag"
         onScrollBeginDrag={() => Keyboard.dismiss()}
       >
-        <DismissKeyboardView>
+        {/* the gap belongs here, not on the ScrollView's content container —
+            that container has exactly one child (this view), so a gap set on
+            it has nothing to space; avatarBlock/headerCard/list/footer are
+            what actually need room between them */}
+        <DismissKeyboardView style={styles.sectionsGap}>
           <Pressable onPress={avatar.onPick} style={styles.avatarBlock}>
             <View style={[styles.avatar, { backgroundColor: avatar.fallbackColor }]}>
               {avatar.uri ? (
@@ -141,16 +140,6 @@ export function ProfileEditor({
                   <Field field={f} value={value} onChange={onChange} />
                 </View>
               ))}
-            </View>
-          )}
-
-          {!!flagsKey && (
-            <View style={styles.flagsCard}>
-              <Text style={styles.flagsLabel}>flags</Text>
-              <ProfileFlagsEditor
-                flags={value[flagsKey] ?? []}
-                onChange={(flags) => onChange({ [flagsKey]: flags })}
-              />
             </View>
           )}
 
@@ -193,13 +182,11 @@ export function ProfileEditor({
             </TouchableWithoutFeedback>
             <View style={[styles.sheet, SheetColumn]}>
               <View style={styles.handle} />
-              {/* every field here auto-saves on change — same "done is
-                  dismissal, never a gate" convention as the screen this sheet
-                  opens from — so there's nothing for a "done" button to
-                  confirm that tapping outside (or the handle above) doesn't
-                  already do. One redundant button removed, not renamed. */}
               <View style={styles.sheetHeader}>
                 <Text style={styles.sheetTitle}>{openSection.label}</Text>
+                <Pressable onPress={() => setOpen(null)} hitSlop={8}>
+                  <Text style={styles.sheetDoneText}>done</Text>
+                </Pressable>
               </View>
               <ScrollView
                 contentContainerStyle={styles.sheetBody}
@@ -297,11 +284,22 @@ function Field({ field, value, onChange }: { field: EditField; value: Value; onC
     );
   }
 
+  const current: string = value[field.key] ?? '';
   return (
     <View style={styles.labeled}>
-      <Text style={styles.labeledText}>{field.label}</Text>
+      <View style={styles.labeledRow}>
+        <Text style={styles.labeledText}>{field.label}</Text>
+        {/* a cap the user can't see is a cap they'll only discover by hitting
+            it mid-sentence — counting up, not down, matches how every field
+            here already reads (nothing else on this screen counts backwards) */}
+        {!!field.maxLength && (
+          <Text style={[styles.charCount, current.length >= field.maxLength && styles.charCountAtLimit]}>
+            {current.length}/{field.maxLength}
+          </Text>
+        )}
+      </View>
       <TextInput
-        value={value[field.key] ?? ''}
+        value={current}
         onChangeText={(v) => onChange({ [field.key]: v })}
         placeholder={field.placeholder}
         placeholderTextColor={Colors.ink3}
@@ -333,7 +331,8 @@ const styles = StyleSheet.create({
   headerTitle: { fontFamily: FontFamily.displayItalic, fontSize: sf(18), color: Colors.ink },
   doneText: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(14), color: Colors.sakuraDeep },
 
-  content: { paddingHorizontal: Spacing.s5, paddingTop: Spacing.s3, gap: Spacing.s5 },
+  content: { paddingHorizontal: Spacing.s5, paddingTop: Spacing.s3 },
+  sectionsGap: { gap: Spacing.s5 },
   notice: {
     marginHorizontal: Spacing.s5, marginBottom: Spacing.s2,
     paddingHorizontal: Spacing.s3, paddingVertical: 8,
@@ -348,12 +347,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.s4,
   },
   headerField: { paddingVertical: Spacing.s4 },
-  flagsCard: {
-    backgroundColor: Colors.vellum,
-    borderRadius: Radius.r4, borderWidth: 1, borderColor: Colors.line,
-    padding: Spacing.s4, gap: Spacing.s3,
-  },
-  flagsLabel: { fontFamily: FontFamily.uiMedium, fontSize: sf(12), color: Colors.ink2 },
   headerFieldDivider: { borderTopWidth: 1, borderTopColor: Colors.line },
   avatarBlock: { alignItems: 'center', gap: 8 },
   avatar: {
@@ -384,19 +377,29 @@ const styles = StyleSheet.create({
     paddingBottom: 34, maxHeight: '80%',
   },
   handle: { width: 40, height: 4, backgroundColor: Colors.line, borderRadius: 2, alignSelf: 'center', marginTop: 10 },
-  sheetHeader: { padding: Spacing.s4, borderBottomWidth: 1, borderBottomColor: Colors.line },
+  sheetHeader: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    padding: Spacing.s4, borderBottomWidth: 1, borderBottomColor: Colors.line,
+  },
   sheetTitle: { fontFamily: FontFamily.displayItalic, fontSize: sf(17), color: Colors.ink },
+  sheetDoneText: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(13), color: Colors.sakuraDeep },
   sheetBody: { padding: Spacing.s5, gap: Spacing.s4 },
 
   labeled: { gap: 6 },
+  labeledRow: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' },
   labeledText: { fontFamily: FontFamily.uiMedium, fontSize: sf(12), color: Colors.ink2 },
+  charCount: { fontFamily: FontFamily.ui, fontSize: sf(11), color: Colors.ink3 },
+  charCountAtLimit: { color: Colors.sakuraDeep },
   input: {
     borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.r3,
     backgroundColor: Colors.vellum,
     paddingHorizontal: Spacing.s3, paddingVertical: Spacing.s3,
     fontFamily: FontFamily.ui, fontSize: sf(14), color: Colors.ink,
   },
-  inputTall: { minHeight: 92, textAlignVertical: 'top', lineHeight: sf(20) },
+  // bio is the only multiline field here, and it's described as "the line or
+  // two under your name" — a box sized for four-plus lines was promising more
+  // room than the 80-char cap actually gives
+  inputTall: { minHeight: 52, textAlignVertical: 'top', lineHeight: sf(20) },
   hint: { fontFamily: FontFamily.ui, fontSize: sf(11.5), color: Colors.ink3, lineHeight: sf(16) },
   chipRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
   chipCustomInput: {

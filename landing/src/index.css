@@ -840,6 +840,14 @@ a:hover {
   gap: 28px;
   margin-top: 12px;
 }
+/* left layout: tighter gap, no top margin of its own — left-text-col's own
+   gap already spaces it from the pronouns line above */
+.social-stats-row-left {
+  display: flex;
+  justify-content: flex-start;
+  gap: 18px;
+  margin-top: 2px;
+}
 .social-stat {
   display: flex;
   flex-direction: column;

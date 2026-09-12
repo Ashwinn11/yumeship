@@ -1,12 +1,15 @@
+import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Keyboard, StyleSheet, Text, View } from 'react-native';
+import { Keyboard, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { Heart } from '@/components/deco/Heart';
 import { ProfileEditor, type EditField, type EditSectionDef } from '@/components/profile/ProfileEditor';
+import { ProfileFlagsEditor } from '@/components/profile/ProfileFlagsEditor';
 import { ProfileLinksEditor } from '@/components/profile/ProfileLinksEditor';
 import { Toggle } from '@/components/ui/Toggle';
-import { Colors, FontFamily, sf } from '@/constants/theme';
+import { Colors, FontFamily, Radius, Spacing, sf } from '@/constants/theme';
 import { persistImage } from '@/lib/localMedia';
 import { readMe, saveMe, type Me } from '@/store/me';
 import { useFos } from '@/store/fo';
@@ -39,19 +42,28 @@ export default function EditProfileScreen() {
     if (!res.canceled && res.assets[0]) patch({ avatar: await persistImage(res.assets[0].uri) });
   }
 
-  function togglePaired(v: boolean) {
-    if (!v) {
+  // one control, one job: pairing is a choice among "none" + every f/o, so
+  // it's a single list with "none" as one of its rows, not a toggle plus a
+  // separate list fighting to represent the same state
+  function choosePaired(id: string) {
+    if (!id) {
       const prev = me.identifyFoId;
       patch({ identifyFoId: '' });
       (async () => { await pushOwnProfile(); if (prev) await unpublishFoProfile(prev); })()
         .catch(logSyncFailure('unpair F/O'));
       return;
     }
-    const first = fos[0];
-    if (!first) return;
-    patch({ identifyFoId: first.id });
-    (async () => { await syncIdentifyFoPublish(first.id); await pushOwnProfile(); })()
+    patch({ identifyFoId: id });
+    // publish them, then re-push the profile so its identify_fo_id can point
+    // at a row that now exists — the reverse order would drop the pairing
+    (async () => { await syncIdentifyFoPublish(id); await pushOwnProfile(); })()
       .catch(logSyncFailure('pair F/O'));
+  }
+
+  // the toggle only makes sense with exactly one f/o — a genuine binary
+  // choice. With more than one, choosePaired's list is the only control.
+  function togglePaired(v: boolean) {
+    choosePaired(v ? fos[0]?.id ?? '' : '');
   }
 
   const pairedName = fos.find((f) => f.id === me.identifyFoId)?.name;
@@ -71,15 +83,14 @@ export default function EditProfileScreen() {
 
   const sections: EditSectionDef[] = [
     {
-      id: 'details',
-      label: 'details',
-      summary: (v) => [v.age, v.birthday, v.height, v.weight].filter(Boolean).join(' · ') || 'not set',
-      fields: [
-        { kind: 'text', key: 'age', label: 'age', placeholder: 'optional' },
-        { kind: 'text', key: 'birthday', label: 'birthday', placeholder: 'e.g. March 3' },
-        { kind: 'text', key: 'height', label: 'height', placeholder: 'e.g. 165 cm' },
-        { kind: 'text', key: 'weight', label: 'weight', placeholder: 'optional' },
-      ],
+      id: 'flags',
+      label: 'flags',
+      summary: (v) => (v.flags.length ? `${v.flags.length} flag${v.flags.length === 1 ? '' : 's'}` : 'none yet'),
+      fields: [{
+        kind: 'node', label: 'flags', render: () => (
+          <ProfileFlagsEditor flags={me.flags} onChange={(flags) => patch({ flags })} />
+        ),
+      }],
     },
     {
       id: 'song',
@@ -114,10 +125,61 @@ export default function EditProfileScreen() {
         kind: 'node' as const,
         label: 'show you and your f/o together, with a heart between, on your card',
         render: () => (
-          <View style={styles.pairedRow}>
-            <Toggle value={!!me.identifyFoId} onValueChange={togglePaired} />
-            {!!pairedName && <Text style={styles.pairedName}>with {pairedName}</Text>}
-          </View>
+          fos.length <= 1 ? (
+            // a genuine binary choice with nothing to pick between — a toggle
+            // is the honest control here
+            <View style={styles.pairedRow}>
+              <Toggle value={!!me.identifyFoId} onValueChange={togglePaired} />
+              {!!pairedName && <Text style={styles.pairedName}>with {pairedName}</Text>}
+            </View>
+          ) : (
+            // more than one f/o: a horizontal tray of avatars, same idiom as
+            // the "your f/os" strip on the profile screen itself — scrolls to
+            // any count with no height games, and the selected one gets a
+            // heart badge instead of a generic checkmark, since a heart
+            // between you and them is literally what this feature draws
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.foPickerRow}>
+              <Pressable style={styles.foPickerItem} onPress={() => choosePaired('')}>
+                <View style={[styles.foPickerAvatarWrap, !me.identifyFoId && styles.foPickerAvatarWrapSelected]}>
+                  <View style={styles.foPickerAvatarNone}>
+                    <Text style={styles.foPickerNoneGlyph}>—</Text>
+                  </View>
+                  {!me.identifyFoId && (
+                    <View style={styles.foPickerHeartBadge}>
+                      <Heart size={11} color={Colors.sakuraDeep} />
+                    </View>
+                  )}
+                </View>
+                <Text style={[styles.foPickerLabel, !me.identifyFoId && styles.foPickerLabelSelected]} numberOfLines={1}>
+                  none
+                </Text>
+              </Pressable>
+              {fos.map((fo) => {
+                const selected = fo.id === me.identifyFoId;
+                return (
+                  <Pressable key={fo.id} style={styles.foPickerItem} onPress={() => choosePaired(fo.id)}>
+                    <View style={[styles.foPickerAvatarWrap, selected && styles.foPickerAvatarWrapSelected]}>
+                      <View style={[styles.foPickerAvatar, { backgroundColor: Colors.lavender }]}>
+                        {fo.photoUri ? (
+                          <Image source={{ uri: fo.photoUri }} style={styles.foPickerAvatarImg} contentFit="cover" />
+                        ) : (
+                          <Text style={styles.foPickerInitial}>{fo.name.trim().charAt(0).toUpperCase() || '♡'}</Text>
+                        )}
+                      </View>
+                      {selected && (
+                        <View style={styles.foPickerHeartBadge}>
+                          <Heart size={11} color={Colors.sakuraDeep} />
+                        </View>
+                      )}
+                    </View>
+                    <Text style={[styles.foPickerLabel, selected && styles.foPickerLabelSelected]} numberOfLines={1}>
+                      {fo.name || 'untitled'}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          )
         ),
       }],
     }] as EditSectionDef[]) : []),
@@ -130,7 +192,6 @@ export default function EditProfileScreen() {
       onChange={(p) => patch(p as Partial<Me>)}
       sections={sections}
       headerFields={headerFields}
-      flagsKey="flags"
       avatar={{
         uri: me.avatar,
         fallbackColor: me.color,
@@ -143,7 +204,43 @@ export default function EditProfileScreen() {
   );
 }
 
+const AVATAR_TRAY_SIZE = 56;
+
 const styles = StyleSheet.create({
   pairedRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   pairedName: { fontFamily: FontFamily.ui, fontSize: sf(13), color: Colors.ink2 },
+
+  // the whole control when there's more than one f/o — a horizontal tray,
+  // same idiom as the "your f/os" strip elsewhere, not a settings list
+  foPickerRow: { flexDirection: 'row', gap: 14, paddingVertical: 2 },
+  foPickerItem: { width: 68, alignItems: 'center', gap: 6 },
+  // the ring is always laid out, transparent until selected — a border/padding
+  // that only appears on selection would grow the avatar and shove its
+  // neighbours over every time the choice changes
+  foPickerAvatarWrap: {
+    borderWidth: 2, borderColor: 'transparent', borderRadius: (AVATAR_TRAY_SIZE + 6) / 2, padding: 1,
+  },
+  foPickerAvatarWrapSelected: { borderColor: Colors.sakuraDeep },
+  foPickerAvatar: {
+    width: AVATAR_TRAY_SIZE, height: AVATAR_TRAY_SIZE, borderRadius: Radius.pill,
+    alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+  },
+  foPickerAvatarNone: {
+    width: AVATAR_TRAY_SIZE, height: AVATAR_TRAY_SIZE, borderRadius: Radius.pill,
+    alignItems: 'center', justifyContent: 'center',
+    backgroundColor: Colors.paperDeep, borderWidth: 1.4, borderColor: Colors.line, borderStyle: 'dashed',
+  },
+  foPickerNoneGlyph: { fontSize: sf(18), color: Colors.ink3, fontFamily: FontFamily.ui },
+  foPickerAvatarImg: { width: AVATAR_TRAY_SIZE, height: AVATAR_TRAY_SIZE, borderRadius: Radius.pill },
+  foPickerInitial: { fontFamily: FontFamily.displayItalic, fontSize: sf(20), color: '#fff' },
+  // sits over the avatar's own corner rather than floating beside it — the
+  // same "one badge marks the chosen one" language the pin badge uses elsewhere
+  foPickerHeartBadge: {
+    position: 'absolute', bottom: -2, right: -2,
+    width: 18, height: 18, borderRadius: Radius.pill,
+    backgroundColor: Colors.vellum, borderWidth: 1, borderColor: Colors.sakuraDeep,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  foPickerLabel: { fontFamily: FontFamily.uiMedium, fontSize: sf(11), color: Colors.ink3, maxWidth: 68 },
+  foPickerLabelSelected: { color: Colors.sakuraDeep, fontFamily: FontFamily.uiSemiBold },
 });

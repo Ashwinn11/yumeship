@@ -188,6 +188,22 @@ export function ProfileCard({
 
   const initial = name.trim().charAt(0).toUpperCase() || '♡';
 
+  // followers/following sits right under pronouns, above flags/tagline/links
+  // — mirrors the mobile app's ProfileCard, which reads as one identity+stats
+  // cluster before anything else about the card
+  const statsContent = (followerCount !== undefined || followingCount !== undefined) ? (
+    <>
+      <div className="social-stat">
+        <span className="social-stat-value" style={textStyle}>{followerCount ?? 0}</span>
+        <span className="social-stat-label">followers</span>
+      </div>
+      <div className="social-stat">
+        <span className="social-stat-value" style={textStyle}>{followingCount ?? 0}</span>
+        <span className="social-stat-label">following</span>
+      </div>
+    </>
+  ) : null;
+
   return (
     <div className="profile-card-container">
       {/* ── Hero: identity only — everything else lives in its own section below ── */}
@@ -245,6 +261,7 @@ export function ProfileCard({
                   </div>
                   {subtitle && <span className="subtitle-text" style={textStyle}>{subtitle}</span>}
                   {pronouns && <span className="pronouns-text pronouns-text-left" style={textStyle}>{pronouns}</span>}
+                  {statsContent && <div className="social-stats-row-left">{statsContent}</div>}
                 </div>
               </div>
             ) : (
@@ -271,6 +288,7 @@ export function ProfileCard({
                   {subtitle && <span className="subtitle-text" style={textStyle}>{subtitle}</span>}
                 </div>
                 {pronouns && <span className="pronouns-text" style={textStyle}>{pronouns}</span>}
+                {statsContent && <div className="social-stats-row">{statsContent}</div>}
               </>
             )}
             <ProfileFlags flags={flags} textColor={textColor} />
@@ -310,18 +328,6 @@ export function ProfileCard({
                     )}
                   </div>
                 ))}
-              </div>
-            )}
-            {(followerCount !== undefined || followingCount !== undefined) && (
-              <div className="social-stats-row">
-                <div className="social-stat">
-                  <span className="social-stat-value" style={textStyle}>{followerCount ?? 0}</span>
-                  <span className="social-stat-label">followers</span>
-                </div>
-                <div className="social-stat">
-                  <span className="social-stat-value" style={textStyle}>{followingCount ?? 0}</span>
-                  <span className="social-stat-label">following</span>
-                </div>
               </div>
             )}
             {followAction && <div className="follow-action-row">{followAction}</div>}

@@ -676,10 +676,9 @@ export async function pushFoProfile(foId: string): Promise<PushResult> {
     border_style: fo.borderStyle,
     name_font: fo.nameFont,
     card_layout: fo.cardLayout,
+    is_public: true,
   };
 
-  // See pushOwnProfile: unpublishing deletes the row outright, so a re-publish
-  // would otherwise trust a stale avatarSyncedUri and leave the F/O faceless.
   const sync = await syncAvatarAndGallery({
     table: 'fo_profiles',
     entityId: fo.id,
@@ -713,7 +712,26 @@ export async function pushFoProfile(foId: string): Promise<PushResult> {
   return { photoFailed: sync.photoFailed };
 }
 
+/**
+ * Turns the toggle off. This used to delete the row (and every uploaded
+ * file with it), which meant the next publish was always a full re-upload —
+ * even when nothing about the F/O had actually changed since. Flipping
+ * is_public instead leaves the row, the files, and every sync marker
+ * exactly where pushFoProfile left them, so switching back on is just that
+ * one flag flip, no re-upload, regardless of how long it's been off.
+ */
 export async function unpublishFoProfile(foId: string): Promise<void> {
+  const { error } = await supabase.from('fo_profiles').update({ is_public: false }).eq('id', foId);
+  if (error) throw error;
+  updateFo(foId, { isPublic: false });
+}
+
+/**
+ * The real, permanent removal — only for when the local F/O itself is being
+ * deleted, never for a plain toggle-off. Nothing will ever republish this id
+ * again, so the remote row and its files should actually go, not just hide.
+ */
+export async function deleteFoProfileRemote(foId: string): Promise<void> {
   // fetched before the row goes away — it's the only place these urls live
   const { data: existing } = await supabase
     .from('fo_profiles')
@@ -723,14 +741,9 @@ export async function unpublishFoProfile(foId: string): Promise<void> {
 
   const { error } = await supabase.from('fo_profiles').delete().eq('id', foId);
   if (error) throw error;
-  // only flip local state once the remote row is actually gone — otherwise a
-  // failed delete leaves the app believing a still-public profile is private
-  // the row is gone, so every uploaded-already marker is now a lie — clearing
-  // them makes the next publish re-upload the avatar and gallery from scratch
-  updateFo(foId, { isPublic: false, avatarSyncedUri: '', gallerySyncMap: {} });
 
   // best-effort, after the delete the caller asked for has already landed —
-  // a missed cleanup here leaves orphaned files, not a broken unpublish
+  // a missed cleanup here leaves orphaned files, not a broken delete
   if (existing?.avatar_url) deleteFromBucketByUrl('avatars', existing.avatar_url);
   if (existing?.card_bg_image) deleteFromBucketByUrl('avatars', existing.card_bg_image);
   if (existing?.page_bg_image) deleteFromBucketByUrl('avatars', existing.page_bg_image);
@@ -797,7 +810,15 @@ export async function syncIdentifyFoPublish(foId: string): Promise<PushResult> {
 
   const fo = getFo(foId);
   if (!fo) return nothingToDo;
-  if (fo.isPublic) return nothingToDo;
+  // the local isPublic marker can't be trusted alone: another device could
+  // have flipped is_public off remotely without this one's copy catching up.
+  // Checking is_public itself (not just row existence) still holds now that
+  // unpublish leaves the row in place — a stale "public" marker here would
+  // otherwise skip the publish pushOwnProfile needs to point identify_fo_id at.
+  if (fo.isPublic) {
+    const { data: existing } = await supabase.from('fo_profiles').select('is_public').eq('id', foId).maybeSingle();
+    if (existing?.is_public) return nothingToDo;
+  }
   return pushFoProfile(foId);
 }
 

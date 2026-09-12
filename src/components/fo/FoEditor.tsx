@@ -2,6 +2,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Pressable, StyleSheet, Text } from 'react-native';
 
 import { ProfileEditor, type EditField, type EditSectionDef } from '@/components/profile/ProfileEditor';
+import { ProfileFlagsEditor } from '@/components/profile/ProfileFlagsEditor';
 import { ProfileLinksEditor } from '@/components/profile/ProfileLinksEditor';
 import { DateField } from '@/components/ui/DateField';
 import { Colors, FontFamily, Radius, REL_ORDER, RelationshipColors, RelationshipLabels, SHARING_ORDER, SharingColors, SharingLabels, Spacing, sf } from '@/constants/theme';
@@ -64,6 +65,16 @@ export function FoEditor({
 
   const sections: EditSectionDef[] = [
     {
+      id: 'flags',
+      label: 'flags',
+      summary: (v) => (v.flags.length ? `${v.flags.length} flag${v.flags.length === 1 ? '' : 's'}` : 'none yet'),
+      fields: [{
+        kind: 'node', label: 'flags', render: () => (
+          <ProfileFlagsEditor flags={value.flags} onChange={(flags) => onChange({ flags })} />
+        ),
+      }],
+    },
+    {
       id: 'relationship',
       label: 'relationship',
       summary: (v) => `${v.relStatus} · sharing ${v.shareStatus}`,
@@ -121,7 +132,6 @@ export function FoEditor({
       onChange={(p) => onChange(p as Partial<FoDraft>)}
       sections={sections}
       headerFields={headerFields}
-      flagsKey="flags"
       avatar={{
         uri: value.photoUri,
         fallbackColor: value.color || Colors.sakura,
