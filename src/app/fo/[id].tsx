@@ -19,10 +19,10 @@ import { relationshipStatus, sharingStatus } from '@/components/profile/cardProp
 import { useIPad } from '@/hooks/use-ipad';
 import { deleteFo, updateFo, useFo } from '@/store/fo';
 import {
+  deleteFoProfileRemote,
   deletePost,
   logSyncFailure,
   pushFoProfile,
-  unpublishFoProfile,
   useFoPosts,
   type CommunityPost,
 } from '@/store/community';
@@ -127,10 +127,10 @@ export default function FoDetailScreen() {
     const foId = fo!.id;
     deleteFo(foId);
     router.back();
-    // the local row is gone either way; a failed unpublish just leaves a
-    // stray remote row behind rather than losing anything the user did
+    // this id is gone for good, not just toggled off — the remote row and its
+    // files should actually go too, not soft-hide like a plain unpublish does
     if (wasPublic) {
-      unpublishFoProfile(foId).catch(logSyncFailure('unpublish deleted F/O'));
+      deleteFoProfileRemote(foId).catch(logSyncFailure('delete remote F/O profile'));
     }
   }
 

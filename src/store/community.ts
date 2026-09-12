@@ -397,6 +397,24 @@ export type PushResult = {
   photoFailed: boolean;
 };
 
+/**
+ * A single gateway blip (504, or the fetch failing outright) shouldn't drop an
+ * otherwise-successful save on the floor — these are idempotent upserts keyed
+ * on the row's own id, so retrying is always safe. Backs off 400ms/800ms
+ * between the up-to-3 attempts rather than hammering an already-struggling edge.
+ */
+async function withRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await fn();
+    } catch (e) {
+      if (i === attempts - 1) throw e;
+      await new Promise((r) => setTimeout(r, 400 * (i + 1)));
+    }
+  }
+  throw new Error('unreachable');
+}
+
 /** Consistent, greppable logging for sync paths that have no UI of their own. */
 export function logSyncFailure(context: string) {
   return (e: unknown) => {
@@ -624,8 +642,12 @@ export async function pushOwnProfile(): Promise<PushResult> {
   patch.page_bg_image = (pageBgImage && sync.galleryMap[pageBgImage]) || '';
   patch.flags = remapFlags(localFlags, sync.galleryMap).filter((f) => f.text || f.flag || f.imageUrl);
 
-  const { error } = await supabase.from('profiles').upsert(patch);
-  if (error) throw error;
+  // withRetry only sees a throw, so the error has to be raised inside the
+  // retried function itself, not left for the usual "check .error after" below
+  await withRetry(async () => {
+    const { error } = await supabase.from('profiles').upsert(patch);
+    if (error) throw error;
+  });
   // only remember the upload once the row that references it actually landed
   if (sync.uploadedAvatarFor) saveGlobalSetting('user_avatar_synced_uri', sync.uploadedAvatarFor);
   // only now that the new state is durably saved — deleting any earlier would
@@ -697,8 +719,10 @@ export async function pushFoProfile(foId: string): Promise<PushResult> {
   patch.page_bg_image = (fo.pageBgImage && sync.galleryMap[fo.pageBgImage]) || '';
   patch.flags = remapFlags(fo.flags, sync.galleryMap).filter((f) => f.text || f.flag || f.imageUrl);
 
-  const { error } = await supabase.from('fo_profiles').upsert(patch);
-  if (error) throw error;
+  await withRetry(async () => {
+    const { error } = await supabase.from('fo_profiles').upsert(patch);
+    if (error) throw error;
+  });
 
   updateFo(fo.id, {
     gallerySyncMap: sync.galleryMap,
@@ -721,8 +745,10 @@ export async function pushFoProfile(foId: string): Promise<PushResult> {
  * one flag flip, no re-upload, regardless of how long it's been off.
  */
 export async function unpublishFoProfile(foId: string): Promise<void> {
-  const { error } = await supabase.from('fo_profiles').update({ is_public: false }).eq('id', foId);
-  if (error) throw error;
+  await withRetry(async () => {
+    const { error } = await supabase.from('fo_profiles').update({ is_public: false }).eq('id', foId);
+    if (error) throw error;
+  });
   updateFo(foId, { isPublic: false });
 }
 
