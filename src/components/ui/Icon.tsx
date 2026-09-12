@@ -123,6 +123,21 @@ export function IconPin({ size = 14, color = Colors.ink }: IconProps) {
   );
 }
 
+/** A die, for "use this template" on a shared bingo card — same 14×14/1.3
+ *  stroke convention as the rest of the set, replacing a raw 🎲 emoji. */
+export function IconDice({ size = 14, color = Colors.ink }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 14 14" fill="none">
+      <Rect x="1.5" y="1.5" width="11" height="11" rx="2.5" stroke={color} strokeWidth="1.3" />
+      <Circle cx="4.4" cy="4.4" r="0.9" fill={color} />
+      <Circle cx="9.6" cy="4.4" r="0.9" fill={color} />
+      <Circle cx="7" cy="7" r="0.9" fill={color} />
+      <Circle cx="4.4" cy="9.6" r="0.9" fill={color} />
+      <Circle cx="9.6" cy="9.6" r="0.9" fill={color} />
+    </Svg>
+  );
+}
+
 export function IconSearch({ size = 14, color = Colors.ink }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 14 14" fill="none">

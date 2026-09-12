@@ -54,13 +54,24 @@ function PostCardImpl({ post, onToggleLike, onPollVote, onRequestDelete, onReque
       {onRequestDelete || onRequestTogglePin ? (
         <View style={styles.cornerActions}>
           {onRequestTogglePin && (
-            <Pressable style={styles.cornerBtn} onPress={onRequestTogglePin} hitSlop={8}>
+            <Pressable
+              style={styles.cornerBtn}
+              onPress={onRequestTogglePin}
+              hitSlop={8}
+              accessibilityLabel={pinned ? 'Unpin post' : 'Pin post'}
+            >
               <IconPin size={13} color={pinned ? Colors.sakuraDeep : Colors.ink3} />
             </Pressable>
           )}
           {onRequestDelete && (
-            <Pressable style={styles.cornerBtn} onPress={onRequestDelete} hitSlop={8}>
-              <IconTrashSolid size={13} color={Colors.ink3} />
+            // tinted red, distinct from pin's neutral toggle — this one is destructive
+            <Pressable
+              style={[styles.cornerBtn, styles.cornerBtnDanger]}
+              onPress={onRequestDelete}
+              hitSlop={8}
+              accessibilityLabel="Delete post"
+            >
+              <IconTrashSolid size={13} color={Colors.ember} />
             </Pressable>
           )}
         </View>
@@ -135,6 +146,9 @@ const styles = StyleSheet.create({
     width: 26, height: 26, borderRadius: Radius.pill,
     backgroundColor: Colors.paperDeep, alignItems: 'center', justifyContent: 'center',
   },
+  // ember at low opacity, not a new named token — a one-off tint distinguishing
+  // this destructive action from the neutral (reversible) pin toggle beside it
+  cornerBtnDanger: { backgroundColor: 'rgba(212,105,74,0.12)' },
   pinnedRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: -2 },
   pinnedLabel: {
     fontFamily: FontFamily.uiSemiBold, fontSize: sf(10.5), color: Colors.ink3,

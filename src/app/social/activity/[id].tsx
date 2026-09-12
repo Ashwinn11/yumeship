@@ -88,7 +88,7 @@ export default function ActivityDetailScreen() {
     return (
       <View style={[styles.screen, { paddingTop: insets.top }]}>
         <View style={[styles.header, column]}>
-          <Pressable onPress={() => router.back()} style={styles.headerBtn}>
+          <Pressable onPress={() => router.back()} style={styles.headerBtn} accessibilityLabel="Back">
             <Text style={styles.headerBtnText}>‹</Text>
           </Pressable>
         </View>
@@ -163,7 +163,7 @@ export default function ActivityDetailScreen() {
           </View>
         )}
         <View style={styles.composerInputRow}>
-          <Pressable style={styles.photoBtn} onPress={pickReplyImages} hitSlop={6}>
+          <Pressable style={styles.photoBtn} onPress={pickReplyImages} hitSlop={6} accessibilityLabel="Add photos">
             <IconPhoto size={17} color={Colors.sakuraDeep} />
           </Pressable>
           <TextInput
@@ -178,6 +178,7 @@ export default function ActivityDetailScreen() {
             onPress={sendReply}
             disabled={!canSend}
             hitSlop={6}
+            accessibilityLabel="Send reply"
             style={({ pressed }) => [
               styles.sendBtn,
               !canSend && styles.sendBtnDisabled,

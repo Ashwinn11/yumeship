@@ -454,16 +454,29 @@ function Feed({ insets }: { insets: { top: number } }) {
       </View>
 
       <View style={[styles.tabsWrap, column]}>
-        <SegmentedTabs
-          tabs={[
-            { key: 'global', label: 'global' },
-            { key: 'following', label: 'following' },
-            { key: 'activities', label: 'activities' },
-            { key: 'groups', label: 'groups' },
-          ]}
-          value={tab}
-          onChange={selectTab}
-        />
+        <View style={styles.tabsRow}>
+          {/* global/following/activities are filters of one feed; groups is a
+              different content type entirely (its own create flow, its own
+              search) — kept as its own pill rather than a 4th segment so it
+              doesn't read as "just another feed filter" */}
+          <View style={styles.feedTabsFlex}>
+            <SegmentedTabs
+              tabs={[
+                { key: 'global', label: 'global' },
+                { key: 'following', label: 'following' },
+                { key: 'activities', label: 'activities' },
+              ]}
+              value={tab === 'groups' ? 'global' : tab}
+              onChange={selectTab}
+            />
+          </View>
+          <Pressable
+            style={[styles.groupsTabBtn, tab === 'groups' && styles.groupsTabBtnActive]}
+            onPress={() => selectTab('groups')}
+          >
+            <Text style={[styles.groupsTabText, tab === 'groups' && styles.groupsTabTextActive]}>groups</Text>
+          </Pressable>
+        </View>
       </View>
 
       {tab === 'groups' ? (
@@ -538,6 +551,7 @@ function Feed({ insets }: { insets: { top: number } }) {
       <Pressable
         style={styles.fab}
         onPress={() => router.push((tab === 'groups' ? '/social/groups/new' : '/social/post/new') as any)}
+        accessibilityLabel={tab === 'groups' ? 'New group' : 'New post'}
       >
         <Text style={styles.fabText}>+</Text>
       </Pressable>
@@ -961,6 +975,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.s5,
     paddingBottom: Spacing.s3,
   },
+  // gap between the feed-filter track and the groups pill is roughly double
+  // the gap the segmented tabs use internally — space alone marking "these
+  // three are one group, this is something else" per better-layout
+  tabsRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  feedTabsFlex: { flex: 1 },
+  groupsTabBtn: {
+    paddingHorizontal: 14, paddingVertical: 8,
+    borderRadius: Radius.pill, backgroundColor: Colors.paperDeep, borderWidth: 1, borderColor: Colors.line,
+  },
+  groupsTabBtnActive: { backgroundColor: Colors.sakuraDeep, borderColor: Colors.sakuraDeep },
+  groupsTabText: { fontFamily: FontFamily.uiMedium, fontSize: sf(12), color: Colors.ink2 },
+  groupsTabTextActive: { color: '#fff', fontFamily: FontFamily.uiSemiBold },
   feedContent: { paddingHorizontal: Spacing.s5, paddingBottom: Spacing.s8 },
   feedSeparator: { height: 12 },
   feedEmpty: { alignItems: 'center', paddingTop: 60 },

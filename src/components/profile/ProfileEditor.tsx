@@ -193,11 +193,13 @@ export function ProfileEditor({
             </TouchableWithoutFeedback>
             <View style={[styles.sheet, SheetColumn]}>
               <View style={styles.handle} />
+              {/* every field here auto-saves on change — same "done is
+                  dismissal, never a gate" convention as the screen this sheet
+                  opens from — so there's nothing for a "done" button to
+                  confirm that tapping outside (or the handle above) doesn't
+                  already do. One redundant button removed, not renamed. */}
               <View style={styles.sheetHeader}>
                 <Text style={styles.sheetTitle}>{openSection.label}</Text>
-                <Pressable onPress={() => setOpen(null)} hitSlop={8}>
-                  <Text style={styles.doneText}>done</Text>
-                </Pressable>
               </View>
               <ScrollView
                 contentContainerStyle={styles.sheetBody}
@@ -382,10 +384,7 @@ const styles = StyleSheet.create({
     paddingBottom: 34, maxHeight: '80%',
   },
   handle: { width: 40, height: 4, backgroundColor: Colors.line, borderRadius: 2, alignSelf: 'center', marginTop: 10 },
-  sheetHeader: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    padding: Spacing.s4, borderBottomWidth: 1, borderBottomColor: Colors.line,
-  },
+  sheetHeader: { padding: Spacing.s4, borderBottomWidth: 1, borderBottomColor: Colors.line },
   sheetTitle: { fontFamily: FontFamily.displayItalic, fontSize: sf(17), color: Colors.ink },
   sheetBody: { padding: Spacing.s5, gap: Spacing.s4 },
 

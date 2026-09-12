@@ -134,7 +134,11 @@ export default function GroupChatScreen() {
         <Pressable onPress={() => router.back()} style={styles.headerBtn}>
           <Text style={styles.headerBtnText}>‹</Text>
         </Pressable>
-        <Pressable style={styles.headerCenter} onPress={() => router.push(`/social/groups/${group.id}/info` as any)}>
+        <Pressable
+          style={styles.headerCenter}
+          onPress={() => router.push(`/social/groups/${group.id}/info` as any)}
+          accessibilityLabel="Group info"
+        >
           <View style={styles.headerAvatar}>
             {group.avatarUrl ? (
               <Image source={{ uri: group.avatarUrl }} style={styles.headerAvatarImg} contentFit="cover" {...AVATAR_IMAGE} />
@@ -148,6 +152,7 @@ export default function GroupChatScreen() {
               {group.fandom ? `#${group.fandom} · ` : ''}{group.memberCount} {group.memberCount === 1 ? 'member' : 'members'}
             </Text>
           </View>
+          <Text style={styles.headerChevron}>›</Text>
         </Pressable>
       </View>
 
@@ -181,7 +186,7 @@ export default function GroupChatScreen() {
                   {replyTo.body || (replyTo.media.length > 0 ? 'photo' : '')}
                 </Text>
               </View>
-              <Pressable onPress={() => setReplyTo(null)} hitSlop={8}>
+              <Pressable onPress={() => setReplyTo(null)} hitSlop={8} accessibilityLabel="Cancel reply">
                 <Text style={styles.bannerCancel}>✕</Text>
               </Pressable>
             </View>
@@ -189,7 +194,7 @@ export default function GroupChatScreen() {
           {!!image && (
             <View style={styles.imagePreviewRow}>
               <Image source={{ uri: image.uri }} style={styles.imagePreview} contentFit="cover" />
-              <Pressable style={styles.imagePreviewRemove} onPress={() => setImage(null)} hitSlop={8}>
+              <Pressable style={styles.imagePreviewRemove} onPress={() => setImage(null)} hitSlop={8} accessibilityLabel="Remove photo">
                 <Text style={styles.bannerCancel}>✕</Text>
               </Pressable>
             </View>
@@ -203,7 +208,7 @@ export default function GroupChatScreen() {
             }}
           />
           <View style={styles.composerRow}>
-            <Pressable style={styles.imagePickBtn} onPress={pickImage} hitSlop={6} disabled={!!image}>
+            <Pressable style={styles.imagePickBtn} onPress={pickImage} hitSlop={6} disabled={!!image} accessibilityLabel="Add photo">
               <IconPhoto size={17} color={image ? Colors.ink3 : Colors.sakuraDeep} />
             </Pressable>
             <TextInput
@@ -218,6 +223,7 @@ export default function GroupChatScreen() {
             <Pressable
               onPress={handleSend}
               disabled={sending || (!draft.trim() && !image)}
+              accessibilityLabel="Send message"
               style={({ pressed }) => [
                 styles.sendBtn,
                 (sending || (!draft.trim() && !image)) && styles.sendBtnDisabled,
@@ -284,6 +290,7 @@ const styles = StyleSheet.create({
   headerAvatarImg: { width: 34, height: 34, borderRadius: Radius.pill },
   headerAvatarInitial: { fontFamily: FontFamily.displayItalic, fontSize: sf(15), color: '#fff' },
   headerTextCol: { flex: 1, minWidth: 0 },
+  headerChevron: { fontFamily: FontFamily.ui, fontSize: sf(20), color: Colors.ink3, marginLeft: 2 },
   headerTitle: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(15), color: Colors.ink },
   headerSub: { fontFamily: FontFamily.ui, fontSize: sf(11), color: Colors.ink3, marginTop: 1 },
 

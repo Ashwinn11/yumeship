@@ -31,7 +31,7 @@ export function MyGroupRow({ group }: { group: CommunityGroup }) {
         )}
       </View>
       <View style={styles.textCol}>
-        <Text style={[styles.name, unread && styles.nameUnread]} numberOfLines={1}>{group.name}</Text>
+        <Text style={[styles.name, unread && styles.nameUnread, unread && styles.namePad]} numberOfLines={1}>{group.name}</Text>
         {!!group.fandom && (
           <Text style={[styles.fandom, unread && styles.fandomUnread]} numberOfLines={1}>#{group.fandom}</Text>
         )}
@@ -60,8 +60,10 @@ const styles = StyleSheet.create({
   avatarImg: { width: AVATAR_SIZE, height: AVATAR_SIZE, borderRadius: AVATAR_SIZE / 2 },
   avatarInitial: { fontFamily: FontFamily.displayItalic, fontSize: sf(18), color: '#fff' },
   textCol: { flex: 1, minWidth: 0, gap: 2 },
-  name: { fontFamily: FontFamily.uiMedium, fontSize: sf(14.5), color: Colors.ink2, flexShrink: 1, paddingRight: 22 },
+  name: { fontFamily: FontFamily.uiMedium, fontSize: sf(14.5), color: Colors.ink2, flexShrink: 1 },
   nameUnread: { fontFamily: FontFamily.uiSemiBold, color: Colors.ink },
+  // only unread rows render the trailing count badge — only they need the room
+  namePad: { paddingRight: 22 },
   fandom: { fontFamily: FontFamily.ui, fontSize: sf(11.5), color: Colors.ink3 },
   fandomUnread: { color: Colors.ink2 },
   badge: {

@@ -1,6 +1,6 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Sakura } from '@/components/deco/Sakura';
@@ -118,13 +118,18 @@ export default function MyProfileScreen() {
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [togglingFosPublic, setTogglingFosPublic] = useState(false);
-  const allFosPublic = fos.length > 0 && fos.every((f) => f.isPublic);
+  // `fos` only reflects a publish/unpublish once the full round trip (avatar
+  // + gallery upload included) lands — without this, the switch doesn't
+  // visibly move on the first tap and reads as needing a second one
+  const [optimisticFosPublic, setOptimisticFosPublic] = useState<boolean | null>(null);
+  const allFosPublic = optimisticFosPublic ?? (fos.length > 0 && fos.every((f) => f.isPublic));
 
   // one switch for every F/O at once, not a per-F/O toggle — publish/unpublish
   // whichever ones don't already match, in parallel, and surface anything that
   // failed (e.g. an F/O whose sharing status is "no" can't be published) rather
   // than letting the switch silently not do what it looked like it did
   async function handleToggleAllFosPublic(next: boolean) {
+    setOptimisticFosPublic(next);
     setTogglingFosPublic(true);
     const targets = fos.filter((f) => f.isPublic !== next);
     const results = await Promise.allSettled(
@@ -139,6 +144,10 @@ export default function MyProfileScreen() {
           : `${failures.length} f/o${failures.length > 1 ? 's' : ''} couldn't be updated`,
       );
     }
+    // clears back to whatever `fos` now actually says — every updateFo() call
+    // inside pushFoProfile/unpublishFoProfile has already landed by the time
+    // Promise.allSettled resolves, so this reflects real state, not a guess
+    setOptimisticFosPublic(null);
     setTogglingFosPublic(false);
   }
 
@@ -211,10 +220,10 @@ export default function MyProfileScreen() {
         title="my profile"
         right={
           <View style={styles.headerActions}>
-            <Pressable onPress={() => setShowCustomize(true)} style={styles.headerBtn}>
+            <Pressable onPress={() => setShowCustomize(true)} style={styles.headerBtn} accessibilityLabel="Customize card">
               <IconPalette size={13} color={Colors.ink2} />
             </Pressable>
-            <Pressable onPress={() => router.push('/profile/edit' as any)} style={styles.headerBtn}>
+            <Pressable onPress={() => router.push('/profile/edit' as any)} style={styles.headerBtn} accessibilityLabel="Edit profile">
               <IconEdit size={13} color={Colors.ink2} />
             </Pressable>
           </View>
@@ -267,25 +276,10 @@ export default function MyProfileScreen() {
             {fos.length > 0 && (
               <>
                 <Text style={styles.postsLabel}>your f/os</Text>
-                {/* publishing is an account feature — offering the switch while
-                    signed out just fails on every f/o with "not signed in" */}
-                {!!user && (
-                  <View style={styles.toggleRow}>
-                    <View style={styles.toggleTextWrap}>
-                      <Text style={styles.toggleLabel}>public profiles</Text>
-                      <Text style={styles.toggleSub}>
-                        {allFosPublic ? 'anyone can view and comment on all your f/os' : 'turn on to make every f/o public at once'}
-                      </Text>
-                    </View>
-                    <Switch
-                      value={allFosPublic}
-                      onValueChange={handleToggleAllFosPublic}
-                      disabled={togglingFosPublic}
-                      trackColor={{ true: Colors.sakuraDeep, false: Colors.line }}
-                      thumbColor={Colors.vellum}
-                    />
-                  </View>
-                )}
+                {/* the label's own content (the F/Os) comes immediately after
+                    it — the sharing toggle below is a related setting, not
+                    what "your f/os" is naming, so it follows the row instead
+                    of sitting between the label and its content */}
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.foRow}>
                   {fos.map((f) => (
                     <FoAvatarCard
@@ -297,6 +291,36 @@ export default function MyProfileScreen() {
                     />
                   ))}
                 </ScrollView>
+
+                {/* publishing is an account feature — offering the switch while
+                    signed out just fails on every f/o with "not signed in" */}
+                {!!user && (
+                  <View style={styles.toggleRow}>
+                    <View style={styles.toggleTextWrap}>
+                      <Text style={styles.toggleLabel}>public profiles</Text>
+                      <Text style={styles.toggleSub}>
+                        {togglingFosPublic
+                          ? 'updating — photos are re-uploading, this can take a moment…'
+                          : allFosPublic
+                            ? 'anyone can view and comment on all your f/os'
+                            : 'turn on to make every f/o public at once'}
+                      </Text>
+                    </View>
+                    {/* the switch alone, dimmed, reads as "stuck" during the
+                        several-second publish — a spinner in its place makes
+                        the wait legible instead of looking broken */}
+                    {togglingFosPublic ? (
+                      <ActivityIndicator size="small" color={Colors.sakuraDeep} style={styles.toggleSpinner} />
+                    ) : (
+                      <Switch
+                        value={allFosPublic}
+                        onValueChange={handleToggleAllFosPublic}
+                        trackColor={{ true: Colors.sakuraDeep, false: Colors.line }}
+                        thumbColor={Colors.vellum}
+                      />
+                    )}
+                  </View>
+                )}
               </>
             )}
 
@@ -367,12 +391,15 @@ const styles = StyleSheet.create({
   foRow: { flexDirection: 'row', gap: 14, paddingBottom: 2, paddingTop: 4 },
   toggleRow: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    padding: Spacing.s4, marginBottom: Spacing.s3,
+    padding: Spacing.s4, marginTop: Spacing.s4, marginBottom: Spacing.s3,
     backgroundColor: Colors.vellum, borderWidth: 1, borderColor: Colors.line, borderRadius: Radius.r3,
   },
   toggleTextWrap: { flex: 1, marginRight: Spacing.s3 },
   toggleLabel: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(13), color: Colors.ink },
   toggleSub: { fontFamily: FontFamily.ui, fontSize: sf(11), color: Colors.ink3, marginTop: 2 },
+  // matches a Switch's own footprint so swapping it for the spinner during
+  // the publish doesn't shift the row
+  toggleSpinner: { width: 51, alignItems: 'center' },
   postsLabel: {
     fontFamily: FontFamily.uiSemiBold, fontSize: sf(11), color: Colors.ink3,
     textTransform: 'uppercase', letterSpacing: 0.8, marginTop: Spacing.s6, marginBottom: Spacing.s3,

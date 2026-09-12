@@ -27,7 +27,7 @@ export function PollComposer({ options, onChange, onRemove }: Props) {
     <View style={styles.wrap}>
       <View style={styles.header}>
         <Text style={styles.headerLabel}>poll</Text>
-        <Pressable onPress={onRemove} hitSlop={8}>
+        <Pressable onPress={onRemove} hitSlop={8} accessibilityLabel="Remove poll">
           <Text style={styles.headerRemove}>✕</Text>
         </Pressable>
       </View>
@@ -45,7 +45,7 @@ export function PollComposer({ options, onChange, onRemove }: Props) {
             style={styles.input}
           />
           {options.length > MIN_POLL_OPTIONS && (
-            <Pressable onPress={() => removeOption(i)} hitSlop={8} style={styles.rowRemove}>
+            <Pressable onPress={() => removeOption(i)} hitSlop={8} style={styles.rowRemove} accessibilityLabel={`Remove option ${i + 1}`}>
               <Text style={styles.rowRemoveText}>✕</Text>
             </Pressable>
           )}

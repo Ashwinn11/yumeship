@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { BingoGrid } from '@/components/bingo/BingoGrid';
+import { IconDice } from '@/components/ui/Icon';
 import type { BingoCard } from '@/lib/bingo';
 import { Colors, FontFamily, sf } from '@/constants/theme';
 
@@ -16,8 +17,14 @@ export function BingoCardView({ card, postId }: Props) {
   return (
     <View style={s.wrap}>
       <BingoGrid card={card} />
-      <Pressable style={s.useBtn} onPress={() => router.push(`/social/bingo/${postId}` as any)} hitSlop={6}>
-        <Text style={s.useBtnText}>🎲 use this template</Text>
+      <Pressable
+        style={s.useBtn}
+        onPress={() => router.push(`/social/bingo/${postId}` as any)}
+        hitSlop={6}
+        accessibilityLabel="Use this bingo template"
+      >
+        <IconDice size={13} color={Colors.plum} />
+        <Text style={s.useBtnText}>use this template</Text>
       </Pressable>
     </View>
   );
@@ -26,6 +33,7 @@ export function BingoCardView({ card, postId }: Props) {
 const s = StyleSheet.create({
   wrap: { marginTop: 4, gap: 8 },
   useBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
     alignSelf: 'center', borderRadius: 999, paddingVertical: 7, paddingHorizontal: 16,
     borderWidth: 1.5, borderColor: Colors.plum, backgroundColor: Colors.lavenderSoft,
   },

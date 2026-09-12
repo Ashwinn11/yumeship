@@ -78,7 +78,7 @@ function Tile({
           <Text style={styles.gifBadgeText}>GIF</Text>
         </View>
       )}
-      <Pressable style={styles.removeBadge} onPress={onRemove} hitSlop={8}>
+      <Pressable style={styles.removeBadge} onPress={onRemove} hitSlop={8} accessibilityLabel="Remove photo">
         <Text style={styles.removeText}>✕</Text>
       </Pressable>
     </View>

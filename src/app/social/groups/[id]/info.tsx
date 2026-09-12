@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ProfileScreenHeader } from '@/components/profile/ProfileScreenHeader';
 import { CozyModal } from '@/components/ui/CozyModal';
+import { IconEdit } from '@/components/ui/Icon';
 import { AVATAR_IMAGE } from '@/lib/imageProps';
 import { Colors, FontFamily, Radius, Shadow, Spacing, sf } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
@@ -114,7 +115,22 @@ export default function GroupInfoScreen() {
 
   return (
     <View style={styles.screen}>
-      <ProfileScreenHeader insetsTop={insets.top} onBack={() => router.back()} title="group info" />
+      <ProfileScreenHeader
+        insetsTop={insets.top}
+        onBack={() => router.back()}
+        title="group info"
+        right={
+          group.isOwner ? (
+            <Pressable
+              onPress={() => router.push(`/social/groups/${group.id}/edit` as any)}
+              style={styles.headerEditBtn}
+              accessibilityLabel="Edit group"
+            >
+              <IconEdit size={13} color={Colors.ink2} />
+            </Pressable>
+          ) : undefined
+        }
+      />
 
       <ScrollView contentContainerStyle={[styles.content, column]} showsVerticalScrollIndicator={false}>
         <View style={styles.identity}>
@@ -133,14 +149,9 @@ export default function GroupInfoScreen() {
           )}
           {!!group.description && <Text style={styles.description}>{group.description}</Text>}
           <Text style={styles.memberCount}>{group.memberCount} {group.memberCount === 1 ? 'member' : 'members'}</Text>
-
-          {group.isOwner && (
-            <Pressable style={styles.editBtn} onPress={() => router.push(`/social/groups/${group.id}/edit` as any)}>
-              <Text style={styles.editBtnText}>edit group</Text>
-            </Pressable>
-          )}
         </View>
 
+        <Text style={styles.sectionLabel}>notifications</Text>
         <View style={styles.toggleRow}>
           <Text style={styles.toggleLabel}>mute notifications</Text>
           <Switch
@@ -148,8 +159,14 @@ export default function GroupInfoScreen() {
             onValueChange={toggleMute}
             trackColor={{ true: Colors.sakuraDeep, false: Colors.line }}
             thumbColor={Colors.vellum}
+            accessibilityLabel="Mute notifications"
           />
         </View>
+
+        {/* pinning is where this group sits in *your* list, not a notification
+            setting — grouping it with mute under one label mixed two different
+            concerns under one heading */}
+        <Text style={styles.sectionLabel}>preferences</Text>
         <View style={styles.toggleRow}>
           <Text style={styles.toggleLabel}>pin to top of your groups</Text>
           <Switch
@@ -157,6 +174,7 @@ export default function GroupInfoScreen() {
             onValueChange={togglePin}
             trackColor={{ true: Colors.sakuraDeep, false: Colors.line }}
             thumbColor={Colors.vellum}
+            accessibilityLabel="Pin to top of your groups"
           />
         </View>
 
@@ -186,9 +204,12 @@ export default function GroupInfoScreen() {
 
         {!!error && <Text style={styles.error}>{error}</Text>}
 
+        <View style={styles.dangerDivider} />
+
         <Pressable
           style={styles.dangerBtn}
           onPress={() => (group.isOwner ? setConfirmDelete(true) : setConfirmExit(true))}
+          accessibilityLabel={group.isOwner ? 'Delete group' : 'Exit group'}
         >
           <Text style={styles.dangerBtnText}>{group.isOwner ? 'delete group' : 'exit group'}</Text>
         </Pressable>
@@ -246,11 +267,10 @@ const styles = StyleSheet.create({
     textAlign: 'center', marginTop: Spacing.s3, paddingHorizontal: Spacing.s2,
   },
   memberCount: { fontFamily: FontFamily.ui, fontSize: sf(11.5), color: Colors.ink3, marginTop: Spacing.s2 },
-  editBtn: {
-    marginTop: Spacing.s3, paddingHorizontal: 16, paddingVertical: 8,
-    borderRadius: Radius.pill, backgroundColor: Colors.paperDeep, borderWidth: 1, borderColor: Colors.line,
+  headerEditBtn: {
+    width: 32, height: 32, borderRadius: Radius.pill,
+    backgroundColor: Colors.paperDeep, alignItems: 'center', justifyContent: 'center',
   },
-  editBtnText: { fontFamily: FontFamily.uiMedium, fontSize: sf(12), color: Colors.ink2 },
 
   toggleRow: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
@@ -281,6 +301,9 @@ const styles = StyleSheet.create({
   ownerBadgeText: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(9.5), color: Colors.sakuraDeep, textTransform: 'uppercase', letterSpacing: 0.4 },
 
   error: { fontFamily: FontFamily.ui, fontSize: sf(12), color: Colors.ember, marginTop: Spacing.s4, textAlign: 'center' },
-  dangerBtn: { marginTop: Spacing.s5, alignItems: 'center', paddingVertical: 12 },
+  // pulls the destructive action out of the member list's visual rhythm —
+  // space, not just margin, is what actually reads as "a different zone"
+  dangerDivider: { height: 1, backgroundColor: Colors.line, marginTop: Spacing.s5, opacity: 0.6 },
+  dangerBtn: { marginTop: Spacing.s4, alignItems: 'center', paddingVertical: 12 },
   dangerBtnText: { fontFamily: FontFamily.uiMedium, fontSize: sf(13.5), color: Colors.ember },
 });

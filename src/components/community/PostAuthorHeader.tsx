@@ -111,6 +111,8 @@ const styles = StyleSheet.create({
   avatar: { alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   avatarInitial: { fontFamily: FontFamily.displayItalic, color: '#fff' },
   pairedAvatars: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  // intentionally pure black, not Colors.ink (a deep-wine near-black) — no
+  // token in this palette matches true black, and this glyph is meant to be it
   pairedHeartSymbol: { fontSize: sf(13), color: '#000' },
   textCol: { flex: 1, minWidth: 0, gap: 2 },
   nameRow: { flexDirection: 'row', alignItems: 'baseline', gap: 6, flexWrap: 'wrap' },

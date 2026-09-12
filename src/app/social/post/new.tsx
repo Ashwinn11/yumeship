@@ -305,16 +305,17 @@ export default function NewPostScreen() {
 
       {tab === 'post' ? (
         <View style={[styles.toolbar, column]}>
-          <Pressable style={styles.toolbarBtn} disabled={!!poll || hasGif} onPress={pickImages}>
+          <Pressable style={styles.toolbarBtn} disabled={!!poll || hasGif} onPress={pickImages} accessibilityLabel="Add photos">
             <ImageIcon color={poll || hasGif ? Colors.line : Colors.sakuraDeep} />
           </Pressable>
-          <Pressable style={styles.toolbarBtn} disabled={!!poll || hasPhotos} onPress={pickGif}>
+          <Pressable style={styles.toolbarBtn} disabled={!!poll || hasPhotos} onPress={pickGif} accessibilityLabel="Add a GIF">
             <GifIcon color={poll || hasPhotos ? Colors.line : hasGif ? Colors.sakuraInk : Colors.sakuraDeep} />
           </Pressable>
           <Pressable
             style={styles.toolbarBtn}
             disabled={media.length > 0}
             onPress={() => setPoll(poll ? null : ['', ''])}
+            accessibilityLabel={poll ? 'Remove poll' : 'Add a poll'}
           >
             <PollIcon color={media.length > 0 ? Colors.line : poll ? Colors.sakuraInk : Colors.sakuraDeep} />
           </Pressable>

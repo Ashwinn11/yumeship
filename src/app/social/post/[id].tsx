@@ -98,7 +98,7 @@ export default function PostDetailScreen() {
     return (
       <View style={[styles.screen, { paddingTop: insets.top }]}>
         <View style={[styles.header, column]}>
-          <Pressable onPress={() => router.back()} style={styles.headerBtn}>
+          <Pressable onPress={() => router.back()} style={styles.headerBtn} accessibilityLabel="Back">
             <Text style={styles.headerBtnText}>‹</Text>
           </Pressable>
         </View>
@@ -131,7 +131,7 @@ export default function PostDetailScreen() {
         </View>
         {/* only the author can delete, and RLS enforces that server-side too */}
         {isMine ? (
-          <Pressable onPress={() => setConfirmDelete(true)} style={styles.headerBtn} hitSlop={6}>
+          <Pressable onPress={() => setConfirmDelete(true)} style={styles.headerBtn} hitSlop={6} accessibilityLabel="Delete post">
             <Text style={styles.headerDelete}>⋯</Text>
           </Pressable>
         ) : (
@@ -225,7 +225,7 @@ export default function PostDetailScreen() {
           {replyTo && (
             <View style={styles.replyBanner}>
               <Text style={styles.replyBannerText}>replying to {replyTo.name}</Text>
-              <Pressable onPress={() => setReplyTo(null)}>
+              <Pressable onPress={() => setReplyTo(null)} accessibilityLabel="Cancel reply">
                 <Text style={styles.replyBannerCancel}>✕</Text>
               </Pressable>
             </View>
@@ -252,6 +252,7 @@ export default function PostDetailScreen() {
               onPress={send}
               disabled={!draft.trim() || sending}
               hitSlop={6}
+              accessibilityLabel="Send comment"
               style={({ pressed }) => [
                 styles.sendBtn,
                 (!draft.trim() || sending) && styles.sendBtnDisabled,

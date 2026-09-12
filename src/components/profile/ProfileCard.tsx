@@ -178,6 +178,23 @@ export function ProfileCard({
   // accents or backdrop fills that sit fine alongside the plain border
   const heroBorderStyle = (frames.lace || frames.lattice) ? { borderWidth: 0 } : null;
 
+  // followers/following now sits right under pronouns, above flags/tagline/
+  // links — the identity+stats cluster reads as one block before anything
+  // else about the card, same as it would on Instagram; defined once and
+  // reused by both layouts below rather than duplicated per branch
+  const statsContent = (followerCount !== undefined || followingCount !== undefined) ? (
+    <>
+      <Pressable style={styles.socialStat} onPress={onPressFollowers} disabled={!onPressFollowers} hitSlop={6}>
+        <Text style={[styles.socialStatValue, textStyle]}>{followerCount ?? 0}</Text>
+        <Text style={styles.socialStatLabel}>followers</Text>
+      </Pressable>
+      <Pressable style={styles.socialStat} onPress={onPressFollowing} disabled={!onPressFollowing} hitSlop={6}>
+        <Text style={[styles.socialStatValue, textStyle]}>{followingCount ?? 0}</Text>
+        <Text style={styles.socialStatLabel}>following</Text>
+      </Pressable>
+    </>
+  ) : null;
+
   // ── Hero: identity only — everything else lives in its own section below ──
   const heroContent = (
     <>
@@ -199,6 +216,7 @@ export function ProfileCard({
             </View>
             {!!subtitle && <Text style={[styles.subtitle, textStyle]}>{subtitle}</Text>}
             {!!pronouns && <Text style={[styles.pronouns, styles.pronounsLeft, textStyle]}>{pronouns}</Text>}
+            {!!statsContent && <View style={styles.socialStatsRowLeft}>{statsContent}</View>}
           </View>
         </View>
       ) : (
@@ -223,6 +241,7 @@ export function ProfileCard({
             {!!subtitle && <Text style={[styles.subtitle, textStyle]}>{subtitle}</Text>}
           </View>
           {!!pronouns && <Text style={[styles.pronouns, textStyle]}>{pronouns}</Text>}
+          {!!statsContent && <View style={styles.socialStatsRow}>{statsContent}</View>}
         </>
       )}
       <ProfileFlags flags={flags} textColor={textColor} />
@@ -252,28 +271,6 @@ export function ProfileCard({
               )}
             </View>
           ))}
-        </View>
-      )}
-      {(followerCount !== undefined || followingCount !== undefined) && (
-        <View style={styles.socialStatsRow}>
-          <Pressable
-            style={styles.socialStat}
-            onPress={onPressFollowers}
-            disabled={!onPressFollowers}
-            hitSlop={6}
-          >
-            <Text style={[styles.socialStatValue, textStyle]}>{followerCount ?? 0}</Text>
-            <Text style={styles.socialStatLabel}>followers</Text>
-          </Pressable>
-          <Pressable
-            style={styles.socialStat}
-            onPress={onPressFollowing}
-            disabled={!onPressFollowing}
-            hitSlop={6}
-          >
-            <Text style={[styles.socialStatValue, textStyle]}>{followingCount ?? 0}</Text>
-            <Text style={styles.socialStatLabel}>following</Text>
-          </Pressable>
         </View>
       )}
       {!!followAction && <View style={styles.followActionRow}>{followAction}</View>}
@@ -471,6 +468,9 @@ const styles = StyleSheet.create({
   },
   subtitle: { fontFamily: FontFamily.marker, fontSize: sf(10), color: Colors.ink3, letterSpacing: 1.2, textTransform: 'uppercase', flexShrink: 0 },
   socialStatsRow: { flexDirection: 'row', justifyContent: 'center', gap: 28, marginTop: Spacing.s3 },
+  // left layout: tighter gap and no top margin of its own — leftTextCol's
+  // own `gap` already spaces it from the pronouns line above
+  socialStatsRowLeft: { flexDirection: 'row', justifyContent: 'flex-start', gap: 18, marginTop: 2 },
   socialStat: { alignItems: 'center' },
   socialStatValue: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(15), color: Colors.ink },
   socialStatLabel: { fontFamily: FontFamily.ui, fontSize: sf(10), color: Colors.ink3, marginTop: 1 },

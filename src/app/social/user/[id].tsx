@@ -161,13 +161,14 @@ export default function PublicUserProfileScreen() {
         title={profile.name || 'their profile'}
         right={
           isMe ? undefined : (
+            // a plain labeled action, not an ambiguous "⋯" — there's only one
+            // thing this button does, so it shouldn't borrow the "more options"
+            // affordance that promises a menu
             <Pressable
               onPress={() => (relationship.blocked ? handleUnblock() : setConfirmBlock(true))}
-              style={relationship.blocked ? styles.textBtn : styles.headerBtn}
+              style={styles.textBtn}
             >
-              <Text style={relationship.blocked ? styles.textBtnLabel : styles.headerBtnText}>
-                {relationship.blocked ? 'unblock' : '⋯'}
-              </Text>
+              <Text style={styles.textBtnLabel}>{relationship.blocked ? 'unblock' : 'block'}</Text>
             </Pressable>
           )
         }
@@ -288,11 +289,6 @@ const styles = StyleSheet.create({
   screen: { flex: 1 },
   toastWrap: { position: 'absolute', left: 0, right: 0, zIndex: 10, alignItems: 'center' },
   screenDefaultBg: { backgroundColor: Colors.paper },
-  headerBtn: {
-    width: 32, height: 32, borderRadius: Radius.pill,
-    backgroundColor: Colors.paperDeep, alignItems: 'center', justifyContent: 'center',
-  },
-  headerBtnText: { fontSize: sf(18), color: Colors.ink2, fontFamily: FontFamily.ui, lineHeight: sf(20) },
   textBtn: {
     paddingHorizontal: 12, height: 32, borderRadius: Radius.pill,
     backgroundColor: Colors.paperDeep, alignItems: 'center', justifyContent: 'center',
