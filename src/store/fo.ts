@@ -19,6 +19,8 @@ export type Fo = {
   shareStatus: string;
   /** short bio shown on the card itself */
   tagline: string;
+  /** longer-form writeup, shown in its own section — separate from tagline */
+  about: string;
   /** free text — usually a day with no year, e.g. "March 3, 2023" */
   sinceDate: string;
   photoUri: string;
@@ -89,6 +91,7 @@ function rowToFo(row: Record<string, unknown>): Fo {
     relStatus: (row.rel_status as Fo['relStatus']) ?? 'romantic',
     shareStatus: (row.share_status as Fo['shareStatus']) ?? 'selective',
     tagline: (row.tagline as string) ?? '',
+    about: (row.about as string) ?? '',
     sinceDate: (row.since_date as string) ?? '',
     photoUri: (row.photo_uri as string) ?? '',
     notifPhotoUri: (row.notif_photo_uri as string) ?? '',
@@ -193,6 +196,7 @@ export function updateFo(id: string, d: Partial<Omit<Fo, 'id' | 'createdAt'>>) {
   if (d.relStatus !== undefined)   { fields.push('rel_status = ?');   values.push(d.relStatus); }
   if (d.shareStatus !== undefined) { fields.push('share_status = ?'); values.push(d.shareStatus); }
   if (d.tagline !== undefined)     { fields.push('tagline = ?');      values.push(d.tagline); }
+  if (d.about !== undefined)       { fields.push('about = ?');        values.push(d.about); }
   if (d.sinceDate !== undefined)   { fields.push('since_date = ?');   values.push(d.sinceDate); }
   if (d.photoUri !== undefined)    { fields.push('photo_uri = ?');    values.push(d.photoUri); }
   if (d.notifPhotoUri !== undefined) { fields.push('notif_photo_uri = ?'); values.push(d.notifPhotoUri); }

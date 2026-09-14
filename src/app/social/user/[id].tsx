@@ -6,15 +6,19 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FollowButton } from '@/components/community/FollowButton';
 import { PostCard } from '@/components/community/PostCard';
 import { FeedSkeleton } from '@/components/community/PostCardSkeleton';
+import { DniPill } from '@/components/profile/DniPill';
 import { FoAvatarCard } from '@/components/profile/FoAvatarCard';
 import { InlineToast, useInlineToast } from '@/components/ui/InlineToast';
 import { SegmentedTabs } from '@/components/ui/SegmentedTabs';
 import { PageBackground } from '@/components/profile/PageBackground';
 import { ProfileCard } from '@/components/profile/ProfileCard';
+import { AboutSection } from '@/components/profile/AboutSection';
+import { ProfileMediaGrid } from '@/components/profile/ProfileMediaGrid';
 import { ProfileCardSkeleton } from '@/components/profile/ProfileCardSkeleton';
 import { ProfileScreenHeader } from '@/components/profile/ProfileScreenHeader';
 import { CozyModal } from '@/components/ui/CozyModal';
-import { IconShare } from '@/components/ui/Icon';
+import { ReportSheet } from '@/components/community/ReportSheet';
+import { IconFlag, IconShare } from '@/components/ui/Icon';
 import { Colors, FontFamily, Radius, sf, Spacing } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
 import { personProfileUrl, shareProfileLink } from '@/lib/shareProfile';
@@ -46,6 +50,8 @@ export default function PublicUserProfileScreen() {
   const [relationship, setRelationship] = useState({ following: false, blocked: false });
   const [loading, setLoading] = useState(true);
   const [confirmBlock, setConfirmBlock] = useState(false);
+  const [reportTarget, setReportTarget] = useState<string | null>(null);
+  const [reportingProfile, setReportingProfile] = useState(false);
   const { message: toastMsg, nonce: toastNonce, show: showToast } = useInlineToast();
 
   useEffect(() => {
@@ -105,6 +111,7 @@ export default function PublicUserProfileScreen() {
         onToggleLike={() => toggleLikeOptimistic(item.id, () => showToast("couldn't update like — try again"))}
         onPollVote={(i) => pollVoteOptimistic(item.id, i, () => showToast("couldn't update vote — try again"))}
         pinned={item.id === pinnedPost?.id}
+        onRequestReport={() => setReportTarget(item.id)}
       />
     ),
     [toggleLikeOptimistic, pollVoteOptimistic, showToast, pinnedPost?.id],
@@ -174,12 +181,21 @@ export default function PublicUserProfileScreen() {
               // a plain labeled action, not an ambiguous "⋯" — there's only one
               // thing this button does, so it shouldn't borrow the "more options"
               // affordance that promises a menu
-              <Pressable
-                onPress={() => (relationship.blocked ? handleUnblock() : setConfirmBlock(true))}
-                style={styles.textBtn}
-              >
-                <Text style={styles.textBtnLabel}>{relationship.blocked ? 'unblock' : 'block'}</Text>
-              </Pressable>
+              <>
+                <Pressable
+                  onPress={() => setReportingProfile(true)}
+                  style={styles.headerBtn}
+                  accessibilityLabel="Report this profile"
+                >
+                  <IconFlag size={13} color={Colors.ink2} />
+                </Pressable>
+                <Pressable
+                  onPress={() => (relationship.blocked ? handleUnblock() : setConfirmBlock(true))}
+                  style={styles.textBtn}
+                >
+                  <Text style={styles.textBtnLabel}>{relationship.blocked ? 'unblock' : 'block'}</Text>
+                </Pressable>
+              </>
             )}
           </View>
         }
@@ -205,8 +221,6 @@ export default function PublicUserProfileScreen() {
               tagline={profile.tagline}
               photoUri={profile.avatarUrl}
               fallbackColor={profile.color || Colors.sakura}
-              songs={profile.songs}
-              gallery={profile.gallery}
               cardBgColor={profile.cardBgColor}
               cardBgImage={profile.cardBgImage}
               cardBgGradient={profile.cardBgGradient}
@@ -224,14 +238,19 @@ export default function PublicUserProfileScreen() {
               onPressFollowing={() => router.push(`/social/follow-list/${id}?tab=following&name=${encodeURIComponent(profile.name || '')}` as any)}
               followAction={
                 !isMe && !relationship.blocked ? (
-                  <FollowButton
-                    userId={profile.id}
-                    initialFollowing={relationship.following}
-                    onFailure={() => showToast("couldn't update follow — try again")}
-                  />
+                  <View style={styles.followRow}>
+                    <FollowButton
+                      userId={profile.id}
+                      initialFollowing={relationship.following}
+                      onFailure={() => showToast("couldn't update follow — try again")}
+                    />
+                    <DniPill text={profile.dni} />
+                  </View>
                 ) : undefined
               }
             />
+            <AboutSection about={profile.about} />
+            <ProfileMediaGrid songs={profile.songs} gallery={profile.gallery} />
 
             {fos.length > 0 && (
               <>
@@ -285,6 +304,23 @@ export default function PublicUserProfileScreen() {
         onClose={() => setConfirmBlock(false)}
         isDestructive
       />
+
+      <ReportSheet
+        visible={!!reportTarget}
+        targetType="post"
+        targetId={reportTarget ?? ''}
+        onClose={() => setReportTarget(null)}
+        onSubmitted={() => { setReportTarget(null); showToast('report sent — thank you'); }}
+        onFailure={() => showToast("couldn't send report — try again")}
+      />
+      <ReportSheet
+        visible={reportingProfile}
+        targetType="user"
+        targetId={profile.id}
+        onClose={() => setReportingProfile(false)}
+        onSubmitted={() => { setReportingProfile(false); showToast('report sent — thank you'); }}
+        onFailure={() => showToast("couldn't send report — try again")}
+      />
     </View>
   );
 
@@ -297,6 +333,7 @@ export default function PublicUserProfileScreen() {
 }
 
 const styles = StyleSheet.create({
+  followRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   screen: { flex: 1 },
   toastWrap: { position: 'absolute', left: 0, right: 0, zIndex: 10, alignItems: 'center' },
   screenDefaultBg: { backgroundColor: Colors.paper },

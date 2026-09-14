@@ -1,6 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Colors } from '../../constants/theme';
-import { Heart } from '../deco/Heart';
 import { LaceFrame } from '../deco/LaceFrame';
 import { LatticeFrame } from '../deco/LatticeFrame';
 import { StitchFrame } from '../deco/StitchFrame';
@@ -18,13 +17,9 @@ import { StarsBackdrop } from '../deco/StarsBackdrop';
 import { MixedBackdrop } from '../deco/MixedBackdrop';
 import { ProfileFlags } from './ProfileFlags';
 import { BlinkieWall } from './BlinkieWall';
-import { Polaroid } from './Polaroid';
-import { SongDiscCard } from './SongDiscCard';
 import { parseBorderFrame, type ProfileFlag } from './cardTheme';
 import type { EquippedBlinkie } from '../../constants/blinkies';
-import type { GalleryPhoto, ProfileLink, ProfileSong } from '../../lib/profile';
-
-const POLAROID_TAPES = [Colors.sakura, Colors.lavender, Colors.butter, Colors.sage, Colors.peach];
+import type { ProfileLink } from '../../lib/profile';
 
 const PILL_SOFT_BY_DEEP: Record<string, string> = {
   [Colors.sakuraDeep]: Colors.sakuraSoft,
@@ -68,11 +63,6 @@ export type ProfileCardProps = {
   sharing?: ProfileStatus;
   /** together-since date — F/O only, stored as "YYYY-MM-DD", independent of the ship's own start date */
   since?: string;
-  /** theme songs — rendered in the same strip as gallery, as tappable
-   *  spinning-disc cards, not a separate section */
-  songs?: ProfileSong[];
-  /** extra photos rendered as a scattered polaroid strip */
-  gallery?: GalleryPhoto[];
   /** hero-card presentation customization */
   cardBgColor?: string;
   cardBgImage?: string;
@@ -100,15 +90,6 @@ export type ProfileCardProps = {
   followAction?: React.ReactNode;
 };
 
-function SectionLabel({ children }: { children: string }) {
-  return (
-    <div className="section-label-row">
-      <Heart size={9} color={Colors.sakuraDeep} outline />
-      <span className="section-label-title">{children}</span>
-    </div>
-  );
-}
-
 function normalizeUrl(url?: string): string {
   if (!url) return '';
   const trimmed = url.trim();
@@ -127,8 +108,6 @@ export function ProfileCard({
   type,
   sharing,
   since,
-  songs = [],
-  gallery = [],
   cardBgColor,
   cardBgImage,
   cardBgGradient,
@@ -176,23 +155,6 @@ export function ProfileCard({
     observer.observe(heroRef.current);
     return () => observer.disconnect();
   }, []);
-
-  // songs+gallery grid: two per row, sized to actually fill the row instead
-  // of a small fixed square with room to spare beside it. clientWidth already
-  // excludes the grid's own horizontal padding, unlike RN's onLayout — no
-  // padding subtraction needed here.
-  const galleryRef = useRef<HTMLDivElement>(null);
-  const [galleryWidth, setGalleryWidth] = useState(0);
-  useEffect(() => {
-    if (!galleryRef.current) return;
-    const update = () => setGalleryWidth(galleryRef.current?.clientWidth ?? 0);
-    update();
-    const observer = new ResizeObserver(update);
-    observer.observe(galleryRef.current);
-    return () => observer.disconnect();
-  }, []);
-  const GALLERY_GAP = 14;
-  const galleryCardSize = galleryWidth ? (galleryWidth - GALLERY_GAP) / 2 : 110;
 
   let heroBgStyle: React.CSSProperties = {};
   if (!cardTransparent) {
@@ -372,29 +334,6 @@ export function ProfileCard({
           )}
         </div>
       </div>
-
-      {/* ── songs + gallery share one grid — two per row, both card-shaped now ── */}
-      {(songs.length > 0 || gallery.length > 0) && (
-        <div className="profile-section-block">
-          <SectionLabel>gallery</SectionLabel>
-          <div className="gallery-grid" ref={galleryRef}>
-            {songs.map((s) => (
-              <SongDiscCard key={s.id} song={s} size={galleryCardSize} />
-            ))}
-            {gallery.map((photo, i) => (
-              <Polaroid
-                key={`${photo.uri}-${i}`}
-                uri={photo.uri}
-                caption={photo.caption}
-                size={galleryCardSize}
-                rotate={0}
-                tapeColor={POLAROID_TAPES[i % POLAROID_TAPES.length]}
-                textColor={textColor}
-              />
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

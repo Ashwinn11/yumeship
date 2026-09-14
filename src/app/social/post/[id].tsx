@@ -16,6 +16,8 @@ import Svg, { Path } from 'react-native-svg';
 
 import { BingoCardView } from '@/components/community/BingoCardView';
 import { CommentThread } from '@/components/community/CommentThread';
+import { ReportSheet } from '@/components/community/ReportSheet';
+import { IconFlag, IconTrashSolid } from '@/components/ui/Icon';
 import { LikeButton } from '@/components/community/LikeButton';
 import { MediaCarousel } from '@/components/community/MediaCarousel';
 import { MentionAutocomplete } from '@/components/community/MentionAutocomplete';
@@ -43,6 +45,7 @@ export default function PostDetailScreen() {
   const [sending, setSending] = useState(false);
   const [keyboardOpen, setKeyboardOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [reportTarget, setReportTarget] = useState<{ type: 'post' | 'comment'; id: string } | null>(null);
   const { message: toastMsg, nonce: toastNonce, show: showToast } = useInlineToast();
   const me = useAuthUser();
   const isMine = !!me && post?.author.id === me.id;
@@ -129,13 +132,21 @@ export default function PostDetailScreen() {
           <Mark size={20} />
           <Text style={styles.headerTitle}>post</Text>
         </View>
-        {/* only the author can delete, and RLS enforces that server-side too */}
+        {/* only the author can delete, and RLS enforces that server-side too;
+            everyone else gets a report action instead of an empty spacer */}
         {isMine ? (
           <Pressable onPress={() => setConfirmDelete(true)} style={styles.headerBtn} hitSlop={6} accessibilityLabel="Delete post">
-            <Text style={styles.headerDelete}>⋯</Text>
+            <IconTrashSolid size={15} color={Colors.ember} />
           </Pressable>
         ) : (
-          <View style={{ width: 32 }} />
+          <Pressable
+            onPress={() => setReportTarget({ type: 'post', id: post.id })}
+            style={styles.headerBtn}
+            hitSlop={6}
+            accessibilityLabel="Report post"
+          >
+            <IconFlag size={15} color={Colors.ink2} />
+          </Pressable>
         )}
       </View>
 
@@ -195,6 +206,7 @@ export default function PostDetailScreen() {
               onReply={(pid, name) => setReplyTo({ id: pid, name })}
               viewerId={me?.id}
               onDelete={handleDeleteComment}
+              onReport={(commentId) => setReportTarget({ type: 'comment', id: commentId })}
             />
           </>
         )}
@@ -212,6 +224,15 @@ export default function PostDetailScreen() {
         onConfirm={handleDeletePost}
         onClose={() => setConfirmDelete(false)}
         isDestructive
+      />
+
+      <ReportSheet
+        visible={!!reportTarget}
+        targetType={reportTarget?.type ?? 'post'}
+        targetId={reportTarget?.id ?? ''}
+        onClose={() => setReportTarget(null)}
+        onSubmitted={() => { setReportTarget(null); showToast('report sent — thank you'); }}
+        onFailure={() => showToast("couldn't send report — try again")}
       />
 
       {!post.activityId && (
@@ -288,7 +309,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.paperDeep, alignItems: 'center', justifyContent: 'center',
   },
   headerBtnText: { fontSize: sf(20), color: Colors.ink2, fontFamily: FontFamily.ui, lineHeight: sf(22) },
-  headerDelete: { fontSize: sf(18), color: Colors.ink2, fontFamily: FontFamily.ui, lineHeight: sf(20) },
   headerCenter: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   headerTitle: { fontFamily: FontFamily.displayItalic, fontSize: FontSize.h6, color: Colors.ink },
   scroll: { flex: 1 },

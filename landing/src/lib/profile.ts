@@ -30,6 +30,10 @@ export type WebProfile = {
   name: string;
   pronouns: string;
   tagline: string;
+  /** longer-form writeup, shown in its own section — separate from tagline */
+  about: string;
+  /** boundary text — shown as a pill next to the follow button */
+  dni: string;
   avatarUrl: string;
   songs: ProfileSong[];
   gallery: GalleryPhoto[];
@@ -58,6 +62,8 @@ export type WebFoProfile = {
   name: string;
   pronouns: string;
   tagline: string;
+  /** longer-form writeup, shown in its own section — separate from tagline */
+  about: string;
   avatarUrl: string;
   songs: ProfileSong[];
   gallery: GalleryPhoto[];
@@ -91,11 +97,11 @@ const CARD_THEME_FIELDS =
   'card_bg_gradient, card_transparent, text_color, border_style, name_font, card_layout';
 
 const PROFILE_FIELDS =
-  `id, username, name, pronouns, tagline, avatar_url, songs, gallery, flags, links, ` +
+  `id, username, name, pronouns, tagline, about, dni, avatar_url, songs, gallery, flags, links, ` +
   `color, blinkies, follower_count, following_count, ${CARD_THEME_FIELDS}`;
 
 const FO_PROFILE_FIELDS =
-  `id, name, pronouns, tagline, avatar_url, songs, gallery, flags, links, ` +
+  `id, name, pronouns, tagline, about, avatar_url, songs, gallery, flags, links, ` +
   `fandom, rel_status, share_status, since_date, blinkies, ${CARD_THEME_FIELDS}`;
 
 // ─── Row mappers ──────────────────────────────────────────────────────────────
@@ -173,6 +179,8 @@ function rowToProfile(row: Record<string, unknown>): WebProfile {
     name: (row.name as string) ?? '',
     pronouns: (row.pronouns as string) ?? '',
     tagline: (row.tagline as string) ?? '',
+    about: (row.about as string) ?? '',
+    dni: (row.dni as string) ?? '',
     avatarUrl: (row.avatar_url as string) ?? '',
     songs: parseSongs(row.songs),
     gallery: parseGallery(row.gallery),
@@ -191,6 +199,7 @@ function rowToFoProfile(row: Record<string, unknown>): WebFoProfile {
     name: (row.name as string) ?? '',
     pronouns: (row.pronouns as string) ?? '',
     tagline: (row.tagline as string) ?? '',
+    about: (row.about as string) ?? '',
     avatarUrl: (row.avatar_url as string) ?? '',
     songs: parseSongs(row.songs),
     gallery: parseGallery(row.gallery),

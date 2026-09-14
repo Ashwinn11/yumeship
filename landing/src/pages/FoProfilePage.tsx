@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { fetchFoProfile, type WebFoProfile } from '../lib/profile';
 import { ProfileCard } from '../components/profile/ProfileCard';
+import { AboutSection } from '../components/profile/AboutSection';
+import { ProfileMediaGrid } from '../components/profile/ProfileMediaGrid';
 import { relationshipStatus, sharingStatus } from '../components/profile/cardProps';
 import { ProfileScreenHeader } from '../components/profile/ProfileScreenHeader';
 import { CreateProfileCta } from '../components/profile/CreateProfileCta';
@@ -111,8 +113,6 @@ export function FoProfilePage() {
                 type={relationshipStatus(profile.relStatus)}
                 sharing={sharingStatus(profile.shareStatus)}
                 since={profile.sinceDate}
-                songs={profile.songs}
-                gallery={profile.gallery}
                 cardBgColor={profile.cardBgColor}
                 cardBgImage={profile.cardBgImage}
                 cardBgGradient={profile.cardBgGradient}
@@ -125,6 +125,8 @@ export function FoProfilePage() {
                 flags={profile.flags}
                 links={profile.links}
               />
+              <AboutSection about={profile.about} />
+              <ProfileMediaGrid songs={profile.songs} gallery={profile.gallery} textColor={profile.textColor} />
 
               {/* Engagement CTA */}
               <CreateProfileCta />

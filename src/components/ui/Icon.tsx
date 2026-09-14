@@ -145,6 +145,23 @@ export function IconPin({ size = 14, color = Colors.ink }: IconProps) {
   );
 }
 
+/** A small flag, for "report this" — same 14×14/1.2 stroke convention as
+ *  the rest of the set. */
+export function IconFlag({ size = 14, color = Colors.ink }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 14 14" fill="none">
+      <Path d="M3.5 1.8v10.4" stroke={color} strokeWidth="1.2" strokeLinecap="round" />
+      <Path
+        d="M3.5 2.3h6.3c.5 0 .75.55.4.9L8.4 4.9l1.8 1.7c.35.35.1.9-.4.9H3.5V2.3z"
+        stroke={color}
+        strokeWidth="1.2"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
+    </Svg>
+  );
+}
+
 /** A die, for "use this template" on a shared bingo card — same 14×14/1.3
  *  stroke convention as the rest of the set, replacing a raw 🎲 emoji. */
 export function IconDice({ size = 14, color = Colors.ink }: IconProps) {

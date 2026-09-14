@@ -11,6 +11,7 @@ import { getGlobalSettings, saveGlobalSetting } from './onboarding';
 
 export const ME_KEYS = [
   'user_name', 'user_pronouns', 'user_username', 'user_color', 'user_avatar', 'user_tagline',
+  'user_about', 'user_dni',
   'user_songs', 'user_gallery',
   'user_page_bg_color', 'user_page_bg_image', 'user_card_bg_color', 'user_card_bg_image',
   'user_card_bg_gradient', 'user_card_transparent', 'user_text_color', 'user_border_style',
@@ -21,6 +22,10 @@ export const ME_KEYS = [
 export type Me = {
   name: string; pronouns: string; username: string; color: string; avatar: string;
   tagline: string;
+  /** longer-form writeup, shown in its own section — separate from tagline */
+  about: string;
+  /** boundary text — shown as a pill next to the follow button on the public profile */
+  dni: string;
   /** theme songs shown two-per-row on the card */
   songs: ProfileSong[];
   gallery: GalleryPhoto[];
@@ -43,6 +48,8 @@ export function readMe(): Me {
     color: g.user_color || Colors.sakura,
     avatar: g.user_avatar,
     tagline: g.user_tagline,
+    about: g.user_about,
+    dni: g.user_dni,
     songs: parseProfileSongs(g.user_songs),
     gallery: parseGallery(g.user_gallery),
     pageBgColor: g.user_page_bg_color,
@@ -84,6 +91,7 @@ const THEME_KEYS: Record<keyof CardTheme, string> = {
 const FIELD_KEYS: Partial<Record<keyof Me, string>> = {
   name: 'user_name', pronouns: 'user_pronouns', username: 'user_username',
   color: 'user_color', avatar: 'user_avatar', tagline: 'user_tagline',
+  about: 'user_about', dni: 'user_dni',
   identifyFoId: 'user_identify_fo_id',
 };
 

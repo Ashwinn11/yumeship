@@ -38,6 +38,10 @@ export type CommunityProfile = CommunityCardTheme & {
   pronouns: string;
   /** short bio shown on the card itself, under the name */
   tagline: string;
+  /** longer-form writeup, shown in its own section — separate from tagline */
+  about: string;
+  /** boundary text — shown as a pill next to the follow button */
+  dni: string;
   avatarUrl: string;
   /** theme songs shown two-per-row on the card */
   songs: ProfileSong[];
@@ -60,6 +64,8 @@ export type CommunityFoProfile = CommunityCardTheme & {
   pronouns: string;
   /** short bio shown on the card itself, under the name */
   tagline: string;
+  /** longer-form writeup, shown in its own section — separate from tagline */
+  about: string;
   avatarUrl: string;
   /** theme songs shown two-per-row on the card */
   songs: ProfileSong[];
@@ -216,6 +222,8 @@ export function rowToProfile(row: Record<string, any>): CommunityProfile {
     name: row.name ?? '',
     pronouns: row.pronouns ?? '',
     tagline: row.tagline ?? '',
+    about: row.about ?? '',
+    dni: row.dni ?? '',
     avatarUrl: row.avatar_url ?? '',
     songs: rowToSongs(row.songs),
     gallery: rowToGallery(row.gallery),
@@ -236,6 +244,7 @@ function rowToFoProfile(row: Record<string, any>): CommunityFoProfile {
     name: row.name ?? '',
     pronouns: row.pronouns ?? '',
     tagline: row.tagline ?? '',
+    about: row.about ?? '',
     avatarUrl: row.avatar_url ?? '',
     songs: rowToSongs(row.songs),
     gallery: rowToGallery(row.gallery),
@@ -361,12 +370,12 @@ const CARD_THEME_FIELDS =
 export const cols = (s: string) => s.replace(/\s+/g, ' ').trim();
 
 const PROFILE_FIELDS = cols(`
-  id, username, name, pronouns, tagline, avatar_url, songs, gallery, flags, links,
+  id, username, name, pronouns, tagline, about, dni, avatar_url, songs, gallery, flags, links,
   color, identify_fo_id, blinkies,
   follower_count, following_count, pinned_post_id, ${CARD_THEME_FIELDS}
 `);
 const FO_PROFILE_FIELDS = cols(`
-  id, name, pronouns, tagline, avatar_url, songs, gallery, flags, links,
+  id, name, pronouns, tagline, about, avatar_url, songs, gallery, flags, links,
   color, fandom, rel_status, share_status, since_date, blinkies, ${CARD_THEME_FIELDS}
 `);
 
@@ -626,6 +635,8 @@ export async function pushOwnProfile(): Promise<PushResult> {
     pronouns: getGlobalSetting('user_pronouns', 'she/her'),
     blinkies: parseEquippedBlinkies(getGlobalSetting('user_blinkies')),
     tagline: getGlobalSetting('user_tagline'),
+    about: getGlobalSetting('user_about'),
+    dni: getGlobalSetting('user_dni'),
     links: parseProfileLinks(getGlobalSetting('user_links')),
     songs: parseProfileSongs(getGlobalSetting('user_songs')),
     color: getGlobalSetting('user_color'),
@@ -718,6 +729,7 @@ export async function pushFoProfile(foId: string): Promise<PushResult> {
     name: fo.name,
     pronouns: fo.pronouns,
     tagline: fo.tagline,
+    about: fo.about,
     links: fo.links,
     blinkies: fo.blinkies,
     songs: fo.songs,
@@ -1415,6 +1427,45 @@ export async function unblockUser(id: string): Promise<void> {
   const user = session?.user;
   if (!user) return;
   const { error } = await supabase.from('blocks').delete().eq('blocker_id', user.id).eq('blocked_id', id);
+  if (error) throw error;
+}
+
+export type ReportTargetType = 'post' | 'comment' | 'group_message' | 'user' | 'fo_profile' | 'group';
+export type ReportReason =
+  | 'spam' | 'harassment' | 'nudity_or_sexual_content' | 'hate_or_violence'
+  | 'minor_safety' | 'proship_or_dni_violation' | 'other';
+
+export const REPORT_REASONS: { value: ReportReason; label: string }[] = [
+  { value: 'harassment', label: 'harassment or bullying' },
+  { value: 'spam', label: 'spam' },
+  { value: 'nudity_or_sexual_content', label: 'nudity or sexual content' },
+  { value: 'hate_or_violence', label: 'hate speech or violence' },
+  { value: 'minor_safety', label: 'involves a minor' },
+  { value: 'proship_or_dni_violation', label: 'proship / DNI violation' },
+  { value: 'other', label: 'something else' },
+];
+
+/** Files a report for manual review — satisfies Apple's UGC reporting
+ *  requirement (Guideline 1.2). There's no in-app moderation queue; reports
+ *  land in the `reports` table and are reviewed by the developer directly. */
+export async function reportContent(
+  targetType: ReportTargetType,
+  targetId: string,
+  reason: ReportReason,
+  details = '',
+): Promise<void> {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const user = session?.user;
+  if (!user) throw new Error('not signed in');
+  const { error } = await supabase.from('reports').insert({
+    reporter_id: user.id,
+    target_type: targetType,
+    target_id: targetId,
+    reason,
+    details,
+  });
   if (error) throw error;
 }
 

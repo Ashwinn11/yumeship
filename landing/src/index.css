@@ -935,10 +935,23 @@ a:hover {
   letter-spacing: 1.4px;
   text-transform: uppercase;
 }
+/* used to sit inside profile-card-container's own 20px flex gap — now a
+   sibling of the card (and of each other), it needs that spacing itself */
 .profile-section-block {
   display: flex;
   flex-direction: column;
+  gap: 6px;
   width: 100%;
+  margin-top: 20px;
+}
+.about-text {
+  font-family: var(--font-ui);
+  font-size: 13.5px;
+  line-height: 20px;
+  color: var(--ink2);
+  padding: 0 2px;
+  margin: 0;
+  white-space: pre-wrap;
 }
 
 /* ── Details grid — part of the hero now, not its own card. Up to three
@@ -1137,9 +1150,10 @@ a.song-disc-card {
   color: #1f1219;
   text-align: center;
   margin: 6px 0 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  /* the RN Polaroid's caption has no line limit at all — it just wraps and
+     the card grows; forcing one line + ellipsis here cut it off even when
+     there was clearly room below for the rest of the sentence */
+  overflow-wrap: break-word;
   font-weight: 700;
 }
 

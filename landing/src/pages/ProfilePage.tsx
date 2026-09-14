@@ -7,6 +7,8 @@ import {
   type WebFoProfile,
 } from '../lib/profile';
 import { ProfileCard } from '../components/profile/ProfileCard';
+import { AboutSection } from '../components/profile/AboutSection';
+import { ProfileMediaGrid } from '../components/profile/ProfileMediaGrid';
 import { FoAvatarCard } from '../components/profile/FoAvatarCard';
 import { ProfileScreenHeader } from '../components/profile/ProfileScreenHeader';
 import { CreateProfileCta } from '../components/profile/CreateProfileCta';
@@ -116,8 +118,6 @@ export function ProfilePage() {
                 tagline={profile.tagline}
                 photoUri={profile.avatarUrl}
                 fallbackColor={profile.color}
-                songs={profile.songs}
-                gallery={profile.gallery}
                 cardBgColor={profile.cardBgColor}
                 cardBgImage={profile.cardBgImage}
                 cardBgGradient={profile.cardBgGradient}
@@ -132,6 +132,8 @@ export function ProfilePage() {
                 followerCount={profile.followerCount}
                 followingCount={profile.followingCount}
               />
+              <AboutSection about={profile.about} />
+              <ProfileMediaGrid songs={profile.songs} gallery={profile.gallery} textColor={profile.textColor} />
 
               {/* F/Os Section */}
               {fos.length > 0 && (

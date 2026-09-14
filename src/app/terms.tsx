@@ -25,17 +25,47 @@ export default function TermsScreen() {
         contentContainerStyle={[styles.content, column]}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.updated}>Last updated: May 27, 2025</Text>
+        <Text style={styles.updated}>Last updated: September 14, 2026</Text>
 
         {Platform.OS === 'ios' ? (
-          <Section title="Licensed Application EULA">
+          <Section title="1. Licensed Application EULA">
             Yumeship is licensed to you under Apple's standard End User License Agreement (EULA).
             The EULA applies to your use of this App and is available at:
             https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
           </Section>
         ) : null}
 
-        <Section title="Subscriptions">
+        <Section title="2. Your account">
+          Some parts of Yumeship — posting, groups, public profiles — require a community account.
+          You're responsible for the activity on your account and for keeping your login secure.
+          You must be at least 17 to create one, consistent with the app's age rating.
+        </Section>
+
+        <Section title="3. Community conduct">
+          You agree not to use the community feature to harass or target another person or their
+          F/O, post sexual content involving minors, post hate speech or content promoting
+          violence, impersonate another person, post spam or unrelated content, repeatedly
+          interact with someone who has a stated DNI in a targeted way, or share another person's
+          private information without consent. We may remove content, suspend, or terminate
+          accounts that violate these rules.
+        </Section>
+
+        <Section title="4. Reporting and enforcement">
+          You can report posts, comments, messages, and profiles you believe violate these terms.
+          We review reports and may remove content, warn a user, or suspend or terminate an
+          account as a result. You can also block another user to stop seeing their content.
+        </Section>
+
+        <Section title="5. Your content">
+          You own what you create — your private journal, and anything you post to the community
+          (posts, comments, profile content, photos). By posting to the community feature, you
+          give other users permission to view that content as intended by the feature it's posted
+          in, and you give us the license needed to store, display, and transmit it as part of
+          operating the app. This license ends when you delete the content or your account. Your
+          private, on-device journal is never covered by this license, since we never receive it.
+        </Section>
+
+        <Section title="6. Subscriptions">
           {Platform.OS === 'ios'
             ? "Yumeship Premium is an auto-renewable subscription sold through Apple's App Store. " +
               'Payment is charged to your Apple ID at confirmation of purchase. Subscriptions renew ' +
@@ -47,12 +77,14 @@ export default function TermsScreen() {
               'Manage or cancel anytime in Google Play subscription settings.'}
         </Section>
 
-        <Section title="Your Content">
-          Everything you create in Yumeship — ships, letters, headcanons — stays on your device.
-          We have no access to it. It belongs entirely to you.
+        <Section title="7. Termination">
+          You can delete your account at any time from within the app. We may suspend or
+          terminate your access to the community feature if you violate these terms. Your
+          private, on-device journal is unaffected by any action we take on your community
+          account.
         </Section>
 
-        <Section title="Contact">
+        <Section title="8. Contact">
           Questions? Reach us at: ashwinnanbazhagan@gmail.com
         </Section>
       </ScrollView>

@@ -68,6 +68,7 @@ function cachedUsernameFor(userId: string | undefined): string {
   return getGlobalSetting('user_username_uid') === userId ? getGlobalSetting('user_username') : '';
 }
 import { InlineToast, useInlineToast } from '@/components/ui/InlineToast';
+import { ReportSheet } from '@/components/community/ReportSheet';
 import { SegmentedTabs } from '@/components/ui/SegmentedTabs';
 import { FeedSkeleton } from '@/components/community/PostCardSkeleton';
 import { getGlobalSetting, saveGlobalSetting } from '@/store/onboarding';
@@ -324,6 +325,7 @@ function Feed() {
   const [feedMode, setFeedMode] = useState<'global' | 'following'>('global');
   const { posts, loading, refreshing, refresh, loadMore, toggleLikeOptimistic, pollVoteOptimistic } = useCommunityFeed(feedMode);
   const { message: toastMsg, nonce: toastNonce, show: showToast } = useInlineToast();
+  const [reportTarget, setReportTarget] = useState<string | null>(null);
 
   function selectTab(t: typeof tab) {
     setTab(t);
@@ -427,6 +429,7 @@ function Feed() {
           post={item}
           onToggleLike={() => toggleLikeOptimistic(item.id, () => showToast("couldn't update like — try again"))}
           onPollVote={(i) => pollVoteOptimistic(item.id, i, () => showToast("couldn't update vote — try again"))}
+          onRequestReport={() => setReportTarget(item.id)}
         />
       ),
     [tab, pool.length, likePoolOptimistic, toggleLikeOptimistic, pollVoteOptimistic, showToast],
@@ -554,6 +557,15 @@ function Feed() {
       >
         <Text style={styles.fabText}>+</Text>
       </Pressable>
+
+      <ReportSheet
+        visible={!!reportTarget}
+        targetType="post"
+        targetId={reportTarget ?? ''}
+        onClose={() => setReportTarget(null)}
+        onSubmitted={() => { setReportTarget(null); showToast('report sent — thank you'); }}
+        onFailure={() => showToast("couldn't send report — try again")}
+      />
     </View>
   );
 }

@@ -20,6 +20,8 @@ import { logSyncFailure, pushOwnProfile, syncIdentifyFoPublish } from '@/store/c
 
 const PRONOUNS = ['she/her', 'he/him', 'they/them'].map((p) => ({ value: p, label: p }));
 const COLORS = [Colors.sakura, Colors.lavender, Colors.sage, Colors.peach, Colors.butter, Colors.plum];
+const ABOUT_MAX = 1000;
+const DNI_MAX = 300;
 
 export default function EditProfileScreen() {
   const fos = useFos();
@@ -88,6 +90,25 @@ export default function EditProfileScreen() {
   ];
 
   const sections: EditSectionDef[] = [
+    {
+      id: 'about',
+      label: 'about',
+      summary: (v) => v.about || 'not set',
+      fields: [{
+        kind: 'text', key: 'about', label: 'about', placeholder: 'the longer version — who you are, what this space is',
+        multiline: true, maxLength: ABOUT_MAX,
+      }],
+    },
+    {
+      id: 'dni',
+      label: 'DNI',
+      summary: (v) => v.dni || 'not set',
+      fields: [{
+        kind: 'text', key: 'dni', label: 'do not interact', placeholder: 'e.g. proship dni, minors dni',
+        multiline: true, maxLength: DNI_MAX,
+        hint: 'shown as a small pill next to your follow button — tapping it opens this text',
+      }],
+    },
     {
       id: 'blinkies',
       label: 'blinkie wall',

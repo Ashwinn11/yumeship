@@ -24,15 +24,16 @@ type NodeProps = {
   depth: number;
   parentAuthorName?: string;
   onReply: (parentId: string, authorName: string) => void;
-  /** viewer's id — only their own comments offer a delete */
+  /** viewer's id — only their own comments offer a delete; everyone else's offer a report */
   viewerId?: string;
   onDelete: (commentId: string) => void;
+  onReport: (commentId: string) => void;
 };
 
 // One self-contained card per comment — same shell PostCard uses (avatar(s),
 // name and F/O tag all inside the bordered card, body and actions below) so
 // a comment and a post-in-a-list read as the same kind of thing.
-function CommentNode({ comment, byParent, depth, parentAuthorName, onReply, viewerId, onDelete }: NodeProps) {
+function CommentNode({ comment, byParent, depth, parentAuthorName, onReply, viewerId, onDelete, onReport }: NodeProps) {
   const children = byParent.get(comment.id) ?? [];
   const cappedDepth = Math.min(depth, MAX_VISUAL_DEPTH);
   const flattened = depth > MAX_VISUAL_DEPTH;
@@ -47,9 +48,13 @@ function CommentNode({ comment, byParent, depth, parentAuthorName, onReply, view
           <Pressable onPress={() => onReply(comment.id, comment.author.name)} hitSlop={6}>
             <Text style={styles.replyAction}>reply</Text>
           </Pressable>
-          {viewerId === comment.author.id && (
+          {viewerId === comment.author.id ? (
             <Pressable onPress={() => onDelete(comment.id)} hitSlop={6}>
               <Text style={[styles.replyAction, styles.deleteAction]}>delete</Text>
+            </Pressable>
+          ) : (
+            <Pressable onPress={() => onReport(comment.id)} hitSlop={6}>
+              <Text style={styles.replyAction}>report</Text>
             </Pressable>
           )}
         </View>
@@ -64,6 +69,7 @@ function CommentNode({ comment, byParent, depth, parentAuthorName, onReply, view
           onReply={onReply}
           viewerId={viewerId}
           onDelete={onDelete}
+          onReport={onReport}
         />
       ))}
     </View>
@@ -75,9 +81,10 @@ type Props = {
   onReply: (parentId: string, authorName: string) => void;
   viewerId?: string;
   onDelete: (commentId: string) => void;
+  onReport: (commentId: string) => void;
 };
 
-export function CommentThread({ comments, onReply, viewerId, onDelete }: Props) {
+export function CommentThread({ comments, onReply, viewerId, onDelete, onReport }: Props) {
   const byParent = buildTree(comments);
   const roots = byParent.get('root') ?? [];
 
@@ -88,7 +95,7 @@ export function CommentThread({ comments, onReply, viewerId, onDelete }: Props) 
   return (
     <View style={styles.container}>
       {roots.map((c) => (
-        <CommentNode key={c.id} comment={c} byParent={byParent} depth={0} onReply={onReply} viewerId={viewerId} onDelete={onDelete} />
+        <CommentNode key={c.id} comment={c} byParent={byParent} depth={0} onReply={onReply} viewerId={viewerId} onDelete={onDelete} onReport={onReport} />
       ))}
     </View>
   );

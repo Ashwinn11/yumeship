@@ -75,6 +75,8 @@ export function initDb() {
   // catalog blinkie ids equipped on this F/O's own profile wall — same
   // free-text-badge feature the person's own profile already has
   try { db.execSync(`ALTER TABLE fo ADD COLUMN blinkies TEXT NOT NULL DEFAULT '[]'`); } catch (_) {}
+  // longer-form writeup, separate from tagline (the short line on the card itself)
+  try { db.execSync(`ALTER TABLE fo ADD COLUMN about TEXT NOT NULL DEFAULT ''`); } catch (_) {}
   // never wired to anything that could set a real value — nothing but this
   // column's own default ever reached it
   try { db.execSync(`ALTER TABLE ships DROP COLUMN nickname`); } catch (_) {}

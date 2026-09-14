@@ -10,6 +10,8 @@ import { CardThemeSheet } from '@/components/profile/CardThemeSheet';
 import type { CardTheme } from '@/components/profile/cardTheme';
 import { PageBackground } from '@/components/profile/PageBackground';
 import { ProfileCard } from '@/components/profile/ProfileCard';
+import { AboutSection } from '@/components/profile/AboutSection';
+import { ProfileMediaGrid } from '@/components/profile/ProfileMediaGrid';
 import { ProfileScreenHeader } from '@/components/profile/ProfileScreenHeader';
 import { CozyModal } from '@/components/ui/CozyModal';
 import { IconEdit, IconPalette, IconShare } from '@/components/ui/Icon';
@@ -102,7 +104,7 @@ export default function FoDetailScreen() {
     setDraft({
       name: fo!.name, pronouns: fo!.pronouns, fandom: fo!.fandom,
       relStatus: fo!.relStatus, shareStatus: fo!.shareStatus, color: fo!.color,
-      tagline: fo!.tagline, sinceDate: fo!.sinceDate, photoUri: fo!.photoUri,
+      tagline: fo!.tagline, about: fo!.about, sinceDate: fo!.sinceDate, photoUri: fo!.photoUri,
       songs: fo!.songs, gallery: fo!.gallery, flags: fo!.flags, links: fo!.links,
       blinkies: fo!.blinkies,
     });
@@ -228,8 +230,6 @@ export default function FoDetailScreen() {
                 since={fo.sinceDate}
                 type={relationshipStatus(fo.relStatus)}
                 sharing={sharingStatus(fo.shareStatus)}
-                songs={fo.songs}
-                gallery={fo.gallery}
                 cardBgColor={fo.cardBgColor}
                 cardBgImage={fo.cardBgImage}
                 cardBgGradient={fo.cardBgGradient}
@@ -242,6 +242,8 @@ export default function FoDetailScreen() {
                 flags={fo.flags}
                 links={fo.links}
               />
+              <AboutSection about={fo.about} />
+              <ProfileMediaGrid songs={fo.songs} gallery={fo.gallery} />
               {fo.isPublic && <Text style={styles.postsLabel}>posts about them</Text>}
             </>
           }

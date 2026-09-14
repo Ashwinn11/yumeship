@@ -8,7 +8,6 @@ import { BeadedFrame } from '@/components/deco/BeadedFrame';
 import { BracketFrame } from '@/components/deco/BracketFrame';
 import { DoubleLineFrame } from '@/components/deco/DoubleLineFrame';
 import { FlourishCorners } from '@/components/deco/FlourishCorners';
-import { Heart } from '@/components/deco/Heart';
 import { HeartRippleBackdrop } from '@/components/deco/HeartRippleBackdrop';
 import { HeartsBackdrop } from '@/components/deco/HeartsBackdrop';
 import { LaceFrame } from '@/components/deco/LaceFrame';
@@ -20,15 +19,12 @@ import { ScatterBackdrop } from '@/components/deco/ScatterBackdrop';
 import { StarsBackdrop } from '@/components/deco/StarsBackdrop';
 import { StitchFrame } from '@/components/deco/StitchFrame';
 import { WashBackdrop } from '@/components/deco/WashBackdrop';
-import { Polaroid } from '@/components/templates/primitives';
 import { calcElapsed } from '@/components/ui/DateField';
 import { Colors, FontFamily, Radius, Shadow, Spacing, sf } from '@/constants/theme';
 import type { EquippedBlinkie } from '@/constants/blinkies';
-import type { GalleryPhoto } from '@/store/fo';
 import { ProfileFlags } from './ProfileFlags';
 import { BlinkieWall } from './BlinkieWall';
-import { SongDiscCard } from './SongDiscCard';
-import { parseBorderFrame, type ProfileFlag, type ProfileLink, type ProfileSong } from './cardTheme';
+import { parseBorderFrame, type ProfileFlag, type ProfileLink } from './cardTheme';
 
 function normalizeUrl(url: string): string {
   const trimmed = url.trim();
@@ -36,12 +32,6 @@ function normalizeUrl(url: string): string {
   return `https://${trimmed}`;
 }
 
-
-const POLAROID_TAPES = [Colors.sakura, Colors.lavender, Colors.butter, Colors.sage, Colors.peach];
-// galleryGrid's own paddingHorizontal:4 on each side, plus a couple px of
-// rounding slack — without it, two cards computed to fill the row exactly
-// come out a hair too wide and flexWrap quietly drops to one per row
-const GALLERY_GRID_PADDING = 4 * 2 + 2;
 
 // type/sharing are the only two fields here that are actually a *status*
 // (they share RelationshipColors/SharingColors with badges everywhere else in
@@ -77,11 +67,6 @@ type Props = {
   sharing?: ProfileStatus;
   /** together-since date — F/O only, stored as "YYYY-MM-DD", independent of the ship's own start date */
   since?: string;
-  /** theme songs — rendered in the same strip as gallery, as tappable
-   *  spinning-disc cards, not a separate section */
-  songs?: ProfileSong[];
-  /** extra photos rendered as a scattered polaroid strip */
-  gallery?: GalleryPhoto[];
   /** hero-card presentation customization */
   cardBgColor?: string;
   cardBgImage?: string;
@@ -118,15 +103,6 @@ const NAME_FONT_MAP: Record<string, string> = {
   klee: FontFamily.ja,
 };
 
-function SectionLabel({ children }: { children: string }) {
-  return (
-    <View style={styles.sectionLabelRow}>
-      <Heart size={9} color={Colors.sakuraDeep} outline />
-      <Text style={styles.sectionLabel}>{children}</Text>
-    </View>
-  );
-}
-
 export function ProfileCard({
   name,
   pronouns,
@@ -138,8 +114,6 @@ export function ProfileCard({
   type,
   sharing,
   since,
-  songs = [],
-  gallery = [],
   cardBgColor,
   cardBgImage,
   cardBgGradient,
@@ -176,15 +150,6 @@ export function ProfileCard({
     const { width, height } = e.nativeEvent.layout;
     setHeroSize((prev) => (prev.width === width && prev.height === height ? prev : { width, height }));
   };
-
-  // songs+gallery grid: two per row, sized to actually fill the row instead
-  // of a small fixed square with empty space beside it. onLayout reports the
-  // grid's own border-box width — its horizontal padding has to come out
-  // before dividing, or the computed card width is a few px too wide for two
-  // to fit and flexWrap silently drops to one per row.
-  const [galleryWidth, setGalleryWidth] = useState(0);
-  const onGalleryLayout = (e: LayoutChangeEvent) => setGalleryWidth(e.nativeEvent.layout.width);
-  const galleryCardSize = galleryWidth ? (galleryWidth - GALLERY_GRID_PADDING - Spacing.s3) / 2 : 150;
 
   // every border-frame accent is independently toggleable — see cardTheme.ts
   const frames = parseBorderFrame(borderStyle);
@@ -360,30 +325,6 @@ export function ProfileCard({
           </View>
         )}
       </View>
-
-      {/* songs + gallery share one grid — both are card-shaped now (a
-          spinning disc, a polaroid) — two per row, sized to fill the row
-          rather than a small fixed square with room to spare beside it */}
-      {(songs.length > 0 || gallery.length > 0) && (
-        <View style={styles.section}>
-          <SectionLabel>gallery</SectionLabel>
-          <View style={styles.galleryGrid} onLayout={onGalleryLayout}>
-            {songs.map((s) => (
-              <SongDiscCard key={s.id} song={s} size={galleryCardSize} />
-            ))}
-            {gallery.map((photo, i) => (
-              <Polaroid
-                key={`${photo.uri}-${i}`}
-                uri={photo.uri}
-                caption={photo.caption}
-                size={galleryCardSize}
-                rotate={0}
-                tapeColor={POLAROID_TAPES[i % POLAROID_TAPES.length]}
-              />
-            ))}
-          </View>
-        </View>
-      )}
     </View>
   );
 }
@@ -483,13 +424,6 @@ const styles = StyleSheet.create({
   socialStatLabel: { fontFamily: FontFamily.ui, fontSize: sf(10), color: Colors.ink3, marginTop: 1 },
   followActionRow: { alignItems: 'center', marginTop: Spacing.s3 },
 
-  section: { gap: 6 },
-  sectionLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingLeft: 2 },
-  sectionLabel: {
-    fontFamily: FontFamily.marker, fontSize: sf(9), color: Colors.ink3,
-    letterSpacing: 1.4, textTransform: 'uppercase',
-  },
-
   // part of the hero now, not its own card — up to three equal columns
   // (type/sharing/since), each getting the full edge-to-edge width divided
   // evenly rather than a compact wrapped cluster, since relation and sharing
@@ -523,9 +457,4 @@ const styles = StyleSheet.create({
     maxWidth: '100%',
   },
   linkPillText: { fontFamily: FontFamily.uiMedium, fontSize: sf(12.5), color: Colors.sakuraDeep },
-
-  galleryGrid: {
-    flexDirection: 'row', flexWrap: 'wrap',
-    gap: Spacing.s3, paddingVertical: 10, paddingHorizontal: 4,
-  },
 });

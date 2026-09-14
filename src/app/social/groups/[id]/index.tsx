@@ -20,6 +20,9 @@ import { GroupChatBubble } from '@/components/community/GroupChatBubble';
 import { JoinGroupButton } from '@/components/community/JoinGroupButton';
 import { mediaFromAssets } from '@/components/community/MediaComposer';
 import { MentionAutocomplete } from '@/components/community/MentionAutocomplete';
+import { MessageActionSheet } from '@/components/community/MessageActionSheet';
+import { ReportSheet } from '@/components/community/ReportSheet';
+import { InlineToast, useInlineToast } from '@/components/ui/InlineToast';
 import { IconPhoto } from '@/components/ui/Icon';
 import { AVATAR_IMAGE } from '@/lib/imageProps';
 import { Colors, FontFamily, Radius, Spacing, sf } from '@/constants/theme';
@@ -60,6 +63,9 @@ export default function GroupChatScreen() {
   const [replyTo, setReplyTo] = useState<GroupMessage | null>(null);
   const [image, setImage] = useState<LocalPickedMedia | null>(null);
   const [sending, setSending] = useState(false);
+  const [actionTarget, setActionTarget] = useState<GroupMessage | null>(null);
+  const [reportTarget, setReportTarget] = useState<GroupMessage | null>(null);
+  const { message: toastMsg, nonce: toastNonce, show: showToast } = useInlineToast();
 
   async function pickImage() {
     const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.9 });
@@ -101,7 +107,7 @@ export default function GroupChatScreen() {
           message={item}
           isMe={item.sender.id === me?.id}
           messagesById={messagesById}
-          onLongPress={() => setReplyTo(item)}
+          onLongPress={() => setActionTarget(item)}
           showIdentity={showIdentity}
         />
       );
@@ -253,6 +259,29 @@ export default function GroupChatScreen() {
           />
         </View>
       )}
+
+      <View style={[styles.toastWrap, { top: insets.top + Spacing.s2 }]} pointerEvents="none">
+        <InlineToast message={toastMsg} nonce={toastNonce} />
+      </View>
+
+      <MessageActionSheet
+        visible={!!actionTarget}
+        onClose={() => setActionTarget(null)}
+        actions={[
+          { label: 'Reply', onPress: () => actionTarget && setReplyTo(actionTarget) },
+          ...(actionTarget && actionTarget.sender.id !== me?.id
+            ? [{ label: 'Report', onPress: () => setReportTarget(actionTarget), destructive: true }]
+            : []),
+        ]}
+      />
+      <ReportSheet
+        visible={!!reportTarget}
+        targetType="group_message"
+        targetId={reportTarget?.id ?? ''}
+        onClose={() => setReportTarget(null)}
+        onSubmitted={() => { setReportTarget(null); showToast('report sent — thank you'); }}
+        onFailure={() => showToast("couldn't send report — try again")}
+      />
     </KeyboardAvoidingView>
   );
 }
@@ -266,6 +295,7 @@ const ChatSeparator = ({ leadingItem, trailingItem }: { leadingItem?: GroupMessa
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: Colors.paper },
   centeredScreen: { flex: 1, backgroundColor: Colors.paper, alignItems: 'center', justifyContent: 'center' },
+  toastWrap: { position: 'absolute', left: 0, right: 0, zIndex: 10, alignItems: 'center' },
   emptySpinner: { marginTop: 60 },
   notFound: {
     fontFamily: FontFamily.script, fontSize: sf(16), color: Colors.ink3, textAlign: 'center', marginTop: 60,

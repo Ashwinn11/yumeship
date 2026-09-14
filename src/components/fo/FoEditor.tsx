@@ -22,9 +22,11 @@ const SHARE = SHARING_ORDER.map((v) => ({ value: v, label: SharingLabels[v], col
 
 export type FoDraft = Pick<
   Fo,
-  'name' | 'pronouns' | 'fandom' | 'relStatus' | 'shareStatus' | 'tagline' | 'color'
+  'name' | 'pronouns' | 'fandom' | 'relStatus' | 'shareStatus' | 'tagline' | 'about' | 'color'
   | 'sinceDate' | 'photoUri' | 'songs' | 'gallery' | 'flags' | 'links' | 'blinkies'
 >;
+
+export const ABOUT_MAX = 1000;
 
 export function FoEditor({
   value,
@@ -69,6 +71,15 @@ export function FoEditor({
   ];
 
   const sections: EditSectionDef[] = [
+    {
+      id: 'about',
+      label: 'about',
+      summary: (v) => v.about || 'not set',
+      fields: [{
+        kind: 'text', key: 'about', label: 'about', placeholder: 'the longer version — backstory, why them, anything else',
+        multiline: true, maxLength: ABOUT_MAX,
+      }],
+    },
     {
       id: 'blinkies',
       label: 'blinkie wall',

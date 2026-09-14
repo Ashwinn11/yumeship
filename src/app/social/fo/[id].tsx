@@ -7,10 +7,13 @@ import { PostCard } from '@/components/community/PostCard';
 import { FeedSkeleton } from '@/components/community/PostCardSkeleton';
 import { PageBackground } from '@/components/profile/PageBackground';
 import { ProfileCard } from '@/components/profile/ProfileCard';
+import { AboutSection } from '@/components/profile/AboutSection';
+import { ProfileMediaGrid } from '@/components/profile/ProfileMediaGrid';
 import { ProfileCardSkeleton } from '@/components/profile/ProfileCardSkeleton';
 import { ProfileScreenHeader } from '@/components/profile/ProfileScreenHeader';
-import { IconShare } from '@/components/ui/Icon';
+import { IconFlag, IconShare } from '@/components/ui/Icon';
 import { InlineToast, useInlineToast } from '@/components/ui/InlineToast';
+import { ReportSheet } from '@/components/community/ReportSheet';
 import { Colors, FontFamily, Radius, Spacing, sf } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
 import { relationshipStatus, sharingStatus } from '@/components/profile/cardProps';
@@ -27,6 +30,8 @@ export default function PublicFoProfileScreen() {
   const [profile, setProfile] = useState<CommunityFoProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const { message: toastMsg, nonce: toastNonce, show: showToast } = useInlineToast();
+  const [reportTarget, setReportTarget] = useState<string | null>(null);
+  const [reportingProfile, setReportingProfile] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -50,6 +55,7 @@ export default function PublicFoProfileScreen() {
         post={item}
         onToggleLike={() => toggleLikeOptimistic(item.id, () => showToast("couldn't update like — try again"))}
         onPollVote={(i) => pollVoteOptimistic(item.id, i, () => showToast("couldn't update vote — try again"))}
+        onRequestReport={() => setReportTarget(item.id)}
       />
     ),
     [toggleLikeOptimistic, pollVoteOptimistic, showToast],
@@ -69,13 +75,22 @@ export default function PublicFoProfileScreen() {
         title={profile?.name || 'their profile'}
         right={
           profile ? (
-            <Pressable
-              onPress={() => shareProfileLink(foProfileUrl(profile.id), (reason) => showToast(reason))}
-              style={styles.headerBtn}
-              accessibilityLabel="Share profile"
-            >
-              <IconShare size={13} color={Colors.ink2} />
-            </Pressable>
+            <View style={styles.headerActions}>
+              <Pressable
+                onPress={() => shareProfileLink(foProfileUrl(profile.id), (reason) => showToast(reason))}
+                style={styles.headerBtn}
+                accessibilityLabel="Share profile"
+              >
+                <IconShare size={13} color={Colors.ink2} />
+              </Pressable>
+              <Pressable
+                onPress={() => setReportingProfile(true)}
+                style={styles.headerBtn}
+                accessibilityLabel="Report this F/O profile"
+              >
+                <IconFlag size={13} color={Colors.ink2} />
+              </Pressable>
+            </View>
           ) : undefined
         }
       />
@@ -110,8 +125,6 @@ export default function PublicFoProfileScreen() {
                 type={relationshipStatus(profile.relStatus)}
                 sharing={sharingStatus(profile.shareStatus)}
                 since={profile.sinceDate}
-                songs={profile.songs}
-                gallery={profile.gallery}
                 cardBgColor={profile.cardBgColor}
                 cardBgImage={profile.cardBgImage}
                 cardBgGradient={profile.cardBgGradient}
@@ -124,12 +137,33 @@ export default function PublicFoProfileScreen() {
                 flags={profile.flags}
                 links={profile.links}
               />
+              <AboutSection about={profile.about} />
+              <ProfileMediaGrid songs={profile.songs} gallery={profile.gallery} />
               <Text style={styles.postsLabel}>posts about them</Text>
             </>
           }
           ListEmptyComponent={
             postsLoading ? <FeedSkeleton /> : <Text style={styles.postsEmpty}>no posts about them yet</Text>
           }
+        />
+      )}
+
+      <ReportSheet
+        visible={!!reportTarget}
+        targetType="post"
+        targetId={reportTarget ?? ''}
+        onClose={() => setReportTarget(null)}
+        onSubmitted={() => { setReportTarget(null); showToast('report sent — thank you'); }}
+        onFailure={() => showToast("couldn't send report — try again")}
+      />
+      {!!profile && (
+        <ReportSheet
+          visible={reportingProfile}
+          targetType="fo_profile"
+          targetId={profile.id}
+          onClose={() => setReportingProfile(false)}
+          onSubmitted={() => { setReportingProfile(false); showToast('report sent — thank you'); }}
+          onFailure={() => showToast("couldn't send report — try again")}
         />
       )}
     </View>
@@ -146,6 +180,7 @@ export default function PublicFoProfileScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1 },
   screenDefaultBg: { backgroundColor: Colors.paper },
+  headerActions: { flexDirection: 'row', gap: 8 },
   headerBtn: {
     width: 32, height: 32, borderRadius: Radius.pill,
     backgroundColor: Colors.paperDeep, alignItems: 'center', justifyContent: 'center',

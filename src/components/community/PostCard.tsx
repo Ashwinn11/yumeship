@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
 import { Sparkle } from '@/components/deco/Sparkle';
-import { IconPin, IconTrashSolid } from '@/components/ui/Icon';
+import { IconFlag, IconPin, IconTrashSolid } from '@/components/ui/Icon';
 import { Colors, FontFamily, Radius, Shadow, Spacing, sf } from '@/constants/theme';
 import type { CommunityPost } from '@/store/community';
 
@@ -39,9 +39,12 @@ type Props = {
   onRequestTogglePin?: () => void;
   /** true when this is the profile's pinned post — shown to every viewer, not just the owner */
   pinned?: boolean;
+  /** someone else's post only — never shown alongside pin/delete, which only
+   *  ever apply to your own posts */
+  onRequestReport?: () => void;
 };
 
-function PostCardImpl({ post, onToggleLike, onPollVote, onRequestDelete, onRequestTogglePin, pinned }: Props) {
+function PostCardImpl({ post, onToggleLike, onPollVote, onRequestDelete, onRequestTogglePin, pinned, onRequestReport }: Props) {
   // a featured activity opens its own responses page; a regular post opens
   // its comments. An unfeatured pool prompt has neither — nothing to see
   // beyond the card itself, so it isn't navigable at all.
@@ -74,6 +77,17 @@ function PostCardImpl({ post, onToggleLike, onPollVote, onRequestDelete, onReque
               <IconTrashSolid size={13} color={Colors.ember} />
             </Pressable>
           )}
+        </View>
+      ) : onRequestReport ? (
+        <View style={styles.cornerActions}>
+          <Pressable
+            style={styles.cornerBtn}
+            onPress={onRequestReport}
+            hitSlop={8}
+            accessibilityLabel="Report post"
+          >
+            <IconFlag size={13} color={Colors.ink3} />
+          </Pressable>
         </View>
       ) : (
         <View style={styles.sparkle} pointerEvents="none">

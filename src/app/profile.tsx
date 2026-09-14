@@ -31,6 +31,8 @@ import {
   type CommunityPost,
 } from '@/store/community';
 import { ProfileCard } from '@/components/profile/ProfileCard';
+import { AboutSection } from '@/components/profile/AboutSection';
+import { ProfileMediaGrid } from '@/components/profile/ProfileMediaGrid';
 import { IconEdit, IconPalette, IconShare } from '@/components/ui/Icon';
 import { personProfileUrl, shareProfileLink } from '@/lib/shareProfile';
 import { Colors, FontFamily, Radius, sf, Spacing } from '@/constants/theme';
@@ -270,8 +272,6 @@ export default function MyProfileScreen() {
               tagline={me.tagline}
               photoUri={me.avatar}
               fallbackColor={me.color}
-              songs={me.songs}
-              gallery={me.gallery}
               cardBgColor={me.cardBgColor}
               cardBgImage={me.cardBgImage}
               cardBgGradient={me.cardBgGradient}
@@ -288,6 +288,8 @@ export default function MyProfileScreen() {
               onPressFollowers={user ? () => router.push(`/social/follow-list/${user.id}?tab=followers&name=${encodeURIComponent(me.name || '')}` as any) : undefined}
               onPressFollowing={user ? () => router.push(`/social/follow-list/${user.id}?tab=following&name=${encodeURIComponent(me.name || '')}` as any) : undefined}
             />
+            <AboutSection about={me.about} />
+            <ProfileMediaGrid songs={me.songs} gallery={me.gallery} />
 
             {fos.length > 0 && (
               <>
