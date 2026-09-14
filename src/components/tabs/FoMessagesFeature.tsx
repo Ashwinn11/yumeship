@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import {
-  Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable,
+  Keyboard, KeyboardAvoidingView, Platform, Pressable,
   ScrollView, StyleSheet, Switch, Text, TextInput, View,
 } from 'react-native';
 import Svg, { Path, Rect } from 'react-native-svg';
@@ -91,7 +91,7 @@ export function FoMessagesFeature({ shipId, shipName, setCustomBack }: { shipId:
           } else {
             const first = queueData[0];
             if (first) {
-              await updateFoMessage(composingMsg.id, first.body, first.hour, sender, shipName, first.minute, first.arrivalDay, senderId);
+              await updateFoMessage(composingMsg.id, first.body, first.hour, sender, first.minute, first.arrivalDay, senderId);
             }
             if (queueData.length > 1) {
               for (let i = 1; i < queueData.length; i++) {
@@ -175,47 +175,18 @@ export function FoMessagesFeature({ shipId, shipName, setCustomBack }: { shipId:
             const hour = m.scheduledHour;
             const minute = m.scheduledMinute;
             const arrivalDay = m.arrivalDay;
-            let bigTimeStr = '';
-            let ampmStr = '';
-            let subtextStr = '';
-
-            if (arrivalDay === 'now' || hour === -2) {
-              bigTimeStr = 'NOW';
-              subtextStr = 'triggers immediately';
-            } else if (arrivalDay === 'random') {
-              bigTimeStr = '❖';
-              ampmStr = '';
-              subtextStr = 'random daily';
-            } else {
-              const ampm = hour >= 12 ? 'PM' : 'AM';
-              const displayHour = hour % 12 === 0 ? 12 : hour % 12;
-              const displayMin = String(minute).padStart(2, '0');
-              bigTimeStr = `${displayHour}:${displayMin}`;
-              ampmStr = ampm;
-
-              if (arrivalDay === 'today') {
-                subtextStr = 'today only';
-              } else if (arrivalDay === 'tomorrow') {
-                subtextStr = 'tomorrow only';
-              } else {
-                subtextStr = 'every day';
-              }
-            }
             const displaySender = m.senderName || shipName;
 
             let displayBody = m.body;
-            let variationCount = 0;
             try {
               if (m.body.startsWith('[')) {
                 const arr = JSON.parse(m.body);
                 if (Array.isArray(arr) && arr.length > 0) {
                   displayBody = arr[0];
-                  variationCount = arr.length;
                 }
               }
             } catch (_) { }
 
-            const isOneShot = arrivalDay === 'now' || arrivalDay === 'today' || arrivalDay === 'tomorrow';
             let nextScheduledStr = '';
             if (arrivalDay === 'now') {
               nextScheduledStr = 'now';
@@ -369,7 +340,9 @@ function FoCompose({ shipName, ship, initialMessage, onQueue }: {
   const initialSender = fromOptions.find((o) => o.id === initialMessage?.senderId && o.isFo)
     ?? fromOptions.find((o) => o.isFo)
     ?? fromOptions[0];
-  const [senderId, setSenderId] = useState(initialMessage?.senderId || initialSender?.id || '');
+  // nothing in this composer ever re-picks the sender once opened, so this
+  // was state with no setter reachable from anywhere — a plain value instead
+  const senderId = initialMessage?.senderId || initialSender?.id || '';
   const [senderName, setSenderName] = useState(
     // an edited message keeps its sender even if that member was since renamed
     initialMessage?.senderName || initialSender?.name || shipName,

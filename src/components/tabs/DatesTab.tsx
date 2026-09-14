@@ -4,9 +4,8 @@ import {
   StyleSheet, Switch, Text, TextInput, TouchableWithoutFeedback, View,
 } from 'react-native';
 import { useIPad } from '@/hooks/use-ipad';
-import { LinearGradient } from 'expo-linear-gradient';
 
-import { StickerTicket, WashiTape, Bullets, Sparkle } from '@/components/deco';
+import { StickerTicket, WashiTape, Bullets } from '@/components/deco';
 import { CozyModal } from '@/components/ui/CozyModal';
 import { DismissKeyboardView } from '@/components/ui/DismissKeyboardView';
 import { IconPlus } from '@/components/ui/Icon';
@@ -17,7 +16,7 @@ import { DateField } from '@/components/ui/DateField';
 
 const DATE_COLORS = [Colors.sakuraDeep, Colors.peachDeep, Colors.lavenderDeep, Colors.sageDeep];
 
-export function DatesTab({ shipId, shipName }: { shipId: string; shipName?: string }) {
+export function DatesTab({ shipId }: { shipId: string }) {
   const { column } = useIPad();
   const dates = useDates(shipId);
   const [composing, setComposing] = useState(false);

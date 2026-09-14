@@ -1,12 +1,9 @@
-import { Tabs, router } from 'expo-router';
+import { Tabs } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { View } from 'react-native';
 import { Colors } from '@/constants/theme';
 
 import { RootTabBar, type RootTab } from '@/components/nav/RootTabBar';
-import { resetOnb } from '@/store/onboarding';
-import { usePremium } from '@/store/premium';
-import { useShips } from '@/store/ships';
 
 const ROUTE_TO_TAB: Record<string, RootTab> = {
   index:     'home',

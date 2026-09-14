@@ -18,7 +18,7 @@ import {
   IconTicketSolid,
   IconTrashSolid,
 } from '@/components/ui';
-import { IconEdit, IconLock } from '@/components/ui/Icon';
+import { IconEdit } from '@/components/ui/Icon';
 import { Mark } from '@/components/ui/Mark';
 import { Toggle } from '@/components/ui/Toggle';
 import { Colors, FontFamily, FontSize, Radius, Spacing ,sf } from '@/constants/theme';

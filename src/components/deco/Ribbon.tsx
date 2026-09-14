@@ -1,5 +1,4 @@
 import { Colors } from '@/constants/theme';
-import React from 'react';
 import { View, ViewStyle } from 'react-native';
 import Svg, { Circle, G, Path } from 'react-native-svg';
 
@@ -54,4 +53,3 @@ export function Ribbon({ size = 36, color = Colors.sakura, style }: Props) {
     </View>
   );
 }
-export const StickerBow = Ribbon;

@@ -1,7 +1,7 @@
 import { Colors, FontFamily ,sf } from '@/constants/theme';
 import React from 'react';
 import { StyleSheet, Text, View, ViewStyle } from 'react-native';
-import Svg, { Circle, Line, Path } from 'react-native-svg';
+import Svg, { Line, Path } from 'react-native-svg';
 
 type PaperProps = {
   width?: number;
@@ -221,22 +221,6 @@ export function PaperGrid({ width = 100, height = 130, children, style }: PaperP
         ))}
       </Svg>
       <View style={{ position: 'absolute', inset: 14 }}>{children}</View>
-    </View>
-  );
-}
-
-export function ClipBinder({ size = 30, color = Colors.butter, rotate = 0, style }: { size?: number; color?: string; rotate?: number; style?: ViewStyle }) {
-  return (
-    <View style={[{ transform: [{ rotate: `${rotate}deg` }] }, style]}>
-      <Svg width={size} height={size * 1.6} viewBox="0 0 20 32">
-        <Path
-          d="M10 2C6 2 3 5 3 9v17a4 4 0 0 0 8 0V9a3 3 0 1 1 6 0v17"
-          stroke={color}
-          strokeWidth="2"
-          strokeLinecap="round"
-          fill="none"
-        />
-      </Svg>
     </View>
   );
 }

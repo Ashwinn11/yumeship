@@ -1,12 +1,10 @@
 import { useState } from 'react';
 import { Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import Svg, { Circle, Path } from 'react-native-svg';
 
-import { WashiTape } from '@/components/deco';
 import { IconEdit, IconPlus, IconTrashSolid } from '@/components/ui/Icon';
 import { Heart } from '@/components/deco/Heart';
-import { FILL_GRAY, INK, SquareCheck, TitleHeader } from '@/components/templates/primitives';
-import { Colors, FontFamily, Radius, Shadow, Spacing, sf } from '@/constants/theme';
+import { FILL_GRAY, INK, TitleHeader } from '@/components/templates/primitives';
+import { Colors, FontFamily, Radius, Spacing, sf } from '@/constants/theme';
 import { getGlobalSetting, saveGlobalSetting } from '@/store/onboarding';
 import {
   addHeadcanon, clearCategoryHeadcanons, deleteHeadcanon, getHeadcanons,
@@ -34,9 +32,6 @@ function getHCCats(shipId: string) {
 function saveHCCats(shipId: string, cats: typeof DEFAULT_HC_CATS) {
   saveGlobalSetting(`hc_cats_${shipId}`, JSON.stringify(cats));
 }
-
-// kept for CategoryBlock previews — fixed to current cats at render time
-const HC_CATS = DEFAULT_HC_CATS;
 
 export function HeadcanonsFeature({ shipId, shipName: _shipName, setCustomBack: _setCustomBack }: { shipId: string; shipName: string; setCustomBack: (fn: (() => void) | null) => void }) {
   const counts = useHeadcanonCounts(shipId);

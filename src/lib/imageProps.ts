@@ -1,5 +1,3 @@
-import { Colors } from '@/constants/theme';
-
 /**
  * Shared expo-image defaults. Without these every <Image> re-fetches on each
  * mount and pops in with a blank frame; 'memory-disk' keeps a decoded copy in
@@ -27,6 +25,3 @@ export const MEDIA_IMAGE = {
   placeholder: { blurhash: 'L6Pj0^i_.AyE_3t7t7R**0o#DgR4' },
   placeholderContentFit: 'cover',
 } as const;
-
-/** Neutral fill shown behind media while the first bytes land. */
-export const MEDIA_BACKDROP = Colors.paperDeep;

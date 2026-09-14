@@ -357,7 +357,6 @@ export async function updateFoMessage(
   body: string,
   scheduledHour: number,
   senderName: string,
-  foName = '',
   scheduledMinute = 0,
   arrivalDay: FoMessage['arrivalDay'] = 'everyday',
   senderId = '',

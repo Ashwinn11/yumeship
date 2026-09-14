@@ -197,10 +197,18 @@ export default function MyProfileScreen() {
   }
 
   // theme edits apply live inside the sheet (one push per tap would be
-  // excessive) — push once, on close, so everyone else actually sees them
+  // excessive) — push once, on close, so everyone else actually sees them.
+  // photoFailed covers a background/gallery image that silently didn't
+  // upload (see syncMediaMap) as much as the avatar — previously dropped on
+  // the floor here, so a failed page/card background just went blank with
+  // no explanation.
   function handleThemeSheetClose() {
     setShowCustomize(false);
-    pushOwnProfile().catch(logSyncFailure('push own profile'));
+    pushOwnProfile()
+      .then((res) => {
+        if (res.photoFailed) showToast("a background image didn't upload — try picking it again");
+      })
+      .catch(logSyncFailure('push own profile'));
   }
 
   const pageBg = me.pageBgImage || me.pageBgColor;

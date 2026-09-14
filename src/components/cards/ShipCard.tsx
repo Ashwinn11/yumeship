@@ -15,7 +15,6 @@ type TapePattern = 'stripe' | 'dot' | 'heart' | 'check' | 'floral' | 'lace' | 'g
 type Props = {
   name: string;
   shipName?: string;
-  myName?: string;
   src: string;
   initial: string;
   gradStart: string;
@@ -36,7 +35,6 @@ type Props = {
 export function ShipCard({
   name,
   shipName,
-  myName,
   src,
   initial,
   gradStart,

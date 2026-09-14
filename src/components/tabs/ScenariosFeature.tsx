@@ -1,5 +1,5 @@
-import { router } from 'expo-router';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useIPad } from '@/hooks/use-ipad';
 import {
   Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable,
   ScrollView, StyleSheet, Text, TextInput, TouchableWithoutFeedback, View,
@@ -14,9 +14,6 @@ import {
   Colors, FontFamily, FontSize, Radius, RelationshipBase, RelationshipColors, RelationshipSoft,
   relationshipTypeOr, Shadow, SheetColumn, Spacing, sf,
 } from '@/constants/theme';
-import { newId } from '@/db/client';
-import { useIPad } from '@/hooks/use-ipad';
-import { usePremium } from '@/store/premium';
 import {
   addScenario, deleteScenario, updateScenario, useScenarios,
 } from '@/store/scenarios';
@@ -30,6 +27,7 @@ import { useShip } from '@/store/ships';
 
 
 export function ScenariosFeature({ shipId, shipName, setCustomBack }: { shipId: string; shipName: string; setCustomBack: (fn: (() => void) | null) => void }) {
+  const { column } = useIPad();
   const scenarios = useScenarios(shipId);
   const ship = useShip(shipId);
   const customPrompts = useCustomPrompts();
@@ -74,7 +72,6 @@ export function ScenariosFeature({ shipId, shipName, setCustomBack }: { shipId: 
     return (
       <ScenarioEditor
         initial={editing}
-        shipName={shipName}
         accent={accent}
         accentLight={accentLight}
         onSave={(title, body) => {
@@ -91,7 +88,7 @@ export function ScenariosFeature({ shipId, shipName, setCustomBack }: { shipId: 
   return (
     <View style={sc.wrap}>
       {/* Redesigned Scenarios Header */}
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 14, paddingHorizontal: 4 }}>
+      <View style={[{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 14, paddingHorizontal: 4 }, column]}>
         <View>
           <Text style={{ fontFamily: FontFamily.marker, fontSize: sf(9), color: accent, letterSpacing: 1.4, textTransform: 'uppercase', marginBottom: 2 }}>
             SCENARIOS · {scenarios.length} SAVED
@@ -131,7 +128,7 @@ export function ScenariosFeature({ shipId, shipName, setCustomBack }: { shipId: 
       </View>
 
       {scenarios.length === 0 ? (
-        <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingTop: 28, paddingHorizontal: 20, paddingBottom: Spacing.s9 }} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={[{ flexGrow: 1, justifyContent: 'center', paddingTop: 28, paddingHorizontal: 20, paddingBottom: Spacing.s9 }, column]} showsVerticalScrollIndicator={false}>
           <View style={{ alignItems: 'center', gap: 4 }}>
             <StickerSakuraBranch size={76} />
             <Text style={{ fontFamily: FontFamily.displayItalic, fontSize: sf(30), color: Colors.ink, textAlign: 'center', marginTop: 8 }}>
@@ -179,7 +176,7 @@ export function ScenariosFeature({ shipId, shipName, setCustomBack }: { shipId: 
           </View>
         </ScrollView>
       ) : (
-        <View style={sc.list}>
+        <View style={[sc.list, column]}>
           <CozyModal
             visible={!!scDeleteTarget}
             title="delete this scene?"
@@ -192,8 +189,6 @@ export function ScenariosFeature({ shipId, shipName, setCustomBack }: { shipId: 
           />
           {scenarios.map((s, scIdx) => {
             const scDate = new Date(s.createdAt).toLocaleDateString('en-US', { month: 'short', day: '2-digit' }).toUpperCase();
-            const wordCount = s.body ? s.body.split(/\s+/).filter(Boolean).length : 0;
-            const readTime = Math.max(1, Math.ceil(wordCount / 180)) + ' MIN READ';
             const tapePattern = (scIdx % 2 === 0 ? 'dot' : 'floral') as any;
             const tapeColor = scIdx % 2 === 0 ? Colors.sakura : Colors.lavender;
 
@@ -352,9 +347,8 @@ export function ScenariosFeature({ shipId, shipName, setCustomBack }: { shipId: 
   );
 }
 
-function ScenarioEditor({ initial, shipName, accent, accentLight, onSave, onDelete }: {
+function ScenarioEditor({ initial, accent, accentLight, onSave, onDelete }: {
   initial: { id: string | null; title: string; body: string; prompt?: string };
-  shipName: string;
   accent: string;
   accentLight: string;
   onSave: (title: string, body: string) => void;
@@ -363,7 +357,6 @@ function ScenarioEditor({ initial, shipName, accent, accentLight, onSave, onDele
   const [title, setTitle] = useState(initial.title);
   const [body, setBody] = useState(initial.body);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const wordCount = body.trim() ? body.trim().split(/\s+/).filter(Boolean).length : 0;
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={[sc.editor, { backgroundColor: Colors.paper }]} keyboardVerticalOffset={120}>

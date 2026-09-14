@@ -9,7 +9,7 @@ import { ProfileEditor, type EditField, type EditSectionDef } from '@/components
 import { ProfileFlagsEditor } from '@/components/profile/ProfileFlagsEditor';
 import { ProfileLinksEditor } from '@/components/profile/ProfileLinksEditor';
 import { Toggle } from '@/components/ui/Toggle';
-import { Colors, FontFamily, Radius, Spacing, sf } from '@/constants/theme';
+import { Colors, FontFamily, Radius, sf } from '@/constants/theme';
 import { persistImage } from '@/lib/localMedia';
 import { readMe, saveMe, type Me } from '@/store/me';
 import { useFos } from '@/store/fo';

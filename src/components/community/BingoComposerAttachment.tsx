@@ -4,7 +4,7 @@ import { Keyboard, Pressable, StyleSheet, Text, View } from 'react-native';
 import { BingoGrid } from '@/components/bingo/BingoGrid';
 import { BingoStyleSheet } from '@/components/bingo/BingoStyleSheet';
 import { makeBingoCells, type BingoCard } from '@/lib/bingo';
-import { Colors, FontFamily, Radius, Spacing, sf } from '@/constants/theme';
+import { Colors, FontFamily, Spacing, sf } from '@/constants/theme';
 
 type Props = {
   card: BingoCard;

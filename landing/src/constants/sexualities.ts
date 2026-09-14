@@ -34,7 +34,3 @@ export const SEXUALITY_OPTIONS: SexualityOption[] = [
   { key: 'fictoromantic', label: 'Fictoromantic' },
   { key: 'fictorose', label: 'Fictorose' },
 ];
-
-export function findSexualityOption(label: string): SexualityOption | undefined {
-  return SEXUALITY_OPTIONS.find((o) => o.label === label);
-}

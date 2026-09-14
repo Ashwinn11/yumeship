@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { memo } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Colors, FontFamily, Radius, Shadow, Spacing, sf } from '@/constants/theme';
 import type { CommunityPost } from '@/store/community';

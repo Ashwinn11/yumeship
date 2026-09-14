@@ -1,8 +1,8 @@
 import { useNavigation } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
-  Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable,
-  ScrollView, StyleSheet, Switch, Text, TextInput, View,
+  Keyboard, Modal, Pressable,
+  ScrollView, StyleSheet, Text, View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -28,7 +28,7 @@ import { Mark } from '@/components/ui/Mark';
 import { Colors, FontFamily, FontSize, Radius, sf, Shadow, SheetColumn, Spacing } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
 import { usePremium } from '@/store/premium';
-import { isPoly, membersLabel, Ship, useShips } from '@/store/ships';
+import { isPoly, membersLabel, useShips } from '@/store/ships';
 import { router } from 'expo-router';
 
 const PREMIUM_FEATURES: Feature[] = ['scenarios', 'albums', 'storyline', 'love-letter'];
@@ -76,7 +76,6 @@ export default function VaultScreen() {
   const [activeFeature, setActiveFeature] = useState<Feature | null>(null);
   const [showShipPicker, setShowShipPicker] = useState(false);
   const [customBack, setCustomBack] = useState<(() => void) | null>(null);
-  const [msgSender, setMsgSender] = useState<'me' | 'them'>('me');
 
   useEffect(() => {
     navigation.setOptions({
@@ -103,16 +102,14 @@ export default function VaultScreen() {
       case 'messages': return <MessagesTab shipId={ship.id} shipName={ship.name} onBack={() => setActiveFeature(null)} />;
       case 'albums': return <AlbumsTab shipId={ship.id} setCustomBack={setCustomBack} />;
       case 'boundaries': return <BoundariesFeature shipId={ship.id} />;
-      case 'storyline': return <StorylineTab shipId={ship.id} shipName={ship.name} />;
-      case 'dates': return <DatesTab shipId={ship.id} shipName={ship.name} />;
+      case 'storyline': return <StorylineTab shipId={ship.id} />;
+      case 'dates': return <DatesTab shipId={ship.id} />;
       case 'fo-messages': return <FoMessagesFeature shipId={ship.id} shipName={ship.name} setCustomBack={setCustomBack} />;
       case 'this-or-that': return <ThisOrThatTab shipId={ship.id} />;
       case 'love-letter': return <LoveLetterTab shipId={ship.id} />;
       case 'incorrect-quotes': return <IncorrectQuotesTab shipId={ship.id} />;
     }
   }
-
-  const activeFeatureMeta = FEATURES.find((f) => f.id === activeFeature);
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top }]}>
@@ -361,11 +358,6 @@ const styles = StyleSheet.create({
   pickerFandom: { fontFamily: FontFamily.ui, fontSize: sf(12), color: Colors.ink3 },
   pickerCheck: { fontSize: sf(14), color: Colors.sakuraDeep, fontFamily: FontFamily.uiSemiBold },
 
-  msgSenderToggle: { flexDirection: 'row', backgroundColor: Colors.paperDeep, borderRadius: Radius.pill, padding: 2, borderWidth: 1, borderColor: Colors.line },
-  msgSenderBtn: { paddingVertical: 3, paddingHorizontal: 8, borderRadius: Radius.pill },
-  msgSenderBtnActive: { backgroundColor: Colors.sakuraDeep },
-  msgSenderBtnText: { fontFamily: FontFamily.ui, fontSize: sf(10), color: Colors.ink2 },
-  msgSenderBtnTextActive: { color: Colors.vellum },
   emptyShips: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: Spacing.s3, paddingBottom: Spacing.s9 },
   emptyTitle: { fontFamily: FontFamily.displayItalic, fontSize: FontSize.h5, color: Colors.ink },
   emptySub: { fontFamily: FontFamily.displayItalic, fontSize: FontSize.meta, color: Colors.ink3, textAlign: 'center', paddingHorizontal: Spacing.s7 },

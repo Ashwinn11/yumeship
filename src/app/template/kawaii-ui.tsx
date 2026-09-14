@@ -4,7 +4,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Defs, Pattern as SvgPattern, Path, Rect } from 'react-native-svg';
 import { TemplateScreenWrapper } from '@/components/templates/TemplateScreenWrapper';
-import { KawaiiPanel, BlankPill, PhotoBox, DualSlider, INK, getContrastColor } from '@/components/templates/primitives';
+import { KawaiiPanel, PhotoBox, DualSlider, INK, getContrastColor } from '@/components/templates/primitives';
 import { Heart } from '@/components/deco/Heart';
 import { DateField, calcElapsed } from '@/components/ui/DateField';
 import { useTemplateCtx } from '@/store/templateData';

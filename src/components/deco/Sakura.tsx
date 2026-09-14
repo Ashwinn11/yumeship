@@ -1,5 +1,5 @@
 import { Colors, Sakura as SakuraColors } from '@/constants/theme';
-import Svg, { Circle, Ellipse, G } from 'react-native-svg';
+import Svg, { Circle, Ellipse } from 'react-native-svg';
 
 // design/deco.jsx — Sakura
 // 5-petal flower with a core dot

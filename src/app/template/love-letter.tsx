@@ -3,7 +3,7 @@ import { Keyboard, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'r
 import { useLocalSearchParams } from 'expo-router';
 import { TemplateScreenWrapper } from '@/components/templates/TemplateScreenWrapper';
 import {
-  MarkerCard, TitleHeader, MarkerHeader, BlankPill, INK, useThemedInk,
+  MarkerCard, TitleHeader, MarkerHeader, INK, useThemedInk,
 } from '@/components/templates/primitives';
 import { Heart } from '@/components/deco/Heart';
 import { FontFamily, SheetColumn ,sf } from '@/constants/theme';

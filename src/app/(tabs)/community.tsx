@@ -13,7 +13,6 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import * as AppleAuthentication from 'expo-apple-authentication';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 
@@ -312,7 +311,7 @@ function GroupsList({ column }: { column: any }) {
   );
 }
 
-function Feed({ insets }: { insets: { top: number } }) {
+function Feed() {
   const { column } = useIPad();
   const { tab: initialTab } = useLocalSearchParams<{ tab?: string }>();
   const [tab, setTab] = useState<'global' | 'following' | 'activities' | 'groups'>(
@@ -707,7 +706,7 @@ export default function CommunityScreen() {
       </View>
 
       {showFeed ? (
-        <Feed insets={insets} />
+        <Feed />
       ) : (
         <ScrollView
           style={styles.scroll}

@@ -4,7 +4,7 @@ import { Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View } fr
 import { useIPad } from '@/hooks/use-ipad';
 import { getMembers, memberColor, ShipMember, useShip } from '@/store/ships';
 import { loadTemplateData, saveTemplateData } from '@/store/templateData';
-import { Colors, FontFamily, Radius, Spacing, sf } from '@/constants/theme';
+import { Colors, FontFamily, Spacing, sf } from '@/constants/theme';
 
 const INK = '#1f1219';
 const TEMPLATE_KEY = 'incorrect-quotes';

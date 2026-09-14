@@ -1,12 +1,9 @@
 import { useState } from 'react';
-import { Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Keyboard, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
 
-import { CozyModal } from '@/components/ui/CozyModal';
-import { Heart } from '@/components/deco/Heart';
-import { FILL_GRAY, INK, SquareCheck, TitleHeader } from '@/components/templates/primitives';
-import { IconPlus, IconTrashSolid } from '@/components/ui/Icon';
-import { Colors, FontFamily, Radius, Shadow, Spacing, sf } from '@/constants/theme';
+import { INK, SquareCheck } from '@/components/templates/primitives';
+import { Colors, FontFamily, Radius, Spacing, sf } from '@/constants/theme';
 import { loadTemplateData, saveTemplateData } from '@/store/templateData';
 
 // ─── Boundaries feature ───────────────────────────────────────────────────────

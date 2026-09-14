@@ -3,7 +3,7 @@ import { SEXUALITY_OPTIONS } from '../../constants/sexualities';
 
 const BY_KEY = new Map(SEXUALITY_OPTIONS.map((o) => [o.key, o]));
 
-export function FlagIcon({ colors, width = 16, height = 11 }: { colors?: string[]; width?: number; height?: number }) {
+function FlagIcon({ colors, width = 16, height = 11 }: { colors?: string[]; width?: number; height?: number }) {
   if (!colors || colors.length === 0) return null;
   const stripeH = height / colors.length;
   return (

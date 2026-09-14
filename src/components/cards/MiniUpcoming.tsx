@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 
 import { Bullets, WashiTape } from '@/components/deco';
-import { Colors, FontFamily, Radius, Spacing ,sf } from '@/constants/theme';
+import { Colors, FontFamily ,sf } from '@/constants/theme';
 import { parseLocalDate } from '@/store/dates';
 
 type Props = {
@@ -16,7 +16,11 @@ type Props = {
   subtitle?: string;
 };
 
-export function MiniUpcoming({ days, title, fo, tint, featured, muted, dateStr, yearly, subtitle }: Props) {
+// `featured` is computed by the caller (upcoming.tsx: anniversaries and
+// events within 7 days) but this component doesn't yet render anything
+// different for it — accepted, not applied. Flagging rather than guessing at
+// a highlight treatment that was never specified.
+export function MiniUpcoming({ days, title, fo, tint, featured: _featured, muted, dateStr, yearly, subtitle }: Props) {
   let monthStr = 'DEC';
   let dayStr = '25';
 

@@ -7,7 +7,7 @@ import { getShip } from '@/store/ships';
 import { TemplateDataCtx, loadTemplateData, saveTemplateData, buildPreFill } from '@/store/templateData';
 import { Spacing } from '@/constants/theme';
 
-export function StorylineTab({ shipId, shipName }: { shipId: string; shipName: string }) {
+export function StorylineTab({ shipId }: { shipId: string }) {
   const { column } = useIPad();
   const ship = getShip(shipId);
   const templateKey = 'storyline';

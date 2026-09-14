@@ -1,7 +1,7 @@
 import { Heart } from '@/components/deco/Heart';
 import { TemplateScreenWrapper } from '@/components/templates/TemplateScreenWrapper';
 import {
-  BlankPill, Check,
+  Check,
   FILL_GRAY,
   INK,
   MarkerCard,

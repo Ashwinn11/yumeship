@@ -6,7 +6,7 @@ import { Mark } from '@/components/ui/Mark';
 import { Ribbon } from '@/components/deco/Ribbon';
 import { WashiTape } from '@/components/deco/WashiTape';
 import { Sparkle } from '@/components/deco/Sparkle';
-import { Colors, FontFamily, FontSize, Radius, Shadow, Spacing ,sf } from '@/constants/theme';
+import { Colors, FontFamily, FontSize, Radius, Spacing ,sf } from '@/constants/theme';
 
 const TEMPLATES = [
   { key: 'get-to-know', title: 'All About Us',        tapePattern: 'heart'  as const, color: Colors.sakuraDeep, bg: Colors.sakuraSoft },

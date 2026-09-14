@@ -61,6 +61,11 @@ export function initDb() {
   try { db.execSync(`ALTER TABLE fo DROP COLUMN birthday`); } catch (_) {}
   try { db.execSync(`ALTER TABLE fo ADD COLUMN since_date TEXT NOT NULL DEFAULT ''`); } catch (_) {}
   try { db.execSync(`ALTER TABLE fo ADD COLUMN card_layout TEXT NOT NULL DEFAULT ''`); } catch (_) {}
+  // never wired to anything that could set a real value — nothing but this
+  // column's own default ever reached it
+  try { db.execSync(`ALTER TABLE ships DROP COLUMN nickname`); } catch (_) {}
+  // shipped, never built on — no store, no screen ever read or wrote a row
+  try { db.execSync(`DROP TABLE IF EXISTS outfits`); } catch (_) {}
   db.execSync(`
     CREATE TABLE IF NOT EXISTS ships (
       id TEXT PRIMARY KEY,
@@ -70,7 +75,6 @@ export function initDb() {
       fandom TEXT NOT NULL DEFAULT '',
       rel_type TEXT NOT NULL DEFAULT 'romantic',
       share_type TEXT NOT NULL DEFAULT '',
-      nickname TEXT NOT NULL DEFAULT '',
       cover_uri TEXT NOT NULL DEFAULT '',
       about_text TEXT NOT NULL DEFAULT '',
       grad_start TEXT NOT NULL DEFAULT '#f3b6c4',
@@ -168,15 +172,6 @@ export function initDb() {
       album_id TEXT NOT NULL,
       uri TEXT NOT NULL,
       caption TEXT NOT NULL DEFAULT '',
-      created_at INTEGER NOT NULL
-    );
-    CREATE TABLE IF NOT EXISTS outfits (
-      id TEXT PRIMARY KEY,
-      ship_id TEXT NOT NULL,
-      title TEXT NOT NULL,
-      uri TEXT NOT NULL DEFAULT '',
-      occasion TEXT NOT NULL DEFAULT '',
-      notes TEXT NOT NULL DEFAULT '',
       created_at INTEGER NOT NULL
     );
     CREATE TABLE IF NOT EXISTS template_data (
@@ -341,7 +336,6 @@ function repairMediaPaths() {
                     'avatar_synced_uri', 'gallery_sync_map']],
     ['messages', ['id'], ['image_uri']],
     ['album_photos', ['id'], ['uri']],
-    ['outfits', ['id'], ['uri']],
     ['custom_stickers', ['id'], ['uri']],
     ['template_data', ['ship_id', 'template_key'], ['data_json']],
     ['settings', ['key'], ['value']],
@@ -381,7 +375,7 @@ function repairMediaPaths() {
 // stores hold one plain string per field is never broken.
 //
 // Only the two record kinds that are ever published carry a sync map — ships,
-// messages, albums, outfits and stickers have nothing to fall back to, so they
+// messages, albums and stickers have nothing to fall back to, so they
 // are untouched here (the previous pass already rescued what it could of those).
 function applyRemoteFallbacks() {
   const db = getDb();

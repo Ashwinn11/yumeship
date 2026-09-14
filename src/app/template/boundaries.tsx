@@ -1,5 +1,5 @@
 import { TemplateScreenWrapper } from '@/components/templates/TemplateScreenWrapper';
-import { INK, MarkerCard, SquareCheck, useThemedInk, getContrastColor } from '@/components/templates/primitives';
+import { MarkerCard, SquareCheck, useThemedInk, getContrastColor } from '@/components/templates/primitives';
 import { FontFamily ,sf } from '@/constants/theme';
 import { useTemplateCtx } from '@/store/templateData';
 import { useLocalSearchParams } from 'expo-router';

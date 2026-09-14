@@ -10,7 +10,7 @@ import { Heart } from '@/components/deco/Heart';
 import { Sparkle } from '@/components/deco';
 import { StickerCassette } from '@/components/deco/Stickers';
 import { useTemplateCtx } from '@/store/templateData';
-import { FontFamily, Spacing, type SharingTemplateLabel } from '@/constants/theme';
+import { FontFamily, type SharingTemplateLabel } from '@/constants/theme';
 
 const STICKER_ROTATE = [-6, 4, -3];
 const STICKER_BADGE = ['★', '♡', '✧'];

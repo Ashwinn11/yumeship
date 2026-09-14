@@ -46,7 +46,6 @@ export function AlbumsTab({ shipId, setCustomBack }: { shipId: string; setCustom
       <AlbumView
         albumId={openAlbumId}
         albumTitle={album?.title ?? ''}
-        onBack={() => { setOpenAlbumId(null); setCustomBack?.(null); }}
       />
     );
   }
@@ -155,7 +154,7 @@ export function AlbumsTab({ shipId, setCustomBack }: { shipId: string; setCustom
   );
 }
 
-function AlbumView({ albumId, albumTitle, onBack }: { albumId: string; albumTitle: string; onBack: () => void }) {
+function AlbumView({ albumId, albumTitle }: { albumId: string; albumTitle: string }) {
   const { column } = useIPad();
   const photos = useAlbumPhotos(albumId);
   const [lightboxUri, setLightboxUri] = useState<string | null>(null);

@@ -59,6 +59,25 @@ export async function compressImage(uri: string, preset: ImagePreset = 'post'): 
 }
 
 /**
+ * A single gateway blip on the upload itself shouldn't silently blank out a
+ * background image or gallery photo — see syncMediaMap's own comment for how
+ * badly that used to fail (no retry, no signal, just an empty field saved to
+ * the row). Retries only the network step, never the local compress: a
+ * missing/corrupt local file will fail the same way every time.
+ */
+async function withUploadRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await fn();
+    } catch (e) {
+      if (i === attempts - 1) throw e;
+      await new Promise((r) => setTimeout(r, 400 * (i + 1)));
+    }
+  }
+  throw new Error('unreachable');
+}
+
+/**
  * Given the account/F/O's current local gallery uris and the previously-synced
  * {localUri: remoteUrl} map, uploads only the uris not already in the map
  * (compressing first) and returns the fully up-to-date map. Local uris removed
@@ -93,7 +112,7 @@ export async function syncMediaMap(
     toUpload.map(async (uri) => {
       try {
         const compressed = await compressImage(uri, preset);
-        next[uri] = await upload(compressed);
+        next[uri] = await withUploadRetry(() => upload(compressed));
       } catch (_) {
         // one missing/broken local photo shouldn't block syncing the rest of the gallery
       }

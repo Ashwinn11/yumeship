@@ -16,7 +16,7 @@ import { CozyModal } from '@/components/ui/CozyModal';
 import { DateField } from '@/components/ui/DateField';
 import { DismissKeyboardView } from '@/components/ui/DismissKeyboardView';
 import { GradientCover } from '@/components/ui/GradientCover';
-import { IconEdit, IconPlus, IconTrashSolid } from '@/components/ui/Icon';
+import { IconEdit, IconPlus } from '@/components/ui/Icon';
 import { Colors, FontFamily, FontSize, Radius, RelationshipColors, SHARING_ORDER, Shadow, SharingColors, SharingLabels, SheetColumn, Spacing, sf } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
 import {

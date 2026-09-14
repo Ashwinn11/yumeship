@@ -1,4 +1,3 @@
-import React from 'react';
 import Svg, { Circle, Ellipse, Path } from 'react-native-svg';
 import { Colors } from '@/constants/theme';
 

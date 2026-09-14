@@ -65,14 +65,6 @@ export async function getPermissionStatus(): Promise<'granted' | 'denied' | 'und
   return status as 'granted' | 'denied' | 'undetermined';
 }
 
-export function getDiscreetMode(): boolean {
-  return getGlobalSetting('discreet_notif') === 'true';
-}
-
-export function setDiscreetMode(v: boolean) {
-  saveGlobalSetting('discreet_notif', String(v));
-}
-
 export function getNotifEnabled(): boolean {
   return getGlobalSetting('notif_enabled') !== 'false';
 }
@@ -116,11 +108,7 @@ export async function scheduleFoNotification(
     const { status } = await Notifications.getPermissionsAsync();
     if (status !== 'granted') return null;
 
-    const discreet = getDiscreetMode();
-
-    // Discreet mode exists to hide who is writing, so showing their face would
-    // defeat it — those stay on the plain notification path deliberately.
-    if (!discreet && avatarUri && isAvatarNotificationSupported()) {
+    if (avatarUri && isAvatarNotificationSupported()) {
       const seconds = secondsUntilArrival(arrivalDay, hour, minute, staggerIndex);
       if (seconds !== null) {
         const avatarId = await scheduleAvatarNotification({
@@ -172,8 +160,8 @@ export async function scheduleFoNotification(
 
     const identifier = await Notifications.scheduleNotificationAsync({
       content: {
-        title: discreet ? '♡' : (foName || 'F/O'),
-        body: discreet ? 'a message for you~' : body,
+        title: foName || 'F/O',
+        body,
       },
       trigger,
     });
@@ -193,11 +181,10 @@ export async function scheduleOneShotAtDate(
   try {
     const { status } = await Notifications.getPermissionsAsync();
     if (status !== 'granted') return null;
-    const discreet = getDiscreetMode();
     const identifier = await Notifications.scheduleNotificationAsync({
       content: {
-        title: discreet ? '♡' : (foName || 'F/O'),
-        body: discreet ? 'a message for you~' : body,
+        title: foName || 'F/O',
+        body,
       },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.DATE,
@@ -255,12 +242,10 @@ export async function scheduleAnniversaryNotification(
     if (parts.length !== 3 || parts.some(isNaN)) return null;
     const [, month, day] = parts;
 
-    const discreet = getDiscreetMode();
-
     const identifier = await Notifications.scheduleNotificationAsync({
       content: {
-        title: discreet ? '♡' : 'a special day',
-        body: discreet ? 'a reminder for you~' : `${title} is today ♡`,
+        title: 'a special day',
+        body: `${title} is today ♡`,
       },
       // YEARLY works on both platforms (CALENDAR is iOS-only) and takes a
       // JS-Date-style 0-based month, unlike the 1-based dateStr.

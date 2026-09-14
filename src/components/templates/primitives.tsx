@@ -7,8 +7,6 @@ import * as ImagePicker from 'expo-image-picker';
 import Svg, {
   Defs, ClipPath, Path, Rect, Circle, G,
   Image as SvgImage,
-  LinearGradient as SvgLinearGradient, Stop,
-  Pattern as SvgPattern,
   SvgXml,
 } from 'react-native-svg';
 import { FontFamily ,sf, SHARING_TEMPLATE_OPTS, type SharingTemplateLabel } from '@/constants/theme';

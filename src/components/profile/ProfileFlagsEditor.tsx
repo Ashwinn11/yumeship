@@ -46,11 +46,12 @@ function Mark({ flag, imageUrl }: { flag: string; imageUrl: string }) {
   return null;
 }
 
-/** Flags shown the way they'll actually appear, each one tappable to edit and
- *  removable in place. Adding or editing opens right here — a swatch beside a
- *  text box; the swatch opens the same picker used elsewhere in the app
- *  (onboarding/persona.tsx's F/O picker): a titled list of rows, tap one and
- *  it closes. Not a grid, not left sitting open. */
+/** Flags shown the way they'll actually appear, each one tappable to edit in
+ *  place — a swatch beside a text box, auto-saving on every change, same
+ *  convention as the rest of this editor and as ProfileLinksEditor's own
+ *  chip-plus-fields shape. The swatch opens the same picker used elsewhere in
+ *  the app (onboarding/persona.tsx's F/O picker): a titled list of rows, tap
+ *  one and it closes. Not a grid, not left sitting open. */
 export function ProfileFlagsEditor({
   flags,
   onChange,
@@ -74,14 +75,29 @@ export function ProfileFlagsEditor({
     setPickerOpen(false);
   }
 
-  function cancel() {
+  function close() {
     setDraft(null);
     setPickerOpen(false);
   }
 
-  function pick(flag: string) {
+  // a new flag only joins the real list once it has something worth keeping —
+  // and drops back out if that's cleared away — so every change writes
+  // straight through with nothing left to "confirm"
+  function updateDraft(patch: Partial<ProfileFlag>) {
     if (!draft) return;
-    setDraft({ ...draft, flag, imageUrl: '' });
+    const next = { ...draft, ...patch };
+    setDraft(next);
+    const hasContent = !!(next.flag || next.imageUrl || next.text.trim());
+    const existsInList = flags.some((f) => f.id === next.id);
+    if (!hasContent) {
+      if (existsInList) onChange(flags.filter((f) => f.id !== next.id));
+      return;
+    }
+    onChange(existsInList ? flags.map((f) => (f.id === next.id ? next : f)) : [...flags, next].slice(0, FLAGS_MAX));
+  }
+
+  function pick(flag: string) {
+    updateDraft({ flag, imageUrl: '' });
     setPickerOpen(false);
   }
 
@@ -100,43 +116,23 @@ export function ProfileFlagsEditor({
     const asset = res.assets[0];
     const cropped = await cropToFlagRatio(asset.uri, asset.width, asset.height);
     const stored = await persistImage(cropped);
-    setDraft({ ...draft, imageUrl: stored, flag: '' });
+    updateDraft({ imageUrl: stored, flag: '' });
     setPickerOpen(false);
   }
 
-  function save() {
+  function remove() {
     if (!draft) return;
-    if (!draft.flag && !draft.imageUrl && !draft.text.trim()) {
-      // nothing was actually chosen — don't leave an empty chip behind
-      setDraft(null);
-      return;
-    }
-    onChange(isNew ? [...flags, draft].slice(0, FLAGS_MAX) : flags.map((f) => (f.id === draft.id ? draft : f)));
-    cancel();
-  }
-
-  function remove(id: string) {
-    onChange(flags.filter((f) => f.id !== id));
-    cancel();
+    onChange(flags.filter((f) => f.id !== draft.id));
+    close();
   }
 
   return (
     <View style={styles.wrap}>
-      {/* the section sheet this opens in already titles itself "flags" — this
-          row only needs to exist while there's a cancel to show */}
-      {!!draft && (
-        <View style={styles.header}>
-          <Pressable onPress={cancel} hitSlop={6}>
-            <Text style={styles.headerCancel}>cancel</Text>
-          </Pressable>
-        </View>
-      )}
-
       <View style={styles.chipRow}>
         {flags.map((f) => (
           <Pressable
             key={f.id}
-            onPress={() => (draft?.id === f.id ? cancel() : edit(f))}
+            onPress={() => (draft?.id === f.id ? close() : edit(f))}
             style={[styles.chip, draft?.id === f.id && styles.chipActive]}
           >
             <Mark flag={f.flag} imageUrl={f.imageUrl} />
@@ -144,7 +140,7 @@ export function ProfileFlagsEditor({
           </Pressable>
         ))}
         {flags.length < FLAGS_MAX && (
-          <Pressable onPress={openNew} style={styles.addChip}>
+          <Pressable onPress={() => (draft && isNew ? close() : openNew())} style={styles.addChip}>
             <Text style={styles.addChipText}>+ flag</Text>
           </Pressable>
         )}
@@ -165,7 +161,7 @@ export function ProfileFlagsEditor({
           </Pressable>
           <TextInput
             value={draft.text}
-            onChangeText={(v) => setDraft({ ...draft, text: v })}
+            onChangeText={(v) => updateDraft({ text: v })}
             placeholder="your words"
             placeholderTextColor={Colors.ink3}
             maxLength={FLAG_TEXT_MAX}
@@ -174,16 +170,14 @@ export function ProfileFlagsEditor({
             returnKeyType="done"
             onSubmitEditing={() => Keyboard.dismiss()}
           />
-          <Pressable onPress={save} style={styles.doneBtn}>
-            <Text style={styles.doneBtnText}>{isNew ? 'add' : 'done'}</Text>
-          </Pressable>
+          {/* same small ✕-badge GalleryPicker and ProfileLinksEditor already
+              use for their own remove actions, not a third pattern */}
+          {!isNew && (
+            <Pressable onPress={remove} style={styles.removeBadge} hitSlop={6} accessibilityLabel="Remove this flag">
+              <Text style={styles.removeBadgeText}>✕</Text>
+            </Pressable>
+          )}
         </View>
-      )}
-
-      {draft && !isNew && (
-        <Pressable onPress={() => remove(draft.id)} hitSlop={6}>
-          <Text style={styles.removeText}>remove this flag</Text>
-        </Pressable>
       )}
 
       <Modal visible={pickerOpen} transparent animationType="fade" onRequestClose={() => setPickerOpen(false)}>
@@ -227,8 +221,6 @@ export function ProfileFlagsEditor({
 
 const styles = StyleSheet.create({
   wrap: { gap: 10 },
-  header: { flexDirection: 'row', justifyContent: 'flex-end' },
-  headerCancel: { fontFamily: FontFamily.uiMedium, fontSize: sf(12), color: Colors.ink3 },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
   chip: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
@@ -266,14 +258,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.s3,
     fontFamily: FontFamily.ui, fontSize: sf(14), color: Colors.ink,
   },
-  doneBtn: {
-    height: 38, paddingHorizontal: Spacing.s4,
-    borderRadius: Radius.pill, backgroundColor: Colors.sakuraDeep,
+  removeBadge: {
+    width: 38, height: 38, borderRadius: Radius.pill,
+    backgroundColor: Colors.paperDeep, borderWidth: 1, borderColor: Colors.line,
     alignItems: 'center', justifyContent: 'center',
   },
-  doneBtnText: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(12.5), color: '#fff' },
-
-  removeText: { fontFamily: FontFamily.uiMedium, fontSize: sf(12), color: Colors.ember, alignSelf: 'center' },
+  removeBadgeText: { color: Colors.ink3, fontSize: sf(11), fontFamily: FontFamily.ui },
 
   // the picker itself — same shape as the F/O picker in onboarding/persona.tsx
   pickOverlay: {

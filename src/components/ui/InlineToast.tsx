@@ -8,7 +8,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { Colors, FontFamily, Radius, Spacing, sf } from '@/constants/theme';
+import { FontFamily, Radius, Spacing, sf } from '@/constants/theme';
 
 const VISIBLE_MS = 2200;
 

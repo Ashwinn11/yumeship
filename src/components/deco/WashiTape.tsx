@@ -1,6 +1,6 @@
 import { Colors } from '@/constants/theme';
-import React, { useMemo } from 'react';
-import Svg, { Defs, Path, Pattern as SvgPattern, Rect, Circle, Ellipse, G } from 'react-native-svg';
+import { useMemo } from 'react';
+import Svg, { Defs, Path, Pattern as SvgPattern, Rect, Circle, Ellipse } from 'react-native-svg';
 
 export type TapePattern =
   | 'stripe'

@@ -7,7 +7,7 @@ import { ShipCard } from '@/components/cards/ShipCard';
 import { Heart } from '@/components/deco/Heart';
 import { Sparkle } from '@/components/deco/Sparkle';
 
-import { StickerSakuraFlower, StickerSparkle, WashiTape } from '@/components/deco';
+import { StickerSakuraFlower, WashiTape } from '@/components/deco';
 import { CozyModal } from '@/components/ui/CozyModal';
 import { IconLockSolid, IconPlus, IconSearch } from '@/components/ui/Icon';
 import { Mark } from '@/components/ui/Mark';
@@ -190,7 +190,6 @@ export default function HomeScreen() {
                 style={styles.card}
                 name={ship.name}
                 shipName={ship.shipName}
-                myName={ship.myName}
                 src={isPoly(ship) ? (membersLabel(ship) || '—') : (ship.fandom || '—')}
                 initial={(ship.shipName || ship.name).charAt(0).toUpperCase() || '♡'}
                 gradStart={ship.gradStart}

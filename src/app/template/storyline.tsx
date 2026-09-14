@@ -4,10 +4,10 @@ import Svg, { Line } from 'react-native-svg';
 import { useLocalSearchParams } from 'expo-router';
 import { TemplateScreenWrapper } from '@/components/templates/TemplateScreenWrapper';
 import {
-  MarkerCard, TitleHeader, INK, useThemedInk,
+  MarkerCard, TitleHeader, useThemedInk,
 } from '@/components/templates/primitives';
 import { Bullets, WashiTape } from '@/components/deco';
-import { Colors, FontFamily ,sf } from '@/constants/theme';
+import { FontFamily ,sf } from '@/constants/theme';
 import { useTemplateCtx } from '@/store/templateData';
 import { DateField } from '@/components/ui/DateField';
 import { DecoBar } from '@/components/templates/DecoBar';

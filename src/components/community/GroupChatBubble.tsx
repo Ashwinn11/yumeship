@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AVATAR_IMAGE, MEDIA_IMAGE } from '@/lib/imageProps';
 import { timeAgo } from '@/lib/relativeTime';
-import { Colors, FontFamily, Radius, sf } from '@/constants/theme';
+import { Colors, FontFamily, sf } from '@/constants/theme';
 import type { GroupMessage } from '@/store/groups';
 
 import { MentionText } from './MentionText';

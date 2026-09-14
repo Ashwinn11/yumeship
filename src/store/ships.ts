@@ -135,8 +135,8 @@ export function addShip(d: {
 }): string {
   const id = newId();
   getDb().runSync(
-    `INSERT INTO ships (id, name, ship_name, my_name, fandom, rel_type, share_type, nickname, grad_start, grad_end, tape_pattern, tape_color, cover_uri, template_key, kind, members, fo_id, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO ships (id, name, ship_name, my_name, fandom, rel_type, share_type, grad_start, grad_end, tape_pattern, tape_color, cover_uri, template_key, kind, members, fo_id, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     id,
     d.name,
     d.shipName ?? '',
@@ -144,7 +144,6 @@ export function addShip(d: {
     d.fandom ?? '',
     d.relType ?? 'romantic',
     d.shareType ?? '',
-    '',
     d.gradStart ?? '#f3b6c4',
     d.gradEnd ?? '#d77a8d',
     d.tapePattern ?? 'heart',
@@ -221,7 +220,6 @@ export function deleteAllData() {
     DELETE FROM messages;
     DELETE FROM albums;
     DELETE FROM album_photos;
-    DELETE FROM outfits;
     DELETE FROM fo_messages;
     DELETE FROM template_data;
     DELETE FROM scenario_prompts;

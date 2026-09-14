@@ -1,9 +1,9 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, Pressable } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { TemplateScreenWrapper } from '@/components/templates/TemplateScreenWrapper';
 import {
-  MarkerCard, BlankPill, PhotoBox, getContrastColor,
+  BlankPill, PhotoBox, getContrastColor,
 } from '@/components/templates/primitives';
 import { WashiTape } from '@/components/deco/WashiTape';
 import { Bullets } from '@/components/deco';

@@ -7,7 +7,6 @@ import {
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useIPad } from '@/hooks/use-ipad';
 
 import { CozyModal } from '@/components/ui/CozyModal';
 import { DismissKeyboardView } from '@/components/ui/DismissKeyboardView';
@@ -76,7 +75,6 @@ function ThreadView({
   onBack?: () => void;
 }) {
   const insets = useSafeAreaInsets();
-  const { isIPad } = useIPad();
   const ship = useShip(shipId);
   const isPremium = usePremium();
   const fo = useFo(ship?.foId);
@@ -95,7 +93,6 @@ function ThreadView({
   const [internalSender, setInternalSender] = useState<string>(poly ? meId : 'me');
   const sender = externalSender ?? internalSender;
   const setSender = onSenderChange ?? setInternalSender;
-  const showToggle = !externalSender;
   const [draft, setDraft] = useState('');
   const [msgToDelete, setMsgToDelete] = useState<string | null>(null);
   const [keyboardOpen, setKeyboardOpen] = useState(false);

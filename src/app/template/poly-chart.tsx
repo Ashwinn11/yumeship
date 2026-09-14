@@ -11,7 +11,7 @@ import { newId } from '@/db/client';
 import { AKI_XML } from '@/components/deco/akiXml';
 import { RIN_XML } from '@/components/deco/rinXml';
 import { ME_XML } from '@/components/deco/meXml';
-import { Colors, FontFamily, Radius, SheetColumn, sf } from '@/constants/theme';
+import { Colors, FontFamily, SheetColumn, sf } from '@/constants/theme';
 
 // ─── Static config (ported from the Canvas design) ────────────────────────────
 
@@ -91,10 +91,10 @@ function RosterStrip({ roster, editing, onAdd, onRemove, onField }: {
               </Pressable>
             )}
           </View>
-          <Field label="Name" value={m.name} editing={editing} accent onChange={(v) => onField(m.id, 'name', v)} />
+          <Field label="Name" value={m.name} editing={editing} onChange={(v) => onField(m.id, 'name', v)} />
           <Field label="Pronouns" value={m.pronouns ?? ''} editing={editing} onChange={(v) => onField(m.id, 'pronouns', v)} />
           <Field label="Sexuality" value={m.sex ?? ''} editing={editing} onChange={(v) => onField(m.id, 'sex', v)} />
-          <Field label="One word" value={m.word ?? ''} editing={editing} accent onChange={(v) => onField(m.id, 'word', v)} />
+          <Field label="One word" value={m.word ?? ''} editing={editing} onChange={(v) => onField(m.id, 'word', v)} />
         </View>
       ))}
       {editing && (
@@ -106,8 +106,8 @@ function RosterStrip({ roster, editing, onAdd, onRemove, onField }: {
   );
 }
 
-function Field({ label, value, editing, onChange, accent }: {
-  label: string; value: string; editing: boolean; onChange: (v: string) => void; accent?: boolean;
+function Field({ label, value, editing, onChange }: {
+  label: string; value: string; editing: boolean; onChange: (v: string) => void;
 }) {
   const ink = useThemedInk();
   return (
@@ -461,7 +461,7 @@ export function PolyChartContent({ editing, shipId }: { editing?: boolean; shipI
 
       {/* ship + media */}
       <View style={ps.shipRow}>
-        <Field label="Ship" value={ship ? ship.shipName ?? '' : PREVIEW_SHIP.shipName} editing={e} accent onChange={(v) => shipId && updateShip(shipId, { shipName: v })} />
+        <Field label="Ship" value={ship ? ship.shipName ?? '' : PREVIEW_SHIP.shipName} editing={e} onChange={(v) => shipId && updateShip(shipId, { shipName: v })} />
         <Field label="Media" value={ship ? ship.fandom ?? '' : PREVIEW_SHIP.fandom} editing={e} onChange={(v) => shipId && updateShip(shipId, { fandom: v })} />
       </View>
 

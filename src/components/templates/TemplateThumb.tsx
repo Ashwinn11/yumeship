@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Dimensions } from 'react-native';
+import { View } from 'react-native';
 
 import { GetToKnowContent } from '@/app/template/get-to-know';
 import { KawaiiUIContent } from '@/app/template/kawaii-ui';
@@ -70,9 +70,3 @@ export function TemplateThumb({ templateKey, width, height, data }: Props) {
     </View>
   );
 }
-
-// Pre-calculated card dimensions for the 2-col grid layout used in both
-// Templates tab (padding 16, gap 10) and new-ship picker (padding 12, gap 10).
-const { width: SCREEN_W } = Dimensions.get('window');
-export const THUMB_CARD_W = Math.floor((SCREEN_W - 32 - 10) / 2);
-export const THUMB_CARD_H = Math.floor(THUMB_CARD_W * 4 / 3);

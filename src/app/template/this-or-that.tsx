@@ -1,6 +1,6 @@
 import { TemplateScreenWrapper } from '@/components/templates/TemplateScreenWrapper';
 import {
-  Check, INK, useThemedInk,
+  Check, useThemedInk,
   TitleHeader
 } from '@/components/templates/primitives';
 import { Colors, FontFamily, Radius, sf } from '@/constants/theme';
@@ -38,15 +38,13 @@ export function ThisOrThatContent({ editing = false, getPairs, onEdit, ship }: {
 
   const pairs = resolvePairs();
 
-  const [vals, setVals] = useState<{ name: string; choices: ('left' | 'right' | null)[]; note: string }>(() => ({
+  const [vals, setVals] = useState<{ name: string; choices: ('left' | 'right' | null)[] }>(() => ({
     name: ctx.get('name'),
     choices: JSON.parse(ctx.get('choices', 'null')) ?? pairs.map(() => null),
-    note: ctx.get('note'),
   }));
 
   const e = editing;
 
-  const setNote = (v: string) => { setVals((p) => ({ ...p, note: v })); ctx.set('note', v); };
   const setName = (v: string) => { setVals((p) => ({ ...p, name: v })); ctx.set('name', v); };
   const pick = (i: number, side: 'left' | 'right') => {
     setVals((prev) => {
@@ -56,7 +54,7 @@ export function ThisOrThatContent({ editing = false, getPairs, onEdit, ship }: {
     });
   };
 
-  const { name, choices, note } = vals;
+  const { name, choices } = vals;
 
   return (
     <View style={{ padding: 10, backgroundColor: customBg ? 'transparent' : undefined }}>
@@ -140,12 +138,4 @@ const s = StyleSheet.create({
   pairText: { fontFamily: FontFamily.marker, fontSize: sf(11), flexShrink: 1 },
   pairChosen: { fontFamily: FontFamily.markerBold, textDecorationLine: 'underline' },
   pairSlash: { fontFamily: FontFamily.marker, fontSize: sf(9), opacity: 0.7, marginHorizontal: 2 },
-  noteWrap: { marginTop: 14, alignItems: 'center' },
-  noteText: {
-    fontFamily: FontFamily.script,
-    fontSize: sf(16),
-    lineHeight: sf(18),
-    textAlign: 'center',
-    minWidth: 180,
-  },
 });
