@@ -1,0 +1,481 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-09-14T16:39:14Z",
+  "command": "metadata plan",
+  "reviewDir": ".asc/metadata/review",
+  "planPath": ".asc/metadata/review/plan.json",
+  "approvalPath": ".asc/metadata/review/approved.json",
+  "planHash": "106e1fce6d336c4e66764985676901ea42091d2d87e97d6c7d6a6f6e7a15cfe6",
+  "options": {
+    "appId": "6773642234",
+    "appInfoId": "b89b5198-2fa0-4abb-8278-1d262360be88",
+    "version": "2.0",
+    "dir": "/tmp/yumeship_metadata_edit",
+    "includes": [
+      "localizations"
+    ],
+    "allowDeletes": false
+  },
+  "plan": {
+    "appId": "6773642234",
+    "appInfoId": "b89b5198-2fa0-4abb-8278-1d262360be88",
+    "version": "2.0",
+    "versionId": "c54e1159-3ade-4574-b145-4b11d0ee89fb",
+    "dir": "/tmp/yumeship_metadata_edit",
+    "dryRun": true,
+    "includes": [
+      "localizations"
+    ],
+    "adds": [],
+    "updates": [
+      {
+        "key": "app-info:ar-SA:privacyPolicyUrl",
+        "scope": "app-info",
+        "locale": "ar-SA",
+        "field": "privacyPolicyUrl",
+        "reason": "field value differs",
+        "from": "https://hosting-pages.netlify.app/yumeship/privacy-policy",
+        "to": "https://myyume.app/privacy"
+      },
+      {
+        "key": "app-info:de-DE:privacyPolicyUrl",
+        "scope": "app-info",
+        "locale": "de-DE",
+        "field": "privacyPolicyUrl",
+        "reason": "field value differs",
+        "from": "https://hosting-pages.netlify.app/yumeship/privacy-policy",
+        "to": "https://myyume.app/privacy"
+      },
+      {
+        "key": "app-info:en-US:privacyPolicyUrl",
+        "scope": "app-info",
+        "locale": "en-US",
+        "field": "privacyPolicyUrl",
+        "reason": "field value differs",
+        "from": "https://hosting-pages.netlify.app/yumeship/privacy-policy",
+        "to": "https://myyume.app/privacy"
+      },
+      {
+        "key": "app-info:es-ES:privacyPolicyUrl",
+        "scope": "app-info",
+        "locale": "es-ES",
+        "field": "privacyPolicyUrl",
+        "reason": "field value differs",
+        "from": "https://hosting-pages.netlify.app/yumeship/privacy-policy",
+        "to": "https://myyume.app/privacy"
+      },
+      {
+        "key": "app-info:es-MX:privacyPolicyUrl",
+        "scope": "app-info",
+        "locale": "es-MX",
+        "field": "privacyPolicyUrl",
+        "reason": "field value differs",
+        "from": "https://hosting-pages.netlify.app/yumeship/privacy-policy",
+        "to": "https://myyume.app/privacy"
+      },
+      {
+        "key": "app-info:fr-CA:privacyPolicyUrl",
+        "scope": "app-info",
+        "locale": "fr-CA",
+        "field": "privacyPolicyUrl",
+        "reason": "field value differs",
+        "from": "https://hosting-pages.netlify.app/yumeship/privacy-policy",
+        "to": "https://myyume.app/privacy"
+      },
+      {
+        "key": "app-info:fr-FR:privacyPolicyUrl",
+        "scope": "app-info",
+        "locale": "fr-FR",
+        "field": "privacyPolicyUrl",
+        "reason": "field value differs",
+        "from": "https://hosting-pages.netlify.app/yumeship/privacy-policy",
+        "to": "https://myyume.app/privacy"
+      },
+      {
+        "key": "app-info:id:privacyPolicyUrl",
+        "scope": "app-info",
+        "locale": "id",
+        "field": "privacyPolicyUrl",
+        "reason": "field value differs",
+        "from": "https://hosting-pages.netlify.app/yumeship/privacy-policy",
+        "to": "https://myyume.app/privacy"
+      },
+      {
+        "key": "app-info:ja:privacyPolicyUrl",
+        "scope": "app-info",
+        "locale": "ja",
+        "field": "privacyPolicyUrl",
+        "reason": "field value differs",
+        "from": "https://hosting-pages.netlify.app/yumeship/privacy-policy",
+        "to": "https://myyume.app/privacy"
+      },
+      {
+        "key": "app-info:ko:privacyPolicyUrl",
+        "scope": "app-info",
+        "locale": "ko",
+        "field": "privacyPolicyUrl",
+        "reason": "field value differs",
+        "from": "https://hosting-pages.netlify.app/yumeship/privacy-policy",
+        "to": "https://myyume.app/privacy"
+      },
+      {
+        "key": "app-info:pt-BR:privacyPolicyUrl",
+        "scope": "app-info",
+        "locale": "pt-BR",
+        "field": "privacyPolicyUrl",
+        "reason": "field value differs",
+        "from": "https://hosting-pages.netlify.app/yumeship/privacy-policy",
+        "to": "https://myyume.app/privacy"
+      },
+      {
+        "key": "app-info:ru:privacyPolicyUrl",
+        "scope": "app-info",
+        "locale": "ru",
+        "field": "privacyPolicyUrl",
+        "reason": "field value differs",
+        "from": "https://hosting-pages.netlify.app/yumeship/privacy-policy",
+        "to": "https://myyume.app/privacy"
+      },
+      {
+        "key": "app-info:th:privacyPolicyUrl",
+        "scope": "app-info",
+        "locale": "th",
+        "field": "privacyPolicyUrl",
+        "reason": "field value differs",
+        "from": "https://hosting-pages.netlify.app/yumeship/privacy-policy",
+        "to": "https://myyume.app/privacy"
+      },
+      {
+        "key": "app-info:zh-Hans:privacyPolicyUrl",
+        "scope": "app-info",
+        "locale": "zh-Hans",
+        "field": "privacyPolicyUrl",
+        "reason": "field value differs",
+        "from": "https://hosting-pages.netlify.app/yumeship/privacy-policy",
+        "to": "https://myyume.app/privacy"
+      },
+      {
+        "key": "app-info:zh-Hant:privacyPolicyUrl",
+        "scope": "app-info",
+        "locale": "zh-Hant",
+        "field": "privacyPolicyUrl",
+        "reason": "field value differs",
+        "from": "https://hosting-pages.netlify.app/yumeship/privacy-policy",
+        "to": "https://myyume.app/privacy"
+      },
+      {
+        "key": "version:2.0:ar-SA:marketingUrl",
+        "scope": "version",
+        "locale": "ar-SA",
+        "version": "2.0",
+        "field": "marketingUrl",
+        "reason": "field value differs",
+        "from": "https://hosting-pages.netlify.app/yumeship",
+        "to": "https://myyume.app"
+      },
+      {
+        "key": "version:2.0:ar-SA:supportUrl",
+        "scope": "version",
+        "locale": "ar-SA",
+        "version": "2.0",
+        "field": "supportUrl",
+        "reason": "field value differs",
+        "from": "https://hosting-pages.netlify.app/yumeship/support",
+        "to": "https://myyume.app/support"
+      },
+      {
+        "key": "version:2.0:de-DE:marketingUrl",
+        "scope": "version",
+        "locale": "de-DE",
+        "version": "2.0",
+        "field": "marketingUrl",
+        "reason": "field value differs",
+        "from": "https://hosting-pages.netlify.app/yumeship",
+        "to": "https://myyume.app"
+      },
+      {
+        "key": "version:2.0:de-DE:supportUrl",
+        "scope": "version",
+        "locale": "de-DE",
+        "version": "2.0",
+        "field": "supportUrl",
+        "reason": "field value differs",
+        "from": "https://hosting-pages.netlify.app/yumeship/support",
+        "to": "https://myyume.app/support"
+      },
+      {
+        "key": "version:2.0:en-US:marketingUrl",
+        "scope": "version",
+        "locale": "en-US",
+        "version": "2.0",
+        "field": "marketingUrl",
+        "reason": "field value differs",
+        "from": "https://hosting-pages.netlify.app/yumeship",
+        "to": "https://myyume.app"
+      },
+      {
+        "key": "version:2.0:en-US:supportUrl",
+        "scope": "version",
+        "locale": "en-US",
+        "version": "2.0",
+        "field": "supportUrl",
+        "reason": "field value differs",
+        "from": "https://hosting-pages.netlify.app/yumeship/support",
+        "to": "https://myyume.app/support"
+      },
+      {
+        "key": "version:2.0:es-ES:marketingUrl",
+        "scope": "version",
+        "locale": "es-ES",
+        "version": "2.0",
+        "field": "marketingUrl",
+        "reason": "field value differs",
+        "from": "https://hosting-pages.netlify.app/yumeship",
+        "to": "https://myyume.app"
+      },
+      {
+        "key": "version:2.0:es-ES:supportUrl",
+        "scope": "version",
+        "locale": "es-ES",
+        "version": "2.0",
+        "field": "supportUrl",
+        "reason": "field value differs",
+        "from": "https://hosting-pages.netlify.app/yumeship/support",
+        "to": "https://myyume.app/support"
+      },
+      {
+        "key": "version:2.0:es-MX:marketingUrl",
+        "scope": "version",
+        "locale": "es-MX",
+        "version": "2.0",
+        "field": "marketingUrl",
+        "reason": "field value differs",
+        "from": "https://hosting-pages.netlify.app/yumeship",
+        "to": "https://myyume.app"
+      },
+      {
+        "key": "version:2.0:es-MX:supportUrl",
+        "scope": "version",
+        "locale": "es-MX",
+        "version": "2.0",
+        "field": "supportUrl",
+        "reason": "field value differs",
+        "from": "https://hosting-pages.netlify.app/yumeship/support",
+        "to": "https://myyume.app/support"
+      },
+      {
+        "key": "version:2.0:fr-CA:marketingUrl",
+        "scope": "version",
+        "locale": "fr-CA",
+        "version": "2.0",
+        "field": "marketingUrl",
+        "reason": "field value differs",
+        "from": "https://hosting-pages.netlify.app/yumeship",
+        "to": "https://myyume.app"
+      },
+      {
+        "key": "version:2.0:fr-CA:supportUrl",
+        "scope": "version",
+        "locale": "fr-CA",
+        "version": "2.0",
+        "field": "supportUrl",
+        "reason": "field value differs",
+        "from": "https://hosting-pages.netlify.app/yumeship/support",
+        "to": "https://myyume.app/support"
+      },
+      {
+        "key": "version:2.0:fr-FR:marketingUrl",
+        "scope": "version",
+        "locale": "fr-FR",
+        "version": "2.0",
+        "field": "marketingUrl",
+        "reason": "field value differs",
+        "from": "https://hosting-pages.netlify.app/yumeship",
+        "to": "https://myyume.app"
+      },
+      {
+        "key": "version:2.0:fr-FR:supportUrl",
+        "scope": "version",
+        "locale": "fr-FR",
+        "version": "2.0",
+        "field": "supportUrl",
+        "reason": "field value differs",
+        "from": "https://hosting-pages.netlify.app/yumeship/support",
+        "to": "https://myyume.app/support"
+      },
+      {
+        "key": "version:2.0:id:marketingUrl",
+        "scope": "version",
+        "locale": "id",
+        "version": "2.0",
+        "field": "marketingUrl",
+        "reason": "field value differs",
+        "from": "https://hosting-pages.netlify.app/yumeship",
+        "to": "https://myyume.app"
+      },
+      {
+        "key": "version:2.0:id:supportUrl",
+        "scope": "version",
+        "locale": "id",
+        "version": "2.0",
+        "field": "supportUrl",
+        "reason": "field value differs",
+        "from": "https://hosting-pages.netlify.app/yumeship/support",
+        "to": "https://myyume.app/support"
+      },
+      {
+        "key": "version:2.0:ja:marketingUrl",
+        "scope": "version",
+        "locale": "ja",
+        "version": "2.0",
+        "field": "marketingUrl",
+        "reason": "field value differs",
+        "from": "https://hosting-pages.netlify.app/yumeship",
+        "to": "https://myyume.app"
+      },
+      {
+        "key": "version:2.0:ja:supportUrl",
+        "scope": "version",
+        "locale": "ja",
+        "version": "2.0",
+        "field": "supportUrl",
+        "reason": "field value differs",
+        "from": "https://hosting-pages.netlify.app/yumeship/support",
+        "to": "https://myyume.app/support"
+      },
+      {
+        "key": "version:2.0:ko:marketingUrl",
+        "scope": "version",
+        "locale": "ko",
+        "version": "2.0",
+        "field": "marketingUrl",
+        "reason": "field value differs",
+        "from": "https://hosting-pages.netlify.app/yumeship",
+        "to": "https://myyume.app"
+      },
+      {
+        "key": "version:2.0:ko:supportUrl",
+        "scope": "version",
+        "locale": "ko",
+        "version": "2.0",
+        "field": "supportUrl",
+        "reason": "field value differs",
+        "from": "https://hosting-pages.netlify.app/yumeship/support",
+        "to": "https://myyume.app/support"
+      },
+      {
+        "key": "version:2.0:pt-BR:marketingUrl",
+        "scope": "version",
+        "locale": "pt-BR",
+        "version": "2.0",
+        "field": "marketingUrl",
+        "reason": "field value differs",
+        "from": "https://hosting-pages.netlify.app/yumeship",
+        "to": "https://myyume.app"
+      },
+      {
+        "key": "version:2.0:pt-BR:supportUrl",
+        "scope": "version",
+        "locale": "pt-BR",
+        "version": "2.0",
+        "field": "supportUrl",
+        "reason": "field value differs",
+        "from": "https://hosting-pages.netlify.app/yumeship/support",
+        "to": "https://myyume.app/support"
+      },
+      {
+        "key": "version:2.0:ru:marketingUrl",
+        "scope": "version",
+        "locale": "ru",
+        "version": "2.0",
+        "field": "marketingUrl",
+        "reason": "field value differs",
+        "from": "https://hosting-pages.netlify.app/yumeship",
+        "to": "https://myyume.app"
+      },
+      {
+        "key": "version:2.0:ru:supportUrl",
+        "scope": "version",
+        "locale": "ru",
+        "version": "2.0",
+        "field": "supportUrl",
+        "reason": "field value differs",
+        "from": "https://hosting-pages.netlify.app/yumeship/support",
+        "to": "https://myyume.app/support"
+      },
+      {
+        "key": "version:2.0:th:marketingUrl",
+        "scope": "version",
+        "locale": "th",
+        "version": "2.0",
+        "field": "marketingUrl",
+        "reason": "field value differs",
+        "from": "https://hosting-pages.netlify.app/yumeship",
+        "to": "https://myyume.app"
+      },
+      {
+        "key": "version:2.0:th:supportUrl",
+        "scope": "version",
+        "locale": "th",
+        "version": "2.0",
+        "field": "supportUrl",
+        "reason": "field value differs",
+        "from": "https://hosting-pages.netlify.app/yumeship/support",
+        "to": "https://myyume.app/support"
+      },
+      {
+        "key": "version:2.0:zh-Hans:marketingUrl",
+        "scope": "version",
+        "locale": "zh-Hans",
+        "version": "2.0",
+        "field": "marketingUrl",
+        "reason": "field value differs",
+        "from": "https://hosting-pages.netlify.app/yumeship",
+        "to": "https://myyume.app"
+      },
+      {
+        "key": "version:2.0:zh-Hans:supportUrl",
+        "scope": "version",
+        "locale": "zh-Hans",
+        "version": "2.0",
+        "field": "supportUrl",
+        "reason": "field value differs",
+        "from": "https://hosting-pages.netlify.app/yumeship/support",
+        "to": "https://myyume.app/support"
+      },
+      {
+        "key": "version:2.0:zh-Hant:marketingUrl",
+        "scope": "version",
+        "locale": "zh-Hant",
+        "version": "2.0",
+        "field": "marketingUrl",
+        "reason": "field value differs",
+        "from": "https://hosting-pages.netlify.app/yumeship",
+        "to": "https://myyume.app"
+      },
+      {
+        "key": "version:2.0:zh-Hant:supportUrl",
+        "scope": "version",
+        "locale": "zh-Hant",
+        "version": "2.0",
+        "field": "supportUrl",
+        "reason": "field value differs",
+        "from": "https://hosting-pages.netlify.app/yumeship/support",
+        "to": "https://myyume.app/support"
+      }
+    ],
+    "deletes": [],
+    "apiCalls": [
+      {
+        "operation": "update_localization",
+        "scope": "app-info",
+        "count": 15
+      },
+      {
+        "operation": "update_localization",
+        "scope": "version",
+        "count": 15
+      }
+    ]
+  }
+}

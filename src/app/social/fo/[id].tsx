@@ -137,7 +137,15 @@ export default function PublicFoProfileScreen() {
                 flags={profile.flags}
                 links={profile.links}
               />
-              <AboutSection about={profile.about} />
+              <AboutSection
+                about={profile.about}
+                cardBgColor={profile.cardBgColor}
+                cardBgImage={profile.cardBgImage}
+                cardBgGradient={profile.cardBgGradient}
+                cardTransparent={profile.cardTransparent}
+                textColor={profile.textColor}
+                borderStyle={profile.borderStyle}
+              />
               <ProfileMediaGrid songs={profile.songs} gallery={profile.gallery} />
               <Text style={styles.postsLabel}>posts about them</Text>
             </>

@@ -30,7 +30,7 @@ export function ProfileMediaGrid({ songs = [], gallery = [] }: { songs?: Profile
 
   return (
     <View style={styles.section}>
-      <SectionLabel>gallery</SectionLabel>
+      <SectionLabel>scrapbook</SectionLabel>
       <View style={styles.galleryGrid} onLayout={onGalleryLayout}>
         {songs.map((s) => (
           <SongDiscCard key={s.id} song={s} size={galleryCardSize} />

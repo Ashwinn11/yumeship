@@ -249,7 +249,15 @@ export default function PublicUserProfileScreen() {
                 ) : undefined
               }
             />
-            <AboutSection about={profile.about} />
+            <AboutSection
+              about={profile.about}
+              cardBgColor={profile.cardBgColor}
+              cardBgImage={profile.cardBgImage}
+              cardBgGradient={profile.cardBgGradient}
+              cardTransparent={profile.cardTransparent}
+              textColor={profile.textColor}
+              borderStyle={profile.borderStyle}
+            />
             <ProfileMediaGrid songs={profile.songs} gallery={profile.gallery} />
 
             {fos.length > 0 && (

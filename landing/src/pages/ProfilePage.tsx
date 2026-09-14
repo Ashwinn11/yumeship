@@ -132,7 +132,15 @@ export function ProfilePage() {
                 followerCount={profile.followerCount}
                 followingCount={profile.followingCount}
               />
-              <AboutSection about={profile.about} />
+              <AboutSection
+                about={profile.about}
+                cardBgColor={profile.cardBgColor}
+                cardBgImage={profile.cardBgImage}
+                cardBgGradient={profile.cardBgGradient}
+                cardTransparent={profile.cardTransparent}
+                textColor={profile.textColor}
+                borderStyle={profile.borderStyle}
+              />
               <ProfileMediaGrid songs={profile.songs} gallery={profile.gallery} textColor={profile.textColor} />
 
               {/* F/Os Section */}

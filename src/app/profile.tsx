@@ -288,30 +288,25 @@ export default function MyProfileScreen() {
               onPressFollowers={user ? () => router.push(`/social/follow-list/${user.id}?tab=followers&name=${encodeURIComponent(me.name || '')}` as any) : undefined}
               onPressFollowing={user ? () => router.push(`/social/follow-list/${user.id}?tab=following&name=${encodeURIComponent(me.name || '')}` as any) : undefined}
             />
-            <AboutSection about={me.about} />
+            <AboutSection
+              about={me.about}
+              cardBgColor={me.cardBgColor}
+              cardBgImage={me.cardBgImage}
+              cardBgGradient={me.cardBgGradient}
+              cardTransparent={me.cardTransparent}
+              textColor={me.textColor}
+              borderStyle={me.borderStyle}
+            />
             <ProfileMediaGrid songs={me.songs} gallery={me.gallery} />
 
             {fos.length > 0 && (
               <>
                 <Text style={styles.postsLabel}>your f/os</Text>
-                {/* the label's own content (the F/Os) comes immediately after
-                    it — the sharing toggle below is a related setting, not
-                    what "your f/os" is naming, so it follows the row instead
-                    of sitting between the label and its content */}
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.foRow}>
-                  {fos.map((f) => (
-                    <FoAvatarCard
-                      key={f.id}
-                      name={f.name}
-                      avatarUri={f.photoUri}
-                      tagline={f.tagline}
-                      onPress={() => router.push(`/fo/${f.id}` as any)}
-                    />
-                  ))}
-                </ScrollView>
 
                 {/* publishing is an account feature — offering the switch while
-                    signed out just fails on every f/o with "not signed in" */}
+                    signed out just fails on every f/o with "not signed in".
+                    Sits above the row itself since it's a setting that
+                    governs all of them, not something that follows them. */}
                 {!!user && (
                   <View style={styles.toggleRow}>
                     <View style={styles.toggleTextWrap}>
@@ -339,6 +334,18 @@ export default function MyProfileScreen() {
                     )}
                   </View>
                 )}
+
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.foRow}>
+                  {fos.map((f) => (
+                    <FoAvatarCard
+                      key={f.id}
+                      name={f.name}
+                      avatarUri={f.photoUri}
+                      tagline={f.tagline}
+                      onPress={() => router.push(`/fo/${f.id}` as any)}
+                    />
+                  ))}
+                </ScrollView>
               </>
             )}
 

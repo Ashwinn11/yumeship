@@ -232,7 +232,7 @@ export function ProfileCard({
         </View>
       )}
       {!!tagline && (
-        <Text style={[styles.tagline, textStyle]} numberOfLines={3}>{tagline}</Text>
+        <Text style={[styles.tagline, textStyle]} numberOfLines={2}>{tagline}</Text>
       )}
       {links.length > 0 && (
         <View style={styles.linksRow}>
@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.55)',
   },
   heroTransparent: { backgroundColor: 'transparent', ...Platform.select({ ios: { shadowOpacity: 0 }, default: {} }), elevation: 0 },
-  avatarOuter: { position: 'relative', alignItems: 'center', justifyContent: 'center' },
+  avatarOuter: { position: 'relative', alignItems: 'center', justifyContent: 'center', marginTop: Spacing.s2 },
   avatarWrap: {
     padding: 3,
     borderRadius: Radius.pill,
@@ -368,7 +368,7 @@ const styles = StyleSheet.create({
   avatarInitial: { fontFamily: FontFamily.displayItalic, fontSize: sf(40), color: '#fff' },
 
   // ── left-aligned layout: avatar beside name/username/pronouns, Instagram-style ──
-  leftHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.s4, width: '100%' },
+  leftHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.s4, width: '100%', marginTop: Spacing.s2 },
   avatarWrapLeft: {
     padding: 3,
     borderRadius: Radius.pill,

@@ -29,7 +29,7 @@ export function FoAvatarCard({ name, avatarUri, tagline, onPress }: Props) {
         )}
       </View>
       <Text style={styles.name} numberOfLines={1}>{name || 'untitled'}</Text>
-      <Text style={styles.tagline} numberOfLines={3}>{tagline ?? ''}</Text>
+      <Text style={styles.tagline} numberOfLines={2}>{tagline ?? ''}</Text>
     </Pressable>
   );
 }
@@ -43,12 +43,13 @@ const styles = StyleSheet.create({
   avatar: {
     width: 64, height: 64, borderRadius: Radius.pill,
     alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+    marginTop: Spacing.s1,
   },
   avatarImg: { width: 64, height: 64, borderRadius: Radius.pill },
   avatarInitial: { fontFamily: FontFamily.displayItalic, fontSize: sf(24), color: '#fff' },
   name: { fontFamily: FontFamily.uiMedium, fontSize: sf(13), color: Colors.ink, textAlign: 'center' },
   tagline: {
     fontFamily: FontFamily.ui, fontSize: sf(12), color: Colors.ink2, lineHeight: sf(16),
-    textAlign: 'center', minHeight: sf(16) * 3,
+    textAlign: 'center', minHeight: sf(16) * 2,
   },
 });

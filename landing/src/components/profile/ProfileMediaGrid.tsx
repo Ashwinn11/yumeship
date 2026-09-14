@@ -40,7 +40,7 @@ export function ProfileMediaGrid({
 
   return (
     <div className="profile-section-block">
-      <SectionLabel>gallery</SectionLabel>
+      <SectionLabel>scrapbook</SectionLabel>
       <div className="gallery-grid" ref={galleryRef}>
         {songs.map((s) => (
           <SongDiscCard key={s.id} song={s} size={galleryCardSize} />

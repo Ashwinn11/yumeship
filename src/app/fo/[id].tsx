@@ -242,7 +242,15 @@ export default function FoDetailScreen() {
                 flags={fo.flags}
                 links={fo.links}
               />
-              <AboutSection about={fo.about} />
+              <AboutSection
+                about={fo.about}
+                cardBgColor={fo.cardBgColor}
+                cardBgImage={fo.cardBgImage}
+                cardBgGradient={fo.cardBgGradient}
+                cardTransparent={fo.cardTransparent}
+                textColor={fo.textColor}
+                borderStyle={fo.borderStyle}
+              />
               <ProfileMediaGrid songs={fo.songs} gallery={fo.gallery} />
               {fo.isPublic && <Text style={styles.postsLabel}>posts about them</Text>}
             </>
