@@ -13,7 +13,7 @@ import { Colors, FontFamily, Radius, sf } from '@/constants/theme';
 import { persistImage } from '@/lib/localMedia';
 import { readMe, saveMe, type Me } from '@/store/me';
 import { useFos } from '@/store/fo';
-import { logSyncFailure, pushOwnProfile, syncIdentifyFoPublish, unpublishFoProfile } from '@/store/community';
+import { logSyncFailure, pushOwnProfile, syncIdentifyFoPublish } from '@/store/community';
 
 const PRONOUNS = ['she/her', 'he/him', 'they/them'].map((p) => ({ value: p, label: p }));
 const COLORS = [Colors.sakura, Colors.lavender, Colors.sage, Colors.peach, Colors.butter, Colors.plum];
@@ -47,10 +47,13 @@ export default function EditProfileScreen() {
   // separate list fighting to represent the same state
   function choosePaired(id: string) {
     if (!id) {
-      const prev = me.identifyFoId;
+      // unpairing only clears *your* identify_fo_id — it says nothing about
+      // whether the f/o's own profile stays published. Unpublishing them here
+      // used to sever every already-posted post's f/o tag (the embed is gated
+      // by the f/o's own is_public) and pull them off their own profile page,
+      // for a toggle that was only ever about your card, not their history.
       patch({ identifyFoId: '' });
-      (async () => { await pushOwnProfile(); if (prev) await unpublishFoProfile(prev); })()
-        .catch(logSyncFailure('unpair F/O'));
+      pushOwnProfile().catch(logSyncFailure('unpair F/O'));
       return;
     }
     patch({ identifyFoId: id });

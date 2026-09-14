@@ -27,7 +27,7 @@ import { useIPad } from '@/hooks/use-ipad';
 import { persistImage } from '@/lib/localMedia';
 import { getGlobalSetting, saveGlobalSetting, setOnbField } from '@/store/onboarding';
 import { parseGallery, useFos, type GalleryPhoto } from '@/store/fo';
-import { logSyncFailure, pushOwnProfile, syncIdentifyFoPublish, unpublishFoProfile } from '@/store/community';
+import { logSyncFailure, pushOwnProfile, syncIdentifyFoPublish } from '@/store/community';
 
 const PRONOUNS = ['she/her', 'he/him', 'they/them', '+'];
 const COLOR_OPTIONS = [
@@ -93,14 +93,14 @@ export default function OnbPersona() {
 
   function handleIdentifyToggle(v: boolean) {
     if (!v) {
-      const prevId = identifyFoId;
+      // unpairing only clears identify_fo_id — it says nothing about whether
+      // the f/o's own profile stays published. Unpublishing them here used to
+      // sever every already-posted post's f/o tag (the embed is gated by the
+      // f/o's own is_public) and pull them off their own profile page, for a
+      // toggle that was only ever about this card, not their post history.
       setIdentifyFoId('');
       saveGlobalSetting('user_identify_fo_id', '');
-      // clear the profile's pointer before deleting the row it references
-      (async () => {
-        await pushOwnProfile();
-        if (prevId) await unpublishFoProfile(prevId);
-      })().catch(logSyncFailure('unpair F/O'));
+      pushOwnProfile().catch(logSyncFailure('unpair F/O'));
       return;
     }
     if (fos.length === 1) {
