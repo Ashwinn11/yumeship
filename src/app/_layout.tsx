@@ -41,6 +41,7 @@ export default function RootLayout() {
     'Fredoka-Medium': require('../../assets/fonts/Fredoka-Medium.ttf'),
     'Fredoka-SemiBold': require('../../assets/fonts/Fredoka-SemiBold.ttf'),
     'Caveat-Bold': require('../../assets/fonts/Caveat-Bold.ttf'),
+    'PressStart2P-Regular': require('../../assets/fonts/PressStart2P-Regular.ttf'),
   });
 
   useEffect(() => {

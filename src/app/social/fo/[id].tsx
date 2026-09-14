@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { FlatList, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { PostCard } from '@/components/community/PostCard';
@@ -9,10 +9,12 @@ import { PageBackground } from '@/components/profile/PageBackground';
 import { ProfileCard } from '@/components/profile/ProfileCard';
 import { ProfileCardSkeleton } from '@/components/profile/ProfileCardSkeleton';
 import { ProfileScreenHeader } from '@/components/profile/ProfileScreenHeader';
+import { IconShare } from '@/components/ui/Icon';
 import { InlineToast, useInlineToast } from '@/components/ui/InlineToast';
-import { Colors, FontFamily, Spacing, sf } from '@/constants/theme';
+import { Colors, FontFamily, Radius, Spacing, sf } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
 import { relationshipStatus, sharingStatus } from '@/components/profile/cardProps';
+import { foProfileUrl, shareProfileLink } from '@/lib/shareProfile';
 import { fetchFoProfile, useFoPosts, type CommunityFoProfile, type CommunityPost } from '@/store/community';
 
 const keyExtractor = (p: CommunityPost) => p.id;
@@ -65,6 +67,17 @@ export default function PublicFoProfileScreen() {
         insetsTop={insets.top}
         onBack={() => router.back()}
         title={profile?.name || 'their profile'}
+        right={
+          profile ? (
+            <Pressable
+              onPress={() => shareProfileLink(foProfileUrl(profile.id), (reason) => showToast(reason))}
+              style={styles.headerBtn}
+              accessibilityLabel="Share profile"
+            >
+              <IconShare size={13} color={Colors.ink2} />
+            </Pressable>
+          ) : undefined
+        }
       />
 
       {loading ? (
@@ -97,8 +110,7 @@ export default function PublicFoProfileScreen() {
                 type={relationshipStatus(profile.relStatus)}
                 sharing={sharingStatus(profile.shareStatus)}
                 since={profile.sinceDate}
-                song={profile.song}
-                songLink={profile.songLink}
+                songs={profile.songs}
                 gallery={profile.gallery}
                 cardBgColor={profile.cardBgColor}
                 cardBgImage={profile.cardBgImage}
@@ -108,6 +120,7 @@ export default function PublicFoProfileScreen() {
                 borderStyle={profile.borderStyle}
                 nameFont={profile.nameFont}
                 cardLayout={profile.cardLayout}
+                blinkies={profile.blinkies}
                 flags={profile.flags}
                 links={profile.links}
               />
@@ -133,6 +146,10 @@ export default function PublicFoProfileScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1 },
   screenDefaultBg: { backgroundColor: Colors.paper },
+  headerBtn: {
+    width: 32, height: 32, borderRadius: Radius.pill,
+    backgroundColor: Colors.paperDeep, alignItems: 'center', justifyContent: 'center',
+  },
   toastWrap: { position: 'absolute', left: 0, right: 0, zIndex: 10, alignItems: 'center' },
   scroll: { flex: 1 },
   content: { paddingHorizontal: Spacing.s6, paddingTop: Spacing.s6, paddingBottom: Spacing.s6 },

@@ -1,9 +1,11 @@
 import * as ImagePicker from 'expo-image-picker';
 import { Pressable, StyleSheet, Text } from 'react-native';
 
+import { BlinkieWallEditor } from '@/components/profile/BlinkieWallEditor';
 import { ProfileEditor, type EditField, type EditSectionDef } from '@/components/profile/ProfileEditor';
 import { ProfileFlagsEditor } from '@/components/profile/ProfileFlagsEditor';
 import { ProfileLinksEditor } from '@/components/profile/ProfileLinksEditor';
+import { ProfileSongsEditor } from '@/components/profile/ProfileSongsEditor';
 import { DateField } from '@/components/ui/DateField';
 import { Colors, FontFamily, Radius, REL_ORDER, RelationshipColors, RelationshipLabels, SHARING_ORDER, SharingColors, SharingLabels, Spacing, sf } from '@/constants/theme';
 import { persistImage } from '@/lib/localMedia';
@@ -21,7 +23,7 @@ const SHARE = SHARING_ORDER.map((v) => ({ value: v, label: SharingLabels[v], col
 export type FoDraft = Pick<
   Fo,
   'name' | 'pronouns' | 'fandom' | 'relStatus' | 'shareStatus' | 'tagline' | 'color'
-  | 'sinceDate' | 'photoUri' | 'song' | 'songLink' | 'gallery' | 'flags' | 'links'
+  | 'sinceDate' | 'photoUri' | 'songs' | 'gallery' | 'flags' | 'links' | 'blinkies'
 >;
 
 export function FoEditor({
@@ -32,6 +34,7 @@ export function FoEditor({
   onDelete,
   mode = 'edit',
   notice,
+  premium,
 }: {
   value: FoDraft;
   onChange: (patch: Partial<FoDraft>) => void;
@@ -41,6 +44,8 @@ export function FoEditor({
   onDelete?: () => void;
   mode?: 'edit' | 'create';
   notice?: string;
+  /** gates the blinkie wall's premium-only badges, same convention as CardThemeSheet */
+  premium: boolean;
 }) {
   const creating = mode === 'create';
   async function pickPhoto() {
@@ -64,6 +69,16 @@ export function FoEditor({
   ];
 
   const sections: EditSectionDef[] = [
+    {
+      id: 'blinkies',
+      label: 'blinkie wall',
+      summary: (v) => (v.blinkies.length ? `${v.blinkies.length} equipped` : 'none yet'),
+      fields: [{
+        kind: 'node', render: () => (
+          <BlinkieWallEditor selected={value.blinkies} onChange={(blinkies) => onChange({ blinkies })} premium={premium} />
+        ),
+      }],
+    },
     {
       id: 'flags',
       label: 'flags',
@@ -96,13 +111,14 @@ export function FoEditor({
       ],
     },
     {
-      id: 'song',
-      label: 'theme song',
-      summary: (v) => v.song || 'not set',
-      fields: [
-        { kind: 'text', key: 'song', label: 'song', placeholder: 'the song that feels like them' },
-        { kind: 'text', key: 'songLink', label: 'link', placeholder: 'https://…', autoCapitalize: 'none', autoCorrect: false, keyboardType: 'url' },
-      ],
+      id: 'songs',
+      label: 'theme songs',
+      summary: (v) => (v.songs.length ? `${v.songs.length} song${v.songs.length === 1 ? '' : 's'}` : 'none yet'),
+      fields: [{
+        kind: 'node', label: 'songs', render: () => (
+          <ProfileSongsEditor songs={value.songs} onChange={(songs) => onChange({ songs })} />
+        ),
+      }],
     },
     {
       id: 'gallery',

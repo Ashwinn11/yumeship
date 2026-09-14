@@ -2,7 +2,7 @@ import { Image } from 'expo-image';
 import { MEDIA_IMAGE } from '@/lib/imageProps';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
-import { Linking, LayoutChangeEvent, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Linking, LayoutChangeEvent, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { BeadedFrame } from '@/components/deco/BeadedFrame';
 import { BracketFrame } from '@/components/deco/BracketFrame';
@@ -18,15 +18,17 @@ import { PatternBackdrop } from '@/components/deco/PatternBackdrop';
 import { SakuraDriftBackdrop } from '@/components/deco/SakuraDriftBackdrop';
 import { ScatterBackdrop } from '@/components/deco/ScatterBackdrop';
 import { StarsBackdrop } from '@/components/deco/StarsBackdrop';
-import { StickerCassette } from '@/components/deco/Stickers';
 import { StitchFrame } from '@/components/deco/StitchFrame';
 import { WashBackdrop } from '@/components/deco/WashBackdrop';
 import { Polaroid } from '@/components/templates/primitives';
 import { calcElapsed } from '@/components/ui/DateField';
 import { Colors, FontFamily, Radius, Shadow, Spacing, sf } from '@/constants/theme';
+import type { EquippedBlinkie } from '@/constants/blinkies';
 import type { GalleryPhoto } from '@/store/fo';
 import { ProfileFlags } from './ProfileFlags';
-import { parseBorderFrame, type ProfileFlag, type ProfileLink } from './cardTheme';
+import { BlinkieWall } from './BlinkieWall';
+import { SongDiscCard } from './SongDiscCard';
+import { parseBorderFrame, type ProfileFlag, type ProfileLink, type ProfileSong } from './cardTheme';
 
 function normalizeUrl(url: string): string {
   const trimmed = url.trim();
@@ -36,6 +38,10 @@ function normalizeUrl(url: string): string {
 
 
 const POLAROID_TAPES = [Colors.sakura, Colors.lavender, Colors.butter, Colors.sage, Colors.peach];
+// galleryGrid's own paddingHorizontal:4 on each side, plus a couple px of
+// rounding slack — without it, two cards computed to fill the row exactly
+// come out a hair too wide and flexWrap quietly drops to one per row
+const GALLERY_GRID_PADDING = 4 * 2 + 2;
 
 // type/sharing are the only two fields here that are actually a *status*
 // (they share RelationshipColors/SharingColors with badges everywhere else in
@@ -71,10 +77,9 @@ type Props = {
   sharing?: ProfileStatus;
   /** together-since date — F/O only, stored as "YYYY-MM-DD", independent of the ship's own start date */
   since?: string;
-  /** theme song shown in its own row */
-  song?: string;
-  /** optional Spotify/YouTube/etc link — makes the song row tappable */
-  songLink?: string;
+  /** theme songs — rendered in the same strip as gallery, as tappable
+   *  spinning-disc cards, not a separate section */
+  songs?: ProfileSong[];
   /** extra photos rendered as a scattered polaroid strip */
   gallery?: GalleryPhoto[];
   /** hero-card presentation customization */
@@ -91,6 +96,8 @@ type Props = {
   nameFont?: string;
   /** '' (avatar above name, everything centered) | 'left' (avatar beside name, Instagram-style) */
   cardLayout?: string;
+  /** blinkie templates + text equipped on this profile's wall — see constants/blinkies.ts */
+  blinkies?: EquippedBlinkie[];
   /** everything they fly under the name */
   flags?: ProfileFlag[];
   /** external links shown in their own card section — socials, playlists, etc. */
@@ -131,8 +138,7 @@ export function ProfileCard({
   type,
   sharing,
   since,
-  song,
-  songLink,
+  songs = [],
   gallery = [],
   cardBgColor,
   cardBgImage,
@@ -142,6 +148,7 @@ export function ProfileCard({
   borderStyle = '',
   nameFont = '',
   cardLayout = '',
+  blinkies,
   flags = [],
   links = [],
   followerCount,
@@ -169,6 +176,15 @@ export function ProfileCard({
     const { width, height } = e.nativeEvent.layout;
     setHeroSize((prev) => (prev.width === width && prev.height === height ? prev : { width, height }));
   };
+
+  // songs+gallery grid: two per row, sized to actually fill the row instead
+  // of a small fixed square with empty space beside it. onLayout reports the
+  // grid's own border-box width — its horizontal padding has to come out
+  // before dividing, or the computed card width is a few px too wide for two
+  // to fit and flexWrap silently drops to one per row.
+  const [galleryWidth, setGalleryWidth] = useState(0);
+  const onGalleryLayout = (e: LayoutChangeEvent) => setGalleryWidth(e.nativeEvent.layout.width);
+  const galleryCardSize = galleryWidth ? (galleryWidth - GALLERY_GRID_PADDING - Spacing.s3) / 2 : 150;
 
   // every border-frame accent is independently toggleable — see cardTheme.ts
   const frames = parseBorderFrame(borderStyle);
@@ -245,6 +261,11 @@ export function ProfileCard({
         </>
       )}
       <ProfileFlags flags={flags} textColor={textColor} />
+      {!!blinkies?.length && (
+        <View style={styles.blinkieWallCentered}>
+          <BlinkieWall items={blinkies} />
+        </View>
+      )}
       {!!tagline && (
         <Text style={[styles.tagline, textStyle]} numberOfLines={3}>{tagline}</Text>
       )}
@@ -340,44 +361,27 @@ export function ProfileCard({
         )}
       </View>
 
-      {/* theme song */}
-      {!!song && (
-        <View style={styles.section}>
-          <SectionLabel>theme song</SectionLabel>
-          <Pressable
-            style={styles.songRow}
-            onPress={songLink ? () => Linking.openURL(songLink) : undefined}
-            disabled={!songLink}
-          >
-            <StickerCassette size={30} style={styles.songCassette} />
-            <View style={styles.songTextCol}>
-              <Text style={styles.songText} numberOfLines={2}>{song}</Text>
-              {!!songLink && <Text style={styles.songLinkHint}>tap to listen ↗</Text>}
-            </View>
-          </Pressable>
-        </View>
-      )}
-
-      {/* gallery */}
-      {gallery.length > 0 && (
+      {/* songs + gallery share one grid — both are card-shaped now (a
+          spinning disc, a polaroid) — two per row, sized to fill the row
+          rather than a small fixed square with room to spare beside it */}
+      {(songs.length > 0 || gallery.length > 0) && (
         <View style={styles.section}>
           <SectionLabel>gallery</SectionLabel>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.galleryContent}
-          >
+          <View style={styles.galleryGrid} onLayout={onGalleryLayout}>
+            {songs.map((s) => (
+              <SongDiscCard key={s.id} song={s} size={galleryCardSize} />
+            ))}
             {gallery.map((photo, i) => (
               <Polaroid
                 key={`${photo.uri}-${i}`}
                 uri={photo.uri}
                 caption={photo.caption}
-                size={110}
-                rotate={i % 2 === 0 ? -4 : 3}
+                size={galleryCardSize}
+                rotate={0}
                 tapeColor={POLAROID_TAPES[i % POLAROID_TAPES.length]}
               />
             ))}
-          </ScrollView>
+          </View>
         </View>
       )}
     </View>
@@ -461,6 +465,9 @@ const styles = StyleSheet.create({
   },
   username: { fontFamily: FontFamily.uiMedium, fontSize: sf(13), color: Colors.sakuraDeep, flexShrink: 0 },
   pronouns: { fontFamily: FontFamily.ui, fontSize: sf(12), color: Colors.ink2, marginTop: 2 },
+  // used wherever pronouns sits beside the identity badge instead of alone —
+  // the row wrapper carries the spacing from the line above instead
+  blinkieWallCentered: { alignItems: 'center', marginTop: 6 },
   tagline: {
     fontFamily: FontFamily.ui, fontSize: sf(13), lineHeight: sf(19),
     color: Colors.ink2, textAlign: 'center',
@@ -504,18 +511,6 @@ const styles = StyleSheet.create({
   },
   detailPillText: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(12.5), textAlign: 'center' },
 
-  songRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    paddingVertical: Spacing.s3, paddingHorizontal: Spacing.s4,
-    backgroundColor: Colors.vellum,
-    borderRadius: Radius.r3,
-    borderWidth: 1, borderColor: Colors.line,
-  },
-  songCassette: { flexShrink: 0 },
-  songTextCol: { flex: 1, gap: 1 },
-  songText: { fontFamily: FontFamily.uiMedium, fontSize: sf(14), color: Colors.ink, lineHeight: sf(19) },
-  songLinkHint: { fontFamily: FontFamily.ui, fontSize: sf(10), color: Colors.sakuraDeep },
-
   linksRow: {
     flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center',
     gap: 8, marginTop: Spacing.s3, paddingHorizontal: Spacing.s2,
@@ -529,5 +524,8 @@ const styles = StyleSheet.create({
   },
   linkPillText: { fontFamily: FontFamily.uiMedium, fontSize: sf(12.5), color: Colors.sakuraDeep },
 
-  galleryContent: { gap: 14, paddingVertical: 10, paddingHorizontal: 4 },
+  galleryGrid: {
+    flexDirection: 'row', flexWrap: 'wrap',
+    gap: Spacing.s3, paddingVertical: 10, paddingHorizontal: 4,
+  },
 });

@@ -1,7 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Colors } from '../../constants/theme';
 import { Heart } from '../deco/Heart';
-import { StickerCassette } from '../deco/StickerCassette';
 import { LaceFrame } from '../deco/LaceFrame';
 import { LatticeFrame } from '../deco/LatticeFrame';
 import { StitchFrame } from '../deco/StitchFrame';
@@ -18,9 +17,12 @@ import { HeartsBackdrop } from '../deco/HeartsBackdrop';
 import { StarsBackdrop } from '../deco/StarsBackdrop';
 import { MixedBackdrop } from '../deco/MixedBackdrop';
 import { ProfileFlags } from './ProfileFlags';
+import { BlinkieWall } from './BlinkieWall';
 import { Polaroid } from './Polaroid';
+import { SongDiscCard } from './SongDiscCard';
 import { parseBorderFrame, type ProfileFlag } from './cardTheme';
-import type { GalleryPhoto, ProfileLink } from '../../lib/profile';
+import type { EquippedBlinkie } from '../../constants/blinkies';
+import type { GalleryPhoto, ProfileLink, ProfileSong } from '../../lib/profile';
 
 const POLAROID_TAPES = [Colors.sakura, Colors.lavender, Colors.butter, Colors.sage, Colors.peach];
 
@@ -66,10 +68,9 @@ export type ProfileCardProps = {
   sharing?: ProfileStatus;
   /** together-since date — F/O only, stored as "YYYY-MM-DD", independent of the ship's own start date */
   since?: string;
-  /** theme song shown in its own row */
-  song?: string;
-  /** optional Spotify/YouTube/etc link — makes the song row tappable */
-  songLink?: string;
+  /** theme songs — rendered in the same strip as gallery, as tappable
+   *  spinning-disc cards, not a separate section */
+  songs?: ProfileSong[];
   /** extra photos rendered as a scattered polaroid strip */
   gallery?: GalleryPhoto[];
   /** hero-card presentation customization */
@@ -86,6 +87,8 @@ export type ProfileCardProps = {
   nameFont?: string;
   /** '' (avatar above name, everything centered) | 'left' (avatar beside name, Instagram-style) */
   cardLayout?: string;
+  /** blinkie templates + text equipped on this profile's wall */
+  blinkies?: EquippedBlinkie[];
   /** everything they fly under the name */
   flags?: ProfileFlag[];
   /** external links shown as pill chips on the card itself */
@@ -124,8 +127,7 @@ export function ProfileCard({
   type,
   sharing,
   since,
-  song,
-  songLink,
+  songs = [],
   gallery = [],
   cardBgColor,
   cardBgImage,
@@ -135,6 +137,7 @@ export function ProfileCard({
   borderStyle = '',
   nameFont = '',
   cardLayout = '',
+  blinkies,
   flags = [],
   links = [],
   followerCount,
@@ -174,6 +177,23 @@ export function ProfileCard({
     return () => observer.disconnect();
   }, []);
 
+  // songs+gallery grid: two per row, sized to actually fill the row instead
+  // of a small fixed square with room to spare beside it. clientWidth already
+  // excludes the grid's own horizontal padding, unlike RN's onLayout — no
+  // padding subtraction needed here.
+  const galleryRef = useRef<HTMLDivElement>(null);
+  const [galleryWidth, setGalleryWidth] = useState(0);
+  useEffect(() => {
+    if (!galleryRef.current) return;
+    const update = () => setGalleryWidth(galleryRef.current?.clientWidth ?? 0);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(galleryRef.current);
+    return () => observer.disconnect();
+  }, []);
+  const GALLERY_GAP = 14;
+  const galleryCardSize = galleryWidth ? (galleryWidth - GALLERY_GAP) / 2 : 110;
+
   let heroBgStyle: React.CSSProperties = {};
   if (!cardTransparent) {
     if (cardBgGradient) {
@@ -188,10 +208,11 @@ export function ProfileCard({
 
   const initial = name.trim().charAt(0).toUpperCase() || '♡';
 
-  // followers/following sits right under pronouns, above flags/tagline/links
-  // — mirrors the mobile app's ProfileCard, which reads as one identity+stats
-  // cluster before anything else about the card
-  const statsContent = (followerCount !== undefined || followingCount !== undefined) ? (
+  // hidden on the public web page by request — followerCount/followingCount
+  // still flow in as props (ProfilePage still fetches them) but nothing here
+  // renders them; this stays `false &&` rather than deleting the block below
+  // so re-enabling it later is a one-line change, not a rebuild
+  const statsContent = false && (followerCount !== undefined || followingCount !== undefined) ? (
     <>
       <div className="social-stat">
         <span className="social-stat-value" style={textStyle}>{followerCount ?? 0}</span>
@@ -292,6 +313,11 @@ export function ProfileCard({
               </>
             )}
             <ProfileFlags flags={flags} textColor={textColor} />
+            {blinkies && blinkies.length > 0 && (
+              <div className="blinkie-wall-centered">
+                <BlinkieWall items={blinkies} />
+              </div>
+            )}
             {tagline && <p className="tagline-text" style={textStyle}>{tagline}</p>}
             {links.length > 0 && (
               <div className="links-row">
@@ -347,47 +373,21 @@ export function ProfileCard({
         </div>
       </div>
 
-      {/* ── theme song ── */}
-      {!!song && (
-        <div className="profile-section-block">
-          <SectionLabel>theme song</SectionLabel>
-          {songLink ? (
-            <a
-              href={normalizeUrl(songLink)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="song-row-card link"
-              title={`Listen to ${song}`}
-            >
-              <StickerCassette size={30} className="song-cassette" />
-              <div className="song-text-col">
-                <span className="song-title-text">{song}</span>
-                <span className="song-link-hint">tap to listen ↗</span>
-              </div>
-            </a>
-          ) : (
-            <div className="song-row-card">
-              <StickerCassette size={30} className="song-cassette" />
-              <div className="song-text-col">
-                <span className="song-title-text">{song}</span>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ── gallery ── */}
-      {gallery.length > 0 && (
+      {/* ── songs + gallery share one grid — two per row, both card-shaped now ── */}
+      {(songs.length > 0 || gallery.length > 0) && (
         <div className="profile-section-block">
           <SectionLabel>gallery</SectionLabel>
-          <div className="gallery-scroll-strip">
+          <div className="gallery-grid" ref={galleryRef}>
+            {songs.map((s) => (
+              <SongDiscCard key={s.id} song={s} size={galleryCardSize} />
+            ))}
             {gallery.map((photo, i) => (
               <Polaroid
                 key={`${photo.uri}-${i}`}
                 uri={photo.uri}
                 caption={photo.caption}
-                size={110}
-                rotate={i % 2 === 0 ? -4 : 3}
+                size={galleryCardSize}
+                rotate={0}
                 tapeColor={POLAROID_TAPES[i % POLAROID_TAPES.length]}
                 textColor={textColor}
               />

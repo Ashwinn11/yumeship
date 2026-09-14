@@ -3,16 +3,18 @@ import { useState } from 'react';
 
 import { FoEditor, type FoDraft } from '@/components/fo/FoEditor';
 import { addFo } from '@/store/fo';
+import { usePremium } from '@/store/premium';
 
 const EMPTY: FoDraft = {
   name: '', pronouns: '', fandom: '', relStatus: 'romantic', shareStatus: 'selective', color: '',
   tagline: '', sinceDate: '',
-  photoUri: '', song: '', songLink: '', gallery: [], flags: [], links: [],
+  photoUri: '', songs: [], gallery: [], flags: [], links: [], blinkies: [],
 };
 
 export default function NewFoScreen() {
   const [value, setValue] = useState<FoDraft>(EMPTY);
   const [notice, setNotice] = useState('');
+  const premium = usePremium();
 
   function handleAdd() {
     if (!value.name.trim()) {
@@ -33,6 +35,7 @@ export default function NewFoScreen() {
       onClose={() => router.back()}
       onDone={handleAdd}
       notice={notice}
+      premium={premium}
     />
   );
 }

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { relationshipTypeOr } from '@/constants/theme';
 import { getDb, newId } from '@/db/client';
-import { parseProfileFlags, parseProfileLinks, type ProfileFlag, type ProfileLink } from '@/components/profile/cardTheme';
+import { parseProfileFlags, parseProfileLinks, parseProfileSongs, type ProfileFlag, type ProfileLink, type ProfileSong } from '@/components/profile/cardTheme';
+import type { EquippedBlinkie } from '@/constants/blinkies';
 import { notifyShips } from './ships';
 import { getGlobalSetting, saveGlobalSetting } from './onboarding';
 
@@ -42,10 +43,8 @@ export type Fo = {
   /** avatar fallback tint — the F/O counterpart to Me.color, so both profile
    *  screens tint a photoless F/O the same instead of each picking a constant */
   color: string;
-  /** theme song shown in its own row */
-  song: string;
-  /** optional Spotify/YouTube/etc link for the theme song */
-  songLink: string;
+  /** theme songs shown two-per-row on the card */
+  songs: ProfileSong[];
   /** extra photos shown in a strip on the profile card, beyond the main portrait */
   gallery: GalleryPhoto[];
   /** everything they fly under the name — identity flags, symbols, their words */
@@ -55,6 +54,8 @@ export type Fo = {
   /** whether this F/O has an opt-in public profile in community — independent of
    *  shareStatus, which is a stated boundary toward doubles, not a visibility switch */
   isPublic: boolean;
+  /** blinkie templates + text equipped on this F/O's own profile wall — see constants/blinkies.ts */
+  blinkies: EquippedBlinkie[];
   /** local avatar uri last uploaded to the public fo_profiles row — skip re-upload when unchanged */
   avatarSyncedUri: string;
   /** {localUri: remoteUrl} map for gallery photos already uploaded to the public fo_profiles row */
@@ -102,16 +103,30 @@ function rowToFo(row: Record<string, unknown>): Fo {
     nameFont: (row.name_font as string) ?? '',
     cardLayout: (row.card_layout as string) ?? '',
     color: (row.color as string) ?? '',
-    song: (row.song as string) ?? '',
-    songLink: (row.song_link as string) ?? '',
+    songs: parseProfileSongs((row.songs as string) ?? ''),
     gallery: parseGallery(row.gallery),
     flags: parseProfileFlags((row.flags as string) ?? ''),
     links: parseProfileLinks((row.links as string) ?? ''),
     isPublic: !!(row.is_public as number),
+    blinkies: parseEquippedBlinkies((row.blinkies as string) ?? ''),
     avatarSyncedUri: (row.avatar_synced_uri as string) ?? '',
     gallerySyncMap: parseSyncMap(row.gallery_sync_map),
     createdAt: row.created_at as number,
   };
+}
+
+function isEquippedBlinkie(v: unknown): v is EquippedBlinkie {
+  return !!v && typeof v === 'object' && typeof (v as any).templateId === 'string' && typeof (v as any).text === 'string';
+}
+
+function parseEquippedBlinkies(raw: string): EquippedBlinkie[] {
+  if (!raw) return [];
+  try {
+    const v = JSON.parse(raw);
+    return Array.isArray(v) ? v.filter(isEquippedBlinkie) : [];
+  } catch {
+    return [];
+  }
 }
 
 function parseSyncMap(raw: unknown): Record<string, string> {
@@ -144,14 +159,13 @@ export function addFo(d: {
   tagline?: string;
   sinceDate?: string;
   photoUri?: string;
-  song?: string;
-  songLink?: string;
+  songs?: ProfileSong[];
   gallery?: GalleryPhoto[];
 }): string {
   const id = newId();
   getDb().runSync(
-    `INSERT INTO fo (id, name, pronouns, fandom, rel_status, share_status, tagline, since_date, photo_uri, song, song_link, gallery, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO fo (id, name, pronouns, fandom, rel_status, share_status, tagline, since_date, photo_uri, songs, gallery, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     id,
     d.name,
     d.pronouns ?? '',
@@ -161,8 +175,7 @@ export function addFo(d: {
     d.tagline ?? '',
     d.sinceDate ?? '',
     d.photoUri ?? '',
-    d.song ?? '',
-    d.songLink ?? '',
+    JSON.stringify(d.songs ?? []),
     JSON.stringify(d.gallery ?? []),
     Date.now(),
   );
@@ -194,11 +207,11 @@ export function updateFo(id: string, d: Partial<Omit<Fo, 'id' | 'createdAt'>>) {
   if (d.color !== undefined)      { fields.push('color = ?');        values.push(d.color); }
   if (d.nameFont !== undefined)    { fields.push('name_font = ?');    values.push(d.nameFont); }
   if (d.cardLayout !== undefined)  { fields.push('card_layout = ?');  values.push(d.cardLayout); }
-  if (d.song !== undefined)        { fields.push('song = ?');         values.push(d.song); }
-  if (d.songLink !== undefined)    { fields.push('song_link = ?');    values.push(d.songLink); }
+  if (d.songs !== undefined)       { fields.push('songs = ?');        values.push(JSON.stringify(d.songs)); }
   if (d.gallery !== undefined)     { fields.push('gallery = ?');      values.push(JSON.stringify(d.gallery)); }
   if (d.flags !== undefined)       { fields.push('flags = ?');        values.push(JSON.stringify(d.flags)); }
   if (d.links !== undefined)       { fields.push('links = ?');        values.push(JSON.stringify(d.links)); }
+  if (d.blinkies !== undefined)    { fields.push('blinkies = ?');     values.push(JSON.stringify(d.blinkies)); }
   if (d.isPublic !== undefined)       { fields.push('is_public = ?');         values.push(d.isPublic ? 1 : 0); }
   if (d.avatarSyncedUri !== undefined) { fields.push('avatar_synced_uri = ?'); values.push(d.avatarSyncedUri); }
   if (d.gallerySyncMap !== undefined)  { fields.push('gallery_sync_map = ?');  values.push(JSON.stringify(d.gallerySyncMap)); }

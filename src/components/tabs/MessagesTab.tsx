@@ -10,7 +10,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 import { CozyModal } from '@/components/ui/CozyModal';
 import { DismissKeyboardView } from '@/components/ui/DismissKeyboardView';
-import { IconSend, IconPhoto } from '@/components/ui/Icon';
+import { IconSend, IconPhoto, IconEdit } from '@/components/ui/Icon';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { useFo } from '@/store/fo';
@@ -233,6 +233,20 @@ function ThreadView({
             </Text>
           )}
         </View>
+
+        {/* Group details — cover photo, name, and each member's own photo,
+            same "pencil in the header corner" entry point the community
+            group screen already uses (see social/groups/[id]/info.tsx) */}
+        {poly && (
+          <Pressable
+            onPress={() => router.push({ pathname: '/ship/group/[id]', params: { id: shipId } })}
+            style={s.groupEditBtn}
+            hitSlop={8}
+            accessibilityLabel="Edit group"
+          >
+            <IconEdit size={13} color={Colors.ink2} />
+          </Pressable>
+        )}
 
         {/* Segmented sender control — single ships only (poly uses "speaking as" below) */}
         {!poly && (
@@ -566,6 +580,10 @@ const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 0,
+  },
+  groupEditBtn: {
+    width: 32, height: 32, borderRadius: Radius.pill,
+    backgroundColor: Colors.paperDeep, alignItems: 'center', justifyContent: 'center',
   },
   chatAvatar: {
     width: 32,

@@ -111,8 +111,7 @@ export function FoProfilePage() {
                 type={relationshipStatus(profile.relStatus)}
                 sharing={sharingStatus(profile.shareStatus)}
                 since={profile.sinceDate}
-                song={profile.song}
-                songLink={profile.songLink}
+                songs={profile.songs}
                 gallery={profile.gallery}
                 cardBgColor={profile.cardBgColor}
                 cardBgImage={profile.cardBgImage}
@@ -122,6 +121,7 @@ export function FoProfilePage() {
                 borderStyle={profile.borderStyle}
                 nameFont={profile.nameFont}
                 cardLayout={profile.cardLayout}
+                blinkies={profile.blinkies}
                 flags={profile.flags}
                 links={profile.links}
               />

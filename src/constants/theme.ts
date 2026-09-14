@@ -194,6 +194,9 @@ export const FontFamily = {
   // tokens.css imports Caveat wght@500;700 — base is Medium (500), not Regular (400)
   script: 'Caveat-Bold',
   scriptBold: 'Caveat-Bold',
+  // real bitmap-style pixel font (SIL OFL) — used only by the blinkie badge,
+  // where hard pixel edges are the point, not a general UI font
+  pixel: 'PressStart2P-Regular',
 } as const;
 
 export const FontSize = {

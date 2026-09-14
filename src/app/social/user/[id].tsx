@@ -14,8 +14,10 @@ import { ProfileCard } from '@/components/profile/ProfileCard';
 import { ProfileCardSkeleton } from '@/components/profile/ProfileCardSkeleton';
 import { ProfileScreenHeader } from '@/components/profile/ProfileScreenHeader';
 import { CozyModal } from '@/components/ui/CozyModal';
+import { IconShare } from '@/components/ui/Icon';
 import { Colors, FontFamily, Radius, sf, Spacing } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
+import { personProfileUrl, shareProfileLink } from '@/lib/shareProfile';
 import { useAuthUser } from '@/store/auth';
 import {
   blockUser,
@@ -160,17 +162,26 @@ export default function PublicUserProfileScreen() {
         onBack={() => router.back()}
         title={profile.name || 'their profile'}
         right={
-          isMe ? undefined : (
-            // a plain labeled action, not an ambiguous "⋯" — there's only one
-            // thing this button does, so it shouldn't borrow the "more options"
-            // affordance that promises a menu
+          <View style={styles.headerActions}>
             <Pressable
-              onPress={() => (relationship.blocked ? handleUnblock() : setConfirmBlock(true))}
-              style={styles.textBtn}
+              onPress={() => shareProfileLink(personProfileUrl(profile.username), (reason) => showToast(reason))}
+              style={styles.headerBtn}
+              accessibilityLabel="Share profile"
             >
-              <Text style={styles.textBtnLabel}>{relationship.blocked ? 'unblock' : 'block'}</Text>
+              <IconShare size={13} color={Colors.ink2} />
             </Pressable>
-          )
+            {!isMe && (
+              // a plain labeled action, not an ambiguous "⋯" — there's only one
+              // thing this button does, so it shouldn't borrow the "more options"
+              // affordance that promises a menu
+              <Pressable
+                onPress={() => (relationship.blocked ? handleUnblock() : setConfirmBlock(true))}
+                style={styles.textBtn}
+              >
+                <Text style={styles.textBtnLabel}>{relationship.blocked ? 'unblock' : 'block'}</Text>
+              </Pressable>
+            )}
+          </View>
         }
       />
 
@@ -194,8 +205,7 @@ export default function PublicUserProfileScreen() {
               tagline={profile.tagline}
               photoUri={profile.avatarUrl}
               fallbackColor={profile.color || Colors.sakura}
-              song={profile.song}
-              songLink={profile.songLink}
+              songs={profile.songs}
               gallery={profile.gallery}
               cardBgColor={profile.cardBgColor}
               cardBgImage={profile.cardBgImage}
@@ -205,6 +215,7 @@ export default function PublicUserProfileScreen() {
               borderStyle={profile.borderStyle}
               nameFont={profile.nameFont}
               cardLayout={profile.cardLayout}
+              blinkies={profile.blinkies}
               flags={profile.flags}
               links={profile.links}
               followerCount={profile.followerCount}
@@ -289,6 +300,11 @@ const styles = StyleSheet.create({
   screen: { flex: 1 },
   toastWrap: { position: 'absolute', left: 0, right: 0, zIndex: 10, alignItems: 'center' },
   screenDefaultBg: { backgroundColor: Colors.paper },
+  headerActions: { flexDirection: 'row', gap: 8 },
+  headerBtn: {
+    width: 32, height: 32, borderRadius: Radius.pill,
+    backgroundColor: Colors.paperDeep, alignItems: 'center', justifyContent: 'center',
+  },
   textBtn: {
     paddingHorizontal: 12, height: 32, borderRadius: Radius.pill,
     backgroundColor: Colors.paperDeep, alignItems: 'center', justifyContent: 'center',

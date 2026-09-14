@@ -83,6 +83,34 @@ export function parseProfileLinks(raw: string): ProfileLink[] {
     .filter((l) => l.url);
 }
 
+/** One entry in a profile's "songs" grid — a title plus where to listen. */
+export type ProfileSong = {
+  id: string;
+  title: string;
+  /** optional Spotify/YouTube/etc link — makes the card tappable */
+  link: string;
+};
+
+export const SONGS_MAX = 6;
+export const SONG_TITLE_MAX = 40;
+
+/** Parses a `user_songs`/`fo.songs` JSON string, tolerating anything malformed. */
+export function parseProfileSongs(raw: string): ProfileSong[] {
+  let v: unknown;
+  try { v = JSON.parse(raw || '[]'); } catch { return []; }
+  if (!Array.isArray(v)) return [];
+  return v
+    .map((entry) => {
+      const e = (entry ?? {}) as Record<string, unknown>;
+      return {
+        id: typeof e.id === 'string' ? e.id : String(e.id ?? ''),
+        title: typeof e.title === 'string' ? e.title : '',
+        link: typeof e.link === 'string' ? e.link : '',
+      };
+    })
+    .filter((s) => s.title);
+}
+
 export const GRADIENT_PRESETS: [string, string][] = [
   ['#fce4ec', '#e1bee7'], // sakura → lavender
   ['#e0f7fa', '#e1bee7'], // sky → lavender

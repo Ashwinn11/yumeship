@@ -6,7 +6,8 @@ import { deleteFromBucketByUrl, isManagedMediaUrl, uploadToBucket } from '@/lib/
 import { FunctionsHttpError } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 
-import { parseProfileFlags, parseProfileLinks, type ProfileFlag, type ProfileLink } from '@/components/profile/cardTheme';
+import { parseProfileFlags, parseProfileLinks, parseProfileSongs, type ProfileFlag, type ProfileLink, type ProfileSong } from '@/components/profile/cardTheme';
+import type { EquippedBlinkie } from '@/constants/blinkies';
 import type { BingoCard } from '@/lib/bingo';
 import { getAllFos, getFo, parseGallery, updateFo, type Fo, type GalleryPhoto } from './fo';
 import { getGlobalSetting, saveGlobalSetting } from './onboarding';
@@ -38,13 +39,15 @@ export type CommunityProfile = CommunityCardTheme & {
   /** short bio shown on the card itself, under the name */
   tagline: string;
   avatarUrl: string;
-  song: string;
-  songLink: string;
+  /** theme songs shown two-per-row on the card */
+  songs: ProfileSong[];
   gallery: GalleryPhoto[];
   flags: ProfileFlag[];
   links: ProfileLink[];
   /** published F/O shown paired on this card, when "profile identify" is on */
   identifyFoId: string | null;
+  /** blinkie templates + text equipped on this profile's wall — see constants/blinkies.ts */
+  blinkies: EquippedBlinkie[];
   followerCount: number;
   followingCount: number;
   /** the one post shown pinned above the rest on this profile, if any */
@@ -58,8 +61,8 @@ export type CommunityFoProfile = CommunityCardTheme & {
   /** short bio shown on the card itself, under the name */
   tagline: string;
   avatarUrl: string;
-  song: string;
-  songLink: string;
+  /** theme songs shown two-per-row on the card */
+  songs: ProfileSong[];
   gallery: GalleryPhoto[];
   flags: ProfileFlag[];
   links: ProfileLink[];
@@ -68,6 +71,8 @@ export type CommunityFoProfile = CommunityCardTheme & {
   shareStatus: Fo['shareStatus'];
   /** together-since date, independent of the ship's own start date */
   sinceDate: string;
+  /** blinkie templates + text equipped on this F/O's own profile wall */
+  blinkies: EquippedBlinkie[];
 };
 
 export type PostMedia = {
@@ -184,6 +189,17 @@ function rowToLinks(raw: unknown): ProfileLink[] {
     }));
 }
 
+function rowToSongs(raw: unknown): ProfileSong[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((s) => s && typeof s.title === 'string' && s.title)
+    .map((s) => ({
+      id: (s.id as string) ?? '',
+      title: s.title as string,
+      link: (s.link as string) ?? '',
+    }));
+}
+
 /** Remote gallery rows are already {url, caption} — reshape to the local {uri, caption}. */
 function rowToGallery(raw: unknown): GalleryPhoto[] {
   if (!Array.isArray(raw)) return [];
@@ -201,12 +217,12 @@ export function rowToProfile(row: Record<string, any>): CommunityProfile {
     pronouns: row.pronouns ?? '',
     tagline: row.tagline ?? '',
     avatarUrl: row.avatar_url ?? '',
-    song: row.song ?? '',
-    songLink: row.song_link ?? '',
+    songs: rowToSongs(row.songs),
     gallery: rowToGallery(row.gallery),
     flags: rowToFlags(row.flags),
     links: rowToLinks(row.links),
     identifyFoId: row.identify_fo_id ?? null,
+    blinkies: rowToEquippedBlinkies(row.blinkies),
     followerCount: row.follower_count ?? 0,
     followingCount: row.following_count ?? 0,
     pinnedPostId: row.pinned_post_id ?? null,
@@ -221,8 +237,7 @@ function rowToFoProfile(row: Record<string, any>): CommunityFoProfile {
     pronouns: row.pronouns ?? '',
     tagline: row.tagline ?? '',
     avatarUrl: row.avatar_url ?? '',
-    song: row.song ?? '',
-    songLink: row.song_link ?? '',
+    songs: rowToSongs(row.songs),
     gallery: rowToGallery(row.gallery),
     flags: rowToFlags(row.flags),
     links: rowToLinks(row.links),
@@ -230,6 +245,7 @@ function rowToFoProfile(row: Record<string, any>): CommunityFoProfile {
     relStatus: (row.rel_status as Fo['relStatus']) ?? 'romantic',
     shareStatus: (row.share_status as Fo['shareStatus']) ?? 'selective',
     sinceDate: row.since_date ?? '',
+    blinkies: rowToEquippedBlinkies(row.blinkies),
   };
 }
 
@@ -317,6 +333,22 @@ function parseSyncMap(raw: string): Record<string, string> {
   }
 }
 
+function isEquippedBlinkie(v: unknown): v is EquippedBlinkie {
+  return !!v && typeof v === 'object' && typeof (v as any).templateId === 'string' && typeof (v as any).text === 'string';
+}
+
+export function rowToEquippedBlinkies(raw: unknown): EquippedBlinkie[] {
+  return Array.isArray(raw) ? raw.filter(isEquippedBlinkie) : [];
+}
+
+export function parseEquippedBlinkies(raw: string): EquippedBlinkie[] {
+  try {
+    return rowToEquippedBlinkies(JSON.parse(raw || '[]'));
+  } catch {
+    return [];
+  }
+}
+
 /** Everything a full profile card needs to render as its owner styled it. */
 const CARD_THEME_FIELDS =
   'page_bg_color, page_bg_image, card_bg_color, card_bg_image, ' +
@@ -329,18 +361,22 @@ const CARD_THEME_FIELDS =
 export const cols = (s: string) => s.replace(/\s+/g, ' ').trim();
 
 const PROFILE_FIELDS = cols(`
-  id, username, name, pronouns, tagline, avatar_url, song, song_link, gallery, flags, links,
-  color, identify_fo_id, follower_count, following_count, pinned_post_id, ${CARD_THEME_FIELDS}
+  id, username, name, pronouns, tagline, avatar_url, songs, gallery, flags, links,
+  color, identify_fo_id, blinkies,
+  follower_count, following_count, pinned_post_id, ${CARD_THEME_FIELDS}
 `);
 const FO_PROFILE_FIELDS = cols(`
-  id, name, pronouns, tagline, avatar_url, song, song_link, gallery, flags, links,
-  color, fandom, rel_status, share_status, since_date, ${CARD_THEME_FIELDS}
+  id, name, pronouns, tagline, avatar_url, songs, gallery, flags, links,
+  color, fandom, rel_status, share_status, since_date, blinkies, ${CARD_THEME_FIELDS}
 `);
 
 // Feed rows only ever draw an avatar + name, so post embeds stay on this narrow
 // set — pulling every author's gallery and theme per post would balloon the feed
 // payload for data no card in the list renders. rowToProfile tolerates the gaps.
-export const PROFILE_SUMMARY_FIELDS = 'id, username, name, pronouns, avatar_url';
+// blinkies rides along despite that: the post header renders the author's
+// primary blinkie directly (just the first one, not their whole wall — a full
+// wall per post header would be exactly the clutter this app keeps trimming).
+export const PROFILE_SUMMARY_FIELDS = 'id, username, name, pronouns, avatar_url, blinkies';
 const FO_SUMMARY_FIELDS = 'id, name, pronouns, avatar_url';
 // The F/O preview row on a profile shows a real card (tagline, pronouns, flag),
 // not just an avatar+name chip — a richer, standalone select so post embeds
@@ -588,10 +624,10 @@ export async function pushOwnProfile(): Promise<PushResult> {
     id: user.id,
     name: getGlobalSetting('user_name'),
     pronouns: getGlobalSetting('user_pronouns', 'she/her'),
+    blinkies: parseEquippedBlinkies(getGlobalSetting('user_blinkies')),
     tagline: getGlobalSetting('user_tagline'),
     links: parseProfileLinks(getGlobalSetting('user_links')),
-    song: getGlobalSetting('user_song'),
-    song_link: getGlobalSetting('user_song_link'),
+    songs: parseProfileSongs(getGlobalSetting('user_songs')),
     color: getGlobalSetting('user_color'),
     page_bg_color: getGlobalSetting('user_page_bg_color'),
     card_bg_color: getGlobalSetting('user_card_bg_color'),
@@ -683,8 +719,8 @@ export async function pushFoProfile(foId: string): Promise<PushResult> {
     pronouns: fo.pronouns,
     tagline: fo.tagline,
     links: fo.links,
-    song: fo.song,
-    song_link: fo.songLink,
+    blinkies: fo.blinkies,
+    songs: fo.songs,
     since_date: fo.sinceDate,
     color: fo.color,
     fandom: fo.fandom,

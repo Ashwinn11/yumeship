@@ -5,6 +5,8 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { AVATAR_IMAGE } from '@/lib/imageProps';
 import { Colors, FontFamily, Radius, sf } from '@/constants/theme';
 import { timeAgo } from '@/lib/relativeTime';
+import { BLINKIE_BY_ID } from '@/constants/blinkies';
+import { Blinkie } from '@/components/profile/Blinkie';
 import type { CommunityFoProfile, CommunityProfile } from '@/store/community';
 
 type Props = {
@@ -51,6 +53,10 @@ export function PostAuthorHeader({ author, fo, createdAt, size = 'sm' }: Props) 
   const big = size === 'lg';
   const avatarSize = big ? 44 : 36;
   const pairedAvatarSize = big ? 38 : 32;
+  // only the author's primary (first) equipped blinkie, never their whole
+  // wall — a feed row is exactly the wrong place to repeat a big collection
+  const primarySlot = author.blinkies?.[0];
+  const primaryTemplate = primarySlot ? BLINKIE_BY_ID[primarySlot.templateId] : undefined;
 
   if (fo) {
     return (
@@ -79,8 +85,15 @@ export function PostAuthorHeader({ author, fo, createdAt, size = 'sm' }: Props) 
             {!!author.username && <Text style={styles.username}>@{author.username}</Text>}
             {!!createdAt && <Text style={styles.meta}>· {timeAgo(createdAt)}</Text>}
           </View>
-          <View style={styles.foBadge}>
-            <Text style={styles.foBadgeText} numberOfLines={1}>{fo.name}</Text>
+          {/* paired post: the author's badge sits next to the f/o's own name,
+              not the author's own name — this line is "who they're posting as with" */}
+          <View style={styles.foRow}>
+            <View style={styles.foBadge}>
+              <Text style={styles.foBadgeText} numberOfLines={1}>{fo.name}</Text>
+            </View>
+            {!!primaryTemplate && !!primarySlot!.text && (
+              <Blinkie template={primaryTemplate} text={primarySlot!.text} />
+            )}
           </View>
         </View>
       </View>
@@ -99,8 +112,15 @@ export function PostAuthorHeader({ author, fo, createdAt, size = 'sm' }: Props) 
             {author.name || 'someone'}
           </Text>
           {!!author.username && <Text style={styles.username}>@{author.username}</Text>}
+          {!!createdAt && <Text style={styles.meta}>· {timeAgo(createdAt)}</Text>}
         </View>
-        {!!createdAt && <Text style={styles.meta}>{timeAgo(createdAt)}</Text>}
+        {/* no f/o on this post — the badge is the author's own, so it goes
+            under their name instead of tucked into a nonexistent f/o line */}
+        {!!primaryTemplate && !!primarySlot!.text && (
+          <View style={styles.identityRow}>
+            <Blinkie template={primaryTemplate} text={primarySlot!.text} />
+          </View>
+        )}
       </View>
     </View>
   );
@@ -118,12 +138,14 @@ const styles = StyleSheet.create({
   nameRow: { flexDirection: 'row', alignItems: 'baseline', gap: 6, flexWrap: 'wrap' },
   name: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(13), color: Colors.ink },
   nameLg: { fontSize: sf(15) },
+  foRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
   foBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 3, alignSelf: 'flex-start',
     paddingHorizontal: 6, paddingVertical: 2, borderRadius: Radius.pill,
     backgroundColor: Colors.lavenderSoft, borderWidth: 1, borderColor: Colors.lavender,
   },
   foBadgeText: { fontFamily: FontFamily.uiMedium, fontSize: sf(10), color: Colors.lavenderDeep },
+  identityRow: { marginTop: 1 },
   username: { fontFamily: FontFamily.uiMedium, fontSize: sf(11.5), color: Colors.sakuraDeep },
   meta: { fontFamily: FontFamily.ui, fontSize: sf(10.5), color: Colors.ink3 },
 });

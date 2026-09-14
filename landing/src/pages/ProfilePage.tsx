@@ -116,8 +116,7 @@ export function ProfilePage() {
                 tagline={profile.tagline}
                 photoUri={profile.avatarUrl}
                 fallbackColor={profile.color}
-                song={profile.song}
-                songLink={profile.songLink}
+                songs={profile.songs}
                 gallery={profile.gallery}
                 cardBgColor={profile.cardBgColor}
                 cardBgImage={profile.cardBgImage}
@@ -127,6 +126,7 @@ export function ProfilePage() {
                 borderStyle={profile.borderStyle}
                 nameFont={profile.nameFont}
                 cardLayout={profile.cardLayout}
+                blinkies={profile.blinkies}
                 flags={profile.flags}
                 links={profile.links}
                 followerCount={profile.followerCount}

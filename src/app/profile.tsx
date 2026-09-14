@@ -31,7 +31,8 @@ import {
   type CommunityPost,
 } from '@/store/community';
 import { ProfileCard } from '@/components/profile/ProfileCard';
-import { IconEdit, IconPalette } from '@/components/ui/Icon';
+import { IconEdit, IconPalette, IconShare } from '@/components/ui/Icon';
+import { personProfileUrl, shareProfileLink } from '@/lib/shareProfile';
 import { Colors, FontFamily, Radius, sf, Spacing } from '@/constants/theme';
 import { useIPad } from '@/hooks/use-ipad';
 import { usePremium } from '@/store/premium';
@@ -234,6 +235,13 @@ export default function MyProfileScreen() {
             <Pressable onPress={() => router.push('/profile/edit' as any)} style={styles.headerBtn} accessibilityLabel="Edit profile">
               <IconEdit size={13} color={Colors.ink2} />
             </Pressable>
+            <Pressable
+              onPress={() => shareProfileLink(personProfileUrl(me.username), (reason) => showToast(reason))}
+              style={styles.headerBtn}
+              accessibilityLabel="Share profile"
+            >
+              <IconShare size={13} color={Colors.ink2} />
+            </Pressable>
           </View>
         }
       />
@@ -262,8 +270,7 @@ export default function MyProfileScreen() {
               tagline={me.tagline}
               photoUri={me.avatar}
               fallbackColor={me.color}
-              song={me.song}
-              songLink={me.songLink}
+              songs={me.songs}
               gallery={me.gallery}
               cardBgColor={me.cardBgColor}
               cardBgImage={me.cardBgImage}
@@ -273,6 +280,7 @@ export default function MyProfileScreen() {
               borderStyle={me.borderStyle}
               nameFont={me.nameFont}
               cardLayout={me.cardLayout}
+              blinkies={me.blinkies}
               flags={me.flags}
               links={me.links}
               followerCount={counts.followerCount}

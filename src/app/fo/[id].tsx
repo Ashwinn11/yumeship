@@ -12,7 +12,8 @@ import { PageBackground } from '@/components/profile/PageBackground';
 import { ProfileCard } from '@/components/profile/ProfileCard';
 import { ProfileScreenHeader } from '@/components/profile/ProfileScreenHeader';
 import { CozyModal } from '@/components/ui/CozyModal';
-import { IconEdit, IconPalette } from '@/components/ui/Icon';
+import { IconEdit, IconPalette, IconShare } from '@/components/ui/Icon';
+import { foProfileUrl, shareProfileLink } from '@/lib/shareProfile';
 import { InlineToast, useInlineToast } from '@/components/ui/InlineToast';
 import { Colors, FontFamily, Radius, Spacing, sf } from '@/constants/theme';
 import { relationshipStatus, sharingStatus } from '@/components/profile/cardProps';
@@ -102,7 +103,8 @@ export default function FoDetailScreen() {
       name: fo!.name, pronouns: fo!.pronouns, fandom: fo!.fandom,
       relStatus: fo!.relStatus, shareStatus: fo!.shareStatus, color: fo!.color,
       tagline: fo!.tagline, sinceDate: fo!.sinceDate, photoUri: fo!.photoUri,
-      song: fo!.song, songLink: fo!.songLink, gallery: fo!.gallery, flags: fo!.flags, links: fo!.links,
+      songs: fo!.songs, gallery: fo!.gallery, flags: fo!.flags, links: fo!.links,
+      blinkies: fo!.blinkies,
     });
     setEditing(true);
   }
@@ -173,6 +175,18 @@ export default function FoDetailScreen() {
               <Pressable onPress={startEdit} style={styles.headerBtn}>
                 <IconEdit size={13} color={Colors.ink2} />
               </Pressable>
+              <Pressable
+                onPress={() =>
+                  shareProfileLink(
+                    fo.isPublic ? foProfileUrl(fo.id) : null,
+                    (reason) => showToast(fo.isPublic ? reason : "turn on public profiles to share this f/o"),
+                  )
+                }
+                style={styles.headerBtn}
+                accessibilityLabel="Share profile"
+              >
+                <IconShare size={13} color={Colors.ink2} />
+              </Pressable>
             </View>
           }
         />
@@ -184,6 +198,7 @@ export default function FoDetailScreen() {
           onChange={(p) => setDraft((d) => (d ? { ...d, ...p } : d))}
           onClose={saveEdit}
           onDelete={() => setConfirmDelete(true)}
+          premium={premium}
         />
       ) : (
         <FlatList
@@ -213,8 +228,7 @@ export default function FoDetailScreen() {
                 since={fo.sinceDate}
                 type={relationshipStatus(fo.relStatus)}
                 sharing={sharingStatus(fo.shareStatus)}
-                song={fo.song}
-                songLink={fo.songLink}
+                songs={fo.songs}
                 gallery={fo.gallery}
                 cardBgColor={fo.cardBgColor}
                 cardBgImage={fo.cardBgImage}
@@ -224,6 +238,7 @@ export default function FoDetailScreen() {
                 borderStyle={fo.borderStyle}
                 nameFont={fo.nameFont}
                 cardLayout={fo.cardLayout}
+                blinkies={fo.blinkies}
                 flags={fo.flags}
                 links={fo.links}
               />

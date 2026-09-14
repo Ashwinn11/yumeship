@@ -71,6 +71,20 @@ export function IconSend({ size = 14, color = Colors.ink }: IconProps) {
   );
 }
 
+export function IconShare({ size = 14, color = Colors.ink }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 14 14" fill="none">
+      <Path
+        d="M4.5 6.5 9.2 3M4.5 7.5 9.2 11"
+        stroke={color} strokeWidth="1.3" strokeLinecap="round"
+      />
+      <Circle cx="2.8" cy="7" r="1.6" stroke={color} strokeWidth="1.3" />
+      <Circle cx="10.6" cy="2.8" r="1.6" stroke={color} strokeWidth="1.3" />
+      <Circle cx="10.6" cy="11.2" r="1.6" stroke={color} strokeWidth="1.3" />
+    </Svg>
+  );
+}
+
 export function IconEdit({ size = 14, color = Colors.ink }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 14 14" fill="none">

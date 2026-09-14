@@ -34,6 +34,16 @@
   font-display: swap;
 }
 
+/* real bitmap-style pixel font (SIL OFL) — used only by the blinkie badge,
+   where hard pixel edges are the point, not a general UI font */
+@font-face {
+  font-family: 'PressStart2P';
+  src: url('/fonts/PressStart2P-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* dedicated single-weight families for --font-ui-medium/--font-ui-semibold —
    every profile-view rule below reaches for these by family name alone, so a
    spot that forgets to also set font-weight can't silently fall back to
@@ -785,6 +795,11 @@ a:hover {
   color: var(--ink2);
   margin-top: 2px;
 }
+.blinkie-wall-centered {
+  display: flex;
+  justify-content: center;
+  margin-top: 6px;
+}
 .tagline-text {
   font-family: var(--font-ui);
   font-size: 13px;
@@ -975,64 +990,106 @@ a:hover {
   overflow-wrap: break-word;
 }
 
-/* ── Theme Song Card ────────────────────────────────────────────────────── */
-.song-row-card {
-  display: flex;
+/* ── Song Disc Card (shares the gallery grid with Polaroids) ──────────────
+   A distinct music card, not a reskinned Polaroid — the disc is the
+   dominant visual on a plain white card, not a small icon boxed inside
+   photo-strip chrome. */
+.song-disc-card {
+  display: inline-flex;
+  flex-direction: column;
   align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  background: var(--vellum);
-  border-radius: 12px;
+  justify-content: center;
+  gap: 6px;
+  flex-shrink: 0;
+  aspect-ratio: 1;
+  background: #fff;
   border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 8px 8px 12px;
   text-decoration: none;
-  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
-.song-row-card.link {
+a.song-disc-card {
   cursor: pointer;
 }
-.song-row-card.link:hover {
-  transform: translateY(-2px);
-  border-color: var(--sakura-deep);
-  box-shadow: 0 4px 14px rgba(215, 122, 141, 0.2);
+.song-disc {
+  position: relative;
+  border-radius: 50%;
+  background: #161616;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
+  animation: song-disc-spin 4s linear infinite;
 }
-.song-row-card.link:active {
-  transform: translateY(0);
+@keyframes song-disc-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
 }
-.song-cassette {
-  flex-shrink: 0;
+.song-disc-groove {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
-.song-text-col {
+.song-disc-label {
+  position: absolute;
+  border-radius: 50%;
+  background: var(--sakura-deep);
   display: flex;
-  flex-direction: column;
-  gap: 1px;
-  min-width: 0;
-  flex: 1;
+  align-items: center;
+  justify-content: center;
 }
-.song-title-text {
-  font-family: var(--font-ui-medium);
-  font-size: 14px;
+.song-disc-note {
+  color: #fff;
+}
+.song-disc-hole {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #161616;
+}
+.song-disc-title {
+  font-family: var(--font-ui-semibold);
+  font-size: 11px;
   color: var(--ink);
-  line-height: 19px;
+  text-align: center;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-.song-link-hint {
-  font-family: var(--font-ui);
-  font-size: 10px;
-  color: var(--sakura-deep);
+  max-width: 100%;
+  padding: 0 8px;
 }
 
-/* ── Gallery Strip ──────────────────────────────────────────────────────── */
-.gallery-scroll-strip {
+/* three bars bouncing out of phase — the "now playing" indicator
+   iOS/iPadOS widgets use (Control Center's Now Playing card, Music rows) */
+.song-eq-row {
   display: flex;
-  overflow-x: auto;
-  gap: 14px;
-  padding: 10px 4px;
-  scrollbar-width: none;
+  align-items: flex-end;
+  gap: 3px;
+  height: 12px;
 }
-.gallery-scroll-strip::-webkit-scrollbar {
-  display: none;
+.song-eq-bar {
+  width: 3px;
+  height: 12px;
+  border-radius: 1.5px;
+  background: var(--sakura-deep);
+  transform-origin: bottom;
+  animation: song-eq-bounce 0.7s ease-in-out infinite;
+}
+.song-eq-bar-1 { animation-delay: 0s; }
+.song-eq-bar-2 { animation-delay: 0.12s; }
+.song-eq-bar-3 { animation-delay: 0.24s; }
+@keyframes song-eq-bounce {
+  0%, 100% { transform: scaleY(0.3); }
+  50% { transform: scaleY(1); }
+}
+
+/* ── Gallery Grid (songs + photos, two per row) ────────────────────────────
+   No horizontal padding here on purpose — clientWidth (what sizes the cards
+   in ProfileCard.tsx) includes padding, and keeping it at 0 sidesteps having
+   to subtract it back out before dividing the row in two. */
+.gallery-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 10px 0;
 }
 .polaroid-frame {
   background: #fff;
@@ -1392,6 +1449,32 @@ a:hover {
 @keyframes shimmer {
   0%   { background-position: -300px 0; }
   100% { background-position:  300px 0; }
+}
+
+/* ── Blinkie wall (real pixel-art badges, user-typed text) ──────────────── */
+.blinkie-wall {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+}
+.blinkie {
+  position: relative;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.blinkie-text {
+  font-family: 'PressStart2P', monospace;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
 }
 .skeleton-avatar,
 .skeleton-name,

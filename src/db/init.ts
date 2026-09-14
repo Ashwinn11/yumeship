@@ -18,6 +18,17 @@ export function initDb() {
   try { db.execSync(`ALTER TABLE fo ADD COLUMN text_color TEXT NOT NULL DEFAULT ''`); } catch (_) {}
   try { db.execSync(`ALTER TABLE fo ADD COLUMN song TEXT NOT NULL DEFAULT ''`); } catch (_) {}
   try { db.execSync(`ALTER TABLE fo ADD COLUMN song_link TEXT NOT NULL DEFAULT ''`); } catch (_) {}
+  // song/song_link (one song) replaced by songs (an array of {id,title,link})
+  // shown two-per-row on the card — each still carries its own link
+  try { db.execSync(`ALTER TABLE fo ADD COLUMN songs TEXT NOT NULL DEFAULT '[]'`); } catch (_) {}
+  try {
+    db.execSync(`
+      UPDATE fo SET songs = json_array(json_object('id', lower(hex(randomblob(8))), 'title', song, 'link', song_link))
+      WHERE song != '' AND songs = '[]'
+    `);
+  } catch (_) {}
+  try { db.execSync(`ALTER TABLE fo DROP COLUMN song`); } catch (_) {}
+  try { db.execSync(`ALTER TABLE fo DROP COLUMN song_link`); } catch (_) {}
   try { db.execSync(`ALTER TABLE fo ADD COLUMN gallery TEXT NOT NULL DEFAULT '[]'`); } catch (_) {}
   try { db.execSync(`ALTER TABLE fo ADD COLUMN is_public INTEGER NOT NULL DEFAULT 0`); } catch (_) {}
   try { db.execSync(`ALTER TABLE fo ADD COLUMN avatar_synced_uri TEXT NOT NULL DEFAULT ''`); } catch (_) {}
@@ -61,6 +72,9 @@ export function initDb() {
   try { db.execSync(`ALTER TABLE fo DROP COLUMN birthday`); } catch (_) {}
   try { db.execSync(`ALTER TABLE fo ADD COLUMN since_date TEXT NOT NULL DEFAULT ''`); } catch (_) {}
   try { db.execSync(`ALTER TABLE fo ADD COLUMN card_layout TEXT NOT NULL DEFAULT ''`); } catch (_) {}
+  // catalog blinkie ids equipped on this F/O's own profile wall — same
+  // free-text-badge feature the person's own profile already has
+  try { db.execSync(`ALTER TABLE fo ADD COLUMN blinkies TEXT NOT NULL DEFAULT '[]'`); } catch (_) {}
   // never wired to anything that could set a real value — nothing but this
   // column's own default ever reached it
   try { db.execSync(`ALTER TABLE ships DROP COLUMN nickname`); } catch (_) {}
@@ -106,8 +120,7 @@ export function initDb() {
       card_bg_color TEXT NOT NULL DEFAULT '',
       card_bg_image TEXT NOT NULL DEFAULT '',
       text_color TEXT NOT NULL DEFAULT '',
-      song TEXT NOT NULL DEFAULT '',
-      song_link TEXT NOT NULL DEFAULT '',
+      songs TEXT NOT NULL DEFAULT '[]',
       gallery TEXT NOT NULL DEFAULT '[]',
       is_public INTEGER NOT NULL DEFAULT 0,
       avatar_synced_uri TEXT NOT NULL DEFAULT '',

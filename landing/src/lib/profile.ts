@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import type { EquippedBlinkie } from '../constants/blinkies';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -17,6 +18,12 @@ export type ProfileLink = {
   url: string;
 };
 
+export type ProfileSong = {
+  id: string;
+  title: string;
+  link: string;
+};
+
 export type WebProfile = {
   id: string;
   username: string;
@@ -24,13 +31,14 @@ export type WebProfile = {
   pronouns: string;
   tagline: string;
   avatarUrl: string;
-  song: string;
-  songLink: string;
+  songs: ProfileSong[];
   gallery: GalleryPhoto[];
   flags: ProfileFlag[];
   links: ProfileLink[];
   followerCount: number;
   followingCount: number;
+  /** blinkie templates + text equipped on this profile's wall */
+  blinkies: EquippedBlinkie[];
   // card theme
   color: string;
   pageBgColor: string;
@@ -51,8 +59,7 @@ export type WebFoProfile = {
   pronouns: string;
   tagline: string;
   avatarUrl: string;
-  song: string;
-  songLink: string;
+  songs: ProfileSong[];
   gallery: GalleryPhoto[];
   flags: ProfileFlag[];
   links: ProfileLink[];
@@ -61,6 +68,8 @@ export type WebFoProfile = {
   shareStatus: string;
   /** together-since date, independent of the ship's own start date */
   sinceDate: string;
+  /** blinkie templates + text equipped on this F/O's own profile wall */
+  blinkies: EquippedBlinkie[];
   // card theme
   color: string;
   pageBgColor: string;
@@ -82,12 +91,12 @@ const CARD_THEME_FIELDS =
   'card_bg_gradient, card_transparent, text_color, border_style, name_font, card_layout';
 
 const PROFILE_FIELDS =
-  `id, username, name, pronouns, tagline, avatar_url, song, song_link, gallery, flags, links, ` +
-  `color, follower_count, following_count, ${CARD_THEME_FIELDS}`;
+  `id, username, name, pronouns, tagline, avatar_url, songs, gallery, flags, links, ` +
+  `color, blinkies, follower_count, following_count, ${CARD_THEME_FIELDS}`;
 
 const FO_PROFILE_FIELDS =
-  `id, name, pronouns, tagline, avatar_url, song, song_link, gallery, flags, links, ` +
-  `fandom, rel_status, share_status, since_date, ${CARD_THEME_FIELDS}`;
+  `id, name, pronouns, tagline, avatar_url, songs, gallery, flags, links, ` +
+  `fandom, rel_status, share_status, since_date, blinkies, ${CARD_THEME_FIELDS}`;
 
 // ─── Row mappers ──────────────────────────────────────────────────────────────
 
@@ -107,6 +116,25 @@ function parseFlags(raw: unknown): ProfileFlag[] {
       flag: ((f.flag ?? f.icon) as string) ?? '',
       imageUrl: (f.imageUrl as string) ?? '',
       text: f.text as string,
+    }));
+}
+
+function isEquippedBlinkie(v: unknown): v is EquippedBlinkie {
+  return !!v && typeof v === 'object' && typeof (v as any).templateId === 'string' && typeof (v as any).text === 'string';
+}
+
+function parseBlinkies(raw: unknown): EquippedBlinkie[] {
+  return Array.isArray(raw) ? raw.filter(isEquippedBlinkie) : [];
+}
+
+function parseSongs(raw: unknown): ProfileSong[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((s) => s && typeof s.title === 'string' && s.title)
+    .map((s) => ({
+      id: (s.id as string) ?? '',
+      title: s.title as string,
+      link: (s.link as string) ?? '',
     }));
 }
 
@@ -146,13 +174,13 @@ function rowToProfile(row: Record<string, unknown>): WebProfile {
     pronouns: (row.pronouns as string) ?? '',
     tagline: (row.tagline as string) ?? '',
     avatarUrl: (row.avatar_url as string) ?? '',
-    song: (row.song as string) ?? '',
-    songLink: (row.song_link as string) ?? '',
+    songs: parseSongs(row.songs),
     gallery: parseGallery(row.gallery),
     flags: parseFlags(row.flags),
     links: parseLinks(row.links),
     followerCount: (row.follower_count as number) ?? 0,
     followingCount: (row.following_count as number) ?? 0,
+    blinkies: parseBlinkies(row.blinkies),
   };
 }
 
@@ -164,8 +192,7 @@ function rowToFoProfile(row: Record<string, unknown>): WebFoProfile {
     pronouns: (row.pronouns as string) ?? '',
     tagline: (row.tagline as string) ?? '',
     avatarUrl: (row.avatar_url as string) ?? '',
-    song: (row.song as string) ?? '',
-    songLink: (row.song_link as string) ?? '',
+    songs: parseSongs(row.songs),
     gallery: parseGallery(row.gallery),
     flags: parseFlags(row.flags),
     links: parseLinks(row.links),
@@ -173,6 +200,7 @@ function rowToFoProfile(row: Record<string, unknown>): WebFoProfile {
     relStatus: (row.rel_status as string) ?? 'romantic',
     shareStatus: (row.share_status as string) ?? 'selective',
     sinceDate: (row.since_date as string) ?? '',
+    blinkies: parseBlinkies(row.blinkies),
   };
 }
 
@@ -244,6 +272,7 @@ export type WebPost = {
     name: string;
     username: string;
     avatarUrl: string;
+    blinkies?: EquippedBlinkie[];
   };
   fo?: {
     id: string;
@@ -259,7 +288,7 @@ export async function fetchUserPosts(userId: string): Promise<WebPost[]> {
       .select(`
         id, author_id, fo_profile_id, title, body, media, like_count, comment_count, created_at,
         kind, poll_options, poll_counts,
-        author:profiles!posts_author_id_fkey(id, name, username, avatar_url),
+        author:profiles!posts_author_id_fkey(id, name, username, avatar_url, blinkies),
         fo:fo_profiles!posts_fo_profile_id_fkey(id, name, avatar_url)
       `)
       .eq('author_id', userId)
@@ -279,7 +308,13 @@ export async function fetchUserPosts(userId: string): Promise<WebPost[]> {
       kind: r.kind,
       pollOptions: r.poll_options,
       pollCounts: r.poll_counts,
-      author: r.author,
+      author: r.author && {
+        id: r.author.id,
+        name: r.author.name,
+        username: r.author.username,
+        avatarUrl: r.author.avatar_url,
+        blinkies: parseBlinkies(r.author.blinkies),
+      },
       fo: r.fo,
     }));
   } catch {

@@ -5,14 +5,17 @@ import { useState } from 'react';
 import { Keyboard, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { Heart } from '@/components/deco/Heart';
+import { BlinkieWallEditor } from '@/components/profile/BlinkieWallEditor';
 import { ProfileEditor, type EditField, type EditSectionDef } from '@/components/profile/ProfileEditor';
 import { ProfileFlagsEditor } from '@/components/profile/ProfileFlagsEditor';
 import { ProfileLinksEditor } from '@/components/profile/ProfileLinksEditor';
+import { ProfileSongsEditor } from '@/components/profile/ProfileSongsEditor';
 import { Toggle } from '@/components/ui/Toggle';
 import { Colors, FontFamily, Radius, sf } from '@/constants/theme';
 import { persistImage } from '@/lib/localMedia';
 import { readMe, saveMe, type Me } from '@/store/me';
 import { useFos } from '@/store/fo';
+import { usePremium } from '@/store/premium';
 import { logSyncFailure, pushOwnProfile, syncIdentifyFoPublish } from '@/store/community';
 
 const PRONOUNS = ['she/her', 'he/him', 'they/them'].map((p) => ({ value: p, label: p }));
@@ -20,6 +23,7 @@ const COLORS = [Colors.sakura, Colors.lavender, Colors.sage, Colors.peach, Color
 
 export default function EditProfileScreen() {
   const fos = useFos();
+  const premium = usePremium();
   const [me, setMe] = useState<Me>(readMe);
 
   /** Every edit lands immediately; "done" is dismissal, never a gate. */
@@ -75,7 +79,6 @@ export default function EditProfileScreen() {
   // change — they sit open under the avatar rather than behind a row you tap.
   const headerFields: EditField[] = [
     { kind: 'text', key: 'name', label: 'name', placeholder: 'your name' },
-    { kind: 'text', key: 'username', label: 'username', placeholder: 'handle', autoCapitalize: 'none', autoCorrect: false },
     { kind: 'chips', key: 'pronouns', label: 'pronouns', options: PRONOUNS },
     {
       kind: 'text', key: 'tagline', label: 'bio', placeholder: 'self ship journal ♡',
@@ -85,6 +88,16 @@ export default function EditProfileScreen() {
   ];
 
   const sections: EditSectionDef[] = [
+    {
+      id: 'blinkies',
+      label: 'blinkie wall',
+      summary: (v) => (v.blinkies.length ? `${v.blinkies.length} equipped` : 'none yet'),
+      fields: [{
+        kind: 'node', render: () => (
+          <BlinkieWallEditor selected={me.blinkies} onChange={(blinkies) => patch({ blinkies })} premium={premium} />
+        ),
+      }],
+    },
     {
       id: 'flags',
       label: 'flags',
@@ -96,13 +109,14 @@ export default function EditProfileScreen() {
       }],
     },
     {
-      id: 'song',
-      label: 'theme song',
-      summary: (v) => v.song || 'not set',
-      fields: [
-        { kind: 'text', key: 'song', label: 'song', placeholder: 'the song that feels like you' },
-        { kind: 'text', key: 'songLink', label: 'link', placeholder: 'https://…', autoCapitalize: 'none', autoCorrect: false, keyboardType: 'url' },
-      ],
+      id: 'songs',
+      label: 'theme songs',
+      summary: (v) => (v.songs.length ? `${v.songs.length} song${v.songs.length === 1 ? '' : 's'}` : 'none yet'),
+      fields: [{
+        kind: 'node', label: 'songs', render: () => (
+          <ProfileSongsEditor songs={me.songs} onChange={(songs) => patch({ songs })} />
+        ),
+      }],
     },
     {
       id: 'gallery',
