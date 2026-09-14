@@ -9,7 +9,7 @@ export const Support: React.FC = () => {
           <div className="content-meta">We'd love to help</div>
 
           <div className="contact-box" style={{ marginTop: 0, marginBottom: 36 }}>
-            <p>Email us at <a href="mailto:ashwinnanbazhagan@gmail.com"><strong>ashwinnanbazhagan@gmail.com</strong></a> and we'll get back to you within 24–48 hours.</p>
+            <p>Email us at <a href="mailto:support@myyume.app"><strong>support@myyume.app</strong></a> and we'll get back to you within 24–48 hours.</p>
           </div>
 
           <h2>Frequently Asked Questions</h2>
@@ -68,7 +68,8 @@ export const Support: React.FC = () => {
           <h3>Is YumeShip free?</h3>
           <p>
             YumeShip is free to download, including the community feature. Premium unlocks
-            unlimited ships and all visual templates — weekly, monthly, or yearly.
+            unlimited ships and all visual templates — weekly or monthly subscriptions, or a
+            one-time Lifetime purchase.
           </p>
         </article>
       </div>

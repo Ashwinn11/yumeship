@@ -97,8 +97,8 @@ export const Terms: React.FC = () => {
           <div className="contact-box">
             <p>Questions? Reach us at:</p>
             <p>
-              <a href="mailto:ashwinnanbazhagan@gmail.com">
-                <strong>ashwinnanbazhagan@gmail.com</strong>
+              <a href="mailto:support@myyume.app">
+                <strong>support@myyume.app</strong>
               </a>
             </p>
           </div>

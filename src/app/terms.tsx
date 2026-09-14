@@ -85,7 +85,7 @@ export default function TermsScreen() {
         </Section>
 
         <Section title="8. Contact">
-          Questions? Reach us at: ashwinnanbazhagan@gmail.com
+          Questions? Reach us at: support@myyume.app
         </Section>
       </ScrollView>
     </View>

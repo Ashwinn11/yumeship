@@ -92,7 +92,7 @@ export default function PrivacyScreen() {
         </Section>
 
         <Section title="11. Contact">
-          Questions, or want your data deleted? Reach us at: ashwinnanbazhagan@gmail.com
+          Questions, or want your data deleted? Reach us at: support@myyume.app
         </Section>
       </ScrollView>
     </View>
