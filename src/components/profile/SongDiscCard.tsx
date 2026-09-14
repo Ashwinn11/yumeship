@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View, Linking } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 
 import { Colors, FontFamily, Radius, sf } from '@/constants/theme';
+import { IconArrowUpRight } from '@/components/ui/Icon';
 import type { ProfileSong } from './cardTheme';
 
 /** Three bars bouncing out of phase — the "now playing" indicator iOS/iPadOS
@@ -75,11 +76,19 @@ export function SongDiscCard({ song, size = 110 }: { song: ProfileSong; size?: n
         >
           <Text style={[styles.discNote, { fontSize: discSize * 0.16 }]}>♪</Text>
         </View>
-        <View style={[styles.discHole, { top: discSize / 2 - 2.5, left: discSize / 2 - 2.5 }]} />
       </Animated.View>
 
       <EqualizerBars />
       <Text style={styles.title} numberOfLines={1}>{song.title}</Text>
+
+      {/* only shown when there's somewhere to actually go — the card is
+          still the disc + title even for a linkless song, this just marks
+          the ones that are tappable */}
+      {!!song.link && (
+        <View style={styles.linkBadge}>
+          <IconArrowUpRight size={9} color={Colors.sakuraDeep} />
+        </View>
+      )}
     </Pressable>
   );
 }
@@ -109,7 +118,6 @@ const styles = StyleSheet.create({
   discGroove: { borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', position: 'absolute' },
   discLabel: { backgroundColor: Colors.sakuraDeep, position: 'absolute', alignItems: 'center', justifyContent: 'center' },
   discNote: { color: '#fff' },
-  discHole: { width: 5, height: 5, borderRadius: 2.5, backgroundColor: '#161616', position: 'absolute' },
   eqRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 3 },
   eqBar: { width: 3, borderRadius: 1.5, backgroundColor: Colors.sakuraDeep },
   title: {
@@ -118,5 +126,11 @@ const styles = StyleSheet.create({
     color: Colors.ink,
     textAlign: 'center',
     paddingHorizontal: 8,
+  },
+  linkBadge: {
+    position: 'absolute', top: 6, right: 6,
+    width: 18, height: 18, borderRadius: Radius.pill,
+    backgroundColor: Colors.paperDeep, borderWidth: 1, borderColor: Colors.line,
+    alignItems: 'center', justifyContent: 'center',
   },
 });

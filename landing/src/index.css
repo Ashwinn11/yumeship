@@ -995,6 +995,7 @@ a:hover {
    dominant visual on a plain white card, not a small icon boxed inside
    photo-strip chrome. */
 .song-disc-card {
+  position: relative;
   display: inline-flex;
   flex-direction: column;
   align-items: center;
@@ -1007,6 +1008,19 @@ a:hover {
   border-radius: 18px;
   padding: 8px 8px 12px;
   text-decoration: none;
+}
+.song-link-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--paper-deep);
+  border: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 a.song-disc-card {
   cursor: pointer;
@@ -1037,13 +1051,6 @@ a.song-disc-card {
 }
 .song-disc-note {
   color: #fff;
-}
-.song-disc-hole {
-  position: absolute;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: #161616;
 }
 .song-disc-title {
   font-family: var(--font-ui-semibold);

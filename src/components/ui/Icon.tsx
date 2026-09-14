@@ -85,6 +85,14 @@ export function IconShare({ size = 14, color = Colors.ink }: IconProps) {
   );
 }
 
+export function IconArrowUpRight({ size = 14, color = Colors.ink }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 14 14" fill="none">
+      <Path d="M4 10 10 4M5 4h5v5" stroke={color} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
+
 export function IconEdit({ size = 14, color = Colors.ink }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 14 14" fill="none">

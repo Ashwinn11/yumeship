@@ -30,7 +30,6 @@ export function SongDiscCard({ song, size = 110 }: { song: ProfileSong; size?: n
         >
           <span className="song-disc-note" style={{ fontSize: discSize * 0.16 }}>♪</span>
         </div>
-        <div className="song-disc-hole" style={{ top: discSize / 2 - 2.5, left: discSize / 2 - 2.5 }} />
       </div>
 
       <div className="song-eq-row">
@@ -39,6 +38,17 @@ export function SongDiscCard({ song, size = 110 }: { song: ProfileSong; size?: n
         <span className="song-eq-bar song-eq-bar-3" />
       </div>
       <span className="song-disc-title">{song.title}</span>
+
+      {/* only shown when there's somewhere to actually go — the card is
+          still the disc + title even for a linkless song, this just marks
+          the ones that are tappable */}
+      {song.link && (
+        <span className="song-link-badge">
+          <svg width="9" height="9" viewBox="0 0 14 14" fill="none">
+            <path d="M4 10 10 4M5 4h5v5" stroke="var(--sakura-deep)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </span>
+      )}
     </>
   );
 
