@@ -260,7 +260,7 @@ export async function createGroup(input: CreateGroupInput): Promise<CommunityGro
       const compressed = await compressImage(input.avatarUri, 'avatar');
       avatarUrl = await uploadToBucket(
         'avatars',
-        `groups/${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`,
+        `${userId}/groups/${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`,
         compressed,
         'image/jpeg',
       );
@@ -308,7 +308,7 @@ export async function updateGroup(groupId: string, input: UpdateGroupInput): Pro
     const compressed = await compressImage(input.avatarUri, 'avatar');
     patch.avatar_url = await uploadToBucket(
       'avatars',
-      `groups/${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`,
+      `${userId}/groups/${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`,
       compressed,
       'image/jpeg',
     );
@@ -391,7 +391,7 @@ export async function sendGroupMessage(groupId: string, input: SendGroupMessageI
       const compressed = await compressImage(input.image.uri, 'post');
       const url = await uploadToBucket(
         'post-media',
-        `group-chat/${groupId}/${userId}/${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`,
+        `${userId}/group-chat/${groupId}/${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`,
         compressed,
         'image/jpeg',
       );

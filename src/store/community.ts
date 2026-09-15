@@ -124,6 +124,25 @@ export type CommunityPost = {
   activityId: string | null;
   /** every @username in `body` that resolved to a real account — see MentionText */
   mentions: CommunityMention[];
+  /** a flair badge shown on the card — 'general' renders no badge at all */
+  postType: PostType;
+};
+
+// The content-type tags a post can carry — sourced from r/selfshipping's own
+// post flairs (Art Showcase, Writing/Fanfiction, Fluff, Merch) plus the two
+// most common Tumblr yumeshipping content tags not already covered by those
+// (headcanon, moodboard). Deliberately excludes identity/relationship tags
+// (sharing status, F/O type) — those belong on the profile, not the post.
+export type PostType = 'general' | 'art' | 'fanfic' | 'headcanon' | 'moodboard' | 'fluff' | 'merch';
+export const POST_TYPES: PostType[] = ['art', 'fanfic', 'headcanon', 'moodboard', 'fluff', 'merch'];
+export const POST_TYPE_LABELS: Record<PostType, string> = {
+  general: 'general',
+  art: 'art',
+  fanfic: 'fanfic',
+  headcanon: 'headcanon',
+  moodboard: 'moodboard',
+  fluff: 'fluff',
+  merch: 'merch',
 };
 
 export type CommunityComment = {
@@ -317,6 +336,7 @@ function rowToPost(
     bingo: rowToBingo(row),
     activityId: row.activity_id ?? null,
     mentions: rowToMentions(row.mentions),
+    postType: (row.post_type as PostType) || 'general',
   };
 }
 
@@ -400,7 +420,7 @@ export const mentionSelect = (fkey: 'mentions_post_id_fkey' | 'mentions_comment_
 
 const POST_SELECT = cols(`
   id, author_id, fo_profile_id, title, body, media, like_count, comment_count, created_at,
-  kind, featured_date, poll_options, poll_counts, bingo_cells, activity_id,
+  kind, featured_date, poll_options, poll_counts, bingo_cells, activity_id, post_type,
   author:profiles!posts_author_id_fkey(${PROFILE_SUMMARY_FIELDS}),
   fo:fo_profiles!posts_fo_profile_id_fkey(${FO_SUMMARY_FIELDS}),
   ${mentionSelect('mentions_post_id_fkey')}
@@ -1065,6 +1085,30 @@ export function fetchFoPosts(foProfileId: string, opts: PostPageOpts = {}): Prom
   return fetchPostsBy('fo_profile_id', foProfileId, opts);
 }
 
+/** Every regular feed post carrying one flair — same exclusions as the main
+ *  feed (activity prompts and activity responses never carry a browsable tag). */
+export async function fetchPostsByType(postType: PostType, opts: PostPageOpts = {}): Promise<CommunityPost[]> {
+  const limit = opts.limit ?? 20;
+  let query = supabase
+    .from('posts')
+    .select(POST_SELECT)
+    .eq('kind', 'post')
+    .eq('post_type', postType)
+    .is('activity_id', null)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (opts.before) query = query.lt('created_at', opts.before);
+
+  const { data, error } = await query;
+  if (error || !data) return [];
+  const ids = data.map((r: any) => r.id);
+  const [likedIds, myPollVotes] = await Promise.all([
+    fetchLikedPostIds(ids),
+    fetchMyPollVotes(ids),
+  ]);
+  return data.map((r: any) => rowToPost(r, likedIds, myPollVotes));
+}
+
 /**
  * The submission pool: the top 30 unfeatured activity prompts, most liked
  * first — a submission stays eligible indefinitely, however long ago it was
@@ -1187,6 +1231,8 @@ export async function createPost(input: {
   bingo?: BingoCard;
   /** set to post as a response to a featured activity, kept off the main feed */
   activityId?: string;
+  /** defaults to 'general', which shows no badge and isn't filterable by tag */
+  postType?: PostType;
 }): Promise<CommunityPost> {
   const {
     data: { session },
@@ -1256,6 +1302,7 @@ export async function createPost(input: {
       poll_counts: input.poll ? input.poll.map(() => 0) : null,
       bingo_cells: bingoPayload,
       activity_id: input.activityId ?? null,
+      post_type: input.postType ?? 'general',
     })
     .select(POST_SELECT)
     .single();
@@ -2459,6 +2506,12 @@ export function useUserPosts(userId: string | undefined) {
 /** Every post tagged to one F/O, for that F/O's profile page. */
 export function useFoPosts(foId: string | undefined) {
   return usePostList(foId, fetchFoPosts);
+}
+
+/** Every post carrying one flair — the tag/flair browse screen's entry point. */
+export function useTaggedPosts(postType: PostType | undefined) {
+  const fetchPage = useCallback((id: string, opts: PostPageOpts) => fetchPostsByType(id as PostType, opts), []);
+  return usePostList(postType, fetchPage);
 }
 
 export function useCommunityPost(id: string) {

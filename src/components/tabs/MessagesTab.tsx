@@ -11,6 +11,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { CozyModal } from '@/components/ui/CozyModal';
 import { DismissKeyboardView } from '@/components/ui/DismissKeyboardView';
 import { IconSend, IconPhoto, IconEdit } from '@/components/ui/Icon';
+import { PhotoViewer } from '@/components/ui/PhotoViewer';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { useFo } from '@/store/fo';
@@ -95,6 +96,7 @@ function ThreadView({
   const setSender = onSenderChange ?? setInternalSender;
   const [draft, setDraft] = useState('');
   const [msgToDelete, setMsgToDelete] = useState<string | null>(null);
+  const [viewerPhoto, setViewerPhoto] = useState<string | null>(null);
   const [keyboardOpen, setKeyboardOpen] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
   const inputRef = useRef<TextInput>(null);
@@ -148,6 +150,11 @@ function ThreadView({
         isDestructive
         onConfirm={() => { if (msgToDelete) deleteMessage(msgToDelete); setMsgToDelete(null); }}
         onClose={() => setMsgToDelete(null)}
+      />
+      <PhotoViewer
+        visible={!!viewerPhoto}
+        photos={viewerPhoto ? [{ uri: viewerPhoto }] : []}
+        onClose={() => setViewerPhoto(null)}
       />
 
       {/* ── Header ── */}
@@ -423,16 +430,18 @@ function ThreadView({
                       {sLabel ? <Text style={s.senderLabel}>{sLabel}</Text> : null}
                       <View style={[s.bubble, { maxWidth: '100%' }, mine ? s.bubbleMe : (poly ? { backgroundColor: sColor, borderBottomLeftRadius: 4 } : s.bubbleThem)]}>
                         {m.imageUri ? (
-                          <Image
-                            source={{ uri: m.imageUri }}
-                            style={{
-                              width: 200,
-                              height: 150,
-                              borderRadius: 12,
-                              marginBottom: m.body ? 6 : 0,
-                            }}
-                            contentFit="cover"
-                          />
+                          <Pressable onPress={() => setViewerPhoto(m.imageUri!)} onLongPress={() => setMsgToDelete(m.id)}>
+                            <Image
+                              source={{ uri: m.imageUri }}
+                              style={{
+                                width: 200,
+                                height: 150,
+                                borderRadius: 12,
+                                marginBottom: m.body ? 6 : 0,
+                              }}
+                              contentFit="cover"
+                            />
+                          </Pressable>
                         ) : null}
                         {m.body ? (
                           <Text style={[s.bubbleText, (mine || poly) ? s.bubbleTextMe : s.bubbleTextThem]}>

@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Heart } from '@/components/deco/Heart';
 import { AVATAR_IMAGE } from '@/lib/imageProps';
-import { Colors, FontFamily, Radius, Spacing, sf } from '@/constants/theme';
+import { Colors, FontFamily, Radius, Shadow, Spacing, sf } from '@/constants/theme';
 import type { CommunityPost } from '@/store/community';
 
 import { MentionText } from './MentionText';
@@ -22,27 +22,36 @@ function Avatar({ uri, name }: { uri: string; name: string }) {
   );
 }
 
-/** One row in the submission pool. Rows stack together as a single list —
- * shared side borders, a bottom border doubling as the divider between
- * rows, and only the last row gets bottom corners — rather than each being
- * its own separate card. */
+/** One card in the submission pool, same bordered+elevated card language as
+ * PostCard rather than a bespoke stitched-list row — the rest of the app
+ * never treats a list of content as one fused block. `rank` is the row's
+ * standing in the like-sorted pool (1 = closest to winning tomorrow), shown
+ * as a small badge since the ordering itself is the point of this list. */
 export function ActivityPromptRow({
   post,
   onToggleLike,
-  isLast,
+  rank,
 }: {
   post: CommunityPost;
   onToggleLike: () => void;
-  isLast?: boolean;
+  rank: number;
 }) {
+  const leading = rank === 1;
   return (
-    <View style={[styles.row, isLast && styles.rowLast]}>
+    <View style={[styles.card, leading && styles.cardLeading]}>
+      <View style={[styles.rankBadge, leading && styles.rankBadgeLeading]}>
+        <Text style={[styles.rankText, leading && styles.rankTextLeading]}>#{rank}</Text>
+      </View>
       <Avatar uri={post.author.avatarUrl} name={post.author.name} />
       <View style={styles.textCol}>
         <MentionText body={post.body} mentions={post.mentions} style={styles.body} numberOfLines={3} />
         {!!post.author.username && <Text style={styles.username}>@{post.author.username}</Text>}
       </View>
-      <Pressable style={styles.likeChip} onPress={onToggleLike} hitSlop={8}>
+      <Pressable
+        style={({ pressed }) => [styles.likeChip, pressed && styles.likeChipPressed]}
+        onPress={onToggleLike}
+        hitSlop={8}
+      >
         <Heart size={13} color={post.likedByMe ? Colors.sakuraDeep : Colors.ink3} outline={!post.likedByMe} />
         <Text style={[styles.likeCount, post.likedByMe && styles.likeCountActive]}>{post.likeCount}</Text>
       </Pressable>
@@ -51,13 +60,23 @@ export function ActivityPromptRow({
 }
 
 const styles = StyleSheet.create({
-  row: {
+  card: {
     flexDirection: 'row', alignItems: 'flex-start', gap: 10,
     backgroundColor: Colors.vellum,
-    borderLeftWidth: 1, borderRightWidth: 1, borderBottomWidth: 1, borderColor: Colors.line,
+    borderWidth: 1, borderColor: Colors.line,
+    borderRadius: Radius.r4,
     padding: Spacing.s3,
+    ...Shadow.s1,
   },
-  rowLast: { borderBottomLeftRadius: Radius.r4, borderBottomRightRadius: Radius.r4 },
+  cardLeading: { borderColor: Colors.sakura, backgroundColor: Colors.sakuraSoft },
+  rankBadge: {
+    minWidth: 22, height: 22, borderRadius: Radius.pill, paddingHorizontal: 4,
+    backgroundColor: Colors.paperDeep, alignItems: 'center', justifyContent: 'center',
+    marginTop: 1,
+  },
+  rankBadgeLeading: { backgroundColor: Colors.sakuraDeep },
+  rankText: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(10.5), color: Colors.ink3 },
+  rankTextLeading: { color: '#fff' },
   avatar: {
     width: AVATAR_SIZE, height: AVATAR_SIZE, borderRadius: AVATAR_SIZE / 2,
     backgroundColor: Colors.sakura, alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
@@ -72,6 +91,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.paperDeep, borderRadius: Radius.pill,
     paddingHorizontal: 10, paddingVertical: 6,
   },
+  likeChipPressed: { transform: [{ scale: 0.96 }] },
   likeCount: { fontFamily: FontFamily.uiMedium, fontSize: sf(12), color: Colors.ink3 },
   likeCountActive: { color: Colors.sakuraDeep },
 });

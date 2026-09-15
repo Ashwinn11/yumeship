@@ -1,7 +1,8 @@
 import { router } from 'expo-router';
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { PhotoViewer } from '@/components/ui/PhotoViewer';
 import { Colors, FontFamily, Radius, Shadow, Spacing, sf } from '@/constants/theme';
 import type { CommunityPost } from '@/store/community';
 
@@ -19,6 +20,7 @@ type Props = {
 // reads as a reply in a thread (CommentThread's card shell: avatar(s), name
 // and F/O tag all inside one bordered card) rather than a standalone post.
 function ActivityResponseCardImpl({ post, onToggleLike }: Props) {
+  const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   const onOpen = () => router.push(`/social/post/${post.id}` as any);
 
   return (
@@ -29,11 +31,24 @@ function ActivityResponseCardImpl({ post, onToggleLike }: Props) {
 
       {post.media.length > 0 && (
         <View style={styles.mediaWrap}>
-          <MediaCarousel media={post.media} variant="thumb" likedByMe={post.likedByMe} onDoubleTap={onToggleLike} />
+          <MediaCarousel
+            media={post.media}
+            variant="thumb"
+            likedByMe={post.likedByMe}
+            onDoubleTap={onToggleLike}
+            onSingleTap={(i) => setViewerIndex(i)}
+          />
         </View>
       )}
 
       <LikeButton liked={post.likedByMe} count={post.likeCount} onToggle={onToggleLike} size={14} />
+
+      <PhotoViewer
+        visible={viewerIndex !== null}
+        photos={post.media.map((m) => ({ uri: m.url }))}
+        initialIndex={viewerIndex ?? 0}
+        onClose={() => setViewerIndex(null)}
+      />
     </Pressable>
   );
 }

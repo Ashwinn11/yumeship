@@ -14,9 +14,9 @@ type Props = {
   variant: 'thumb' | 'full';
   likedByMe: boolean;
   onDoubleTap: () => void;
-  /** feed only — a plain single tap opens the post; detail has nowhere
-   * further to go, so it's omitted there */
-  onSingleTap?: () => void;
+  /** feed opens the post on a plain single tap (index ignored); detail opens
+   * the full-screen photo viewer at whichever page was tapped */
+  onSingleTap?: (index: number) => void;
   aspectRatio?: number;
 };
 
@@ -48,10 +48,14 @@ export function MediaCarousel({ media, variant, likedByMe, onDoubleTap, onSingle
   }, [likedByMe, onDoubleTap]);
 
   const renderItem = useCallback(
-    ({ item }: ListRenderItemInfo<PostMedia>) => {
+    ({ item, index: i }: ListRenderItemInfo<PostMedia>) => {
       const uri = uriFor(item, variant);
       return (
-        <DoubleTapLike style={[styles.page, { width, height }]} onSingleTap={onSingleTap} onDoubleTap={handleDoubleTap}>
+        <DoubleTapLike
+          style={[styles.page, { width, height }]}
+          onSingleTap={onSingleTap ? () => onSingleTap(i) : undefined}
+          onDoubleTap={handleDoubleTap}
+        >
           <Image source={{ uri }} style={StyleSheet.absoluteFill} contentFit="cover" recyclingKey={uri} {...MEDIA_IMAGE} />
         </DoubleTapLike>
       );
@@ -63,7 +67,11 @@ export function MediaCarousel({ media, variant, likedByMe, onDoubleTap, onSingle
     <View onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
       {width > 0 &&
         (media.length === 1 ? (
-          <DoubleTapLike style={[styles.page, { width, height }]} onSingleTap={onSingleTap} onDoubleTap={handleDoubleTap}>
+          <DoubleTapLike
+            style={[styles.page, { width, height }]}
+            onSingleTap={onSingleTap ? () => onSingleTap(0) : undefined}
+            onDoubleTap={handleDoubleTap}
+          >
             <Image
               source={{ uri: uriFor(media[0], variant) }}
               style={StyleSheet.absoluteFill}

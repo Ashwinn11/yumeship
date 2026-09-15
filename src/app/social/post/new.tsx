@@ -21,12 +21,13 @@ import { BingoComposerAttachment } from '@/components/community/BingoComposerAtt
 import { MediaComposer, mediaFromAssets } from '@/components/community/MediaComposer';
 import { MentionAutocomplete } from '@/components/community/MentionAutocomplete';
 import { MIN_POLL_OPTIONS, PollComposer } from '@/components/community/PollComposer';
+import { Chip } from '@/components/ui/Chip';
 import { DismissKeyboardView } from '@/components/ui/DismissKeyboardView';
 import { useIPad } from '@/hooks/use-ipad';
 import { AVATAR_IMAGE } from '@/lib/imageProps';
 import { defaultBingoStyle, makeBingoCells, type BingoCard } from '@/lib/bingo';
 import { Colors, FontFamily, Radius, Spacing, sf } from '@/constants/theme';
-import { createPost, MAX_IMAGES, type LocalPickedMedia } from '@/store/community';
+import { createPost, MAX_IMAGES, POST_TYPES, POST_TYPE_LABELS, type LocalPickedMedia, type PostType } from '@/store/community';
 import { getGlobalSetting } from '@/store/onboarding';
 
 const MAX_BODY = 4000;
@@ -105,6 +106,9 @@ export default function NewPostScreen() {
   // null = no poll attached; an array (starts at 2 blank options) = poll mode,
   // mutually exclusive with media — same as Twitter/IG
   const [poll, setPoll] = useState<string[] | null>(null);
+  // 'general' = no flair, the default — picking one tags the post so it shows
+  // up under /social/tag/[type] and gets a small badge on the card
+  const [postType, setPostType] = useState<PostType>('general');
 
   const [activityBody, setActivityBody] = useState('');
 
@@ -169,6 +173,7 @@ export default function NewPostScreen() {
           media: poll ? [] : media,
           foProfileId: identifyFoId || undefined,
           poll: poll ? filledPollOptions : undefined,
+          postType,
         });
       }
       router.canGoBack() ? router.back() : router.replace('/(tabs)/community' as any);
@@ -285,6 +290,25 @@ export default function NewPostScreen() {
           }}
         />
 
+        {tab === 'post' && (
+          <View style={styles.flairRow}>
+            {POST_TYPES.map((t) => {
+              const active = postType === t;
+              return (
+                <Chip
+                  key={t}
+                  active={active}
+                  color={active ? Colors.lavenderDeep : Colors.ink3}
+                  bg={active ? Colors.lavenderSoft : Colors.paperDeep}
+                  onPress={() => setPostType(active ? 'general' : t)}
+                >
+                  #{POST_TYPE_LABELS[t]}
+                </Chip>
+              );
+            })}
+          </View>
+        )}
+
         {tab === 'post' && !!poll && (
           <View style={styles.attachWrap}>
             <PollComposer options={poll} onChange={setPoll} onRemove={() => setPoll(null)} />
@@ -383,6 +407,7 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.ui, fontSize: sf(15), color: Colors.ink, lineHeight: sf(22),
   },
 
+  flairRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, paddingLeft: 48, marginTop: Spacing.s2 },
   attachWrap: { marginTop: Spacing.s3, paddingLeft: 48 },
   mediaWrap: { marginTop: Spacing.s3, paddingLeft: 48 },
 

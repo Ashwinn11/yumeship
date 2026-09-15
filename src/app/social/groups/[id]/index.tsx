@@ -22,6 +22,7 @@ import { mediaFromAssets } from '@/components/community/MediaComposer';
 import { MentionAutocomplete } from '@/components/community/MentionAutocomplete';
 import { MessageActionSheet } from '@/components/community/MessageActionSheet';
 import { ReportSheet } from '@/components/community/ReportSheet';
+import { PhotoViewer } from '@/components/ui/PhotoViewer';
 import { InlineToast, useInlineToast } from '@/components/ui/InlineToast';
 import { IconPhoto } from '@/components/ui/Icon';
 import { AVATAR_IMAGE } from '@/lib/imageProps';
@@ -65,6 +66,7 @@ export default function GroupChatScreen() {
   const [sending, setSending] = useState(false);
   const [actionTarget, setActionTarget] = useState<GroupMessage | null>(null);
   const [reportTarget, setReportTarget] = useState<GroupMessage | null>(null);
+  const [viewerPhoto, setViewerPhoto] = useState<string | null>(null);
   const { message: toastMsg, nonce: toastNonce, show: showToast } = useInlineToast();
 
   async function pickImage() {
@@ -109,6 +111,7 @@ export default function GroupChatScreen() {
           messagesById={messagesById}
           onLongPress={() => setActionTarget(item)}
           showIdentity={showIdentity}
+          onRequestViewPhoto={item.media[0] ? () => setViewerPhoto(item.media[0].url) : undefined}
         />
       );
     },
@@ -281,6 +284,11 @@ export default function GroupChatScreen() {
         onClose={() => setReportTarget(null)}
         onSubmitted={() => { setReportTarget(null); showToast('report sent — thank you'); }}
         onFailure={() => showToast("couldn't send report — try again")}
+      />
+      <PhotoViewer
+        visible={!!viewerPhoto}
+        photos={viewerPhoto ? [{ uri: viewerPhoto }] : []}
+        onClose={() => setViewerPhoto(null)}
       />
     </KeyboardAvoidingView>
   );

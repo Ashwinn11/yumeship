@@ -29,9 +29,12 @@ type Props = {
    *  avatar and name show once per consecutive run, not on every bubble.
    *  Own messages never show either regardless of this prop. */
   showIdentity?: boolean;
+  /** tapping this bubble's photo — omitted messages have no image so it's
+   *  just never wired */
+  onRequestViewPhoto?: () => void;
 };
 
-export function GroupChatBubble({ message, isMe, messagesById, onLongPress, showIdentity = true }: Props) {
+export function GroupChatBubble({ message, isMe, messagesById, onLongPress, showIdentity = true, onRequestViewPhoto }: Props) {
   const replyTo = message.replyToId ? messagesById.get(message.replyToId) : undefined;
   const image = message.media[0];
 
@@ -66,12 +69,14 @@ export function GroupChatBubble({ message, isMe, messagesById, onLongPress, show
         )}
 
         {!!image && (
-          <Image
-            source={{ uri: image.url }}
-            style={[styles.image, imageDisplaySize(image.width, image.height)]}
-            contentFit="cover"
-            {...MEDIA_IMAGE}
-          />
+          <Pressable onPress={onRequestViewPhoto} onLongPress={onLongPress}>
+            <Image
+              source={{ uri: image.url }}
+              style={[styles.image, imageDisplaySize(image.width, image.height)]}
+              contentFit="cover"
+              {...MEDIA_IMAGE}
+            />
+          </Pressable>
         )}
 
         {message.body ? (

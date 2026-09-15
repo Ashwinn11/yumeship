@@ -27,6 +27,7 @@ import { PostDetailSkeleton } from '@/components/community/PostDetailSkeleton';
 import { useIPad } from '@/hooks/use-ipad';
 import { DismissKeyboardView } from '@/components/ui/DismissKeyboardView';
 import { Mark } from '@/components/ui/Mark';
+import { PhotoViewer } from '@/components/ui/PhotoViewer';
 import { Colors, FontFamily, FontSize, Radius, Spacing, sf } from '@/constants/theme';
 import { addComment, deleteComment, deletePost, logSyncFailure, useCommunityPost } from '@/store/community';
 import { InlineToast, useInlineToast } from '@/components/ui/InlineToast';
@@ -43,6 +44,7 @@ export default function PostDetailScreen() {
   const [draftSelection, setDraftSelection] = useState(0);
   const [replyTo, setReplyTo] = useState<{ id: string; name: string } | null>(null);
   const [sending, setSending] = useState(false);
+  const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   const [keyboardOpen, setKeyboardOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [reportTarget, setReportTarget] = useState<{ type: 'post' | 'comment'; id: string } | null>(null);
@@ -173,6 +175,7 @@ export default function PostDetailScreen() {
               variant="full"
               likedByMe={post.likedByMe}
               onDoubleTap={() => toggleLikeOptimistic(() => showToast("couldn't update like — try again"))}
+              onSingleTap={(i) => setViewerIndex(i)}
             />
           </View>
         )}
@@ -233,6 +236,13 @@ export default function PostDetailScreen() {
         onClose={() => setReportTarget(null)}
         onSubmitted={() => { setReportTarget(null); showToast('report sent — thank you'); }}
         onFailure={() => showToast("couldn't send report — try again")}
+      />
+
+      <PhotoViewer
+        visible={viewerIndex !== null}
+        photos={post.media.map((m) => ({ uri: m.url }))}
+        initialIndex={viewerIndex ?? 0}
+        onClose={() => setViewerIndex(null)}
       />
 
       {!post.activityId && (

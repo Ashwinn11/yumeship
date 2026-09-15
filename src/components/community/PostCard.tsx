@@ -6,7 +6,7 @@ import Svg, { Path } from 'react-native-svg';
 import { Sparkle } from '@/components/deco/Sparkle';
 import { IconFlag, IconPin, IconTrashSolid } from '@/components/ui/Icon';
 import { Colors, FontFamily, Radius, Shadow, Spacing, sf } from '@/constants/theme';
-import type { CommunityPost } from '@/store/community';
+import { POST_TYPE_LABELS, type CommunityPost } from '@/store/community';
 
 import { BingoCardView } from './BingoCardView';
 import { LikeButton } from './LikeButton';
@@ -104,6 +104,16 @@ function PostCardImpl({ post, onToggleLike, onPollVote, onRequestDelete, onReque
 
       <PostAuthorHeader author={post.author} fo={post.fo} createdAt={post.createdAt} />
 
+      {post.postType !== 'general' && (
+        <Pressable
+          style={styles.flairBadge}
+          onPress={() => router.push(`/social/tag/${post.postType}` as any)}
+          hitSlop={4}
+        >
+          <Text style={styles.flairText}>#{POST_TYPE_LABELS[post.postType]}</Text>
+        </Pressable>
+      )}
+
       {!!post.title && <Text style={styles.title}>{post.title}</Text>}
       {!!post.body && (
         <MentionText body={post.body} mentions={post.mentions} style={styles.body} numberOfLines={6} />
@@ -167,6 +177,18 @@ const styles = StyleSheet.create({
   pinnedLabel: {
     fontFamily: FontFamily.uiSemiBold, fontSize: sf(10.5), color: Colors.ink3,
     textTransform: 'uppercase', letterSpacing: 0.6,
+  },
+  flairBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: Colors.lavenderSoft,
+    borderWidth: 1,
+    borderColor: Colors.lavender,
+    borderRadius: Radius.pill,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  flairText: {
+    fontFamily: FontFamily.uiSemiBold, fontSize: sf(9.5), color: Colors.lavenderDeep,
   },
   title: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(16), color: Colors.ink, marginTop: 2 },
   body: { fontFamily: FontFamily.ui, fontSize: sf(13), color: Colors.ink2, lineHeight: sf(19) },

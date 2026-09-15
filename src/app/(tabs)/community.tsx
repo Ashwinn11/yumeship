@@ -422,7 +422,7 @@ function Feed() {
         <ActivityPromptRow
           post={item}
           onToggleLike={() => likePoolOptimistic(item.id)}
-          isLast={index === pool.length - 1}
+          rank={index + 1}
         />
       ) : (
         <PostCard
@@ -489,7 +489,7 @@ function Feed() {
         keyExtractor={keyExtractor}
         renderItem={renderPost}
         contentContainerStyle={[styles.feedContent, column]}
-        ItemSeparatorComponent={activityData ? undefined : FeedSeparator}
+        ItemSeparatorComponent={FeedSeparator}
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={Colors.sakuraDeep} />}
         onEndReached={activityData ? undefined : loadMore}
         onEndReachedThreshold={0.4}
@@ -520,8 +520,12 @@ function Feed() {
                       <Text style={styles.submittedSub}>Help pick tomorrow's</Text>
                     </View>
                   </View>
-                  <Pressable onPress={() => router.push('/social/post/new?kind=activity' as any)} hitSlop={8}>
-                    <Text style={styles.submittedSubmitLink}>Submit</Text>
+                  <Pressable
+                    style={({ pressed }) => [styles.submittedSubmitBtn, pressed && styles.submittedSubmitBtnPressed]}
+                    onPress={() => router.push('/social/post/new?kind=activity' as any)}
+                    hitSlop={8}
+                  >
+                    <Text style={styles.submittedSubmitText}>Submit</Text>
                   </Pressable>
                 </View>
               )}
@@ -532,7 +536,7 @@ function Feed() {
           isLoading ? (
             <FeedSkeleton />
           ) : activityData ? (
-            <View style={[styles.feedEmpty, styles.submittedEmptyClose]}>
+            <View style={styles.feedEmpty}>
               <Text style={styles.emptyTitle}>the pool's empty</Text>
               <Text style={styles.claimSub}>submit a prompt and be the first to get liked up ♡</Text>
             </View>
@@ -968,20 +972,21 @@ const styles = StyleSheet.create({
   submittedHeaderCard: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     backgroundColor: Colors.vellum,
-    borderTopWidth: 1, borderLeftWidth: 1, borderRightWidth: 1, borderColor: Colors.line,
-    borderTopLeftRadius: Radius.r4, borderTopRightRadius: Radius.r4,
+    borderWidth: 1, borderColor: Colors.line,
+    borderRadius: Radius.r4,
     padding: Spacing.s4,
+    marginBottom: Spacing.s3,
+    ...Shadow.s1,
   },
   submittedHeaderLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   submittedTitle: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(14), color: Colors.ink },
   submittedSub: { fontFamily: FontFamily.ui, fontSize: sf(11.5), color: Colors.ink3, marginTop: 1 },
-  submittedSubmitLink: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(13), color: Colors.sakuraDeep },
-  submittedEmptyClose: {
-    backgroundColor: Colors.vellum,
-    borderLeftWidth: 1, borderRightWidth: 1, borderBottomWidth: 1, borderColor: Colors.line,
-    borderBottomLeftRadius: Radius.r4, borderBottomRightRadius: Radius.r4,
-    paddingVertical: Spacing.s6,
+  submittedSubmitBtn: {
+    backgroundColor: Colors.sakuraDeep, borderRadius: Radius.pill,
+    paddingHorizontal: 14, paddingVertical: 8,
   },
+  submittedSubmitBtnPressed: { transform: [{ scale: 0.96 }] },
+  submittedSubmitText: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(12.5), color: '#fff' },
   tabsWrap: {
     paddingHorizontal: Spacing.s5,
     paddingBottom: Spacing.s3,
