@@ -291,7 +291,23 @@ export function ProfileCard({
                     rel="noopener noreferrer"
                     className="link-pill"
                   >
-                    {l.label || l.url}
+                    <svg className="link-pill-icon" width="11" height="11" viewBox="0 0 14 14" fill="none">
+                      <path
+                        d="M6.1 8.9 4.6 10.4a2 2 0 0 1-2.83-2.83l1.5-1.5a2 2 0 0 1 2.83 0"
+                        stroke="var(--sakura-deep)"
+                        strokeWidth="1.2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M7.9 5.1 9.4 3.6a2 2 0 0 1 2.83 2.83l-1.5 1.5a2 2 0 0 1-2.83 0"
+                        stroke="var(--sakura-deep)"
+                        strokeWidth="1.2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    <span className="link-pill-label">{l.label || l.url}</span>
                   </a>
                 ))}
               </div>

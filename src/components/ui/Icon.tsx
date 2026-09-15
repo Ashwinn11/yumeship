@@ -162,6 +162,58 @@ export function IconFlag({ size = 14, color = Colors.ink }: IconProps) {
   );
 }
 
+/** Two interlocking chain links — marks a profile's external link pills so
+ *  they read as links even before the label text is parsed. */
+export function IconLink({ size = 14, color = Colors.ink }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 14 14" fill="none">
+      <Path
+        d="M6.1 8.9 4.6 10.4a2 2 0 0 1-2.83-2.83l1.5-1.5a2 2 0 0 1 2.83 0"
+        stroke={color}
+        strokeWidth="1.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Path
+        d="M7.9 5.1 9.4 3.6a2 2 0 0 1 2.83 2.83l-1.5 1.5a2 2 0 0 1-2.83 0"
+        stroke={color}
+        strokeWidth="1.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+/** Two overlapping heads — the follow button's leading glyph, so "follow"
+ *  reads at a glance instead of relying on the label text alone. */
+export function IconPeople({ size = 14, color = Colors.ink }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 14 14" fill="none">
+      <Circle cx="5" cy="4.3" r="2" stroke={color} strokeWidth="1.2" />
+      <Path d="M1.3 12c.3-2.3 1.9-3.6 3.7-3.6s3.4 1.3 3.7 3.6" stroke={color} strokeWidth="1.2" strokeLinecap="round" />
+      <Path d="M8.6 2.6c.9.2 1.6 1 1.6 2 0 .9-.6 1.7-1.4 2" stroke={color} strokeWidth="1.1" strokeLinecap="round" />
+      <Path d="M9.3 8.5c1.6.3 2.8 1.5 3.1 3.5" stroke={color} strokeWidth="1.1" strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+/** A raised, palm-out hand — the DNI pill's glyph, reading as "stop" without
+ *  relying on a viewer already knowing the "do not interact" acronym. */
+export function IconHandStop({ size = 14, color = Colors.ink }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 14 14" fill="none">
+      <Path
+        d="M4 6.6V2.3a.85.85 0 0 1 1.7 0v3.4M5.7 5.7V1.7a.85.85 0 0 1 1.7 0v4M7.4 5.8V2.3a.85.85 0 0 1 1.7 0v4.2M9.1 6.7V3.9a.85.85 0 0 1 1.7 0v4.6c0 2.2-1.5 4-3.8 4-1.5 0-2.3-.5-3.1-1.6L2.1 8.2c-.4-.5-.3-1.2.2-1.5.5-.3 1.1-.2 1.5.2L4 7.1"
+        stroke={color}
+        strokeWidth="1.1"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
 /** A die, for "use this template" on a shared bingo card — same 14×14/1.3
  *  stroke convention as the rest of the set, replacing a raw 🎲 emoji. */
 export function IconDice({ size = 14, color = Colors.ink }: IconProps) {

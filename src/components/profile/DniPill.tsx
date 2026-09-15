@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
 
 import { CozyModal } from '@/components/ui/CozyModal';
+import { IconHandStop } from '@/components/ui/Icon';
 import { Colors, FontFamily, Radius, sf } from '@/constants/theme';
 
 /** A small boundary pill next to the follow button — renders nothing when
@@ -15,6 +16,7 @@ export function DniPill({ text }: { text?: string }) {
   return (
     <>
       <Pressable onPress={() => setOpen(true)} style={styles.pill} hitSlop={6}>
+        <IconHandStop size={11} color={Colors.ember} />
         <Text style={styles.pillText}>DNI</Text>
       </Pressable>
       <CozyModal
@@ -30,9 +32,10 @@ export function DniPill({ text }: { text?: string }) {
 
 const styles = StyleSheet.create({
   pill: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
     paddingHorizontal: 12, height: 32, borderRadius: Radius.pill,
     backgroundColor: Colors.paperDeep, borderWidth: 1, borderColor: Colors.ember,
-    alignItems: 'center', justifyContent: 'center',
+    justifyContent: 'center',
   },
   pillText: { fontFamily: FontFamily.uiSemiBold, fontSize: sf(11), color: Colors.ember, letterSpacing: 0.4 },
 });

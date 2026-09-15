@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Colors, FontFamily, Radius, sf } from '@/constants/theme';
 import { followUser, unfollowUser } from '@/store/community';
+import { IconPeople } from '@/components/ui/Icon';
 
 type Props = {
   userId: string;
@@ -41,7 +42,10 @@ export function FollowButton({ userId, initialFollowing, onChange, onFailure }: 
       {busy ? (
         <ActivityIndicator size="small" color={following ? Colors.ink2 : '#fff'} />
       ) : (
-        <Text style={[styles.text, following && styles.textActive]}>{following ? 'following' : 'follow'}</Text>
+        <View style={styles.content}>
+          <IconPeople size={12} color={following ? Colors.ink2 : '#fff'} />
+          <Text style={[styles.text, following && styles.textActive]}>{following ? 'following' : 'follow'}</Text>
+        </View>
       )}
     </Pressable>
   );
@@ -58,6 +62,7 @@ const styles = StyleSheet.create({
     minWidth: 92,
   },
   btnActive: { backgroundColor: Colors.paperDeep, borderWidth: 1, borderColor: Colors.line },
+  content: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   text: { fontFamily: FontFamily.uiMedium, fontSize: sf(12), color: '#fff' },
   textActive: { color: Colors.ink2 },
 });

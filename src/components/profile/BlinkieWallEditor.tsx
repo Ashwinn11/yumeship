@@ -1,4 +1,3 @@
-import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { BLINKIE_BY_ID, BLINKIE_CATALOG, BLINKIE_FREE_WALL_MAX, BLINKIE_TEXT_MAX, BLINKIE_WALL_MAX, type EquippedBlinkie } from '@/constants/blinkies';
@@ -11,6 +10,11 @@ type Props = {
   selected: EquippedBlinkie[];
   onChange: (items: EquippedBlinkie[]) => void;
   premium: boolean;
+  /** called instead of adding a template once the free cap is hit — the
+   *  caller is responsible for navigating to the paywall, since it also
+   *  needs to close whatever modal this editor is sitting in first (see
+   *  ProfileEditor's `closeSheet`); this component never navigates itself */
+  onNeedsPaywall: () => void;
 };
 
 /**
@@ -19,7 +23,7 @@ type Props = {
  * them straight to the paywall instead of adding it, same convention
  * CardThemeSheet already uses for its own premium controls.
  */
-export function BlinkieWallEditor({ selected, onChange, premium }: Props) {
+export function BlinkieWallEditor({ selected, onChange, premium, onNeedsPaywall }: Props) {
   // a stable per-slot id, not the template id, so equipping the same
   // template twice with different text doesn't collide as one React key
   const slots: Slot[] = selected.map((s, i) => ({ ...s, slotId: `${s.templateId}-${i}` }));
@@ -28,7 +32,7 @@ export function BlinkieWallEditor({ selected, onChange, premium }: Props) {
 
   function addTemplate(templateId: string) {
     if (freeCapped) {
-      router.push('/paywall?reason=blinkie-wall' as any);
+      onNeedsPaywall();
       return;
     }
     if (atMax) return;

@@ -20,6 +20,7 @@ import { StarsBackdrop } from '@/components/deco/StarsBackdrop';
 import { StitchFrame } from '@/components/deco/StitchFrame';
 import { WashBackdrop } from '@/components/deco/WashBackdrop';
 import { calcElapsed } from '@/components/ui/DateField';
+import { IconLink } from '@/components/ui/Icon';
 import { Colors, FontFamily, Radius, Shadow, Spacing, sf } from '@/constants/theme';
 import type { EquippedBlinkie } from '@/constants/blinkies';
 import { ProfileFlags } from './ProfileFlags';
@@ -238,6 +239,7 @@ export function ProfileCard({
         <View style={styles.linksRow}>
           {links.map((l) => (
             <Pressable key={l.id} style={styles.linkPill} onPress={() => Linking.openURL(normalizeUrl(l.url))}>
+              <IconLink size={11} color={Colors.sakuraDeep} />
               <Text style={styles.linkPillText} numberOfLines={1}>{l.label || l.url}</Text>
             </Pressable>
           ))}
@@ -450,6 +452,7 @@ const styles = StyleSheet.create({
     gap: 8, marginTop: Spacing.s3, paddingHorizontal: Spacing.s2,
   },
   linkPill: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
     paddingVertical: 6, paddingHorizontal: 14,
     borderRadius: Radius.pill,
     backgroundColor: Colors.paperDeep,

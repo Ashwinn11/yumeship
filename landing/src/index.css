@@ -832,6 +832,9 @@ a:hover {
   padding: 0 8px;
 }
 .link-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   font-family: var(--font-ui-medium);
   font-size: 12.5px;
   color: var(--sakura-deep);
@@ -842,11 +845,17 @@ a:hover {
   border: 1px solid var(--line);
   max-width: 100%;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 .link-pill:hover {
   border-color: var(--sakura-deep);
+}
+.link-pill-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.link-pill-icon {
+  flex-shrink: 0;
 }
 
 /* Name font variations */

@@ -241,7 +241,7 @@ export default function PaywallScreen() {
         {/* Features card */}
         <View style={styles.featCard}>
           {[
-            { icon: '♡', label: 'Unlimited ships & F/Os' },
+            { icon: '♡', label: 'Unlimited ships & F/Os shrines' },
             { icon: '♡', label: 'Polyships — your whole polycule, together' },
             { icon: '♡', label: 'Every template & theme, switch anytime' },
             { icon: '♡', label: 'Scenarios, Storyline, Albums & Love Letters' },

@@ -41,7 +41,14 @@ export type EditField =
     }
   | { kind: 'swatches'; key: string; label: string; options: string[]; /** cleared when a swatch is picked */ clears?: string }
   | { kind: 'gallery'; key: string }
-  | { kind: 'node'; label?: string; render: () => React.ReactNode };
+  | {
+      kind: 'node';
+      label?: string;
+      /** `closeSheet` lets a node close this section's own Modal before doing
+       *  anything that presents another modal screen (e.g. the paywall) —
+       *  two native modal presentations stacked at once hangs the app on iOS. */
+      render: (closeSheet: () => void) => React.ReactNode;
+    };
 
 export type EditSectionDef = {
   id: string;
@@ -197,7 +204,7 @@ export function ProfileEditor({
               >
                 <DismissKeyboardView>
                   {openSection.fields.map((f, i) => (
-                    <Field key={('key' in f ? f.key : f.label) ?? i} field={f} value={value} onChange={onChange} />
+                    <Field key={('key' in f ? f.key : f.label) ?? i} field={f} value={value} onChange={onChange} closeSheet={() => setOpen(null)} />
                   ))}
                 </DismissKeyboardView>
               </ScrollView>
@@ -209,12 +216,12 @@ export function ProfileEditor({
   );
 }
 
-function Field({ field, value, onChange }: { field: EditField; value: Value; onChange: (p: Value) => void }) {
+function Field({ field, value, onChange, closeSheet }: { field: EditField; value: Value; onChange: (p: Value) => void; closeSheet?: () => void }) {
   if (field.kind === 'node') {
     return (
       <View style={styles.labeled}>
         {!!field.label && <Text style={styles.labeledText}>{field.label}</Text>}
-        {field.render()}
+        {field.render(closeSheet ?? (() => {}))}
       </View>
     );
   }

@@ -19,7 +19,6 @@ import { usePremium } from '@/store/premium';
 import { logSyncFailure, pushOwnProfile, syncIdentifyFoPublish } from '@/store/community';
 
 const PRONOUNS = ['she/her', 'he/him', 'they/them'].map((p) => ({ value: p, label: p }));
-const COLORS = [Colors.sakura, Colors.lavender, Colors.sage, Colors.peach, Colors.butter, Colors.plum];
 const ABOUT_MAX = 1000;
 const DNI_MAX = 300;
 
@@ -86,7 +85,6 @@ export default function EditProfileScreen() {
       kind: 'text', key: 'tagline', label: 'bio', placeholder: 'self ship journal ♡',
       multiline: true, maxLength: 80, hint: 'the line or two under your name on your card — symbols welcome',
     },
-    { kind: 'swatches', key: 'color', label: 'colour', options: COLORS, clears: 'avatar' },
   ];
 
   const sections: EditSectionDef[] = [
@@ -114,8 +112,13 @@ export default function EditProfileScreen() {
       label: 'blinkie wall',
       summary: (v) => (v.blinkies.length ? `${v.blinkies.length} equipped` : 'none yet'),
       fields: [{
-        kind: 'node', render: () => (
-          <BlinkieWallEditor selected={me.blinkies} onChange={(blinkies) => patch({ blinkies })} premium={premium} />
+        kind: 'node', render: (closeSheet) => (
+          <BlinkieWallEditor
+            selected={me.blinkies}
+            onChange={(blinkies) => patch({ blinkies })}
+            premium={premium}
+            onNeedsPaywall={() => { closeSheet(); router.push('/paywall?reason=blinkie-wall' as any); }}
+          />
         ),
       }],
     },

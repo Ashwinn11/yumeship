@@ -1,4 +1,5 @@
 import * as ImagePicker from 'expo-image-picker';
+import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text } from 'react-native';
 
 import { BlinkieWallEditor } from '@/components/profile/BlinkieWallEditor';
@@ -16,7 +17,6 @@ import type { Fo } from '@/store/fo';
 // a person has a handle and a pairing. Everything else they share.
 
 const PRONOUNS = ['she/her', 'he/him', 'they/them'].map((p) => ({ value: p, label: p }));
-const FO_COLORS = [Colors.sakura, Colors.lavender, Colors.sage, Colors.peach, Colors.butter, Colors.plum];
 const REL = REL_ORDER.map((v) => ({ value: v, label: RelationshipLabels[v], color: RelationshipColors[v] }));
 const SHARE = SHARING_ORDER.map((v) => ({ value: v, label: SharingLabels[v], color: SharingColors[v] }));
 
@@ -66,8 +66,6 @@ export function FoEditor({
       kind: 'text', key: 'tagline', label: 'bio', placeholder: 'my beloved ♡',
       multiline: true, maxLength: 80, hint: 'the line or two under their name on their card',
     },
-    // avatar tint, not a relationship attribute — lives with the rest of the identity fields
-    { kind: 'swatches', key: 'color', label: 'their colour', options: FO_COLORS, clears: 'photoUri' },
   ];
 
   const sections: EditSectionDef[] = [
@@ -85,8 +83,13 @@ export function FoEditor({
       label: 'blinkie wall',
       summary: (v) => (v.blinkies.length ? `${v.blinkies.length} equipped` : 'none yet'),
       fields: [{
-        kind: 'node', render: () => (
-          <BlinkieWallEditor selected={value.blinkies} onChange={(blinkies) => onChange({ blinkies })} premium={premium} />
+        kind: 'node', render: (closeSheet) => (
+          <BlinkieWallEditor
+            selected={value.blinkies}
+            onChange={(blinkies) => onChange({ blinkies })}
+            premium={premium}
+            onNeedsPaywall={() => { closeSheet(); router.push('/paywall?reason=blinkie-wall' as any); }}
+          />
         ),
       }],
     },
